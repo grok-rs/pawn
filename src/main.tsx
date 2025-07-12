@@ -1,5 +1,6 @@
 import "@mui/material/styles/styled";
 import "./assets/main.css";
+import "./styles/animations.css";
 import "@fontsource/roboto";
 import "./i18n";
 

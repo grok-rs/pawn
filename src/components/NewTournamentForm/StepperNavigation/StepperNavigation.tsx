@@ -1,5 +1,6 @@
-import { Button, Stack } from '@mui/material';
+import { Button, Stack, CircularProgress } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { ArrowBack, ArrowForward, Check } from '@mui/icons-material';
 
 type Props = {
   isSubmitting?: boolean;
@@ -21,23 +22,50 @@ const StepperNavigation = ({
   const { t } = useTranslation();
 
   return (
-    <Stack direction="row" marginTop="auto" spacing={2} alignSelf="end">
+    <Stack
+      direction="row"
+      marginTop="auto"
+      spacing={2}
+      alignSelf="end"
+      sx={{ pt: 3 }}
+    >
       <Button
         variant="outlined"
         disabled={isSubmitting}
         onClick={isFirstStep ? onCancel : onStepBack}
-        sx={{ textTransform: 'none' }} // Prevent text from being uppercase
+        startIcon={<ArrowBack />}
+        sx={{
+          textTransform: 'none',
+          px: 3,
+          py: 1.5,
+          borderRadius: 2,
+        }}
       >
-        Назад
+        {isFirstStep ? 'Cancel' : 'Back'}
       </Button>
       <Button
         type="submit"
         variant="contained"
-        disabled={isSubmitButtonDisabled}
+        disabled={isSubmitButtonDisabled || isSubmitting}
         color="primary"
-        sx={{ textTransform: 'none' }} // Prevent text from being uppercase
+        endIcon={
+          isSubmitting ? (
+            <CircularProgress size={20} color="inherit" />
+          ) : isLastStep ? (
+            <Check />
+          ) : (
+            <ArrowForward />
+          )
+        }
+        sx={{
+          textTransform: 'none',
+          px: 3,
+          py: 1.5,
+          borderRadius: 2,
+          minWidth: 120,
+        }}
       >
-        {isLastStep ? 'Створити' : t('continue')}
+        {isSubmitting ? 'Creating...' : isLastStep ? 'Create Tournament' : 'Continue'}
       </Button>
     </Stack>
   );
