@@ -1,0 +1,22 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for the main window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "core:webview:allow-set-webview-zoom",
+    "pawn:allow-get-tournaments",
+    "pawn:allow-get-tournament",
+    "pawn:allow-create-tournament",
+    "pawn:allow-get-tournament-details",
+    "pawn:allow-get-players-by-tournament",
+    "pawn:allow-create-player",
+    "pawn:allow-get-games-by-tournament",
+    "pawn:allow-create-game",
+    "pawn:allow-get-player-results",
+    "pawn:allow-get-game-results",
+    "pawn:allow-populate-mock-data"
+  ]
+}
