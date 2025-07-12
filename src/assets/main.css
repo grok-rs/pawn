@@ -1,7 +1,9 @@
 @import "./base.css";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 body {
-    background: #f3f4f6;
+    background: #f9f9ff;
+    font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
 }
 
 code {
@@ -21,11 +23,8 @@ code {
 }
 
 #root {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    margin-bottom: 80px;
+    width: 100%;
+    min-height: 100vh;
 }
 
 .logo {

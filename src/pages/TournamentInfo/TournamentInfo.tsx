@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
-  Container,
   Typography,
   Card,
   CardContent,
@@ -21,6 +20,14 @@ import {
   Tabs,
   Tab,
   IconButton,
+  Avatar,
+  Menu,
+  MenuItem,
+  Breadcrumbs,
+  Link,
+  useTheme,
+  Skeleton,
+  Divider,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -31,6 +38,12 @@ import {
   CalendarToday,
   Timer,
   Flag,
+  NavigateNext,
+  MoreVert,
+  Download,
+  Edit,
+  Print,
+  Share,
 } from '@mui/icons-material';
 import { commands } from '../../dto/bindings';
 import type { TournamentDetails } from '../../dto/bindings';
@@ -68,14 +81,24 @@ function a11yProps(index: number) {
 const TournamentInfoPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const theme = useTheme();
   const [tournamentDetails, setTournamentDetails] = useState<TournamentDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
   const [hasMockData, setHasMockData] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+  };
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
   };
 
   const fetchTournamentDetails = async () => {
@@ -190,80 +213,204 @@ const TournamentInfoPage: React.FC = () => {
 
   return (
     <BaseLayout>
-      <Container maxWidth={false}>
-        <Box sx={{ py: 3 }}>
-          {/* Header */}
-          <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-            <IconButton onClick={() => navigate('/tournaments')} color="primary">
-              <ArrowBack />
-            </IconButton>
-            <Typography variant="h4" component="h1" sx={{ flexGrow: 1 }}>
-              {tournament.name}
-            </Typography>
-            {!hasMockData && (
-              <Button
-                variant="outlined"
-                onClick={handlePopulateMockData}
-                startIcon={<People />}
-              >
-                Add Sample Data
-              </Button>
-            )}
+      <Box>
+        {/* Breadcrumbs */}
+        <Breadcrumbs
+          separator={<NavigateNext fontSize="small" />}
+          sx={{ mb: 3 }}
+        >
+          <Link
+            component="button"
+            underline="hover"
+            color="inherit"
+            onClick={() => navigate('/tournaments')}
+            sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+          >
+            <EmojiEvents fontSize="small" />
+            Tournaments
+          </Link>
+          <Typography color="text.primary" fontWeight={500}>
+            {tournament.name}
+          </Typography>
+        </Breadcrumbs>
+
+        {/* Header */}
+        <Box sx={{ mb: 4 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+            <Box>
+              <Typography variant="h4" component="h1" fontWeight={700} gutterBottom>
+                {tournament.name}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, color: 'text.secondary' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <LocationOn fontSize="small" />
+                  <Typography variant="body1">{tournament.location}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <CalendarToday fontSize="small" />
+                  <Typography variant="body1">{formatDate(tournament.date)}</Typography>
+                </Box>
+              </Box>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              {!hasMockData && (
+                <Button
+                  variant="outlined"
+                  onClick={handlePopulateMockData}
+                  startIcon={<People />}
+                >
+                  Add Sample Data
+                </Button>
+              )}
+              <IconButton onClick={handleMenuClick}>
+                <MoreVert />
+              </IconButton>
+            </Box>
           </Box>
 
-          {/* Tournament Info Cards */}
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid size={{ mobile: 12, desktop: 3 }}>
-              <Card>
+          {/* Tournament Stats Cards */}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid size={{ mobile: 12, tablet: 6, laptop: 3 }}>
+              <Card
+                sx={{
+                  background: `linear-gradient(135deg, ${theme.palette.primary.light}20 0%, ${theme.palette.primary.main}20 100%)`,
+                  border: `1px solid ${theme.palette.primary.light}40`,
+                }}
+              >
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <LocationOn color="primary" />
-                    <Typography variant="h6">Location</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar
+                      sx={{
+                        bgcolor: theme.palette.primary.main,
+                        width: 48,
+                        height: 48,
+                      }}
+                    >
+                      <People />
+                    </Avatar>
+                    <Box>
+                      <Typography variant="h4" fontWeight={700}>
+                        {players.length}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Total Players
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Typography variant="body1">{tournament.location}</Typography>
                 </CardContent>
               </Card>
             </Grid>
-            <Grid size={{ mobile: 12, desktop: 3 }}>
-              <Card>
+            <Grid size={{ mobile: 12, tablet: 6, laptop: 3 }}>
+              <Card
+                sx={{
+                  background: `linear-gradient(135deg, ${theme.palette.success.light}20 0%, ${theme.palette.success.main}20 100%)`,
+                  border: `1px solid ${theme.palette.success.light}40`,
+                }}
+              >
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <CalendarToday color="primary" />
-                    <Typography variant="h6">Date</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar
+                      sx={{
+                        bgcolor: theme.palette.success.main,
+                        width: 48,
+                        height: 48,
+                      }}
+                    >
+                      <Games />
+                    </Avatar>
+                    <Box>
+                      <Typography variant="h4" fontWeight={700}>
+                        {games.length}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Games Played
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Typography variant="body1">{formatDate(tournament.date)}</Typography>
                 </CardContent>
               </Card>
             </Grid>
-            <Grid size={{ mobile: 12, desktop: 3 }}>
-              <Card>
+            <Grid size={{ mobile: 12, tablet: 6, laptop: 3 }}>
+              <Card
+                sx={{
+                  background: `linear-gradient(135deg, ${theme.palette.warning.light}20 0%, ${theme.palette.warning.main}20 100%)`,
+                  border: `1px solid ${theme.palette.warning.light}40`,
+                }}
+              >
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <Timer color="primary" />
-                    <Typography variant="h6">Time Control</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar
+                      sx={{
+                        bgcolor: theme.palette.warning.main,
+                        width: 48,
+                        height: 48,
+                      }}
+                    >
+                      <Timer />
+                    </Avatar>
+                    <Box>
+                      <Typography variant="h4" fontWeight={700}>
+                        {tournament.time_type || 'N/A'}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Time Control
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Typography variant="body1">{tournament.time_type}</Typography>
                 </CardContent>
               </Card>
             </Grid>
-            <Grid size={{ mobile: 12, desktop: 3 }}>
-              <Card>
+            <Grid size={{ mobile: 12, tablet: 6, laptop: 3 }}>
+              <Card
+                sx={{
+                  background: `linear-gradient(135deg, ${theme.palette.info.light}20 0%, ${theme.palette.info.main}20 100%)`,
+                  border: `1px solid ${theme.palette.info.light}40`,
+                }}
+              >
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <Games color="primary" />
-                    <Typography variant="h6">Progress</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar
+                      sx={{
+                        bgcolor: theme.palette.info.main,
+                        width: 48,
+                        height: 48,
+                      }}
+                    >
+                      <EmojiEvents />
+                    </Avatar>
+                    <Box>
+                      <Typography variant="h4" fontWeight={700}>
+                        {tournament.rounds_played}/{tournament.total_rounds}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Rounds Progress
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Typography variant="body1">
-                    Round {tournament.rounds_played} of {tournament.total_rounds}
-                  </Typography>
                 </CardContent>
               </Card>
             </Grid>
           </Grid>
 
           {/* Tabs */}
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs value={tabValue} onChange={handleTabChange} aria-label="tournament tabs">
+          <Paper sx={{ mb: 3 }}>
+            <Tabs
+              value={tabValue}
+              onChange={handleTabChange}
+              aria-label="tournament tabs"
+              sx={{
+                borderBottom: 1,
+                borderColor: 'divider',
+                '& .MuiTab-root': {
+                  minHeight: 64,
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                },
+                '& .Mui-selected': {
+                  color: theme.palette.primary.main,
+                },
+              }}
+            >
               <Tab
                 icon={<EmojiEvents />}
                 label="Standings"
@@ -283,13 +430,13 @@ const TournamentInfoPage: React.FC = () => {
                 {...a11yProps(2)}
               />
             </Tabs>
-          </Box>
+          </Paper>
 
           {/* Tab Panels */}
           <TabPanel value={tabValue} index={0}>
             {/* Standings Table */}
-            <TableContainer component={Paper}>
-              <Table>
+            <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+              <Table sx={{ minWidth: 650 }}>
                 <TableHead>
                   <TableRow>
                     <TableCell>Rank</TableCell>
@@ -472,7 +619,35 @@ const TournamentInfoPage: React.FC = () => {
             </TableContainer>
           </TabPanel>
         </Box>
-      </Container>
+
+        {/* Action Menu */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+        >
+          <MenuItem onClick={handleMenuClose}>
+            <Edit fontSize="small" sx={{ mr: 1 }} />
+            Edit Tournament
+          </MenuItem>
+          <MenuItem onClick={handleMenuClose}>
+            <Download fontSize="small" sx={{ mr: 1 }} />
+            Export Data
+          </MenuItem>
+          <MenuItem onClick={handleMenuClose}>
+            <Print fontSize="small" sx={{ mr: 1 }} />
+            Print Report
+          </MenuItem>
+          <MenuItem onClick={handleMenuClose}>
+            <Share fontSize="small" sx={{ mr: 1 }} />
+            Share Tournament
+          </MenuItem>
+          <Divider />
+          <MenuItem onClick={handleMenuClose} sx={{ color: 'error.main' }}>
+            Delete Tournament
+          </MenuItem>
+        </Menu>
+      </Box>
     </BaseLayout>
   );
 };
