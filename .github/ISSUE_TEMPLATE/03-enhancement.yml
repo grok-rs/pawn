@@ -1,0 +1,110 @@
+name: Enhancement
+description: Suggest an improvement to existing functionality
+title: "[ENHANCEMENT] "
+labels: ["enhancement", "improvement"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement! This template is for enhancing existing features. For new features, please use the Feature Request template.
+
+  - type: textarea
+    id: current
+    attributes:
+      label: Current Behavior
+      description: Describe how the feature currently works
+      placeholder: |
+        Currently, when I...
+        
+        The existing functionality...
+    validations:
+      required: true
+
+  - type: textarea
+    id: improved
+    attributes:
+      label: Desired Behavior
+      description: Describe how you'd like the feature to work
+      placeholder: |
+        I would like it to...
+        
+        It would be better if...
+    validations:
+      required: true
+
+  - type: textarea
+    id: justification
+    attributes:
+      label: Justification
+      description: Why would this enhancement be beneficial?
+      placeholder: |
+        This would improve...
+        
+        Users would benefit because...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: enhancement-type
+    attributes:
+      label: Enhancement Type
+      description: What kind of enhancement is this?
+      options:
+        - Performance improvement
+        - User experience improvement
+        - Visual/UI enhancement
+        - Workflow optimization
+        - Accessibility improvement
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: affected-users
+    attributes:
+      label: Who would benefit?
+      description: Which users would benefit most from this enhancement?
+      options:
+        - All users
+        - Tournament organizers
+        - Players
+        - Spectators
+        - Administrators
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples
+      description: Provide examples of how this enhancement would improve the user experience
+      placeholder: |
+        For example...
+        
+        In practice, this would mean...
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation Suggestions
+      description: If you have ideas about how this could be implemented, share them here
+      placeholder: Optional - any technical suggestions or approaches
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context or screenshots about the enhancement
+      placeholder: Any other relevant information...
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have searched existing issues to ensure this enhancement hasn't been suggested
+          required: true
+        - label: This enhancement improves existing functionality rather than adding new features
+          required: true
+        - label: I have clearly explained the benefits of this enhancement
+          required: true

@@ -1,0 +1,114 @@
+name: Documentation
+description: Report issues or suggest improvements for documentation
+title: "[DOCS] "
+labels: ["documentation"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve our documentation! Good documentation is crucial for user success.
+
+  - type: dropdown
+    id: doc-type
+    attributes:
+      label: Documentation Type
+      description: What type of documentation issue is this?
+      options:
+        - Missing documentation
+        - Incorrect documentation
+        - Unclear documentation
+        - Outdated documentation
+        - Typo or formatting issue
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: location
+    attributes:
+      label: Documentation Location
+      description: Where in the documentation did you encounter this issue?
+      placeholder: |
+        - README.md, section "Installation"
+        - Wiki page: "Tournament Setup"
+        - In-app help for "Creating Players"
+        - Code comments in file.ts
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: Issue Description
+      description: Describe the documentation issue
+      placeholder: |
+        The documentation states... but actually...
+        
+        This section is unclear because...
+        
+        There's no documentation for...
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested Improvement
+      description: How would you improve this documentation?
+      placeholder: |
+        I suggest changing it to...
+        
+        It would be clearer if...
+        
+        Add a section about...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: audience
+    attributes:
+      label: Target Audience
+      description: Who is the primary audience for this documentation?
+      options:
+        - New users
+        - Tournament organizers
+        - Developers
+        - System administrators
+        - All users
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples or References
+      description: Provide examples of good documentation or specific content that should be included
+      placeholder: |
+        For example, like how X project documents...
+        
+        Should include examples such as...
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context or information about the documentation issue
+      placeholder: Other relevant information...
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I would be willing to help improve this documentation
+          required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have searched existing issues to ensure this hasn't been reported
+          required: true
+        - label: I have clearly identified the documentation that needs improvement
+          required: true

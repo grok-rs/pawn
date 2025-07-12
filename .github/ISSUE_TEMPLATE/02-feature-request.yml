@@ -1,0 +1,110 @@
+name: Feature Request
+description: Suggest a new feature or functionality for Pawn
+title: "[FEATURE] "
+labels: ["enhancement", "feature-request"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please provide as much detail as possible to help us understand your request.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Description
+      description: Is your feature request related to a problem? Please describe it
+      placeholder: |
+        I'm always frustrated when...
+        
+        When organizing tournaments, I find it difficult to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see implemented
+      placeholder: |
+        I would like to see...
+        
+        The feature should work by...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions
+      description: Have you considered any alternative solutions or features?
+      placeholder: |
+        Another way to solve this could be...
+        
+        I've also thought about...
+
+  - type: dropdown
+    id: feature-area
+    attributes:
+      label: Feature Area
+      description: Which area of Pawn would this feature affect?
+      options:
+        - Tournament Management
+        - Player Management
+        - Game Recording
+        - Standings/Results
+        - Import/Export
+        - User Interface
+        - Reporting
+        - Database
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Critical - Can't use Pawn effectively without it
+        - High - Would significantly improve my workflow
+        - Medium - Nice to have
+        - Low - Minor improvement
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe a specific scenario where this feature would be useful
+      placeholder: |
+        For example, when running a tournament with 100+ players...
+        
+        This would be especially helpful during...
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups or Examples
+      description: If applicable, add mockups, wireframes, or examples from other applications
+      placeholder: Drag and drop images here or provide links to examples
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or information about the feature request
+      placeholder: Any other information that might be helpful...
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have searched existing issues to ensure this feature hasn't been requested
+          required: true
+        - label: This feature aligns with Pawn's goal of chess tournament management
+          required: true
+        - label: I have provided sufficient detail for the feature to be understood
+          required: true

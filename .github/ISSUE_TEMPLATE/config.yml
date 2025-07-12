@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discord Community
+    url: https://discord.gg/chess-pawn
+    about: Join our Discord server for general discussions and support
+  - name: Documentation
+    url: https://github.com/grok-rs/pawn/wiki
+    about: Check our documentation for setup guides and usage instructions
+  - name: Security Issues
+    url: mailto:security@pawn-chess.org
+    about: Please report security vulnerabilities via email
