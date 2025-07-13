@@ -64,6 +64,13 @@ impl<D: Db> TournamentService<D> {
             .map_err(PawnError::Database)
     }
 
+    pub async fn delete_tournament(&self, id: i32) -> Result<(), PawnError> {
+        self.db
+            .delete_tournament(id)
+            .await
+            .map_err(PawnError::Database)
+    }
+
     // Player operations
     pub async fn get_players_by_tournament(&self, tournament_id: i32) -> Result<Vec<Player>, PawnError> {
         self.db

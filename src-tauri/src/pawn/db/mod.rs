@@ -12,6 +12,7 @@ pub trait Db: Send + Sync {
     async fn get_tournament(&self, id: i32) -> Result<Tournament, sqlx::Error>;
     async fn create_tournament(&self, data: CreateTournament) -> Result<Tournament, sqlx::Error>;
     async fn get_tournament_details(&self, id: i32) -> Result<TournamentDetails, sqlx::Error>;
+    async fn delete_tournament(&self, id: i32) -> Result<(), sqlx::Error>;
     
     // Player operations
     async fn get_players_by_tournament(&self, tournament_id: i32) -> Result<Vec<Player>, sqlx::Error>;

@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-tournament"
+description = "Allows retrieving a specific tournament by ID"
+commands.allow = ["get_tournament"]
+
+[[permission]]
+identifier = "deny-get-tournament" 
+description = "Denies the get tournament command"
+commands.deny = ["get_tournament"]

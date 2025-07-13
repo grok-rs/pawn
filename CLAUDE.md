@@ -64,3 +64,10 @@ This is **Pawn**, a chess tournament management desktop application built with T
 - Form validation with react-hook-form + yup
 - Chess tournament management with Swiss/Round-robin support
 - Plugin name: "pawn" (commands use "plugin:pawn|command_name" format)
+
+## API and External Resource Handling
+
+- If encountering repeated failing API requests to external resources:
+  - Limit retry attempts to 2-3 times
+  - Attempt to use alternative resources
+  - Update project documentation with context about the failures

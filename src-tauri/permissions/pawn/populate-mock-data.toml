@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-populate-mock-data"
+description = "Allows populating tournament with mock data for testing"
+commands.allow = ["populate_mock_data"]
+
+[[permission]]
+identifier = "deny-populate-mock-data"
+description = "Denies the populate mock data command"
+commands.deny = ["populate_mock_data"]

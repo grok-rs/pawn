@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-delete-tournament"
+description = "Allows deleting a tournament and all its associated data"
+commands.allow = ["delete_tournament"]
+
+[[permission]]
+identifier = "deny-delete-tournament"
+description = "Denies the delete tournament command"
+commands.deny = ["delete_tournament"]

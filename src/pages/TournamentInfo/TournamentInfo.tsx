@@ -29,6 +29,11 @@ import {
   useTheme,
   Divider,
   Container,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -96,6 +101,7 @@ const TournamentInfoPage: React.FC = () => {
   const [hasMockData, setHasMockData] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -175,6 +181,28 @@ const TournamentInfoPage: React.FC = () => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDeleteTournament = () => {
+    handleMenuClose();
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!id) return;
+    
+    try {
+      await commands.deleteTournament(parseInt(id));
+      navigate('/');
+    } catch (err) {
+      console.error('Failed to delete tournament:', err);
+      setError(t('failedToDeleteTournament'));
+    }
+    setDeleteDialogOpen(false);
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
   };
 
   useEffect(() => {
@@ -699,7 +727,7 @@ const TournamentInfoPage: React.FC = () => {
             Share Tournament
           </MenuItem>
           <Divider />
-          <MenuItem onClick={handleMenuClose} sx={{ color: 'error.main' }}>
+          <MenuItem onClick={handleDeleteTournament} sx={{ color: 'error.main' }}>
             {t('deleteTournament')}
           </MenuItem>
         </Menu>
@@ -716,6 +744,31 @@ const TournamentInfoPage: React.FC = () => {
             }
           }}
         />
+        
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={handleCancelDelete}
+          aria-labelledby="delete-dialog-title"
+          aria-describedby="delete-dialog-description"
+        >
+          <DialogTitle id="delete-dialog-title">
+            {t('confirmDeleteTitle')}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="delete-dialog-description">
+              {t('confirmDeleteMessage')} "{tournamentDetails?.tournament.name}"?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCancelDelete} color="primary">
+              {t('cancel')}
+            </Button>
+            <Button onClick={handleConfirmDelete} color="error" variant="contained">
+              {t('delete')}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </BaseLayout>
   );

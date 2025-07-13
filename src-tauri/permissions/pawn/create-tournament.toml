@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-create-tournament"
+description = "Allows creating a new tournament"
+commands.allow = ["create_tournament"]
+
+[[permission]]
+identifier = "deny-create-tournament"
+description = "Denies the create tournament command"
+commands.deny = ["create_tournament"]

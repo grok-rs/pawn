@@ -114,7 +114,7 @@ const TournamentSettings: React.FC<TournamentSettingsProps> = ({
     <Dialog
       open={open}
       onClose={handleClose}
-      maxWidth="md"
+      maxWidth={false}
       fullWidth
       PaperProps={{
         sx: {

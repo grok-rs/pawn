@@ -82,6 +82,41 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
+    async fn delete_tournament(&self, id: i32) -> Result<(), sqlx::Error> {
+        // Start a transaction to ensure all deletions are atomic
+        let mut tx = self.pool.begin().await?;
+
+        // Delete tournament settings first (if any)
+        sqlx::query("DELETE FROM tournament_settings WHERE tournament_id = ?")
+            .bind(id)
+            .execute(&mut *tx)
+            .await?;
+
+        // Delete all games for this tournament
+        sqlx::query("DELETE FROM games WHERE tournament_id = ?")
+            .bind(id)
+            .execute(&mut *tx)
+            .await?;
+
+        // Delete all players for this tournament
+        sqlx::query("DELETE FROM players WHERE tournament_id = ?")
+            .bind(id)
+            .execute(&mut *tx)
+            .await?;
+
+        // Finally delete the tournament itself
+        sqlx::query("DELETE FROM tournaments WHERE id = ?")
+            .bind(id)
+            .execute(&mut *tx)
+            .await?;
+
+        // Commit the transaction
+        tx.commit().await?;
+
+        Ok(())
+    }
+
+    #[instrument(ret, skip(self))]
     async fn get_players_by_tournament(&self, tournament_id: i32) -> Result<Vec<Player>, sqlx::Error> {
         let players = sqlx::query_as(
             "SELECT * FROM players WHERE tournament_id = ? ORDER BY name"

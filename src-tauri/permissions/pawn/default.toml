@@ -1,0 +1,21 @@
+# Default permission set for the pawn plugin
+
+[default]
+description = "Default permissions for the pawn plugin"
+permissions = [
+    "allow-get-tournaments",
+    "allow-get-tournament", 
+    "allow-create-tournament",
+    "allow-get-tournament-details",
+    "allow-delete-tournament",
+    "allow-get-players-by-tournament",
+    "allow-create-player",
+    "allow-get-games-by-tournament",
+    "allow-create-game",
+    "allow-get-player-results",
+    "allow-get-game-results",
+    "allow-populate-mock-data",
+    "allow-get-tournament-standings",
+    "allow-get-tournament-settings",
+    "allow-update-tournament-settings"
+]

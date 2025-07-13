@@ -15,6 +15,11 @@ import {
   useTheme,
   Paper,
   Skeleton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import {
   Add,
@@ -49,6 +54,8 @@ const TournamentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [tournamentToDelete, setTournamentToDelete] = useState<Tournament | null>(null);
 
   const stats = {
     total: tournaments.length,
@@ -113,6 +120,35 @@ const TournamentsPage = () => {
   const handleFilterSelect = (newFilter: string) => {
     setFilter(newFilter);
     handleFilterClose();
+  };
+
+  const handleDeleteClick = (id: number) => {
+    const tournament = tournaments.find(t => t.id === id);
+    if (tournament) {
+      setTournamentToDelete(tournament);
+      setDeleteDialogOpen(true);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!tournamentToDelete) return;
+    
+    try {
+      await commands.deleteTournament(tournamentToDelete.id);
+      // Refresh the tournaments list
+      const data = await commands.getTournaments();
+      setTournaments(data);
+      setFilteredTournaments(data);
+    } catch (error) {
+      console.error("Failed to delete tournament:", error);
+    }
+    setDeleteDialogOpen(false);
+    setTournamentToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setTournamentToDelete(null);
   };
 
   const StatCard = ({ title, value, icon, color }: any) => (
@@ -303,7 +339,7 @@ const TournamentsPage = () => {
             ))}
           </Box>
         ) : (
-          <TournamentList tournaments={filteredTournaments} />
+          <TournamentList tournaments={filteredTournaments} onDelete={handleDeleteClick} />
         )}
 
         {/* Empty State */}
@@ -338,6 +374,31 @@ const TournamentsPage = () => {
           </Paper>
         )}
       </Box>
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCancelDelete}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">
+          {t('confirmDeleteTitle')}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            {t('confirmDeleteMessage')} "{tournamentToDelete?.name}"?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete} color="primary">
+            {t('cancel')}
+          </Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            {t('delete')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </BaseLayout>
   );
 };

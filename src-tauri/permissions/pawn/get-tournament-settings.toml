@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-tournament-settings"
+description = "Allows retrieving tournament tiebreak settings"
+commands.allow = ["get_tournament_settings"]
+
+[[permission]]
+identifier = "deny-get-tournament-settings"
+description = "Denies the get tournament settings command"
+commands.deny = ["get_tournament_settings"]

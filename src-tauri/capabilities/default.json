@@ -17,6 +17,10 @@
     "pawn:allow-create-game",
     "pawn:allow-get-player-results",
     "pawn:allow-get-game-results",
-    "pawn:allow-populate-mock-data"
+    "pawn:allow-populate-mock-data",
+    "pawn:allow-delete-tournament",
+    "pawn:allow-get-tournament-standings",
+    "pawn:allow-get-tournament-settings",
+    "pawn:allow-update-tournament-settings"
   ]
 }

@@ -27,6 +27,7 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::tournament::get_tournament,
             command::tournament::create_tournament,
             command::tournament::get_tournament_details,
+            command::tournament::delete_tournament,
             command::tournament::get_players_by_tournament,
             command::tournament::create_player,
             command::tournament::get_games_by_tournament,

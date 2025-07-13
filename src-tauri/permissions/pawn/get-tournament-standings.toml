@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-tournament-standings"
+description = "Allows retrieving tournament standings with tiebreak calculations"
+commands.allow = ["get_tournament_standings"]
+
+[[permission]]
+identifier = "deny-get-tournament-standings"
+description = "Denies the get tournament standings command"
+commands.deny = ["get_tournament_standings"]

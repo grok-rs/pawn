@@ -17,6 +17,9 @@ async createTournament(data: CreateTournament) : Promise<Tournament> {
 async getTournamentDetails(id: number) : Promise<TournamentDetails> {
     return await TAURI_INVOKE("plugin:pawn|get_tournament_details", { id });
 },
+async deleteTournament(id: number) : Promise<null> {
+    return await TAURI_INVOKE("plugin:pawn|delete_tournament", { id });
+},
 async getPlayersByTournament(tournamentId: number) : Promise<Player[]> {
     return await TAURI_INVOKE("plugin:pawn|get_players_by_tournament", { tournamentId });
 },

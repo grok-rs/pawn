@@ -47,6 +47,16 @@ pub async fn get_tournament_details(
     Ok(state.tournament_service.get_tournament_details(id).await?)
 }
 
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_tournament(
+    state: State<'_, PawnState>,
+    id: i32,
+) -> CommandResult<()> {
+    Ok(state.tournament_service.delete_tournament(id).await?)
+}
+
 // Player operations
 #[instrument(ret, skip(state))]
 #[tauri::command]

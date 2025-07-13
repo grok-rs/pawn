@@ -26,9 +26,10 @@ import { isOngoingTournament, isDraftTournament, isFinishedTournament } from '..
 
 type TournamentListItemProps = {
   tournament: Tournament;
+  onDelete?: (id: number) => void;
 };
 
-const TournamentListItem = ({ tournament }: TournamentListItemProps) => {
+const TournamentListItem = ({ tournament, onDelete }: TournamentListItemProps) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const { t } = useTranslation();
@@ -175,7 +176,10 @@ const TournamentListItem = ({ tournament }: TournamentListItemProps) => {
         <MenuItem onClick={handleMenuClose}>
           {t('exportData')}
         </MenuItem>
-        <MenuItem onClick={handleMenuClose} sx={{ color: 'error.main' }}>
+        <MenuItem onClick={() => { 
+          handleMenuClose(); 
+          onDelete?.(tournament.id); 
+        }} sx={{ color: 'error.main' }}>
           {t('deleteTournament')}
         </MenuItem>
       </Menu>

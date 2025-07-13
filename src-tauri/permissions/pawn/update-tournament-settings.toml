@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-update-tournament-settings"
+description = "Allows updating tournament tiebreak settings"
+commands.allow = ["update_tournament_settings"]
+
+[[permission]]
+identifier = "deny-update-tournament-settings"
+description = "Denies the update tournament settings command"
+commands.deny = ["update_tournament_settings"]
