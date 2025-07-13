@@ -4,13 +4,14 @@ use sqlx::sqlite::SqlitePoolOptions;
 use tracing::info;
 
 use super::{
-    db::sqlite::SqliteDb, 
+    db::{sqlite::SqliteDb, Db}, 
     service::{tournament::TournamentService, tiebreak::TiebreakCalculator}
 };
 
 pub struct State<D> {
     #[allow(dead_code)]
     pub app_data_dir: PathBuf,
+    pub db: Arc<D>,
     pub tournament_service: Arc<TournamentService<D>>,
     pub tiebreak_calculator: Arc<TiebreakCalculator<D>>,
 }
@@ -49,6 +50,7 @@ impl PawnState {
 
         Self {
             app_data_dir,
+            db: sqlite,
             tournament_service,
             tiebreak_calculator,
         }

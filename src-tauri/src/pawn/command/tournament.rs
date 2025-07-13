@@ -3,6 +3,7 @@ use tracing::instrument;
 
 use crate::pawn::{
     common::types::CommandResult,
+    db::Db,
     domain::{
         dto::{CreateTournament, CreatePlayer, CreateGame, UpdateTournamentSettings},
         model::{Tournament, Player, Game, TournamentDetails, PlayerResult, GameResult},
@@ -128,9 +129,15 @@ pub async fn get_tournament_standings(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<StandingsCalculationResult> {
-    // TODO: Load config from database once implemented
-    let mut config = TournamentTiebreakConfig::default();
-    config.tournament_id = tournament_id;
+    // Load config from database or use defaults
+    let config = match state.db.get_tournament_settings(tournament_id).await? {
+        Some(config) => config,
+        None => {
+            let mut config = TournamentTiebreakConfig::default();
+            config.tournament_id = tournament_id;
+            config
+        }
+    };
     
     Ok(state.tiebreak_calculator.calculate_standings(tournament_id, &config).await?)
 }
@@ -143,10 +150,14 @@ pub async fn get_tournament_settings(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<TournamentTiebreakConfig> {
-    // TODO: Load from database once implemented
-    let mut config = TournamentTiebreakConfig::default();
-    config.tournament_id = tournament_id;
-    Ok(config)
+    match state.db.get_tournament_settings(tournament_id).await? {
+        Some(config) => Ok(config),
+        None => {
+            let mut config = TournamentTiebreakConfig::default();
+            config.tournament_id = tournament_id;
+            Ok(config)
+        }
+    }
 }
 
 #[instrument(ret, skip(state))]
@@ -156,7 +167,7 @@ pub async fn update_tournament_settings(
     state: State<'_, PawnState>,
     settings: UpdateTournamentSettings,
 ) -> CommandResult<()> {
-    // TODO: Save to database once implemented
-    tracing::info!("Updating tournament settings: {:?}", settings);
+    state.db.upsert_tournament_settings(&settings).await?;
+    tracing::info!("Tournament settings updated successfully for tournament {}", settings.tournament_id);
     Ok(())
 }

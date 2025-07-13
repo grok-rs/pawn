@@ -2,6 +2,7 @@ use sqlx::SqlitePool;
 use tracing::instrument;
 
 use super::*;
+use crate::pawn::domain::tiebreak::TiebreakType;
 
 pub struct SqliteDb {
     pool: SqlitePool,
@@ -222,5 +223,70 @@ impl Db for SqliteDb {
         }
 
         Ok(results)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn get_tournament_settings(&self, tournament_id: i32) -> Result<Option<TournamentTiebreakConfig>, sqlx::Error> {
+        #[derive(sqlx::FromRow)]
+        struct TournamentSettingsRow {
+            tiebreak_order: String,
+            use_fide_defaults: bool,
+        }
+
+        let result: Option<TournamentSettingsRow> = sqlx::query_as(
+            r#"
+            SELECT tiebreak_order, use_fide_defaults
+            FROM tournament_settings
+            WHERE tournament_id = ?
+            "#
+        )
+        .bind(tournament_id)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        match result {
+            Some(row) => {
+                // Parse the JSON tiebreak_order string
+                let tiebreaks: Vec<TiebreakType> = serde_json::from_str(&row.tiebreak_order)
+                    .map_err(|e| sqlx::Error::Protocol(format!("Failed to parse tiebreak_order: {}", e)))?;
+                
+                Ok(Some(TournamentTiebreakConfig {
+                    tournament_id,
+                    tiebreaks,
+                    use_fide_defaults: row.use_fide_defaults,
+                }))
+            }
+            None => {
+                // Return default config if no settings exist
+                let mut config = TournamentTiebreakConfig::default();
+                config.tournament_id = tournament_id;
+                Ok(Some(config))
+            }
+        }
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn upsert_tournament_settings(&self, settings: &UpdateTournamentSettings) -> Result<(), sqlx::Error> {
+        // Serialize tiebreaks to JSON string
+        let tiebreak_order_json = serde_json::to_string(&settings.tiebreak_order)
+            .map_err(|e| sqlx::Error::Protocol(format!("Failed to serialize tiebreak_order: {}", e)))?;
+
+        sqlx::query(
+            r#"
+            INSERT INTO tournament_settings (tournament_id, tiebreak_order, use_fide_defaults)
+            VALUES (?, ?, ?)
+            ON CONFLICT(tournament_id) DO UPDATE SET
+                tiebreak_order = excluded.tiebreak_order,
+                use_fide_defaults = excluded.use_fide_defaults,
+                updated_at = CURRENT_TIMESTAMP
+            "#
+        )
+        .bind(settings.tournament_id)
+        .bind(tiebreak_order_json)
+        .bind(settings.use_fide_defaults)
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
     }
 }

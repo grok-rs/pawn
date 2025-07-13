@@ -161,5 +161,8 @@
   
   "tiebreakSettings": "Tiebreak Settings",
   "tiebreakConfiguration": "Configure how tied players are ranked",
-  "dragToReorder": "Drag to reorder tiebreak priority"
+  "dragToReorder": "Drag to reorder tiebreak priority",
+  "tournamentSettings": "Tournament Settings",
+  "tiebreakConfigDescription": "Configure the tiebreak rules for determining final standings when players have equal points.",
+  "save": "Save"
 }

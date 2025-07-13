@@ -1,6 +1,7 @@
 use super::domain::{
-    dto::{CreateTournament, CreatePlayer, CreateGame},
+    dto::{CreateTournament, CreatePlayer, CreateGame, UpdateTournamentSettings},
     model::{Tournament, Player, Game, TournamentDetails, PlayerResult, GameResult},
+    tiebreak::TournamentTiebreakConfig,
 };
 
 pub mod sqlite;
@@ -23,4 +24,8 @@ pub trait Db: Send + Sync {
     // Statistics
     async fn get_player_results(&self, tournament_id: i32) -> Result<Vec<PlayerResult>, sqlx::Error>;
     async fn get_game_results(&self, tournament_id: i32) -> Result<Vec<GameResult>, sqlx::Error>;
+    
+    // Tournament settings
+    async fn get_tournament_settings(&self, tournament_id: i32) -> Result<Option<TournamentTiebreakConfig>, sqlx::Error>;
+    async fn upsert_tournament_settings(&self, settings: &UpdateTournamentSettings) -> Result<(), sqlx::Error>;
 }

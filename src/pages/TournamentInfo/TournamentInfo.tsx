@@ -51,6 +51,7 @@ import type { TournamentDetails, StandingsCalculationResult } from '../../dto/bi
 import BaseLayout from '../../components/BaseLayout';
 import { StandingsTable } from '../../components/StandingsTable';
 import { exportStandingsToCsv, exportStandingsToPdf } from '../../utils/export';
+import TournamentSettings from './TournamentSettings';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -94,6 +95,7 @@ const TournamentInfoPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [hasMockData, setHasMockData] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -677,9 +679,12 @@ const TournamentInfoPage: React.FC = () => {
           open={Boolean(anchorEl)}
           onClose={handleMenuClose}
         >
-          <MenuItem onClick={handleMenuClose}>
+          <MenuItem onClick={() => {
+            handleMenuClose();
+            setSettingsOpen(true);
+          }}>
             <Edit fontSize="small" sx={{ mr: 1 }} />
-            Edit Tournament
+            Tournament Settings
           </MenuItem>
           <MenuItem onClick={handleMenuClose}>
             <Download fontSize="small" sx={{ mr: 1 }} />
@@ -698,6 +703,19 @@ const TournamentInfoPage: React.FC = () => {
             {t('deleteTournament')}
           </MenuItem>
         </Menu>
+        
+        {/* Tournament Settings Dialog */}
+        <TournamentSettings
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          tournamentId={parseInt(id!)}
+          onSettingsUpdated={() => {
+            // Refresh standings when settings are updated
+            if (id) {
+              fetchStandings(parseInt(id));
+            }
+          }}
+        />
       </Box>
     </BaseLayout>
   );
