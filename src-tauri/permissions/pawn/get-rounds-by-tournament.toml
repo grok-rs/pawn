@@ -1,0 +1,6 @@
+"$schema" = "../../../gen/schemas/desktop-schema.json"
+
+[[permission]]
+identifier = "get-rounds-by-tournament"
+description = "Permission to get all rounds for a tournament"
+commands.allow = ["get_rounds_by_tournament"]

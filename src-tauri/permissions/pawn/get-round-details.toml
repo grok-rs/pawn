@@ -1,0 +1,6 @@
+"$schema" = "../../../gen/schemas/desktop-schema.json"
+
+[[permission]]
+identifier = "get-round-details"
+description = "Permission to get detailed information about a round"
+commands.allow = ["get_round_details"]

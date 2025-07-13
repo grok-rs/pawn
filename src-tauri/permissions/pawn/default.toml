@@ -15,7 +15,18 @@ permissions = [
     "allow-get-player-results",
     "allow-get-game-results",
     "allow-populate-mock-data",
+    "allow-populate-mock-tournaments",
     "allow-get-tournament-standings",
     "allow-get-tournament-settings",
-    "allow-update-tournament-settings"
+    "allow-update-tournament-settings",
+    "create-round",
+    "create-next-round",
+    "create-pairings-as-games",
+    "get-rounds-by-tournament",
+    "get-current-round",
+    "update-round-status",
+    "get-round-details",
+    "generate-pairings",
+    "complete-round",
+    "update-tournament-pairing-method"
 ]

@@ -1,6 +1,8 @@
 use std::fs;
 
+#[cfg(debug_assertions)]
 use specta_typescript::formatter::prettier;
+#[cfg(debug_assertions)]
 use specta_typescript::{BigIntExportBehavior, Typescript};
 use state::PawnState;
 use tauri::{Runtime, plugin::TauriPlugin};
@@ -35,9 +37,20 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::tournament::get_player_results,
             command::tournament::get_game_results,
             command::tournament::populate_mock_data,
+            command::tournament::populate_mock_tournaments,
             command::tournament::get_tournament_standings,
             command::tournament::get_tournament_settings,
             command::tournament::update_tournament_settings,
+            command::round::get_rounds_by_tournament,
+            command::round::get_current_round,
+            command::round::create_round,
+            command::round::update_round_status,
+            command::round::get_round_details,
+            command::round::generate_pairings,
+            command::round::create_pairings_as_games,
+            command::round::complete_round,
+            command::round::create_next_round,
+            command::round::update_tournament_pairing_method,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Throw);
 

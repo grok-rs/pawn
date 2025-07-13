@@ -1,6 +1,6 @@
 use super::domain::{
-    dto::{CreateTournament, CreatePlayer, CreateGame, UpdateTournamentSettings},
-    model::{Tournament, Player, Game, TournamentDetails, PlayerResult, GameResult},
+    dto::{CreateTournament, CreatePlayer, CreateGame, UpdateTournamentSettings, CreateRound},
+    model::{Tournament, Player, Game, TournamentDetails, PlayerResult, GameResult, Round},
     tiebreak::TournamentTiebreakConfig,
 };
 
@@ -29,4 +29,12 @@ pub trait Db: Send + Sync {
     // Tournament settings
     async fn get_tournament_settings(&self, tournament_id: i32) -> Result<Option<TournamentTiebreakConfig>, sqlx::Error>;
     async fn upsert_tournament_settings(&self, settings: &UpdateTournamentSettings) -> Result<(), sqlx::Error>;
+    
+    // Round operations
+    async fn get_rounds_by_tournament(&self, tournament_id: i32) -> Result<Vec<Round>, sqlx::Error>;
+    async fn get_current_round(&self, tournament_id: i32) -> Result<Option<Round>, sqlx::Error>;
+    async fn get_round(&self, round_id: i32) -> Result<Round, sqlx::Error>;
+    async fn create_round(&self, data: CreateRound) -> Result<Round, sqlx::Error>;
+    async fn update_round_status(&self, round_id: i32, status: &str) -> Result<Round, sqlx::Error>;
+    async fn get_games_by_round(&self, tournament_id: i32, round_number: i32) -> Result<Vec<GameResult>, sqlx::Error>;
 }

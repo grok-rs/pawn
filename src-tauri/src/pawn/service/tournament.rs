@@ -138,9 +138,77 @@ impl<D: Db> TournamentService<D> {
     }
 
     // Utility methods for populating mock data
-    pub async fn populate_mock_data(&self, tournament_id: i32) -> Result<(), PawnError> {
-        // Create mock players
-        let mock_players = vec![
+    pub async fn populate_mock_tournaments(&self) -> Result<(), PawnError> {
+        // Create multiple diverse tournaments
+        let tournaments = vec![
+            CreateTournament {
+                name: "World Championship Candidates 2024".to_string(),
+                location: "Madrid, Spain".to_string(),
+                date: "2024-04-15".to_string(),
+                time_type: "classical".to_string(),
+                player_count: 8,
+                rounds_played: 2,
+                total_rounds: 14,
+                country_code: "ES".to_string(),
+            },
+            CreateTournament {
+                name: "Grand Prix Rapid Open".to_string(),
+                location: "Dubai, UAE".to_string(),
+                date: "2024-03-20".to_string(),
+                time_type: "rapid".to_string(),
+                player_count: 6,
+                rounds_played: 3,
+                total_rounds: 9,
+                country_code: "AE".to_string(),
+            },
+            CreateTournament {
+                name: "Speed Chess Championship".to_string(),
+                location: "Saint Louis, USA".to_string(),
+                date: "2024-02-10".to_string(),
+                time_type: "blitz".to_string(),
+                player_count: 8,
+                rounds_played: 4,
+                total_rounds: 7,
+                country_code: "US".to_string(),
+            },
+            CreateTournament {
+                name: "Local Club Championship".to_string(),
+                location: "London Chess Club".to_string(),
+                date: "2024-01-28".to_string(),
+                time_type: "classical".to_string(),
+                player_count: 6,
+                rounds_played: 2,
+                total_rounds: 5,
+                country_code: "GB".to_string(),
+            },
+        ];
+
+        for tournament_data in tournaments {
+            let tournament = self.create_tournament(tournament_data.clone()).await?;
+            
+            // Populate each tournament with appropriate players and games
+            match tournament_data.name.as_str() {
+                "World Championship Candidates 2024" => {
+                    self.populate_candidates_tournament(tournament.id).await?;
+                }
+                "Grand Prix Rapid Open" => {
+                    self.populate_rapid_tournament(tournament.id).await?;
+                }
+                "Speed Chess Championship" => {
+                    self.populate_blitz_tournament(tournament.id).await?;
+                }
+                "Local Club Championship" => {
+                    self.populate_club_tournament(tournament.id).await?;
+                }
+                _ => {}
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn populate_candidates_tournament(&self, tournament_id: i32) -> Result<(), PawnError> {
+        let players = vec![
             CreatePlayer {
                 tournament_id,
                 name: "Magnus Carlsen".to_string(),
@@ -177,16 +245,27 @@ impl<D: Db> TournamentService<D> {
                 rating: Some(2780),
                 country_code: Some("US".to_string()),
             },
+            CreatePlayer {
+                tournament_id,
+                name: "Hikaru Nakamura".to_string(),
+                rating: Some(2780),
+                country_code: Some("US".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Vidit Gujrathi".to_string(),
+                rating: Some(2750),
+                country_code: Some("IN".to_string()),
+            },
         ];
 
         let mut player_ids = Vec::new();
-        for player_data in mock_players {
+        for player_data in players {
             let player = self.create_player(player_data).await?;
             player_ids.push(player.id);
         }
 
-        // Create mock games (round-robin first round)
-        let mock_games = vec![
+        let games = vec![
             CreateGame {
                 tournament_id,
                 round_number: 1,
@@ -200,6 +279,361 @@ impl<D: Db> TournamentService<D> {
                 white_player_id: player_ids[2],
                 black_player_id: player_ids[3],
                 result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[4],
+                black_player_id: player_ids[5],
+                result: "0-1".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[6],
+                black_player_id: player_ids[7],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 2,
+                white_player_id: player_ids[1],
+                black_player_id: player_ids[2],
+                result: "1/2-1/2".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 2,
+                white_player_id: player_ids[3],
+                black_player_id: player_ids[4],
+                result: "0-1".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 2,
+                white_player_id: player_ids[5],
+                black_player_id: player_ids[6],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 2,
+                white_player_id: player_ids[7],
+                black_player_id: player_ids[0],
+                result: "1/2-1/2".to_string(),
+            },
+        ];
+
+        for game_data in games {
+            self.create_game(game_data).await?;
+        }
+
+        Ok(())
+    }
+
+    async fn populate_rapid_tournament(&self, tournament_id: i32) -> Result<(), PawnError> {
+        let players = vec![
+            CreatePlayer {
+                tournament_id,
+                name: "Maxime Vachier-Lagrave".to_string(),
+                rating: Some(2780),
+                country_code: Some("FR".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Levon Aronian".to_string(),
+                rating: Some(2770),
+                country_code: Some("US".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Teimour Radjabov".to_string(),
+                rating: Some(2760),
+                country_code: Some("AZ".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Shakhriyar Mamedyarov".to_string(),
+                rating: Some(2740),
+                country_code: Some("AZ".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Alexander Grischuk".to_string(),
+                rating: Some(2730),
+                country_code: Some("RU".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Jan-Krzysztof Duda".to_string(),
+                rating: Some(2720),
+                country_code: Some("PL".to_string()),
+            },
+        ];
+
+        let mut player_ids = Vec::new();
+        for player_data in players {
+            let player = self.create_player(player_data).await?;
+            player_ids.push(player.id);
+        }
+
+        let games = vec![
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[0],
+                black_player_id: player_ids[1],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[2],
+                black_player_id: player_ids[3],
+                result: "1/2-1/2".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[4],
+                black_player_id: player_ids[5],
+                result: "0-1".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 2,
+                white_player_id: player_ids[1],
+                black_player_id: player_ids[2],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 2,
+                white_player_id: player_ids[3],
+                black_player_id: player_ids[4],
+                result: "1/2-1/2".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 2,
+                white_player_id: player_ids[5],
+                black_player_id: player_ids[0],
+                result: "0-1".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 3,
+                white_player_id: player_ids[0],
+                black_player_id: player_ids[3],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 3,
+                white_player_id: player_ids[1],
+                black_player_id: player_ids[4],
+                result: "1/2-1/2".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 3,
+                white_player_id: player_ids[2],
+                black_player_id: player_ids[5],
+                result: "1-0".to_string(),
+            },
+        ];
+
+        for game_data in games {
+            self.create_game(game_data).await?;
+        }
+
+        Ok(())
+    }
+
+    async fn populate_blitz_tournament(&self, tournament_id: i32) -> Result<(), PawnError> {
+        let players = vec![
+            CreatePlayer {
+                tournament_id,
+                name: "Alireza Firouzja".to_string(),
+                rating: Some(2800),
+                country_code: Some("FR".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Praggnanandhaa Rameshbabu".to_string(),
+                rating: Some(2750),
+                country_code: Some("IN".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Nodirbek Abdusattorov".to_string(),
+                rating: Some(2740),
+                country_code: Some("UZ".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Hans Niemann".to_string(),
+                rating: Some(2720),
+                country_code: Some("US".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Vincent Keymer".to_string(),
+                rating: Some(2710),
+                country_code: Some("DE".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Arjun Erigaisi".to_string(),
+                rating: Some(2700),
+                country_code: Some("IN".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Dommaraju Gukesh".to_string(),
+                rating: Some(2690),
+                country_code: Some("IN".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Christopher Yoo".to_string(),
+                rating: Some(2680),
+                country_code: Some("US".to_string()),
+            },
+        ];
+
+        let mut player_ids = Vec::new();
+        for player_data in players {
+            let player = self.create_player(player_data).await?;
+            player_ids.push(player.id);
+        }
+
+        let games = vec![
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[0],
+                black_player_id: player_ids[1],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[2],
+                black_player_id: player_ids[3],
+                result: "0-1".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[4],
+                black_player_id: player_ids[5],
+                result: "1/2-1/2".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[6],
+                black_player_id: player_ids[7],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 2,
+                white_player_id: player_ids[1],
+                black_player_id: player_ids[2],
+                result: "1/2-1/2".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 2,
+                white_player_id: player_ids[3],
+                black_player_id: player_ids[4],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 2,
+                white_player_id: player_ids[5],
+                black_player_id: player_ids[6],
+                result: "0-1".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 2,
+                white_player_id: player_ids[7],
+                black_player_id: player_ids[0],
+                result: "0-1".to_string(),
+            },
+        ];
+
+        for game_data in games {
+            self.create_game(game_data).await?;
+        }
+
+        Ok(())
+    }
+
+    async fn populate_club_tournament(&self, tournament_id: i32) -> Result<(), PawnError> {
+        let players = vec![
+            CreatePlayer {
+                tournament_id,
+                name: "David Johnson".to_string(),
+                rating: Some(2200),
+                country_code: Some("GB".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Sarah Williams".to_string(),
+                rating: Some(2100),
+                country_code: Some("GB".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Michael Brown".to_string(),
+                rating: Some(2000),
+                country_code: Some("GB".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Emma Davis".to_string(),
+                rating: Some(1950),
+                country_code: Some("GB".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "James Wilson".to_string(),
+                rating: Some(1900),
+                country_code: Some("GB".to_string()),
+            },
+            CreatePlayer {
+                tournament_id,
+                name: "Alice Smith".to_string(),
+                rating: Some(1850),
+                country_code: Some("GB".to_string()),
+            },
+        ];
+
+        let mut player_ids = Vec::new();
+        for player_data in players {
+            let player = self.create_player(player_data).await?;
+            player_ids.push(player.id);
+        }
+
+        let games = vec![
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[0],
+                black_player_id: player_ids[1],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[2],
+                black_player_id: player_ids[3],
+                result: "1/2-1/2".to_string(),
             },
             CreateGame {
                 tournament_id,
@@ -231,10 +665,15 @@ impl<D: Db> TournamentService<D> {
             },
         ];
 
-        for game_data in mock_games {
+        for game_data in games {
             self.create_game(game_data).await?;
         }
 
         Ok(())
+    }
+
+    pub async fn populate_mock_data(&self, tournament_id: i32) -> Result<(), PawnError> {
+        // Legacy method - still populate single tournament for compatibility
+        self.populate_candidates_tournament(tournament_id).await
     }
 }

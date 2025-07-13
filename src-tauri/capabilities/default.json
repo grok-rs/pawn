@@ -18,9 +18,20 @@
     "pawn:allow-get-player-results",
     "pawn:allow-get-game-results",
     "pawn:allow-populate-mock-data",
+    "pawn:allow-populate-mock-tournaments",
     "pawn:allow-delete-tournament",
     "pawn:allow-get-tournament-standings",
     "pawn:allow-get-tournament-settings",
-    "pawn:allow-update-tournament-settings"
+    "pawn:allow-update-tournament-settings",
+    "pawn:create-round",
+    "pawn:create-next-round",
+    "pawn:create-pairings-as-games",
+    "pawn:get-rounds-by-tournament",
+    "pawn:get-current-round",
+    "pawn:update-round-status",
+    "pawn:get-round-details",
+    "pawn:generate-pairings",
+    "pawn:complete-round",
+    "pawn:update-tournament-pairing-method"
   ]
 }

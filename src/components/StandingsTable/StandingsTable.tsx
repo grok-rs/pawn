@@ -127,6 +127,9 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
           sx={{
             cursor: onPlayerClick ? 'pointer' : 'default',
             '&:hover': onPlayerClick ? { textDecoration: 'underline' } : {},
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
           }}
           onClick={() => onPlayerClick?.(params.row.player.id)}
         >
@@ -134,9 +137,17 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
             {params.row.player.name}
           </Typography>
           {params.row.player.country_code && (
-            <Typography variant="caption" color="text.secondary">
-              {params.row.player.country_code}
-            </Typography>
+            <Chip 
+              label={params.row.player.country_code} 
+              size="small" 
+              variant="outlined"
+              sx={{ 
+                height: 20, 
+                fontSize: '0.75rem',
+                color: 'text.secondary',
+                borderColor: 'text.secondary',
+              }}
+            />
           )}
         </Box>
       ),

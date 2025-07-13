@@ -41,6 +41,9 @@ async getGameResults(tournamentId: number) : Promise<GameResult[]> {
 async populateMockData(tournamentId: number) : Promise<null> {
     return await TAURI_INVOKE("plugin:pawn|populate_mock_data", { tournamentId });
 },
+async populateMockTournaments() : Promise<null> {
+    return await TAURI_INVOKE("plugin:pawn|populate_mock_tournaments");
+},
 async getTournamentStandings(tournamentId: number) : Promise<StandingsCalculationResult> {
     return await TAURI_INVOKE("plugin:pawn|get_tournament_standings", { tournamentId });
 },
@@ -49,6 +52,36 @@ async getTournamentSettings(tournamentId: number) : Promise<TournamentTiebreakCo
 },
 async updateTournamentSettings(settings: UpdateTournamentSettings) : Promise<null> {
     return await TAURI_INVOKE("plugin:pawn|update_tournament_settings", { settings });
+},
+async getRoundsByTournament(tournamentId: number) : Promise<Round[]> {
+    return await TAURI_INVOKE("plugin:pawn|get_rounds_by_tournament", { tournamentId });
+},
+async getCurrentRound(tournamentId: number) : Promise<Round | null> {
+    return await TAURI_INVOKE("plugin:pawn|get_current_round", { tournamentId });
+},
+async createRound(data: CreateRound) : Promise<Round> {
+    return await TAURI_INVOKE("plugin:pawn|create_round", { data });
+},
+async updateRoundStatus(data: UpdateRoundStatus) : Promise<Round> {
+    return await TAURI_INVOKE("plugin:pawn|update_round_status", { data });
+},
+async getRoundDetails(roundId: number) : Promise<RoundDetails> {
+    return await TAURI_INVOKE("plugin:pawn|get_round_details", { roundId });
+},
+async generatePairings(request: GeneratePairingsRequest) : Promise<Pairing[]> {
+    return await TAURI_INVOKE("plugin:pawn|generate_pairings", { request });
+},
+async createPairingsAsGames(tournamentId: number, roundNumber: number, pairings: Pairing[]) : Promise<GameResult[]> {
+    return await TAURI_INVOKE("plugin:pawn|create_pairings_as_games", { tournamentId, roundNumber, pairings });
+},
+async completeRound(roundId: number) : Promise<Round> {
+    return await TAURI_INVOKE("plugin:pawn|complete_round", { roundId });
+},
+async createNextRound(tournamentId: number) : Promise<Round> {
+    return await TAURI_INVOKE("plugin:pawn|create_next_round", { tournamentId });
+},
+async updateTournamentPairingMethod(data: UpdateTournamentPairingMethod) : Promise<null> {
+    return await TAURI_INVOKE("plugin:pawn|update_tournament_pairing_method", { data });
 }
 }
 
@@ -64,12 +97,18 @@ async updateTournamentSettings(settings: UpdateTournamentSettings) : Promise<nul
 
 export type CreateGame = { tournament_id: number; round_number: number; white_player_id: number; black_player_id: number; result: string }
 export type CreatePlayer = { tournament_id: number; name: string; rating: number | null; country_code: string | null }
+export type CreateRound = { tournament_id: number; round_number: number }
 export type CreateTournament = { name: string; location: string; date: string; time_type: string; player_count: number; rounds_played: number; total_rounds: number; country_code: string }
 export type Game = { id: number; tournament_id: number; round_number: number; white_player_id: number; black_player_id: number; result: string; created_at: string }
 export type GameResult = { game: Game; white_player: Player; black_player: Player }
+export type GeneratePairingsRequest = { tournament_id: number; round_number: number; pairing_method: string }
+export type Pairing = { white_player: Player; black_player: Player | null; board_number: number }
 export type Player = { id: number; tournament_id: number; name: string; rating: number | null; country_code: string | null; created_at: string }
 export type PlayerResult = { player: Player; points: number; games_played: number; wins: number; draws: number; losses: number }
 export type PlayerStanding = { player: Player; rank: number; points: number; games_played: number; wins: number; draws: number; losses: number; tiebreak_scores: TiebreakScore[]; performance_rating: number | null; rating_change: number | null }
+export type Round = { id: number; tournament_id: number; round_number: number; status: string; created_at: string; completed_at: string | null }
+export type RoundDetails = { round: Round; games: GameResult[]; status: RoundStatus }
+export type RoundStatus = "Upcoming" | "InProgress" | "Completed"
 export type StandingsCalculationResult = { standings: PlayerStanding[]; last_updated: string; tiebreak_config: TournamentTiebreakConfig }
 export type TiebreakScore = { tiebreak_type: TiebreakType; value: number; display_value: string }
 export type TiebreakType = "buchholz_full" | "buchholz_cut_1" | "buchholz_cut_2" | "buchholz_median" | "sonneborn_berger" | "progressive_score" | "cumulative_score" | "direct_encounter" | "average_rating_of_opponents" | "tournament_performance_rating" | "number_of_wins" | "number_of_games_with_black" | "number_of_wins_with_black" | "koya_system" | "aroc_cut_1" | "aroc_cut_2" | "match_points" | "game_points" | "board_points"
@@ -88,6 +127,8 @@ message: string;
  * Detailed error message throwing by the low level api
  */
 details: string }
+export type UpdateRoundStatus = { round_id: number; status: string }
+export type UpdateTournamentPairingMethod = { tournament_id: number; pairing_method: string }
 export type UpdateTournamentSettings = { tournament_id: number; tiebreak_order: TiebreakType[]; use_fide_defaults: boolean }
 
 /** tauri-specta globals **/

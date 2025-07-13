@@ -131,6 +131,15 @@ pub async fn populate_mock_data(
     Ok(state.tournament_service.populate_mock_data(tournament_id).await?)
 }
 
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn populate_mock_tournaments(
+    state: State<'_, PawnState>,
+) -> CommandResult<()> {
+    Ok(state.tournament_service.populate_mock_tournaments().await?)
+}
+
 // Standings with tiebreaks
 #[instrument(ret, skip(state))]
 #[tauri::command]

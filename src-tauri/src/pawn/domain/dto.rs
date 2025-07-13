@@ -37,3 +37,28 @@ pub struct UpdateTournamentSettings {
     pub tiebreak_order: Vec<TiebreakType>,
     pub use_fide_defaults: bool,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct CreateRound {
+    pub tournament_id: i32,
+    pub round_number: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct UpdateRoundStatus {
+    pub round_id: i32,
+    pub status: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct GeneratePairingsRequest {
+    pub tournament_id: i32,
+    pub round_number: i32,
+    pub pairing_method: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct UpdateTournamentPairingMethod {
+    pub tournament_id: i32,
+    pub pairing_method: String,
+}

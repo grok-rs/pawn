@@ -1,0 +1,6 @@
+"$schema" = "../../../gen/schemas/desktop-schema.json"
+
+[[permission]]
+identifier = "update-tournament-pairing-method"
+description = "Permission to update tournament pairing method"
+commands.allow = ["update_tournament_pairing_method"]

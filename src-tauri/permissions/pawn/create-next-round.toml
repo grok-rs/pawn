@@ -1,0 +1,6 @@
+"$schema" = "../../../gen/schemas/desktop-schema.json"
+
+[[permission]]
+identifier = "create-next-round"
+description = "Permission to create the next round in a tournament"
+commands.allow = ["create_next_round"]

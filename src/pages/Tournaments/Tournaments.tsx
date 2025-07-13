@@ -56,6 +56,7 @@ const TournamentsPage = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tournamentToDelete, setTournamentToDelete] = useState<Tournament | null>(null);
+  const [populatingTournaments, setPopulatingTournaments] = useState(false);
 
   const stats = {
     total: tournaments.length,
@@ -151,6 +152,20 @@ const TournamentsPage = () => {
     setTournamentToDelete(null);
   };
 
+  const handlePopulateSampleTournaments = async () => {
+    setPopulatingTournaments(true);
+    try {
+      await commands.populateMockTournaments();
+      // Refresh the tournaments list
+      const data = await commands.getTournaments();
+      setTournaments(data);
+      setFilteredTournaments(data);
+    } catch (error) {
+      console.error("Failed to populate sample tournaments:", error);
+    }
+    setPopulatingTournaments(false);
+  };
+
   const StatCard = ({ title, value, icon, color }: any) => (
     <Card
       sx={{
@@ -193,7 +208,11 @@ const TournamentsPage = () => {
         {/* Page Header */}
         <Box sx={{ mb: 4 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h4" fontWeight={700}>
+            <Typography 
+              variant="h4" 
+              fontWeight={700}
+              sx={{ color: theme.palette.text.primary }}
+            >
               {t('tournaments')}
             </Typography>
             <Button
@@ -363,13 +382,23 @@ const TournamentsPage = () => {
                 : 'Get started by creating your first tournament'}
             </Typography>
             {filter === 'all' && !searchQuery && (
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={() => navigate(APP_ROUTES.NEW_TOURNAMENT)}
-              >
-                Create Tournament
-              </Button>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                <Button
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={() => navigate(APP_ROUTES.NEW_TOURNAMENT)}
+                >
+                  Create Tournament
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<EmojiEvents />}
+                  onClick={handlePopulateSampleTournaments}
+                  disabled={populatingTournaments}
+                >
+                  {populatingTournaments ? 'Adding Sample Tournaments...' : 'Add Sample Tournaments'}
+                </Button>
+              </Box>
             )}
           </Paper>
         )}

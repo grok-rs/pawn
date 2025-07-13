@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-populate-mock-tournaments"
+description = "Allows populating multiple sample tournaments for testing"
+commands.allow = ["populate_mock_tournaments"]
+
+[[permission]]
+identifier = "deny-populate-mock-tournaments"
+description = "Denies the populate mock tournaments command"
+commands.deny = ["populate_mock_tournaments"]

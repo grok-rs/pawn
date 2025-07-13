@@ -50,11 +50,13 @@ import {
   Edit,
   Print,
   Share,
+  PlayCircleOutline,
 } from '@mui/icons-material';
 import { commands } from '../../dto/bindings';
 import type { TournamentDetails, StandingsCalculationResult } from '../../dto/bindings';
 import BaseLayout from '../../components/BaseLayout';
 import { StandingsTable } from '../../components/StandingsTable';
+import RoundManager from '../../components/RoundManager';
 import { exportStandingsToCsv, exportStandingsToPdf } from '../../utils/export';
 import TournamentSettings from './TournamentSettings';
 
@@ -308,7 +310,7 @@ const TournamentInfoPage: React.FC = () => {
         <Box sx={{ mb: 4 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
             <Box>
-              <Typography variant="h4" component="h1" fontWeight={700} gutterBottom>
+              <Typography variant="h4" component="h1" fontWeight={700} gutterBottom color="text.primary">
                 {tournament.name}
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, color: 'text.secondary' }}>
@@ -488,16 +490,22 @@ const TournamentInfoPage: React.FC = () => {
                 {...a11yProps(0)}
               />
               <Tab
+                icon={<PlayCircleOutline />}
+                label="Rounds"
+                iconPosition="start"
+                {...a11yProps(1)}
+              />
+              <Tab
                 icon={<Games />}
                 label={t('gamesTab')}
                 iconPosition="start"
-                {...a11yProps(1)}
+                {...a11yProps(2)}
               />
               <Tab
                 icon={<People />}
                 label={t('playersTab')}
                 iconPosition="start"
-                {...a11yProps(2)}
+                {...a11yProps(3)}
               />
             </Tabs>
           </Paper>
@@ -580,6 +588,17 @@ const TournamentInfoPage: React.FC = () => {
           </TabPanel>
 
           <TabPanel value={tabValue} index={1}>
+            {/* Round Management */}
+            <RoundManager 
+              tournamentId={parseInt(id!)}
+              onRoundUpdate={() => {
+                // Refresh tournament details when rounds are updated
+                fetchTournamentDetails();
+              }}
+            />
+          </TabPanel>
+
+          <TabPanel value={tabValue} index={2}>
             {/* Games Table */}
             <TableContainer component={Paper}>
               <Table>
@@ -644,7 +663,7 @@ const TournamentInfoPage: React.FC = () => {
             </TableContainer>
           </TabPanel>
 
-          <TabPanel value={tabValue} index={2}>
+          <TabPanel value={tabValue} index={3}>
             {/* Players Table */}
             <TableContainer component={Paper}>
               <Table>

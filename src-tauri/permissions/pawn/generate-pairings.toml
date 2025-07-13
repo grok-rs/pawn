@@ -1,0 +1,6 @@
+"$schema" = "../../../gen/schemas/desktop-schema.json"
+
+[[permission]]
+identifier = "generate-pairings"
+description = "Permission to generate pairings for a round"
+commands.allow = ["generate_pairings"]
