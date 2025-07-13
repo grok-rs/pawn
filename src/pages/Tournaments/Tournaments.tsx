@@ -20,7 +20,6 @@ import {
   Add,
   Search,
   FilterList,
-  MoreVert,
   EmojiEvents,
   Schedule,
   CheckCircle,

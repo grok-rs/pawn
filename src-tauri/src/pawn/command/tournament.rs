@@ -6,6 +6,7 @@ use crate::pawn::{
     domain::{
         dto::{CreateTournament, CreatePlayer, CreateGame},
         model::{Tournament, Player, Game, TournamentDetails, PlayerResult, GameResult},
+        tiebreak::{StandingsCalculationResult, TournamentTiebreakConfig},
     },
     state::PawnState,
 };
@@ -117,4 +118,19 @@ pub async fn populate_mock_data(
     tournament_id: i32,
 ) -> CommandResult<()> {
     Ok(state.tournament_service.populate_mock_data(tournament_id).await?)
+}
+
+// Standings with tiebreaks
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn get_tournament_standings(
+    state: State<'_, PawnState>,
+    tournament_id: i32,
+) -> CommandResult<StandingsCalculationResult> {
+    // For now, use default tiebreak configuration
+    let mut config = TournamentTiebreakConfig::default();
+    config.tournament_id = tournament_id;
+    
+    Ok(state.tiebreak_calculator.calculate_standings(tournament_id, &config).await?)
 }

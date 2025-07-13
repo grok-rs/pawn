@@ -134,8 +134,9 @@ function DataTable<T extends Record<string, any>>({
                 }}
               >
                 {columns.map((column) => {
-                  const value = column.id.includes('.')
-                    ? column.id.split('.').reduce((obj, key) => obj?.[key], row as any)
+                  const columnId = String(column.id);
+                  const value = columnId.includes('.')
+                    ? columnId.split('.').reduce((obj, key) => obj?.[key], row as any)
                     : row[column.id as keyof T];
 
                   return (

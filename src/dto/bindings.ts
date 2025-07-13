@@ -37,6 +37,9 @@ async getGameResults(tournamentId: number) : Promise<GameResult[]> {
 },
 async populateMockData(tournamentId: number) : Promise<null> {
     return await TAURI_INVOKE("plugin:pawn|populate_mock_data", { tournamentId });
+},
+async getTournamentStandings(tournamentId: number) : Promise<StandingsCalculationResult> {
+    return await TAURI_INVOKE("plugin:pawn|get_tournament_standings", { tournamentId });
 }
 }
 
@@ -57,8 +60,13 @@ export type Game = { id: number; tournament_id: number; round_number: number; wh
 export type GameResult = { game: Game; white_player: Player; black_player: Player }
 export type Player = { id: number; tournament_id: number; name: string; rating: number | null; country_code: string | null; created_at: string }
 export type PlayerResult = { player: Player; points: number; games_played: number; wins: number; draws: number; losses: number }
+export type PlayerStanding = { player: Player; rank: number; points: number; games_played: number; wins: number; draws: number; losses: number; tiebreak_scores: TiebreakScore[]; performance_rating: number | null; rating_change: number | null }
+export type StandingsCalculationResult = { standings: PlayerStanding[]; last_updated: string; tiebreak_config: TournamentTiebreakConfig }
+export type TiebreakScore = { tiebreak_type: TiebreakType; value: number; display_value: string }
+export type TiebreakType = "buchholz_full" | "buchholz_cut_1" | "buchholz_cut_2" | "buchholz_median" | "sonneborn_berger" | "progressive_score" | "cumulative_score" | "direct_encounter" | "average_rating_of_opponents" | "tournament_performance_rating" | "number_of_wins" | "number_of_games_with_black" | "number_of_wins_with_black" | "koya_system" | "aroc_cut_1" | "aroc_cut_2" | "match_points" | "game_points" | "board_points"
 export type Tournament = { id: number; name: string; location: string; date: string; time_type: string; player_count: number; rounds_played: number; total_rounds: number; country_code: string }
 export type TournamentDetails = { tournament: Tournament; players: PlayerResult[]; games: GameResult[] }
+export type TournamentTiebreakConfig = { tournament_id: number; tiebreaks: TiebreakType[]; use_fide_defaults: boolean }
 /**
  * Global error object returned by all commands
  */

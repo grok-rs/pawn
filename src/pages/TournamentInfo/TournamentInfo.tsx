@@ -27,8 +27,8 @@ import {
   Breadcrumbs,
   Link,
   useTheme,
-  Skeleton,
   Divider,
+  Container,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -47,8 +47,10 @@ import {
   Share,
 } from '@mui/icons-material';
 import { commands } from '../../dto/bindings';
-import type { TournamentDetails } from '../../dto/bindings';
+import type { TournamentDetails, StandingsCalculationResult } from '../../dto/bindings';
 import BaseLayout from '../../components/BaseLayout';
+import { StandingsTable } from '../../components/StandingsTable';
+import { exportStandingsToCsv, exportStandingsToPdf } from '../../utils/export';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -85,7 +87,9 @@ const TournamentInfoPage: React.FC = () => {
   const theme = useTheme();
   const { t } = useTranslation();
   const [tournamentDetails, setTournamentDetails] = useState<TournamentDetails | null>(null);
+  const [standings, setStandings] = useState<StandingsCalculationResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingStandings, setLoadingStandings] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
   const [hasMockData, setHasMockData] = useState(false);
@@ -115,11 +119,29 @@ const TournamentInfoPage: React.FC = () => {
       const details = await commands.getTournamentDetails(tournamentId);
       setTournamentDetails(details);
       setHasMockData(details.players.length > 0);
+      
+      // Fetch standings with tiebreaks if we have players
+      if (details.players.length > 0) {
+        fetchStandings(tournamentId);
+      }
     } catch (err) {
       console.error('Failed to fetch tournament details:', err);
       setError(t('failedToLoadTournamentDetails'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStandings = async (tournamentId: number) => {
+    setLoadingStandings(true);
+    try {
+      const standingsData = await commands.getTournamentStandings(tournamentId);
+      setStandings(standingsData);
+    } catch (err) {
+      console.error('Failed to fetch standings:', err);
+      // Don't show error, just use regular standings
+    } finally {
+      setLoadingStandings(false);
     }
   };
 
@@ -135,6 +157,22 @@ const TournamentInfoPage: React.FC = () => {
       console.error('Failed to populate mock data:', err);
       setError(t('failedToPopulateMockData'));
     }
+  };
+
+  const handleExportCsv = () => {
+    if (standings && tournamentDetails) {
+      exportStandingsToCsv(standings.standings, tournamentDetails.tournament.name);
+    }
+  };
+
+  const handleExportPdf = () => {
+    if (standings && tournamentDetails) {
+      exportStandingsToPdf(standings.standings, tournamentDetails.tournament.name);
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   useEffect(() => {
@@ -437,67 +475,78 @@ const TournamentInfoPage: React.FC = () => {
           {/* Tab Panels */}
           <TabPanel value={tabValue} index={0}>
             {/* Standings Table */}
-            <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
-              <Table sx={{ minWidth: 650 }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>{t('rank')}</TableCell>
-                    <TableCell>{t('player')}</TableCell>
-                    <TableCell>{t('rating')}</TableCell>
-                    <TableCell>{t('country')}</TableCell>
-                    <TableCell align="center">{t('points')}</TableCell>
-                    <TableCell align="center">{t('games')}</TableCell>
-                    <TableCell align="center">{t('wins')}</TableCell>
-                    <TableCell align="center">{t('draws')}</TableCell>
-                    <TableCell align="center">{t('losses')}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {players.map((playerResult, index) => (
-                    <TableRow key={playerResult.player.id} hover>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {index + 1}
-                          {index === 0 && <EmojiEvents color="warning" />}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="subtitle2">
-                          {playerResult.player.name}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        {playerResult.player.rating || 'Unrated'}
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Flag fontSize="small" />
-                          {playerResult.player.country_code || 'N/A'}
-                        </Box>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography variant="h6" color="primary">
-                          {playerResult.points}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">{playerResult.games_played}</TableCell>
-                      <TableCell align="center">{playerResult.wins}</TableCell>
-                      <TableCell align="center">{playerResult.draws}</TableCell>
-                      <TableCell align="center">{playerResult.losses}</TableCell>
-                    </TableRow>
-                  ))}
-                  {players.length === 0 && (
+            {standings ? (
+              <StandingsTable
+                standings={standings.standings}
+                loading={loadingStandings}
+                onPlayerClick={(playerId) => console.log('Player clicked:', playerId)}
+                onExportCsv={handleExportCsv}
+                onExportPdf={handleExportPdf}
+                onPrint={handlePrint}
+              />
+            ) : (
+              <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+                <Table sx={{ minWidth: 650 }}>
+                  <TableHead>
                     <TableRow>
-                      <TableCell colSpan={9} align="center">
-                        <Typography variant="body2" color="textSecondary">
-                          {t('noDataAvailable')}
-                        </Typography>
-                      </TableCell>
+                      <TableCell>{t('rank')}</TableCell>
+                      <TableCell>{t('player')}</TableCell>
+                      <TableCell>{t('rating')}</TableCell>
+                      <TableCell>{t('country')}</TableCell>
+                      <TableCell align="center">{t('points')}</TableCell>
+                      <TableCell align="center">{t('games')}</TableCell>
+                      <TableCell align="center">{t('wins')}</TableCell>
+                      <TableCell align="center">{t('draws')}</TableCell>
+                      <TableCell align="center">{t('losses')}</TableCell>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {players.map((playerResult, index) => (
+                      <TableRow key={playerResult.player.id} hover>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {index + 1}
+                            {index === 0 && <EmojiEvents color="warning" />}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="subtitle2">
+                            {playerResult.player.name}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          {playerResult.player.rating || 'Unrated'}
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Flag fontSize="small" />
+                            {playerResult.player.country_code || 'N/A'}
+                          </Box>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Typography variant="h6" color="primary">
+                            {playerResult.points}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">{playerResult.games_played}</TableCell>
+                        <TableCell align="center">{playerResult.wins}</TableCell>
+                        <TableCell align="center">{playerResult.draws}</TableCell>
+                        <TableCell align="center">{playerResult.losses}</TableCell>
+                      </TableRow>
+                    ))}
+                    {players.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={9} align="center">
+                          <Typography variant="body2" color="textSecondary">
+                            {t('noDataAvailable')}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
           </TabPanel>
 
           <TabPanel value={tabValue} index={1}>

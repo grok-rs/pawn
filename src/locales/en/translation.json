@@ -142,5 +142,13 @@
   
   "viewDetails": "View Details",
   "editTournament": "Edit Tournament",
-  "exportData": "Export Data"
+  "exportData": "Export Data",
+  
+  "showTiebreaks": "Show Tiebreaks",
+  "denseView": "Dense View",
+  "export": "Export",
+  "exportCsv": "Export to CSV",
+  "exportPdf": "Export to PDF",
+  "print": "Print",
+  "tournamentPerformanceRating": "Tournament Performance Rating"
 }

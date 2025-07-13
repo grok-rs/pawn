@@ -3,12 +3,16 @@ use std::{path::PathBuf, sync::Arc};
 use sqlx::sqlite::SqlitePoolOptions;
 use tracing::info;
 
-use super::{db::sqlite::SqliteDb, service::tournament::TournamentService};
+use super::{
+    db::sqlite::SqliteDb, 
+    service::{tournament::TournamentService, tiebreak::TiebreakCalculator}
+};
 
 pub struct State<D> {
     #[allow(dead_code)]
     pub app_data_dir: PathBuf,
     pub tournament_service: Arc<TournamentService<D>>,
+    pub tiebreak_calculator: Arc<TiebreakCalculator<D>>,
 }
 
 pub type PawnState = State<SqliteDb>;
@@ -41,10 +45,12 @@ impl PawnState {
         let sqlite = Arc::new(SqliteDb::new(pool));
 
         let tournament_service = Arc::new(TournamentService::new(Arc::clone(&sqlite)));
+        let tiebreak_calculator = Arc::new(TiebreakCalculator::new(Arc::clone(&sqlite)));
 
         Self {
             app_data_dir,
             tournament_service,
+            tiebreak_calculator,
         }
     }
 }

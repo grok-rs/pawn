@@ -34,6 +34,7 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::tournament::get_player_results,
             command::tournament::get_game_results,
             command::tournament::populate_mock_data,
+            command::tournament::get_tournament_standings,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Throw);
 
