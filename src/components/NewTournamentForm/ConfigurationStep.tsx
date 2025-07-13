@@ -19,15 +19,26 @@ import {
   ViewModule,
   Numbers,
   Speed,
+  CompareArrows,
 } from '@mui/icons-material';
+import { useState } from 'react';
+import type { TiebreakType } from '../../dto/bindings';
 
 import CustomFormHelperText from '../FormHelperText/FormHelperText';
 import TimeInputWithUnits from '../TimeInputWithUnits/TimeInputWithUnits';
 import { StyledGrid } from './styled';
 import { TournamentFormValues } from './types';
+import { TiebreakConfig } from '../TiebreakConfig';
 
 const ConfigurationStep = () => {
   const { t } = useTranslation();
+  const [tiebreaks, setTiebreaks] = useState<TiebreakType[]>([
+    'buchholz_full',
+    'buchholz_cut_1',
+    'number_of_wins',
+    'direct_encounter',
+  ]);
+  const [useFideDefaults, setUseFideDefaults] = useState(true);
 
   const {
     register,
@@ -226,6 +237,27 @@ const ConfigurationStep = () => {
                   ),
                 },
               }}
+            />
+          </Paper>
+        </StyledGrid>
+
+        {/* Tiebreak Settings */}
+        <StyledGrid size={12}>
+          <Paper sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <CompareArrows color="primary" />
+              <Typography variant="h6" fontWeight={600}>
+                {t("tiebreakSettings")}
+              </Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              {t("tiebreakConfiguration")}
+            </Typography>
+            <TiebreakConfig
+              tiebreaks={tiebreaks}
+              onChange={setTiebreaks}
+              useFideDefaults={useFideDefaults}
+              onFideDefaultsChange={setUseFideDefaults}
             />
           </Paper>
         </StyledGrid>

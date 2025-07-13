@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use specta::Type;
+use crate::pawn::domain::tiebreak::TiebreakType;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateTournament {
@@ -28,4 +29,11 @@ pub struct CreateGame {
     pub white_player_id: i32,
     pub black_player_id: i32,
     pub result: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct UpdateTournamentSettings {
+    pub tournament_id: i32,
+    pub tiebreak_order: Vec<TiebreakType>,
+    pub use_fide_defaults: bool,
 }

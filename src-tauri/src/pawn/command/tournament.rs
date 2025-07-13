@@ -4,7 +4,7 @@ use tracing::instrument;
 use crate::pawn::{
     common::types::CommandResult,
     domain::{
-        dto::{CreateTournament, CreatePlayer, CreateGame},
+        dto::{CreateTournament, CreatePlayer, CreateGame, UpdateTournamentSettings},
         model::{Tournament, Player, Game, TournamentDetails, PlayerResult, GameResult},
         tiebreak::{StandingsCalculationResult, TournamentTiebreakConfig},
     },
@@ -128,9 +128,35 @@ pub async fn get_tournament_standings(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<StandingsCalculationResult> {
-    // For now, use default tiebreak configuration
+    // TODO: Load config from database once implemented
     let mut config = TournamentTiebreakConfig::default();
     config.tournament_id = tournament_id;
     
     Ok(state.tiebreak_calculator.calculate_standings(tournament_id, &config).await?)
+}
+
+// Tournament settings
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn get_tournament_settings(
+    state: State<'_, PawnState>,
+    tournament_id: i32,
+) -> CommandResult<TournamentTiebreakConfig> {
+    // TODO: Load from database once implemented
+    let mut config = TournamentTiebreakConfig::default();
+    config.tournament_id = tournament_id;
+    Ok(config)
+}
+
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn update_tournament_settings(
+    state: State<'_, PawnState>,
+    settings: UpdateTournamentSettings,
+) -> CommandResult<()> {
+    // TODO: Save to database once implemented
+    tracing::info!("Updating tournament settings: {:?}", settings);
+    Ok(())
 }

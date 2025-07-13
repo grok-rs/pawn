@@ -150,5 +150,16 @@
   "exportCsv": "Export to CSV",
   "exportPdf": "Export to PDF",
   "print": "Print",
-  "tournamentPerformanceRating": "Tournament Performance Rating"
+  "tournamentPerformanceRating": "Tournament Performance Rating",
+  
+  "tiebreakOrder": "Tiebreak Order",
+  "useFideDefaults": "Use FIDE Defaults",
+  "resetToDefaults": "Reset to Defaults",
+  "noTiebreaksConfigured": "No tiebreaks configured. Add at least one tiebreak method.",
+  "addTiebreak": "Add Tiebreak",
+  "selectTiebreak": "Select Tiebreak Method",
+  
+  "tiebreakSettings": "Tiebreak Settings",
+  "tiebreakConfiguration": "Configure how tied players are ranked",
+  "dragToReorder": "Drag to reorder tiebreak priority"
 }

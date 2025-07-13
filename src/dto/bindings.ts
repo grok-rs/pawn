@@ -40,6 +40,12 @@ async populateMockData(tournamentId: number) : Promise<null> {
 },
 async getTournamentStandings(tournamentId: number) : Promise<StandingsCalculationResult> {
     return await TAURI_INVOKE("plugin:pawn|get_tournament_standings", { tournamentId });
+},
+async getTournamentSettings(tournamentId: number) : Promise<TournamentTiebreakConfig> {
+    return await TAURI_INVOKE("plugin:pawn|get_tournament_settings", { tournamentId });
+},
+async updateTournamentSettings(settings: UpdateTournamentSettings) : Promise<null> {
+    return await TAURI_INVOKE("plugin:pawn|update_tournament_settings", { settings });
 }
 }
 
@@ -79,6 +85,7 @@ message: string;
  * Detailed error message throwing by the low level api
  */
 details: string }
+export type UpdateTournamentSettings = { tournament_id: number; tiebreak_order: TiebreakType[]; use_fide_defaults: boolean }
 
 /** tauri-specta globals **/
 
