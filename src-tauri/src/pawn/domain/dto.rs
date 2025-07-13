@@ -62,3 +62,50 @@ pub struct UpdateTournamentPairingMethod {
     pub tournament_id: i32,
     pub pairing_method: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct UpdateGameResult {
+    pub game_id: i32,
+    pub result: String,
+    pub result_type: Option<String>,
+    pub result_reason: Option<String>,
+    pub arbiter_notes: Option<String>,
+    pub changed_by: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct ValidateGameResult {
+    pub game_id: i32,
+    pub result: String,
+    pub result_type: Option<String>,
+    pub tournament_id: i32,
+    pub changed_by: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct BatchUpdateResults {
+    pub tournament_id: i32,
+    pub updates: Vec<UpdateGameResult>,
+    pub validate_only: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct ApproveGameResult {
+    pub game_id: i32,
+    pub approved_by: String,
+    pub notes: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct GameResultValidation {
+    pub is_valid: bool,
+    pub errors: Vec<String>,
+    pub warnings: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct BatchValidationResult {
+    pub overall_valid: bool,
+    pub results: Vec<(usize, GameResultValidation)>,
+}
+

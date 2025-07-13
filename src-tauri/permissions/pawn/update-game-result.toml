@@ -1,0 +1,6 @@
+"$schema" = "../../../gen/schemas/desktop-schema.json"
+
+[[permission]]
+identifier = "update-game-result"
+description = "Update a game result with validation"
+commands.allow = ["update_game_result"]

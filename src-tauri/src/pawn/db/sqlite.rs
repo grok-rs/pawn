@@ -2,7 +2,7 @@ use sqlx::SqlitePool;
 use tracing::instrument;
 
 use super::*;
-use crate::pawn::domain::tiebreak::TiebreakType;
+use crate::pawn::domain::{tiebreak::TiebreakType, model::GameResultType};
 
 pub struct SqliteDb {
     pool: SqlitePool,
@@ -173,6 +173,127 @@ impl Db for SqliteDb {
         .await?;
 
         Ok(game)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn get_game(&self, game_id: i32) -> Result<Game, sqlx::Error> {
+        let game = sqlx::query_as("SELECT id, tournament_id, round_number, white_player_id, black_player_id, result, result_type, result_reason, arbiter_notes, last_updated, approved_by, created_at FROM games WHERE id = ?")
+            .bind(game_id)
+            .fetch_one(&self.pool)
+            .await?;
+
+        Ok(game)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn get_player(&self, player_id: i32) -> Result<Player, sqlx::Error> {
+        let player = sqlx::query_as("SELECT * FROM players WHERE id = ?")
+            .bind(player_id)
+            .fetch_one(&self.pool)
+            .await?;
+
+        Ok(player)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn update_game_result(&self, data: UpdateGameResult) -> Result<Game, sqlx::Error> {
+        let game: Game = sqlx::query_as(
+            "UPDATE games 
+             SET result = ?, result_type = ?, result_reason = ?, arbiter_notes = ?, approved_by = ?, last_updated = CURRENT_TIMESTAMP
+             WHERE id = ?
+             RETURNING id, tournament_id, round_number, white_player_id, black_player_id, result, result_type, result_reason, arbiter_notes, last_updated, approved_by, created_at"
+        )
+        .bind(&data.result)
+        .bind(&data.result_type)
+        .bind(&data.result_reason)
+        .bind(&data.arbiter_notes)
+        .bind(&data.changed_by)
+        .bind(data.game_id)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(game)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn get_enhanced_game_result(&self, game_id: i32) -> Result<EnhancedGameResult, sqlx::Error> {
+        let game = self.get_game(game_id).await?;
+        let white_player = self.get_player(game.white_player_id).await?;
+        let black_player = self.get_player(game.black_player_id).await?;
+        let audit_trail = self.get_game_audit_trail(game_id).await?;
+        
+        let result_type = GameResultType::from_str(&game.result);
+        let requires_approval = result_type.requires_arbiter_approval() && game.approved_by.is_none();
+
+        Ok(EnhancedGameResult {
+            game,
+            white_player,
+            black_player,
+            audit_trail,
+            requires_approval,
+        })
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn get_game_audit_trail(&self, game_id: i32) -> Result<Vec<GameResultAudit>, sqlx::Error> {
+        let audit_records = sqlx::query_as("SELECT * FROM game_result_audit WHERE game_id = ? ORDER BY changed_at DESC")
+            .bind(game_id)
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(audit_records)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn approve_game_result(&self, data: ApproveGameResult) -> Result<(), sqlx::Error> {
+        // Update the game approval
+        sqlx::query("UPDATE games SET approved_by = ? WHERE id = ?")
+            .bind(&data.approved_by)
+            .bind(data.game_id)
+            .execute(&self.pool)
+            .await?;
+
+        // Update the latest audit record
+        sqlx::query("UPDATE game_result_audit SET approved = TRUE, approved_by = ?, approved_at = CURRENT_TIMESTAMP WHERE game_id = ? AND approved = FALSE")
+            .bind(&data.approved_by)
+            .bind(data.game_id)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn get_pending_approvals(&self, tournament_id: i32) -> Result<Vec<EnhancedGameResult>, sqlx::Error> {
+        let games = sqlx::query_as::<_, Game>(
+            "SELECT id, tournament_id, round_number, white_player_id, black_player_id, result, result_type, result_reason, arbiter_notes, last_updated, approved_by, created_at 
+             FROM games 
+             WHERE tournament_id = ? AND result_type IN ('white_forfeit', 'black_forfeit', 'white_default', 'black_default', 'double_forfeit', 'cancelled') AND approved_by IS NULL"
+        )
+        .bind(tournament_id)
+        .fetch_all(&self.pool)
+        .await?;
+
+        let mut enhanced_results = Vec::new();
+        for game in games {
+            match self.get_enhanced_game_result(game.id).await {
+                Ok(enhanced) => enhanced_results.push(enhanced),
+                Err(e) => tracing::warn!("Failed to get enhanced result for game {}: {}", game.id, e),
+            }
+        }
+
+        Ok(enhanced_results)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn get_round_by_number(&self, tournament_id: i32, round_number: i32) -> Result<Round, sqlx::Error> {
+        let round = sqlx::query_as("SELECT * FROM rounds WHERE tournament_id = ? AND round_number = ?")
+            .bind(tournament_id)
+            .bind(round_number)
+            .fetch_one(&self.pool)
+            .await?;
+
+        Ok(round)
     }
 
     #[instrument(ret, skip(self))]

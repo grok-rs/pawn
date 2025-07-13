@@ -1,0 +1,12 @@
+"$schema" = "../../../gen/schemas/desktop-schema.json"
+
+[[permission]]
+identifier = "game-result-management"
+description = "Comprehensive game result management operations"
+commands.allow = [
+    "get_enhanced_game_result",
+    "get_game_audit_trail", 
+    "approve_game_result",
+    "get_pending_approvals",
+    "get_game_result_types"
+]

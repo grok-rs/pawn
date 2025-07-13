@@ -51,12 +51,14 @@ import {
   Print,
   Share,
   PlayCircleOutline,
+  Assignment,
 } from '@mui/icons-material';
 import { commands } from '../../dto/bindings';
 import type { TournamentDetails, StandingsCalculationResult } from '../../dto/bindings';
 import BaseLayout from '../../components/BaseLayout';
 import { StandingsTable } from '../../components/StandingsTable';
 import RoundManager from '../../components/RoundManager';
+import { ResultsGrid } from '../../components/ResultsGrid';
 import { exportStandingsToCsv, exportStandingsToPdf } from '../../utils/export';
 import TournamentSettings from './TournamentSettings';
 
@@ -211,31 +213,6 @@ const TournamentInfoPage: React.FC = () => {
     fetchTournamentDetails();
   }, [id]);
 
-  const getResultChip = (result: string) => {
-    let color: 'success' | 'error' | 'warning' | 'default' = 'default';
-    let label = result;
-
-    switch (result) {
-      case '1-0':
-        color = 'success';
-        label = t('whiteWins');
-        break;
-      case '0-1':
-        color = 'error';
-        label = t('blackWins');
-        break;
-      case '1/2-1/2':
-        color = 'warning';
-        label = t('draw');
-        break;
-      case '*':
-        color = 'default';
-        label = t('ongoing');
-        break;
-    }
-
-    return <Chip label={label} color={color} size="small" />;
-  };
 
   const formatDate = (dateString: string) => {
     try {
@@ -496,8 +473,8 @@ const TournamentInfoPage: React.FC = () => {
                 {...a11yProps(1)}
               />
               <Tab
-                icon={<Games />}
-                label={t('gamesTab')}
+                icon={<Assignment />}
+                label={t('resultsTab')}
                 iconPosition="start"
                 {...a11yProps(2)}
               />
@@ -599,68 +576,37 @@ const TournamentInfoPage: React.FC = () => {
           </TabPanel>
 
           <TabPanel value={tabValue} index={2}>
-            {/* Games Table */}
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>{t('round')}</TableCell>
-                    <TableCell>{t('white')}</TableCell>
-                    <TableCell>{t('black')}</TableCell>
-                    <TableCell align="center">{t('result')}</TableCell>
-                    <TableCell>{t('date')}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {games.map((gameResult) => (
-                    <TableRow key={gameResult.game.id} hover>
-                      <TableCell>
-                        <Chip
-                          label={`${t('round')} ${gameResult.game.round_number}`}
-                          variant="outlined"
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Box>
-                          <Typography variant="subtitle2">
-                            {gameResult.white_player.name}
-                          </Typography>
-                          <Typography variant="caption" color="textSecondary">
-                            {gameResult.white_player.rating ? `(${gameResult.white_player.rating})` : ''}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box>
-                          <Typography variant="subtitle2">
-                            {gameResult.black_player.name}
-                          </Typography>
-                          <Typography variant="caption" color="textSecondary">
-                            {gameResult.black_player.rating ? `(${gameResult.black_player.rating})` : ''}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell align="center">
-                        {getResultChip(gameResult.game.result)}
-                      </TableCell>
-                      <TableCell>
-                        {formatDate(gameResult.game.created_at)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {games.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={5} align="center">
-                        <Typography variant="body2" color="textSecondary">
-                          {t('noDataAvailable')}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            {/* Results Management */}
+            {games.length > 0 ? (
+              <ResultsGrid
+                tournamentId={parseInt(id!)}
+                games={games}
+                onResultsUpdated={() => {
+                  // Refresh tournament details and standings when results are updated
+                  fetchTournamentDetails();
+                  if (id) {
+                    fetchStandings(parseInt(id));
+                  }
+                }}
+              />
+            ) : (
+              <Paper sx={{ p: 4, textAlign: 'center' }}>
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  {t('noGamesMessage')}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t('createRoundsFirstMessage')}
+                </Typography>
+                <Button
+                  variant="outlined"
+                  onClick={() => setTabValue(1)}
+                  sx={{ mt: 2 }}
+                  startIcon={<PlayCircleOutline />}
+                >
+                  {t('goToRoundsTab')}
+                </Button>
+              </Paper>
+            )}
           </TabPanel>
 
           <TabPanel value={tabValue} index={3}>

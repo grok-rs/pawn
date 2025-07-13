@@ -1,6 +1,6 @@
 use super::domain::{
-    dto::{CreateTournament, CreatePlayer, CreateGame, UpdateTournamentSettings, CreateRound},
-    model::{Tournament, Player, Game, TournamentDetails, PlayerResult, GameResult, Round},
+    dto::{CreateTournament, CreatePlayer, CreateGame, UpdateTournamentSettings, CreateRound, UpdateGameResult, ApproveGameResult},
+    model::{Tournament, Player, Game, TournamentDetails, PlayerResult, GameResult, Round, GameResultAudit, EnhancedGameResult},
     tiebreak::TournamentTiebreakConfig,
 };
 
@@ -20,7 +20,19 @@ pub trait Db: Send + Sync {
     
     // Game operations
     async fn get_games_by_tournament(&self, tournament_id: i32) -> Result<Vec<Game>, sqlx::Error>;
+    async fn get_game(&self, game_id: i32) -> Result<Game, sqlx::Error>;
+    async fn get_player(&self, player_id: i32) -> Result<Player, sqlx::Error>;
     async fn create_game(&self, data: CreateGame) -> Result<Game, sqlx::Error>;
+    async fn update_game_result(&self, data: UpdateGameResult) -> Result<Game, sqlx::Error>;
+    async fn get_enhanced_game_result(&self, game_id: i32) -> Result<EnhancedGameResult, sqlx::Error>;
+    
+    // Game result audit operations
+    async fn get_game_audit_trail(&self, game_id: i32) -> Result<Vec<GameResultAudit>, sqlx::Error>;
+    async fn approve_game_result(&self, data: ApproveGameResult) -> Result<(), sqlx::Error>;
+    async fn get_pending_approvals(&self, tournament_id: i32) -> Result<Vec<EnhancedGameResult>, sqlx::Error>;
+    
+    // Round operations extended
+    async fn get_round_by_number(&self, tournament_id: i32, round_number: i32) -> Result<Round, sqlx::Error>;
     
     // Statistics
     async fn get_player_results(&self, tournament_id: i32) -> Result<Vec<PlayerResult>, sqlx::Error>;

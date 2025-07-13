@@ -51,6 +51,14 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::round::complete_round,
             command::round::create_next_round,
             command::round::update_tournament_pairing_method,
+            command::game_result::update_game_result,
+            command::game_result::validate_game_result,
+            command::game_result::batch_update_results,
+            command::game_result::get_enhanced_game_result,
+            command::game_result::get_game_audit_trail,
+            command::game_result::approve_game_result,
+            command::game_result::get_pending_approvals,
+            command::game_result::get_game_result_types,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Throw);
 

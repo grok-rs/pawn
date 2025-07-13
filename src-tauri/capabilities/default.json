@@ -32,6 +32,10 @@
     "pawn:get-round-details",
     "pawn:generate-pairings",
     "pawn:complete-round",
-    "pawn:update-tournament-pairing-method"
+    "pawn:update-tournament-pairing-method",
+    "pawn:update-game-result",
+    "pawn:validate-game-result",
+    "pawn:batch-update-results",
+    "pawn:game-result-management"
   ]
 }

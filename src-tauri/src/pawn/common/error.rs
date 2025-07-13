@@ -41,6 +41,10 @@ pub enum PawnError {
     #[error("Business logic error: {0}")]
     /// Represents business logic violations.
     BusinessLogic(String),
+
+    #[error("Validation error: {0}")]
+    /// Represents validation errors for game results.
+    ValidationError(String),
 }
 
 impl specta::NamedType for PawnError {
@@ -125,6 +129,7 @@ enum TxErrorKind {
     InvalidInput { message: String, details: String },
     NotFound { message: String, details: String },
     BusinessLogic { message: String, details: String },
+    ValidationError { message: String, details: String },
 }
 
 impl Serialize for PawnError {
@@ -160,6 +165,10 @@ impl Serialize for PawnError {
             },
             Self::BusinessLogic(_) => TxErrorKind::BusinessLogic {
                 message: "Business logic violation".to_string(),
+                details: error_message,
+            },
+            Self::ValidationError(_) => TxErrorKind::ValidationError {
+                message: "Validation failed".to_string(),
                 details: error_message,
             },
         };

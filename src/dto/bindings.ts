@@ -82,6 +82,30 @@ async createNextRound(tournamentId: number) : Promise<Round> {
 },
 async updateTournamentPairingMethod(data: UpdateTournamentPairingMethod) : Promise<null> {
     return await TAURI_INVOKE("plugin:pawn|update_tournament_pairing_method", { data });
+},
+async updateGameResult(data: UpdateGameResult) : Promise<Game> {
+    return await TAURI_INVOKE("plugin:pawn|update_game_result", { data });
+},
+async validateGameResult(data: ValidateGameResult) : Promise<GameResultValidation> {
+    return await TAURI_INVOKE("plugin:pawn|validate_game_result", { data });
+},
+async batchUpdateResults(data: BatchUpdateResults) : Promise<BatchValidationResult> {
+    return await TAURI_INVOKE("plugin:pawn|batch_update_results", { data });
+},
+async getEnhancedGameResult(gameId: number) : Promise<EnhancedGameResult> {
+    return await TAURI_INVOKE("plugin:pawn|get_enhanced_game_result", { gameId });
+},
+async getGameAuditTrail(gameId: number) : Promise<GameResultAudit[]> {
+    return await TAURI_INVOKE("plugin:pawn|get_game_audit_trail", { gameId });
+},
+async approveGameResult(data: ApproveGameResult) : Promise<null> {
+    return await TAURI_INVOKE("plugin:pawn|approve_game_result", { data });
+},
+async getPendingApprovals(tournamentId: number) : Promise<EnhancedGameResult[]> {
+    return await TAURI_INVOKE("plugin:pawn|get_pending_approvals", { tournamentId });
+},
+async getGameResultTypes() : Promise<([string, string])[]> {
+    return await TAURI_INVOKE("plugin:pawn|get_game_result_types");
 }
 }
 
@@ -95,12 +119,18 @@ async updateTournamentPairingMethod(data: UpdateTournamentPairingMethod) : Promi
 
 /** user-defined types **/
 
+export type ApproveGameResult = { game_id: number; approved_by: string; notes: string | null }
+export type BatchUpdateResults = { tournament_id: number; updates: UpdateGameResult[]; validate_only: boolean }
+export type BatchValidationResult = { overall_valid: boolean; results: ([number, GameResultValidation])[] }
 export type CreateGame = { tournament_id: number; round_number: number; white_player_id: number; black_player_id: number; result: string }
 export type CreatePlayer = { tournament_id: number; name: string; rating: number | null; country_code: string | null }
 export type CreateRound = { tournament_id: number; round_number: number }
 export type CreateTournament = { name: string; location: string; date: string; time_type: string; player_count: number; rounds_played: number; total_rounds: number; country_code: string }
-export type Game = { id: number; tournament_id: number; round_number: number; white_player_id: number; black_player_id: number; result: string; created_at: string }
+export type EnhancedGameResult = { game: Game; white_player: Player; black_player: Player; audit_trail: GameResultAudit[]; requires_approval: boolean }
+export type Game = { id: number; tournament_id: number; round_number: number; white_player_id: number; black_player_id: number; result: string; result_type: string | null; result_reason: string | null; arbiter_notes: string | null; last_updated: string | null; approved_by: string | null; created_at: string }
 export type GameResult = { game: Game; white_player: Player; black_player: Player }
+export type GameResultAudit = { id: number; game_id: number; old_result: string | null; new_result: string; old_result_type: string | null; new_result_type: string | null; reason: string | null; changed_by: string | null; changed_at: string; approved: boolean; approved_by: string | null; approved_at: string | null }
+export type GameResultValidation = { is_valid: boolean; errors: string[]; warnings: string[] }
 export type GeneratePairingsRequest = { tournament_id: number; round_number: number; pairing_method: string }
 export type Pairing = { white_player: Player; black_player: Player | null; board_number: number }
 export type Player = { id: number; tournament_id: number; name: string; rating: number | null; country_code: string | null; created_at: string }
@@ -127,9 +157,11 @@ message: string;
  * Detailed error message throwing by the low level api
  */
 details: string }
+export type UpdateGameResult = { game_id: number; result: string; result_type: string | null; result_reason: string | null; arbiter_notes: string | null; changed_by: string | null }
 export type UpdateRoundStatus = { round_id: number; status: string }
 export type UpdateTournamentPairingMethod = { tournament_id: number; pairing_method: string }
 export type UpdateTournamentSettings = { tournament_id: number; tiebreak_order: TiebreakType[]; use_fide_defaults: boolean }
+export type ValidateGameResult = { game_id: number; result: string; result_type: string | null; tournament_id: number; changed_by: string | null }
 
 /** tauri-specta globals **/
 

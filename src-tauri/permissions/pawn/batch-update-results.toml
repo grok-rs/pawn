@@ -1,0 +1,6 @@
+"$schema" = "../../../gen/schemas/desktop-schema.json"
+
+[[permission]]
+identifier = "batch-update-results"
+description = "Batch update multiple game results"
+commands.allow = ["batch_update_results"]
