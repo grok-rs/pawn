@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -82,6 +83,7 @@ const TournamentInfoPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
+  const { t } = useTranslation();
   const [tournamentDetails, setTournamentDetails] = useState<TournamentDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -103,7 +105,7 @@ const TournamentInfoPage: React.FC = () => {
 
   const fetchTournamentDetails = async () => {
     if (!id) {
-      setError('Tournament ID not provided');
+      setError(t('tournamentIdNotProvided'));
       setLoading(false);
       return;
     }
@@ -115,7 +117,7 @@ const TournamentInfoPage: React.FC = () => {
       setHasMockData(details.players.length > 0);
     } catch (err) {
       console.error('Failed to fetch tournament details:', err);
-      setError('Failed to load tournament details');
+      setError(t('failedToLoadTournamentDetails'));
     } finally {
       setLoading(false);
     }
@@ -131,7 +133,7 @@ const TournamentInfoPage: React.FC = () => {
       await fetchTournamentDetails();
     } catch (err) {
       console.error('Failed to populate mock data:', err);
-      setError('Failed to populate mock data');
+      setError(t('failedToPopulateMockData'));
     }
   };
 
@@ -146,19 +148,19 @@ const TournamentInfoPage: React.FC = () => {
     switch (result) {
       case '1-0':
         color = 'success';
-        label = 'White wins';
+        label = t('whiteWins');
         break;
       case '0-1':
         color = 'error';
-        label = 'Black wins';
+        label = t('blackWins');
         break;
       case '1/2-1/2':
         color = 'warning';
-        label = 'Draw';
+        label = t('draw');
         break;
       case '*':
         color = 'default';
-        label = 'Ongoing';
+        label = t('ongoing');
         break;
     }
 
@@ -259,7 +261,7 @@ const TournamentInfoPage: React.FC = () => {
                   onClick={handlePopulateMockData}
                   startIcon={<People />}
                 >
-                  Add Sample Data
+                  {t('addSampleData')}
                 </Button>
               )}
               <IconButton onClick={handleMenuClick}>
@@ -293,7 +295,7 @@ const TournamentInfoPage: React.FC = () => {
                         {players.length}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Total Players
+                        {t('players')}
                       </Typography>
                     </Box>
                   </Box>
@@ -413,19 +415,19 @@ const TournamentInfoPage: React.FC = () => {
             >
               <Tab
                 icon={<EmojiEvents />}
-                label="Standings"
+                label={t('standings')}
                 iconPosition="start"
                 {...a11yProps(0)}
               />
               <Tab
                 icon={<Games />}
-                label="Games"
+                label={t('gamesTab')}
                 iconPosition="start"
                 {...a11yProps(1)}
               />
               <Tab
                 icon={<People />}
-                label="Players"
+                label={t('playersTab')}
                 iconPosition="start"
                 {...a11yProps(2)}
               />
@@ -439,15 +441,15 @@ const TournamentInfoPage: React.FC = () => {
               <Table sx={{ minWidth: 650 }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Rank</TableCell>
-                    <TableCell>Player</TableCell>
-                    <TableCell>Rating</TableCell>
-                    <TableCell>Country</TableCell>
-                    <TableCell align="center">Points</TableCell>
-                    <TableCell align="center">Games</TableCell>
-                    <TableCell align="center">Wins</TableCell>
-                    <TableCell align="center">Draws</TableCell>
-                    <TableCell align="center">Losses</TableCell>
+                    <TableCell>{t('rank')}</TableCell>
+                    <TableCell>{t('player')}</TableCell>
+                    <TableCell>{t('rating')}</TableCell>
+                    <TableCell>{t('country')}</TableCell>
+                    <TableCell align="center">{t('points')}</TableCell>
+                    <TableCell align="center">{t('games')}</TableCell>
+                    <TableCell align="center">{t('wins')}</TableCell>
+                    <TableCell align="center">{t('draws')}</TableCell>
+                    <TableCell align="center">{t('losses')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -488,7 +490,7 @@ const TournamentInfoPage: React.FC = () => {
                     <TableRow>
                       <TableCell colSpan={9} align="center">
                         <Typography variant="body2" color="textSecondary">
-                          No players registered yet
+                          {t('noDataAvailable')}
                         </Typography>
                       </TableCell>
                     </TableRow>
@@ -504,11 +506,11 @@ const TournamentInfoPage: React.FC = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Round</TableCell>
-                    <TableCell>White</TableCell>
-                    <TableCell>Black</TableCell>
-                    <TableCell align="center">Result</TableCell>
-                    <TableCell>Date</TableCell>
+                    <TableCell>{t('round')}</TableCell>
+                    <TableCell>{t('white')}</TableCell>
+                    <TableCell>{t('black')}</TableCell>
+                    <TableCell align="center">{t('result')}</TableCell>
+                    <TableCell>{t('date')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -516,7 +518,7 @@ const TournamentInfoPage: React.FC = () => {
                     <TableRow key={gameResult.game.id} hover>
                       <TableCell>
                         <Chip
-                          label={`Round ${gameResult.game.round_number}`}
+                          label={`${t('round')} ${gameResult.game.round_number}`}
                           variant="outlined"
                           size="small"
                         />
@@ -553,7 +555,7 @@ const TournamentInfoPage: React.FC = () => {
                     <TableRow>
                       <TableCell colSpan={5} align="center">
                         <Typography variant="body2" color="textSecondary">
-                          No games played yet
+                          {t('noDataAvailable')}
                         </Typography>
                       </TableCell>
                     </TableRow>
@@ -569,10 +571,10 @@ const TournamentInfoPage: React.FC = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell>Rating</TableCell>
-                    <TableCell>Country</TableCell>
-                    <TableCell>Registered</TableCell>
+                    <TableCell>{t('name')}</TableCell>
+                    <TableCell>{t('rating')}</TableCell>
+                    <TableCell>{t('country')}</TableCell>
+                    <TableCell>{t('registered')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -609,7 +611,7 @@ const TournamentInfoPage: React.FC = () => {
                     <TableRow>
                       <TableCell colSpan={4} align="center">
                         <Typography variant="body2" color="textSecondary">
-                          No players registered yet
+                          {t('noDataAvailable')}
                         </Typography>
                       </TableCell>
                     </TableRow>
@@ -644,7 +646,7 @@ const TournamentInfoPage: React.FC = () => {
           </MenuItem>
           <Divider />
           <MenuItem onClick={handleMenuClose} sx={{ color: 'error.main' }}>
-            Delete Tournament
+            {t('deleteTournament')}
           </MenuItem>
         </Menu>
       </Box>

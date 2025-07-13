@@ -5,20 +5,20 @@ import { TOURNAMENT_FORM_SCHEMA } from './validation';
 export const NEW_TOURNAMENT_FORM_STEPS = [
   {
     id: 1,
-    label: 'General Information',
+    label: 'form.steps.generalInformation',
     stepIntro: {
-      title: 'Tournament Details',
-      description: 'Enter the basic information about your tournament',
+      title: 'form.steps.generalInfo.title',
+      description: 'form.steps.generalInfo.description',
     },
     component: GeneralInfoStep,
     schema: TOURNAMENT_FORM_SCHEMA
   },
   {
     id: 2,
-    label: 'Tournament Settings',
+    label: 'form.steps.tournamentSettings',
     stepIntro: {
-      title: 'Configure Tournament',
-      description: 'Set up the rules and format for your tournament',
+      title: 'form.steps.configuration.title',
+      description: 'form.steps.configuration.description',
     },
     component: ConfigurationStep,
   },

@@ -1,10 +1,12 @@
 import CheckIcon from '@mui/icons-material/Check';
+import { useTranslation } from 'react-i18next';
 
 import { useFormStepperContext } from '../FormStepperContext';
 import { StyledStep, StyledStepLabel, StyledStepper } from './styled';
 
 const FormStepperStepIndicator = () => {
   const { activeStep, steps } = useFormStepperContext();
+  const { t } = useTranslation();
 
   return (
     <StyledStepper activeStep={activeStep}>
@@ -15,7 +17,7 @@ const FormStepperStepIndicator = () => {
 
         return (
           <StyledStep key={step.id} completed={isStepCompleted}>
-            <StyledStepLabel icon={labelIcon}>{step.label}</StyledStepLabel>
+            <StyledStepLabel icon={labelIcon}>{step.label ? t(step.label) : ''}</StyledStepLabel>
           </StyledStep>
         );
       })}

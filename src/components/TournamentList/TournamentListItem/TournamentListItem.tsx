@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Tournament } from '../../../dto/bindings';
 import {
   CalendarToday,
@@ -30,6 +31,7 @@ type TournamentListItemProps = {
 const TournamentListItem = ({ tournament }: TournamentListItemProps) => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleViewTournament = () => {
@@ -59,11 +61,11 @@ const TournamentListItem = ({ tournament }: TournamentListItemProps) => {
 
   const getStatusChip = () => {
     if (isFinishedTournament(tournament)) {
-      return <Chip label="Finished" size="small" color="info" />;
+      return <Chip label={t('finished')} size="small" color="info" />;
     } else if (isOngoingTournament(tournament)) {
-      return <Chip label="Ongoing" size="small" color="success" />;
+      return <Chip label={t('ongoing')} size="small" color="success" />;
     } else if (isDraftTournament(tournament)) {
-      return <Chip label="Not Started" size="small" color="warning" />;
+      return <Chip label={t('notStarted')} size="small" color="warning" />;
     }
     return null;
   };
@@ -112,7 +114,7 @@ const TournamentListItem = ({ tournament }: TournamentListItemProps) => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <People fontSize="small" />
                 <Typography variant="body2">
-                  {tournament.player_count} players
+                  {tournament.player_count} {t('players').toLowerCase()}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -136,10 +138,10 @@ const TournamentListItem = ({ tournament }: TournamentListItemProps) => {
           <Box sx={{ mt: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
               <Typography variant="body2" color="text.secondary">
-                Progress
+                {t('progress') || 'Progress'}
               </Typography>
               <Typography variant="body2" fontWeight={600}>
-                Round {tournament.rounds_played} of {tournament.total_rounds}
+                {t('round')} {tournament.rounds_played} / {tournament.total_rounds}
               </Typography>
             </Box>
             <LinearProgress
@@ -165,16 +167,16 @@ const TournamentListItem = ({ tournament }: TournamentListItemProps) => {
         onClose={handleMenuClose}
       >
         <MenuItem onClick={() => { handleMenuClose(); handleViewTournament(); }}>
-          View Details
+          {t('viewDetails')}
         </MenuItem>
         <MenuItem onClick={handleMenuClose}>
-          Edit Tournament
+          {t('editTournament')}
         </MenuItem>
         <MenuItem onClick={handleMenuClose}>
-          Export Data
+          {t('exportData')}
         </MenuItem>
         <MenuItem onClick={handleMenuClose} sx={{ color: 'error.main' }}>
-          Delete Tournament
+          {t('deleteTournament')}
         </MenuItem>
       </Menu>
     </Card>

@@ -29,7 +29,9 @@ import {
   FileUpload,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { APP_ROUTES } from '../../constants/appRoutes';
+import { LanguageSwitcher } from '../LanguageSwitcher';
 
 const drawerWidth = 280;
 const collapsedWidth = 72;
@@ -43,6 +45,7 @@ const Sidebar = ({ open, onToggle }: SidebarProps) => {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const isMobile = useMediaQuery(theme.breakpoints.down('tablet'));
   const [tournamentsOpen, setTournamentsOpen] = useState(true);
 
@@ -59,41 +62,41 @@ const Sidebar = ({ open, onToggle }: SidebarProps) => {
 
   const menuItems = [
     {
-      text: 'Dashboard',
+      text: t('dashboard'),
       icon: <Dashboard />,
       path: APP_ROUTES.TOURNAMENTS,
       primary: true,
     },
     {
-      text: 'Tournaments',
+      text: t('tournaments'),
       icon: <EmojiEvents />,
       expandable: true,
       expanded: tournamentsOpen,
       onToggle: () => setTournamentsOpen(!tournamentsOpen),
       subItems: [
         {
-          text: 'All Tournaments',
+          text: t('allTournaments'),
           path: APP_ROUTES.TOURNAMENTS,
         },
         {
-          text: 'New Tournament',
+          text: t('newTournament'),
           icon: <Add />,
           path: APP_ROUTES.NEW_TOURNAMENT,
         },
         {
-          text: 'Import Tournament',
+          text: t('importTournament'),
           icon: <FileUpload />,
           path: '#import',
         },
       ],
     },
     {
-      text: 'Players',
+      text: t('players'),
       icon: <People />,
       path: '#players',
     },
     {
-      text: 'Analytics',
+      text: t('analytics'),
       icon: <Analytics />,
       path: '#analytics',
     },
@@ -304,7 +307,7 @@ const Sidebar = ({ open, onToggle }: SidebarProps) => {
           </ListItemIcon>
           {open && (
             <ListItemText
-              primary="User"
+              primary={t('user')}
               secondary="user@example.com"
               primaryTypographyProps={{ fontWeight: 500 }}
               secondaryTypographyProps={{ fontSize: '0.75rem' }}
@@ -313,20 +316,25 @@ const Sidebar = ({ open, onToggle }: SidebarProps) => {
         </ListItemButton>
 
         {open && (
-          <ListItemButton
-            sx={{
-              borderRadius: 2,
-              mt: 1,
-              '&:hover': {
-                backgroundColor: theme.palette.action.hover,
-              },
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: 40 }}>
-              <Settings />
-            </ListItemIcon>
-            <ListItemText primary="Settings" />
-          </ListItemButton>
+          <>
+            <ListItemButton
+              sx={{
+                borderRadius: 2,
+                mt: 1,
+                '&:hover': {
+                  backgroundColor: theme.palette.action.hover,
+                },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40 }}>
+                <Settings />
+              </ListItemIcon>
+              <ListItemText primary={t('settings')} />
+            </ListItemButton>
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+              <LanguageSwitcher />
+            </Box>
+          </>
         )}
       </Box>
     </Box>

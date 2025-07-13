@@ -7,16 +7,15 @@ import {
   useTheme,
   Card,
   CardContent,
-  Button,
 } from "@mui/material";
 import {
   NavigateNext,
   EmojiEvents,
-  Add,
   FileUpload,
   Info,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Grid from "@mui/material/Grid2";
 
 import BaseLayout from "../../components/BaseLayout";
@@ -27,6 +26,7 @@ import { APP_ROUTES } from "../../constants/appRoutes";
 const NewTournamentPage = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <BaseLayout>
@@ -44,20 +44,20 @@ const NewTournamentPage = () => {
             sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
           >
             <EmojiEvents fontSize="small" />
-            Tournaments
+            {t("tournaments")}
           </Link>
           <Typography color="text.primary" fontWeight={500}>
-            New Tournament
+            {t("newTournament")}
           </Typography>
         </Breadcrumbs>
 
         {/* Page Header */}
         <Box sx={{ mb: 4 }}>
           <Typography variant="h4" fontWeight={700} gutterBottom>
-            Create New Tournament
+            {t("createNewTournament")}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Set up a new chess tournament with custom rules and configurations
+            {t("setupNewChessTournament")}
           </Typography>
         </Box>
 
@@ -83,11 +83,11 @@ const NewTournamentPage = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                   <FileUpload color="primary" />
                   <Typography variant="h6" fontWeight={600}>
-                    Import Tournament
+                    {t("importTournament")}
                   </Typography>
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Have an existing tournament file? Import it directly to save time.
+                  {t("importTournamentDescription")}
                 </Typography>
                 <ImportTournamentButton />
               </CardContent>
@@ -99,21 +99,21 @@ const NewTournamentPage = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                   <Info color="primary" />
                   <Typography variant="h6" fontWeight={600}>
-                    Quick Tips
+                    {t("quickTips")}
                   </Typography>
                 </Box>
                 <Box component="ul" sx={{ pl: 2, pr: 0, m: 0 }}>
                   <Typography component="li" variant="body2" sx={{ mb: 1 }}>
-                    Choose Swiss system for tournaments with many players
+                    {t("quickTips.swiss")}
                   </Typography>
                   <Typography component="li" variant="body2" sx={{ mb: 1 }}>
-                    Round-robin works best for smaller groups
+                    {t("quickTips.roundRobin")}
                   </Typography>
                   <Typography component="li" variant="body2" sx={{ mb: 1 }}>
-                    Set time controls based on your event duration
+                    {t("quickTips.timeControls")}
                   </Typography>
                   <Typography component="li" variant="body2">
-                    You can always edit tournament details later
+                    {t("quickTips.editLater")}
                   </Typography>
                 </Box>
               </CardContent>

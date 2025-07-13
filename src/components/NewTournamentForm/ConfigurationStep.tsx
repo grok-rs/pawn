@@ -9,7 +9,6 @@ import {
   Paper,
   InputAdornment,
   Chip,
-  useTheme,
 } from '@mui/material';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -29,7 +28,6 @@ import { TournamentFormValues } from './types';
 
 const ConfigurationStep = () => {
   const { t } = useTranslation();
-  const theme = useTheme();
 
   const {
     register,
@@ -38,10 +36,10 @@ const ConfigurationStep = () => {
   } = useFormContext<TournamentFormValues>();
 
   const timeUnitOptions = [
-    { value: 'seconds', label: 'Seconds' },
-    { value: 'minutes', label: 'Minutes' },
-    { value: 'hours', label: 'Hours' },
-    { value: 'days', label: 'Days' },
+    { value: 'seconds', label: 'tournament.timeUnits.seconds.label' },
+    { value: 'minutes', label: 'tournament.timeUnits.minutes.label' },
+    { value: 'hours', label: 'tournament.timeUnits.hours.label' },
+    { value: 'days', label: 'tournament.timeUnits.days.label' },
   ];
 
   const selectedPairingSystem = watch('pairingSystem');
@@ -55,13 +53,13 @@ const ConfigurationStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Person color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                Tournament Officials
+                {t("form.sections.tournamentOfficials")}
               </Typography>
             </Box>
             <TextField
               fullWidth
-              label="Main Arbiter / Referee"
-              placeholder="Enter arbiter name"
+              label={t("tournament.configuration.mainReferee")}
+              placeholder={t("form.placeholders.enterArbiterName")}
               {...register('mainReferee')}
               error={Boolean(errors.mainReferee)}
               helperText={<CustomFormHelperText errorMessage={errors.mainReferee} />}
@@ -82,17 +80,17 @@ const ConfigurationStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <EmojiEvents color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                Tournament Format
+                {t("form.sections.tournamentFormat")}
               </Typography>
             </Box>
             <StyledGrid container spacing={2}>
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <FormControl fullWidth error={Boolean(errors.type)}>
-                  <InputLabel>Tournament Type</InputLabel>
+                  <InputLabel>{t("tournament.configuration.type")}</InputLabel>
                   <Select
                     defaultValue="rapid"
                     {...register('type', { required: true })}
-                    label="Tournament Type"
+                    label={t("tournament.configuration.type")}
                     startAdornment={
                       <InputAdornment position="start">
                         <Speed color="action" />
@@ -101,20 +99,20 @@ const ConfigurationStep = () => {
                   >
                     <MenuItem value="rapid">
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                        <span>Rapid</span>
-                        <Chip label="15-60 min" size="small" variant="outlined" />
+                        <span>{t("tournament.types.rapid")}</span>
+                        <Chip label={t("tournament.types.rapid.timeRange")} size="small" variant="outlined" />
                       </Box>
                     </MenuItem>
                     <MenuItem value="classical">
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                        <span>Classical</span>
-                        <Chip label="60+ min" size="small" variant="outlined" />
+                        <span>{t("tournament.types.classic")}</span>
+                        <Chip label={t("tournament.types.classical.timeRange")} size="small" variant="outlined" />
                       </Box>
                     </MenuItem>
                     <MenuItem value="blitz">
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                        <span>Blitz</span>
-                        <Chip label="3-15 min" size="small" variant="outlined" />
+                        <span>{t("tournament.types.blitz")}</span>
+                        <Chip label={t("tournament.types.blitz.timeRange")} size="small" variant="outlined" />
                       </Box>
                     </MenuItem>
                   </Select>
@@ -123,11 +121,11 @@ const ConfigurationStep = () => {
               </StyledGrid>
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <FormControl fullWidth error={Boolean(errors.pairingSystem)}>
-                  <InputLabel>Pairing System</InputLabel>
+                  <InputLabel>{t("tournament.configuration.pairingSystem")}</InputLabel>
                   <Select
                     defaultValue="swiss"
                     {...register('pairingSystem', { required: true })}
-                    label="Pairing System"
+                    label={t("tournament.configuration.pairingSystem")}
                     startAdornment={
                       <InputAdornment position="start">
                         <ViewModule color="action" />
@@ -136,17 +134,17 @@ const ConfigurationStep = () => {
                   >
                     <MenuItem value="swiss">
                       <Box>
-                        <Typography>Swiss System</Typography>
+                        <Typography>{t("tournament.pairingSystems.swiss")}</Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Best for large tournaments
+                          {t("tournament.pairingSystems.swiss.description")}
                         </Typography>
                       </Box>
                     </MenuItem>
                     <MenuItem value="roundRobin">
                       <Box>
-                        <Typography>Round Robin</Typography>
+                        <Typography>{t("tournament.pairingSystems.roundRobin")}</Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Everyone plays everyone
+                          {t("tournament.pairingSystems.roundRobin.description")}
                         </Typography>
                       </Box>
                     </MenuItem>
@@ -163,13 +161,13 @@ const ConfigurationStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Timer color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                Time Control Settings
+                {t("form.sections.timeControlSettings")}
               </Typography>
             </Box>
             <StyledGrid container spacing={2}>
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <TimeInputWithUnits
-                  label="Main Time"
+                  label={t("tournament.configuration.mainTime")}
                   inputName="mainTime"
                   unitName="mainTimeUnit"
                   error={errors.mainTime}
@@ -179,7 +177,7 @@ const ConfigurationStep = () => {
               </StyledGrid>
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <TimeInputWithUnits
-                  label="Increment per Move"
+                  label={t("tournament.configuration.additionalTime")}
                   inputName="additionalTime"
                   unitName="additionalTimeUnit"
                   error={errors.additionalTime}
@@ -197,23 +195,23 @@ const ConfigurationStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Numbers color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                Tournament Structure
+                {t("form.sections.tournamentStructure")}
               </Typography>
             </Box>
             <TextField
               fullWidth
-              label="Number of Rounds"
+              label={t("tournament.configuration.numberOfRounds")}
               type="number"
               {...register('rounds', { min: 1 })}
               error={Boolean(errors.rounds)}
               helperText={
-                <CustomFormHelperText
-                  errorMessage={errors.rounds}
-                  helperText={selectedPairingSystem === 'swiss' 
-                    ? 'Recommended: 7-9 rounds for Swiss system'
-                    : 'Round Robin: Each player plays everyone once'
-                  }
-                />
+                errors.rounds ? (
+                  <CustomFormHelperText errorMessage={errors.rounds} />
+                ) : (
+                  selectedPairingSystem === 'swiss' 
+                    ? t('form.helpers.swissRounds')
+                    : t('form.helpers.roundRobinRounds')
+                )
               }
               slotProps={{
                 input: {

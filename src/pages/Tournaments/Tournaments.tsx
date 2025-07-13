@@ -27,6 +27,7 @@ import {
   PlayArrow,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import BaseLayout from "../../components/BaseLayout/BaseLayout";
 import TournamentList from "../../components/TournamentList/TournamentList";
 import {
@@ -42,6 +43,7 @@ import { commands } from "../../dto/bindings";
 const TournamentsPage = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [filteredTournaments, setFilteredTournaments] = useState<Tournament[]>([]);
   const [filter, setFilter] = useState("all");
@@ -157,7 +159,7 @@ const TournamentsPage = () => {
         <Box sx={{ mb: 4 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h4" fontWeight={700}>
-              Tournaments
+              {t('tournaments')}
             </Typography>
             <Button
               variant="contained"
@@ -171,7 +173,7 @@ const TournamentsPage = () => {
                 },
               }}
             >
-              New Tournament
+              {t('newTournament')}
             </Button>
           </Box>
 
@@ -182,7 +184,7 @@ const TournamentsPage = () => {
                 <Skeleton variant="rounded" height={100} />
               ) : (
                 <StatCard
-                  title="Total Tournaments"
+                  title={t('totalTournaments')}
                   value={stats.total}
                   icon={<EmojiEvents />}
                   color={theme.palette.primary.main}
@@ -194,7 +196,7 @@ const TournamentsPage = () => {
                 <Skeleton variant="rounded" height={100} />
               ) : (
                 <StatCard
-                  title="Ongoing"
+                  title={t('ongoing')}
                   value={stats.ongoing}
                   icon={<PlayArrow />}
                   color={theme.palette.success.main}
@@ -206,7 +208,7 @@ const TournamentsPage = () => {
                 <Skeleton variant="rounded" height={100} />
               ) : (
                 <StatCard
-                  title="Not Started"
+                  title={t('notStarted')}
                   value={stats.draft}
                   icon={<Schedule />}
                   color={theme.palette.warning.main}
@@ -218,7 +220,7 @@ const TournamentsPage = () => {
                 <Skeleton variant="rounded" height={100} />
               ) : (
                 <StatCard
-                  title="Finished"
+                  title={t('finished')}
                   value={stats.finished}
                   icon={<CheckCircle />}
                   color={theme.palette.info.main}
@@ -238,7 +240,7 @@ const TournamentsPage = () => {
             }}
           >
             <TextField
-              placeholder="Search tournaments..."
+              placeholder={t('searchTournaments')}
               variant="outlined"
               size="small"
               value={searchQuery}
@@ -254,25 +256,25 @@ const TournamentsPage = () => {
             />
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Chip
-                label="All"
+                label={t('all')}
                 onClick={() => setFilter('all')}
                 color={filter === 'all' ? 'primary' : 'default'}
                 variant={filter === 'all' ? 'filled' : 'outlined'}
               />
               <Chip
-                label="Ongoing"
+                label={t('ongoing')}
                 onClick={() => setFilter('ongoing')}
                 color={filter === 'ongoing' ? 'success' : 'default'}
                 variant={filter === 'ongoing' ? 'filled' : 'outlined'}
               />
               <Chip
-                label="Not Started"
+                label={t('notStarted')}
                 onClick={() => setFilter('draft')}
                 color={filter === 'draft' ? 'warning' : 'default'}
                 variant={filter === 'draft' ? 'filled' : 'outlined'}
               />
               <Chip
-                label="Finished"
+                label={t('finished')}
                 onClick={() => setFilter('finished')}
                 color={filter === 'finished' ? 'info' : 'default'}
                 variant={filter === 'finished' ? 'filled' : 'outlined'}
@@ -286,10 +288,10 @@ const TournamentsPage = () => {
               open={Boolean(anchorEl)}
               onClose={handleFilterClose}
             >
-              <MenuItem onClick={() => handleFilterSelect('all')}>All Status</MenuItem>
-              <MenuItem onClick={() => handleFilterSelect('ongoing')}>Ongoing Only</MenuItem>
-              <MenuItem onClick={() => handleFilterSelect('draft')}>Not Started Only</MenuItem>
-              <MenuItem onClick={() => handleFilterSelect('finished')}>Finished Only</MenuItem>
+              <MenuItem onClick={() => handleFilterSelect('all')}>{t('all')}</MenuItem>
+              <MenuItem onClick={() => handleFilterSelect('ongoing')}>{t('ongoing')}</MenuItem>
+              <MenuItem onClick={() => handleFilterSelect('draft')}>{t('notStarted')}</MenuItem>
+              <MenuItem onClick={() => handleFilterSelect('finished')}>{t('finished')}</MenuItem>
             </Menu>
           </Paper>
         </Box>

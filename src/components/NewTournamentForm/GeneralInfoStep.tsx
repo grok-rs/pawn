@@ -14,7 +14,6 @@ import {
   EmojiEvents,
   LocationOn,
   CalendarToday,
-  Flag,
 } from '@mui/icons-material';
 
 import CountryAutocomplete from '../CountryAutocomplete';
@@ -47,13 +46,13 @@ const GeneralInfoStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <EmojiEvents color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                Tournament Identity
+                {t("form.sections.tournamentIdentity")}
               </Typography>
             </Box>
             <TextField
               fullWidth
-              label="Tournament Name"
-              placeholder="e.g., Spring Chess Championship 2024"
+              label={t("tournamentName")}
+              placeholder={t("form.placeholders.tournamentName")}
               {...register('name')}
               error={Boolean(errors.name)}
               helperText={<CustomFormHelperText errorMessage={errors.name} />}
@@ -79,15 +78,15 @@ const GeneralInfoStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <LocationOn color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                Location Details
+                {t("form.sections.locationDetails")}
               </Typography>
             </Box>
             <StyledGrid container spacing={2}>
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <TextField
                   fullWidth
-                  label="City"
-                  placeholder="Enter city name"
+                  label={t("city")}
+                  placeholder={t("form.placeholders.enterCityName")}
                   {...register('city')}
                   error={Boolean(errors.city)}
                   helperText={<CustomFormHelperText errorMessage={errors.city} />}
@@ -104,7 +103,7 @@ const GeneralInfoStep = () => {
                 <CountryAutocomplete
                   control={control}
                   name="country"
-                  label="Country"
+                  label={t("country")}
                   error={Boolean(errors.country)}
                   helperText={<CustomFormHelperText errorMessage={errors.country} />}
                 />
@@ -119,7 +118,7 @@ const GeneralInfoStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <CalendarToday color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                Tournament Schedule
+                {t("form.sections.tournamentSchedule")}
               </Typography>
             </Box>
             <StyledGrid container spacing={2}>
@@ -130,7 +129,7 @@ const GeneralInfoStep = () => {
                   render={({ field }) => (
                     <DatePicker
                       {...field}
-                      label="Start Date"
+                      label={t("start_date")}
                       onChange={(date) => field.onChange(date)}
                       value={dayjs(field.value)}
                       slotProps={{
@@ -156,7 +155,7 @@ const GeneralInfoStep = () => {
                   render={({ field }) => (
                     <DatePicker
                       {...field}
-                      label="End Date"
+                      label={t("end_date")}
                       onChange={(date) => field.onChange(date)}
                       value={dayjs(field.value)}
                       slotProps={{
