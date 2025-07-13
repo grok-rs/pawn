@@ -267,14 +267,14 @@ const TournamentInfoPage: React.FC = () => {
       <BaseLayout>
         <Container>
           <Alert severity="error" sx={{ mt: 2 }}>
-            {error || 'Tournament not found'}
+            {error || t('tournament.tournamentNotFound')}
           </Alert>
           <Button
             startIcon={<ArrowBack />}
             onClick={() => navigate('/tournaments')}
             sx={{ mt: 2 }}
           >
-            Back to Tournaments
+            {t('tournament.backToTournaments')}
           </Button>
         </Container>
       </BaseLayout>
@@ -299,7 +299,7 @@ const TournamentInfoPage: React.FC = () => {
             sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
           >
             <EmojiEvents fontSize="small" />
-            Tournaments
+            {t('tournaments')}
           </Link>
           <Typography color="text.primary" fontWeight={500}>
             {tournament.name}
@@ -395,7 +395,7 @@ const TournamentInfoPage: React.FC = () => {
                         {games.length}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Games Played
+                        {t('tournament.gamesPlayed')}
                       </Typography>
                     </Box>
                   </Box>
@@ -422,10 +422,10 @@ const TournamentInfoPage: React.FC = () => {
                     </Avatar>
                     <Box>
                       <Typography variant="h4" fontWeight={700}>
-                        {tournament.time_type || 'N/A'}
+                        {tournament.time_type ? t(`timeControls.${tournament.time_type}`) : 'N/A'}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Time Control
+                        {t('tournament.timeControl')}
                       </Typography>
                     </Box>
                   </Box>
@@ -455,7 +455,7 @@ const TournamentInfoPage: React.FC = () => {
                         {tournament.rounds_played}/{tournament.total_rounds}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Rounds Progress
+                        {t('tournament.roundsProgress')}
                       </Typography>
                     </Box>
                   </Box>
@@ -491,7 +491,7 @@ const TournamentInfoPage: React.FC = () => {
               />
               <Tab
                 icon={<PlayCircleOutline />}
-                label="Rounds"
+                label={t('tournament.rounds')}
                 iconPosition="start"
                 {...a11yProps(1)}
               />
@@ -553,7 +553,7 @@ const TournamentInfoPage: React.FC = () => {
                           </Typography>
                         </TableCell>
                         <TableCell>
-                          {playerResult.player.rating || 'Unrated'}
+                          {playerResult.player.rating || t('unrated')}
                         </TableCell>
                         <TableCell>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -731,19 +731,19 @@ const TournamentInfoPage: React.FC = () => {
             setSettingsOpen(true);
           }}>
             <Edit fontSize="small" sx={{ mr: 1 }} />
-            Tournament Settings
+            {t('tournament.menuSettings')}
           </MenuItem>
           <MenuItem onClick={handleMenuClose}>
             <Download fontSize="small" sx={{ mr: 1 }} />
-            Export Data
+            {t('tournament.menuExportData')}
           </MenuItem>
           <MenuItem onClick={handleMenuClose}>
             <Print fontSize="small" sx={{ mr: 1 }} />
-            Print Report
+            {t('tournament.menuPrintReport')}
           </MenuItem>
           <MenuItem onClick={handleMenuClose}>
             <Share fontSize="small" sx={{ mr: 1 }} />
-            Share Tournament
+            {t('tournament.menuShareTournament')}
           </MenuItem>
           <Divider />
           <MenuItem onClick={handleDeleteTournament} sx={{ color: 'error.main' }}>

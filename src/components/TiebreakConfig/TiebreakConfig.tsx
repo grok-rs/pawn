@@ -39,84 +39,7 @@ interface TiebreakConfigProps {
   onFideDefaultsChange?: (use: boolean) => void;
 }
 
-const TIEBREAK_INFO: Record<TiebreakType, { name: string; description: string }> = {
-  buchholz_full: {
-    name: 'Buchholz',
-    description: 'Sum of all opponents\' scores',
-  },
-  buchholz_cut_1: {
-    name: 'Buchholz Cut-1',
-    description: 'Sum of opponents\' scores excluding the lowest',
-  },
-  buchholz_cut_2: {
-    name: 'Buchholz Cut-2',
-    description: 'Sum of opponents\' scores excluding highest and lowest',
-  },
-  buchholz_median: {
-    name: 'Median Buchholz',
-    description: 'Median of opponents\' scores',
-  },
-  sonneborn_berger: {
-    name: 'Sonneborn-Berger',
-    description: 'Sum of defeated opponents\' scores + half of drawn opponents\' scores',
-  },
-  progressive_score: {
-    name: 'Progressive Score',
-    description: 'Cumulative score after each round',
-  },
-  cumulative_score: {
-    name: 'Cumulative Score',
-    description: 'Sum of scores up to each round',
-  },
-  direct_encounter: {
-    name: 'Direct Encounter',
-    description: 'Head-to-head result between tied players',
-  },
-  average_rating_of_opponents: {
-    name: 'Average Rating of Opponents (ARO)',
-    description: 'Average rating of all opponents',
-  },
-  tournament_performance_rating: {
-    name: 'Tournament Performance Rating (TPR)',
-    description: 'Performance rating based on results and opponents\' ratings',
-  },
-  number_of_wins: {
-    name: 'Number of Wins',
-    description: 'Total number of games won',
-  },
-  number_of_games_with_black: {
-    name: 'Games with Black',
-    description: 'Number of games played with black pieces',
-  },
-  number_of_wins_with_black: {
-    name: 'Wins with Black',
-    description: 'Number of games won with black pieces',
-  },
-  koya_system: {
-    name: 'Koya System',
-    description: 'Points against opponents who scored 50% or more',
-  },
-  aroc_cut_1: {
-    name: 'AROC Cut-1',
-    description: 'Average rating of opponents excluding the lowest',
-  },
-  aroc_cut_2: {
-    name: 'AROC Cut-2',
-    description: 'Average rating of opponents excluding highest and lowest',
-  },
-  match_points: {
-    name: 'Match Points',
-    description: 'Points from match results (team events)',
-  },
-  game_points: {
-    name: 'Game Points',
-    description: 'Points from individual games (team events)',
-  },
-  board_points: {
-    name: 'Board Points',
-    description: 'Points by board position (team events)',
-  },
-};
+// Tiebreak information is now localized through translation keys
 
 const FIDE_DEFAULT_TIEBREAKS: TiebreakType[] = [
   'buchholz_full',
@@ -135,9 +58,25 @@ const TiebreakConfig: React.FC<TiebreakConfigProps> = ({
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
-  const availableTiebreaks = Object.keys(TIEBREAK_INFO).filter(
-    (tb) => !tiebreaks.includes(tb as TiebreakType)
-  ) as TiebreakType[];
+  const allTiebreakTypes: TiebreakType[] = [
+    'buchholz_full', 'buchholz_cut_1', 'buchholz_cut_2', 'buchholz_median',
+    'sonneborn_berger', 'progressive_score', 'cumulative_score', 'direct_encounter',
+    'average_rating_of_opponents', 'tournament_performance_rating', 'number_of_wins',
+    'number_of_games_with_black', 'number_of_wins_with_black', 'koya_system',
+    'aroc_cut_1', 'aroc_cut_2', 'match_points', 'game_points', 'board_points'
+  ];
+  
+  const availableTiebreaks = allTiebreakTypes.filter(
+    (tb) => !tiebreaks.includes(tb)
+  );
+  
+  const getTiebreakName = (tiebreak: TiebreakType): string => {
+    return t(`tiebreaks.${tiebreak}.name`);
+  };
+  
+  const getTiebreakDescription = (tiebreak: TiebreakType): string => {
+    return t(`tiebreaks.${tiebreak}.description`);
+  };
 
   const handleDragStart = (index: number) => (e: React.DragEvent) => {
     setDraggedIndex(index);
@@ -244,10 +183,10 @@ const TiebreakConfig: React.FC<TiebreakConfigProps> = ({
                   primary={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Chip label={index + 1} size="small" color="primary" />
-                      <Typography>{TIEBREAK_INFO[tiebreak].name}</Typography>
+                      <Typography>{getTiebreakName(tiebreak)}</Typography>
                     </Box>
                   }
-                  secondary={TIEBREAK_INFO[tiebreak].description}
+                  secondary={getTiebreakDescription(tiebreak)}
                 />
                 <ListItemSecondaryAction>
                   <ButtonGroup size="small">
@@ -305,8 +244,8 @@ const TiebreakConfig: React.FC<TiebreakConfigProps> = ({
                 sx={{ '&:hover': { bgcolor: 'action.hover' } }}
               >
                 <ListItemText
-                  primary={TIEBREAK_INFO[tiebreak].name}
-                  secondary={TIEBREAK_INFO[tiebreak].description}
+                  primary={getTiebreakName(tiebreak)}
+                  secondary={getTiebreakDescription(tiebreak)}
                 />
               </ListItemButton>
             ))}

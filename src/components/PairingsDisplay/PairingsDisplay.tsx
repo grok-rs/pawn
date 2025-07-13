@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogTitle,
@@ -47,6 +48,7 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
   onConfirm,
   loading = false,
 }) => {
+  const { t } = useTranslation();
   const [editedPairings, setEditedPairings] = useState<Pairing[]>(pairings);
 
   const handleSwapColors = (index: number) => {
@@ -64,7 +66,7 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
 
   const getPlayerRatingDisplay = (player: Player | null) => {
     if (!player) return null;
-    return player.rating ? `(${player.rating})` : '(Unrated)';
+    return player.rating ? `(${player.rating})` : t('pairings.unrated');
   };
 
   const getPlayerCountryFlag = (player: Player | null) => {
@@ -96,7 +98,7 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
           </Avatar>
           <Box>
             <Typography variant="body2" color="text.secondary">
-              BYE
+              {t('pairings.bye')}
             </Typography>
           </Box>
         </Box>
@@ -147,14 +149,14 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Chip
               icon={<CheckCircle />}
-              label={`${getTotalGames()} Games`}
+              label={`${getTotalGames()} ${t('pairings.games')}`}
               color="primary"
               variant="outlined"
             />
             {getTotalByes() > 0 && (
               <Chip
                 icon={<PersonOff />}
-                label={`${getTotalByes()} Byes`}
+                label={`${getTotalByes()} ${t('pairings.byes')}`}
                 color="warning"
                 variant="outlined"
               />
@@ -166,7 +168,7 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
       <DialogContent dividers>
         {editedPairings.length === 0 ? (
           <Alert severity="info" sx={{ mt: 2 }}>
-            No pairings generated. This might happen when there are insufficient players or all players have already played each other.
+            {t('pairings.noPairingsMessage')}
           </Alert>
         ) : (
           <TableContainer component={Paper} variant="outlined">
@@ -174,19 +176,19 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
               <TableHead>
                 <TableRow>
                   <TableCell align="center" sx={{ fontWeight: 600 }}>
-                    Board
+                    {t('pairings.board')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, minWidth: 200 }}>
-                    White Player
+                    {t('pairings.whitePlayer')}
                   </TableCell>
                   <TableCell align="center" sx={{ fontWeight: 600, width: 60 }}>
-                    vs
+                    {t('pairings.vs')}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, minWidth: 200 }}>
-                    Black Player
+                    {t('pairings.blackPlayer')}
                   </TableCell>
                   <TableCell align="center" sx={{ fontWeight: 600, width: 120 }}>
-                    Actions
+                    {t('pairings.actions')}
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -206,7 +208,7 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
                     </TableCell>
                     <TableCell align="center">
                       <Typography variant="h6" color="text.secondary">
-                        vs
+                        {t('pairings.vs')}
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -214,7 +216,7 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
                     </TableCell>
                     <TableCell align="center">
                       {pairing.black_player && (
-                        <Tooltip title="Swap colors">
+                        <Tooltip title={t('pairings.swapColors')}>
                           <IconButton
                             size="small"
                             onClick={() => handleSwapColors(index)}
@@ -236,9 +238,9 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
           <Box sx={{ mt: 3 }}>
             <Divider sx={{ mb: 2 }} />
             <Typography variant="body2" color="text.secondary">
-              <strong>Summary:</strong> {getTotalGames()} games will be created
-              {getTotalByes() > 0 && `, ${getTotalByes()} players will receive byes`}.
-              You can swap colors by clicking the swap button next to each pairing.
+              <strong>{t('pairings.summary')}</strong> {t('pairings.gamesWillBeCreated').replace('{games}', getTotalGames().toString())}
+              {getTotalByes() > 0 && `, ${t('pairings.playersWillReceiveByes').replace('{players}', getTotalByes().toString())}`}.
+              {t('pairings.swapColorsHelp')}
             </Typography>
           </Box>
         )}
@@ -250,7 +252,7 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
           disabled={loading}
           startIcon={<Cancel />}
         >
-          Cancel
+          {t('cancel')}
         </Button>
         <Button
           onClick={() => onConfirm(editedPairings)}
@@ -258,7 +260,7 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
           disabled={loading || editedPairings.length === 0}
           startIcon={<CheckCircle />}
         >
-          {loading ? 'Creating Games...' : 'Confirm Pairings'}
+          {loading ? t('pairings.creatingGames') : t('pairings.confirmPairings')}
         </Button>
       </DialogActions>
     </Dialog>

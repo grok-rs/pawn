@@ -37,7 +37,7 @@ import {
   ExpandMore,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import type { PlayerStanding, TiebreakType } from '../../dto/bindings';
+import type { PlayerStanding } from '../../dto/bindings';
 
 interface StandingsTableProps {
   standings: PlayerStanding[];
@@ -48,27 +48,7 @@ interface StandingsTableProps {
   onPrint?: () => void;
 }
 
-const TIEBREAK_SHORT_NAMES: Record<TiebreakType, string> = {
-  buchholz_full: 'Buch',
-  buchholz_cut_1: 'Buch-1',
-  buchholz_cut_2: 'Buch-2',
-  buchholz_median: 'Med-Buch',
-  sonneborn_berger: 'S-B',
-  progressive_score: 'Prog',
-  cumulative_score: 'Cumul',
-  direct_encounter: 'DE',
-  average_rating_of_opponents: 'ARO',
-  tournament_performance_rating: 'TPR',
-  number_of_wins: 'Wins',
-  number_of_games_with_black: 'Black',
-  number_of_wins_with_black: 'W-Black',
-  koya_system: 'Koya',
-  aroc_cut_1: 'AROC-1',
-  aroc_cut_2: 'AROC-2',
-  match_points: 'MP',
-  game_points: 'GP',
-  board_points: 'BP',
-};
+// Tiebreak short names are now localized through translation keys
 
 const StandingsTable: React.FC<StandingsTableProps> = ({
   standings,
@@ -160,7 +140,7 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams) => (
         <Box>
-          {params.row.player.rating || 'Unrated'}
+          {params.row.player.rating || t('unrated')}
           {params.row.rating_change && (
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {params.row.rating_change > 0 ? (
@@ -248,13 +228,13 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
     },
     {
       field: 'performance_rating',
-      headerName: 'TPR',
+      headerName: t('tiebreaks.short.tournament_performance_rating'),
       width: 100,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams) => (
         params.value ? (
-          <Tooltip title={t('Tournament Performance Rating')}>
+          <Tooltip title={t('tiebreaks.tournament_performance_rating.name')}>
             <Typography variant="body2" fontWeight={500}>
               {params.value}
             </Typography>
@@ -266,21 +246,24 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
 
   // Add tiebreak columns dynamically
   const tiebreakColumns: GridColDef[] = showTiebreaks && standings[0]?.tiebreak_scores
-    ? standings[0].tiebreak_scores.map((_, index) => ({
-        field: `tiebreak_${index}`,
-        headerName: TIEBREAK_SHORT_NAMES[standings[0].tiebreak_scores[index].tiebreak_type],
-        width: 100,
-        align: 'center',
-        headerAlign: 'center',
-        valueGetter: (_value: any, row: any) => row.tiebreak_scores[index]?.display_value || '-',
-        renderCell: (params: GridRenderCellParams) => (
-          <Tooltip title={standings[0].tiebreak_scores[index].tiebreak_type.replace(/_/g, ' ')}>
-            <Typography variant="body2">
-              {params.value}
-            </Typography>
-          </Tooltip>
-        ),
-      }))
+    ? standings[0].tiebreak_scores.map((_, index) => {
+        const tiebreakType = standings[0].tiebreak_scores[index].tiebreak_type;
+        return {
+          field: `tiebreak_${index}`,
+          headerName: t(`tiebreaks.short.${tiebreakType}`),
+          width: 100,
+          align: 'center',
+          headerAlign: 'center',
+          valueGetter: (_value: any, row: any) => row.tiebreak_scores[index]?.display_value || '-',
+          renderCell: (params: GridRenderCellParams) => (
+            <Tooltip title={t(`tiebreaks.${tiebreakType}.name`)}>
+              <Typography variant="body2">
+                {params.value}
+              </Typography>
+            </Tooltip>
+          ),
+        };
+      })
     : [];
 
   const columns = [...baseColumns, ...tiebreakColumns];

@@ -24,7 +24,7 @@ const languages: LanguageOption[] = [
 ];
 
 const LanguageSwitcher: React.FC = () => {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -46,12 +46,12 @@ const LanguageSwitcher: React.FC = () => {
 
   return (
     <>
-      <Tooltip title="Change language">
+      <Tooltip title={t('language.changeLanguage')}>
         <IconButton
           onClick={handleClick}
           size="small"
           sx={{ ml: 2 }}
-          aria-label="change language"
+          aria-label={t('language.changeLanguage')}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <span style={{ fontSize: '1.2rem' }}>{currentLanguage.flag}</span>

@@ -121,7 +121,7 @@ const TournamentListItem = ({ tournament, onDelete }: TournamentListItemProps) =
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Timer fontSize="small" />
                 <Typography variant="body2">
-                  {tournament.time_type}
+                  {tournament.time_type ? t(`timeControls.${tournament.time_type}`) : '-'}
                 </Typography>
               </Box>
             </Box>

@@ -128,7 +128,7 @@ const RoundManager: React.FC<RoundManagerProps> = ({ tournamentId, onRoundUpdate
       console.log(`Generated ${pairings.length} pairings:`, pairings);
       
       if (pairings.length === 0) {
-        setError('No pairings could be generated. This might happen if there are insufficient players or all players have already played each other.');
+        setError(t('rounds.noPairingsGenerated'));
         return;
       }
       
@@ -267,7 +267,7 @@ const RoundManager: React.FC<RoundManagerProps> = ({ tournamentId, onRoundUpdate
         <Card sx={{ mb: 3 }}>
           <CardContent>
             <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-              Current Standings
+              {t('rounds.currentStandings')}
             </Typography>
             <Box sx={{ height: 400 }}>
               <StandingsTable 
@@ -284,7 +284,7 @@ const RoundManager: React.FC<RoundManagerProps> = ({ tournamentId, onRoundUpdate
         <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6" fontWeight={600}>
-              Tournament Progress
+              {t('rounds.tournamentProgress')}
             </Typography>
             <Button
               startIcon={<Add />}
@@ -292,14 +292,14 @@ const RoundManager: React.FC<RoundManagerProps> = ({ tournamentId, onRoundUpdate
               onClick={() => setCreateRoundDialogOpen(true)}
               disabled={actionLoading}
             >
-              New Round
+              {t('rounds.newRound')}
             </Button>
           </Box>
           
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
               <Typography variant="body2" color="text.secondary">
-                Rounds Completed
+                {t('rounds.roundsCompleted')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {rounds.filter(r => r.status === 'completed').length} / {rounds.length}
@@ -315,11 +315,11 @@ const RoundManager: React.FC<RoundManagerProps> = ({ tournamentId, onRoundUpdate
           {currentRound && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                Current Round:
+                {t('rounds.currentRound')}
               </Typography>
               <Chip
                 icon={getRoundStatusIcon(currentRound.status)}
-                label={`Round ${currentRound.round_number} - ${currentRound.status}`}
+                label={`${t('round')} ${currentRound.round_number} - ${t(`rounds.status.${currentRound.status === 'in_progress' ? 'inProgress' : currentRound.status}`)}`}
                 color={getRoundStatusColor(currentRound.status)}
                 variant="outlined"
               />
@@ -346,19 +346,19 @@ const RoundManager: React.FC<RoundManagerProps> = ({ tournamentId, onRoundUpdate
                   </Typography>
                   <Chip
                     icon={getRoundStatusIcon(round.status)}
-                    label={round.status}
+                    label={t(`rounds.status.${round.status === 'in_progress' ? 'inProgress' : round.status}`)}
                     color={getRoundStatusColor(round.status)}
                     size="small"
                   />
                 </Box>
 
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Created: {new Date(round.created_at).toLocaleDateString()}
+                  {t('rounds.created')} {new Date(round.created_at).toLocaleDateString()}
                 </Typography>
 
                 {round.completed_at && (
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Completed: {new Date(round.completed_at).toLocaleDateString()}
+                    {t('rounds.completed')} {new Date(round.completed_at).toLocaleDateString()}
                   </Typography>
                 )}
 
@@ -372,7 +372,7 @@ const RoundManager: React.FC<RoundManagerProps> = ({ tournamentId, onRoundUpdate
                       onClick={() => handleGeneratePairings(round.round_number)}
                       disabled={actionLoading}
                     >
-                      Generate Pairings
+                      {t('rounds.generatePairings')}
                     </Button>
                   )}
 
@@ -384,7 +384,7 @@ const RoundManager: React.FC<RoundManagerProps> = ({ tournamentId, onRoundUpdate
                       onClick={() => handleCompleteRound(round.id)}
                       disabled={actionLoading}
                     >
-                      Complete Round
+                      {t('rounds.completeRound')}
                     </Button>
                   )}
 
@@ -395,7 +395,7 @@ const RoundManager: React.FC<RoundManagerProps> = ({ tournamentId, onRoundUpdate
                       onClick={handleCreateNextRound}
                       disabled={actionLoading}
                     >
-                      Next Round
+                      {t('rounds.nextRound')}
                     </Button>
                   )}
                 </Box>
@@ -409,10 +409,10 @@ const RoundManager: React.FC<RoundManagerProps> = ({ tournamentId, onRoundUpdate
             <Card>
               <CardContent sx={{ textAlign: 'center', py: 4 }}>
                 <Typography variant="h6" color="text.secondary" gutterBottom>
-                  No rounds created yet
+                  {t('rounds.noRoundsYet')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Create the first round to start the tournament
+                  {t('rounds.createFirstRoundDescription')}
                 </Typography>
                 <Button
                   startIcon={<Add />}
@@ -420,7 +420,7 @@ const RoundManager: React.FC<RoundManagerProps> = ({ tournamentId, onRoundUpdate
                   onClick={() => setCreateRoundDialogOpen(true)}
                   disabled={actionLoading}
                 >
-                  Create First Round
+                  {t('rounds.createFirstRound')}
                 </Button>
               </CardContent>
             </Card>
@@ -437,31 +437,31 @@ const RoundManager: React.FC<RoundManagerProps> = ({ tournamentId, onRoundUpdate
           sx: { maxWidth: 'sm', margin: 'auto' }
         }}
       >
-        <DialogTitle>Create New Round</DialogTitle>
+        <DialogTitle>{t('rounds.createNewRound')}</DialogTitle>
         <DialogContent>
           <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>Pairing Method</InputLabel>
+            <InputLabel>{t('rounds.pairingMethod')}</InputLabel>
             <Select
               value={pairingMethod}
-              label="Pairing Method"
+              label={t('rounds.pairingMethod')}
               onChange={(e) => setPairingMethod(e.target.value)}
             >
-              <MenuItem value="swiss">Swiss System</MenuItem>
-              <MenuItem value="round_robin">Round Robin</MenuItem>
-              <MenuItem value="manual">Manual</MenuItem>
+              <MenuItem value="swiss">{t('rounds.swissSystem')}</MenuItem>
+              <MenuItem value="round_robin">{t('rounds.roundRobin')}</MenuItem>
+              <MenuItem value="manual">{t('rounds.manual')}</MenuItem>
             </Select>
           </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCreateRoundDialogOpen(false)}>
-            Cancel
+            {t('cancel')}
           </Button>
           <Button 
             onClick={handleCreateRound}
             variant="contained"
             disabled={actionLoading}
           >
-            {actionLoading ? <CircularProgress size={20} /> : 'Create Round'}
+            {actionLoading ? <CircularProgress size={20} /> : t('rounds.createRound')}
           </Button>
         </DialogActions>
       </Dialog>
