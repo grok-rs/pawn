@@ -419,7 +419,7 @@ const LateEntryDialog: React.FC<LateEntryDialogProps> = ({
             {/* Impact Summary */}
             {missedRounds.length > 0 && (
               <Grid size={12}>
-                <Card variant="outlined" sx={{ bgcolor: 'warning.light', bgcolor: 'warning.50' }}>
+                <Card variant="outlined" sx={{ bgcolor: 'warning.50' }}>
                   <CardContent>
                     <Typography variant="subtitle2" gutterBottom>
                       <Info sx={{ verticalAlign: 'middle', mr: 1 }} />

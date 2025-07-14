@@ -454,11 +454,25 @@ impl Db for SqliteDb {
         struct TournamentSettingsRow {
             tiebreak_order: String,
             use_fide_defaults: bool,
+            forfeit_time_minutes: Option<i32>,
+            draw_offers_allowed: Option<bool>,
+            mobile_phone_policy: Option<String>,
+            default_color_allocation: Option<String>,
+            late_entry_allowed: Option<bool>,
+            bye_assignment_rule: Option<String>,
+            arbiter_notes: Option<String>,
+            tournament_category: Option<String>,
+            organizer_name: Option<String>,
+            organizer_email: Option<String>,
+            prize_structure: Option<String>,
         }
 
         let result: Option<TournamentSettingsRow> = sqlx::query_as(
             r#"
-            SELECT tiebreak_order, use_fide_defaults
+            SELECT tiebreak_order, use_fide_defaults, forfeit_time_minutes, 
+                   draw_offers_allowed, mobile_phone_policy, default_color_allocation,
+                   late_entry_allowed, bye_assignment_rule, arbiter_notes,
+                   tournament_category, organizer_name, organizer_email, prize_structure
             FROM tournament_settings
             WHERE tournament_id = ?
             "#
@@ -477,6 +491,17 @@ impl Db for SqliteDb {
                     tournament_id,
                     tiebreaks,
                     use_fide_defaults: row.use_fide_defaults,
+                    forfeit_time_minutes: row.forfeit_time_minutes,
+                    draw_offers_allowed: row.draw_offers_allowed,
+                    mobile_phone_policy: row.mobile_phone_policy,
+                    default_color_allocation: row.default_color_allocation,
+                    late_entry_allowed: row.late_entry_allowed,
+                    bye_assignment_rule: row.bye_assignment_rule,
+                    arbiter_notes: row.arbiter_notes,
+                    tournament_category: row.tournament_category,
+                    organizer_name: row.organizer_name,
+                    organizer_email: row.organizer_email,
+                    prize_structure: row.prize_structure,
                 }))
             }
             None => {
@@ -496,17 +521,45 @@ impl Db for SqliteDb {
 
         sqlx::query(
             r#"
-            INSERT INTO tournament_settings (tournament_id, tiebreak_order, use_fide_defaults)
-            VALUES (?, ?, ?)
+            INSERT INTO tournament_settings (
+                tournament_id, tiebreak_order, use_fide_defaults,
+                forfeit_time_minutes, draw_offers_allowed, mobile_phone_policy,
+                default_color_allocation, late_entry_allowed, bye_assignment_rule,
+                arbiter_notes, tournament_category, organizer_name,
+                organizer_email, prize_structure
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(tournament_id) DO UPDATE SET
                 tiebreak_order = excluded.tiebreak_order,
                 use_fide_defaults = excluded.use_fide_defaults,
+                forfeit_time_minutes = excluded.forfeit_time_minutes,
+                draw_offers_allowed = excluded.draw_offers_allowed,
+                mobile_phone_policy = excluded.mobile_phone_policy,
+                default_color_allocation = excluded.default_color_allocation,
+                late_entry_allowed = excluded.late_entry_allowed,
+                bye_assignment_rule = excluded.bye_assignment_rule,
+                arbiter_notes = excluded.arbiter_notes,
+                tournament_category = excluded.tournament_category,
+                organizer_name = excluded.organizer_name,
+                organizer_email = excluded.organizer_email,
+                prize_structure = excluded.prize_structure,
                 updated_at = CURRENT_TIMESTAMP
             "#
         )
         .bind(settings.tournament_id)
         .bind(tiebreak_order_json)
         .bind(settings.use_fide_defaults)
+        .bind(settings.forfeit_time_minutes)
+        .bind(settings.draw_offers_allowed)
+        .bind(settings.mobile_phone_policy.as_deref())
+        .bind(settings.default_color_allocation.as_deref())
+        .bind(settings.late_entry_allowed)
+        .bind(settings.bye_assignment_rule.as_deref())
+        .bind(settings.arbiter_notes.as_deref())
+        .bind(settings.tournament_category.as_deref())
+        .bind(settings.organizer_name.as_deref())
+        .bind(settings.organizer_email.as_deref())
+        .bind(settings.prize_structure.as_deref())
         .execute(&self.pool)
         .await?;
 

@@ -27,6 +27,12 @@ This file provides comprehensive guidance to Claude Code (claude.ai/code) when w
 - **Player Demo**: Navigate to `/demo/enhanced-players` in running application
 - **Sample Data**: Use "Create Sample Tournament" in demo for testing
 
+### GitHub Operations
+- **Issues & PRs**: Use `gh` command for all GitHub operations (view issues, PRs, comments)
+- **View PR Comments**: `gh api repos/owner/repo/pulls/123/comments`
+- **Analyze Issues**: `gh issue view 123` or `gh issue list`
+- **Repository Info**: `gh repo view` for repository details
+
 ## Enhanced Architecture Overview
 
 **Pawn** is a professional chess tournament management application with a sophisticated multi-layered architecture:

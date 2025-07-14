@@ -20,9 +20,15 @@ import {
   Numbers,
   Speed,
   CompareArrows,
+  Settings,
+  Gavel,
+  Phone,
+  Schedule,
+  PersonAdd,
 } from '@mui/icons-material';
-import { useState } from 'react';
-import type { TiebreakType } from '../../dto/bindings';
+import { useState, useEffect } from 'react';
+import type { TiebreakType, TimeControlTemplate } from '../../dto/bindings';
+import { commands } from '../../dto/bindings';
 
 import CustomFormHelperText from '../FormHelperText/FormHelperText';
 import TimeInputWithUnits from '../TimeInputWithUnits/TimeInputWithUnits';
@@ -39,6 +45,8 @@ const ConfigurationStep = () => {
     'direct_encounter',
   ]);
   const [useFideDefaults, setUseFideDefaults] = useState(true);
+  const [timeControlTemplates, setTimeControlTemplates] = useState<TimeControlTemplate[]>([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
 
   const {
     register,
@@ -54,6 +62,22 @@ const ConfigurationStep = () => {
   ];
 
   const selectedPairingSystem = watch('pairingSystem');
+
+  useEffect(() => {
+    const loadTimeControlTemplates = async () => {
+      setLoadingTemplates(true);
+      try {
+        const templates = await commands.getTimeControlTemplates();
+        setTimeControlTemplates(templates);
+      } catch (error) {
+        console.error('Failed to load time control templates:', error);
+      } finally {
+        setLoadingTemplates(false);
+      }
+    };
+
+    loadTimeControlTemplates();
+  }, []);
 
   return (
     <Box>
@@ -132,11 +156,11 @@ const ConfigurationStep = () => {
               </StyledGrid>
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <FormControl fullWidth error={Boolean(errors.pairingSystem)}>
-                  <InputLabel>{t("tournament.configuration.pairingSystem")}</InputLabel>
+                  <InputLabel>{t("tournament.configuration.tournamentType")}</InputLabel>
                   <Select
                     defaultValue="swiss"
                     {...register('pairingSystem', { required: true })}
-                    label={t("tournament.configuration.pairingSystem")}
+                    label={t("tournament.configuration.tournamentType")}
                     startAdornment={
                       <InputAdornment position="start">
                         <ViewModule color="action" />
@@ -145,17 +169,33 @@ const ConfigurationStep = () => {
                   >
                     <MenuItem value="swiss">
                       <Box>
-                        <Typography>{t("tournament.pairingSystems.swiss")}</Typography>
+                        <Typography>{t("tournament.types.swiss")}</Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {t("tournament.pairingSystems.swiss.description")}
+                          {t("tournament.types.swiss.description")}
                         </Typography>
                       </Box>
                     </MenuItem>
                     <MenuItem value="roundRobin">
                       <Box>
-                        <Typography>{t("tournament.pairingSystems.roundRobin")}</Typography>
+                        <Typography>{t("tournament.types.roundRobin")}</Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {t("tournament.pairingSystems.roundRobin.description")}
+                          {t("tournament.types.roundRobin.description")}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="knockout">
+                      <Box>
+                        <Typography>{t("tournament.types.knockout")}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {t("tournament.types.knockout.description")}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="elimination">
+                      <Box>
+                        <Typography>{t("tournament.types.elimination")}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {t("tournament.types.elimination.description")}
                         </Typography>
                       </Box>
                     </MenuItem>
@@ -177,14 +217,31 @@ const ConfigurationStep = () => {
             </Box>
             <StyledGrid container spacing={2}>
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
-                <TimeInputWithUnits
-                  label={t("tournament.configuration.mainTime")}
-                  inputName="mainTime"
-                  unitName="mainTimeUnit"
-                  error={errors.mainTime}
-                  defaultUnit="minutes"
-                  unitOptions={timeUnitOptions}
-                />
+                <FormControl fullWidth error={Boolean(errors.timeControlTemplate)}>
+                  <InputLabel>{t("tournament.configuration.timeControlTemplate")}</InputLabel>
+                  <Select
+                    {...register('timeControlTemplate')}
+                    label={t("tournament.configuration.timeControlTemplate")}
+                    disabled={loadingTemplates}
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <Timer color="action" />
+                      </InputAdornment>
+                    }
+                  >
+                    {timeControlTemplates.map((template) => (
+                      <MenuItem key={template.id} value={template.id}>
+                        <Box>
+                          <Typography>{template.name}</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {template.description || t(`tournament.timeControl.${template.time_control_type}`)}
+                          </Typography>
+                        </Box>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <CustomFormHelperText errorMessage={errors.timeControlTemplate} />
+                </FormControl>
               </StyledGrid>
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <TimeInputWithUnits
@@ -221,7 +278,11 @@ const ConfigurationStep = () => {
                 ) : (
                   selectedPairingSystem === 'swiss' 
                     ? t('form.helpers.swissRounds')
-                    : t('form.helpers.roundRobinRounds')
+                    : selectedPairingSystem === 'roundRobin'
+                    ? t('form.helpers.roundRobinRounds')
+                    : selectedPairingSystem === 'knockout' || selectedPairingSystem === 'elimination'
+                    ? t('form.helpers.knockoutRounds')
+                    : t('form.helpers.defaultRounds')
                 )
               }
               slotProps={{
@@ -259,6 +320,244 @@ const ConfigurationStep = () => {
               useFideDefaults={useFideDefaults}
               onFideDefaultsChange={setUseFideDefaults}
             />
+          </Paper>
+        </StyledGrid>
+
+        {/* Advanced Tournament Rules */}
+        <StyledGrid size={12}>
+          <Paper sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <Settings color="primary" />
+              <Typography variant="h6" fontWeight={600}>
+                {t("form.sections.advancedRules")}
+              </Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              {t("form.sections.advancedRules.description")}
+            </Typography>
+            <StyledGrid container spacing={2}>
+              {/* Forfeit Time */}
+              <StyledGrid size={{ mobile: 12, laptop: 6 }}>
+                <TextField
+                  fullWidth
+                  label={t("tournament.configuration.forfeitTime")}
+                  type="number"
+                  defaultValue={30}
+                  {...register('forfeitTimeMinutes')}
+                  error={Boolean(errors.forfeitTimeMinutes)}
+                  helperText={
+                    errors.forfeitTimeMinutes ? (
+                      <CustomFormHelperText errorMessage={errors.forfeitTimeMinutes} />
+                    ) : (
+                      t('form.helpers.forfeitTime')
+                    )
+                  }
+                  slotProps={{
+                    input: {
+                      inputProps: {
+                        min: 1,
+                        max: 120,
+                      },
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Schedule color="action" />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          {t("tournament.timeUnits.minutes.short")}
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+              </StyledGrid>
+
+              {/* Draw Offers Policy */}
+              <StyledGrid size={{ mobile: 12, laptop: 6 }}>
+                <FormControl fullWidth>
+                  <InputLabel>{t("tournament.configuration.drawOffersPolicy")}</InputLabel>
+                  <Select
+                    defaultValue="allowed"
+                    {...register('drawOffersPolicy')}
+                    label={t("tournament.configuration.drawOffersPolicy")}
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <Gavel color="action" />
+                      </InputAdornment>
+                    }
+                  >
+                    <MenuItem value="allowed">
+                      <Box>
+                        <Typography>{t("tournament.drawOffers.allowed")}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {t("tournament.drawOffers.allowed.description")}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="restricted">
+                      <Box>
+                        <Typography>{t("tournament.drawOffers.restricted")}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {t("tournament.drawOffers.restricted.description")}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="prohibited">
+                      <Box>
+                        <Typography>{t("tournament.drawOffers.prohibited")}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {t("tournament.drawOffers.prohibited.description")}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+              </StyledGrid>
+
+              {/* Mobile Phone Policy */}
+              <StyledGrid size={{ mobile: 12, laptop: 6 }}>
+                <FormControl fullWidth>
+                  <InputLabel>{t("tournament.configuration.mobilePhonePolicy")}</InputLabel>
+                  <Select
+                    defaultValue="prohibited"
+                    {...register('mobilePhonePolicy')}
+                    label={t("tournament.configuration.mobilePhonePolicy")}
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <Phone color="action" />
+                      </InputAdornment>
+                    }
+                  >
+                    <MenuItem value="allowed">
+                      <Box>
+                        <Typography>{t("tournament.mobilePhone.allowed")}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {t("tournament.mobilePhone.allowed.description")}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="silent_only">
+                      <Box>
+                        <Typography>{t("tournament.mobilePhone.silentOnly")}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {t("tournament.mobilePhone.silentOnly.description")}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="prohibited">
+                      <Box>
+                        <Typography>{t("tournament.mobilePhone.prohibited")}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {t("tournament.mobilePhone.prohibited.description")}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+              </StyledGrid>
+
+              {/* Late Entry Policy */}
+              <StyledGrid size={{ mobile: 12, laptop: 6 }}>
+                <FormControl fullWidth>
+                  <InputLabel>{t("tournament.configuration.lateEntryPolicy")}</InputLabel>
+                  <Select
+                    defaultValue="allowed"
+                    {...register('lateEntryPolicy')}
+                    label={t("tournament.configuration.lateEntryPolicy")}
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <PersonAdd color="action" />
+                      </InputAdornment>
+                    }
+                  >
+                    <MenuItem value="allowed">
+                      <Box>
+                        <Typography>{t("tournament.lateEntry.allowed")}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {t("tournament.lateEntry.allowed.description")}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="restricted">
+                      <Box>
+                        <Typography>{t("tournament.lateEntry.restricted")}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {t("tournament.lateEntry.restricted.description")}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="prohibited">
+                      <Box>
+                        <Typography>{t("tournament.lateEntry.prohibited")}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {t("tournament.lateEntry.prohibited.description")}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+              </StyledGrid>
+
+              {/* Organizer Information */}
+              <StyledGrid size={{ mobile: 12, laptop: 6 }}>
+                <TextField
+                  fullWidth
+                  label={t("tournament.configuration.organizerName")}
+                  placeholder={t("form.placeholders.enterOrganizerName")}
+                  {...register('organizerName')}
+                  error={Boolean(errors.organizerName)}
+                  helperText={<CustomFormHelperText errorMessage={errors.organizerName} />}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Person color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </StyledGrid>
+
+              <StyledGrid size={{ mobile: 12, laptop: 6 }}>
+                <TextField
+                  fullWidth
+                  label={t("tournament.configuration.organizerEmail")}
+                  placeholder={t("form.placeholders.enterOrganizerEmail")}
+                  type="email"
+                  {...register('organizerEmail')}
+                  error={Boolean(errors.organizerEmail)}
+                  helperText={<CustomFormHelperText errorMessage={errors.organizerEmail} />}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        @
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </StyledGrid>
+
+              {/* Arbiter Notes */}
+              <StyledGrid size={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  label={t("tournament.configuration.arbiterNotes")}
+                  placeholder={t("form.placeholders.enterArbiterNotes")}
+                  {...register('arbiterNotes')}
+                  error={Boolean(errors.arbiterNotes)}
+                  helperText={<CustomFormHelperText errorMessage={errors.arbiterNotes} />}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
+                        <Gavel color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </StyledGrid>
+            </StyledGrid>
           </Paper>
         </StyledGrid>
       </StyledGrid>

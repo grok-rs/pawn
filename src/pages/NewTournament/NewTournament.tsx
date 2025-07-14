@@ -13,6 +13,8 @@ import {
   EmojiEvents,
   FileUpload,
   Info,
+  Settings,
+  ContentCopy,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -21,6 +23,8 @@ import Grid from "@mui/material/Grid2";
 import BaseLayout from "../../components/BaseLayout";
 import ImportTournamentButton from "../../components/ImportTournamentButton";
 import NewTournamentSetup from "../../components/NewTournamentForm/NewTournamentSetup";
+import TournamentConfigurationExport from "../../components/TournamentConfigurationExport";
+import TournamentTemplates from "../../components/TournamentTemplates";
 import { APP_ROUTES } from "../../constants/appRoutes";
 
 const NewTournamentPage = () => {
@@ -90,6 +94,44 @@ const NewTournamentPage = () => {
                   {t("importTournamentDescription")}
                 </Typography>
                 <ImportTournamentButton />
+              </CardContent>
+            </Card>
+
+            {/* Configuration Import/Export */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <Settings color="primary" />
+                  <Typography variant="h6" fontWeight={600}>
+                    {t("tournament.configuration.title")}
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  {t("tournament.configuration.description")}
+                </Typography>
+                <TournamentConfigurationExport />
+              </CardContent>
+            </Card>
+
+            {/* Tournament Templates */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <ContentCopy color="primary" />
+                  <Typography variant="h6" fontWeight={600}>
+                    {t("tournament.templates.title")}
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  {t("tournament.templates.quickStart")}
+                </Typography>
+                <TournamentTemplates 
+                  showSelection={true}
+                  onSelectTemplate={(template) => {
+                    // In a real implementation, this would populate the form with template data
+                    console.log('Selected template:', template);
+                  }}
+                />
               </CardContent>
             </Card>
 

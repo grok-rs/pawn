@@ -18,21 +18,30 @@ const NewTournamentSetup = () => {
     return DEFAULT_TOURNAMENT_FORM_VALUES;
   }, []);
 
-  const onSubmit = async (data: CreateTournament) => {
+  const onSubmit = async (data: any) => {
     console.log("submit", data);
-    const createTournament: CreateTournament = {
-      name: "test",
-      location: "Lozova",
-      date: "",
-      time_type: "",
-      player_count: 10,
-      rounds_played: 10,
-      total_rounds: 30,
-      country_code: "UKR",
-    };
-    await commands
-      .createTournament(createTournament)
-      .catch((error) => console.error(error));
+    try {
+      const createTournament: CreateTournament = {
+        name: data.name,
+        location: data.city,
+        date: data.startDate ? data.startDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        time_type: data.type,
+        tournament_type: data.pairingSystem,
+        player_count: 0, // Will be updated as players are added
+        rounds_played: 0,
+        total_rounds: data.rounds || 9,
+        country_code: data.country || "UKR",
+      };
+      
+      const newTournament = await commands.createTournament(createTournament);
+      console.log('Tournament created successfully:', newTournament);
+      
+      // Navigate to the tournament page
+      navigate(`/tournament/${newTournament.id}`);
+    } catch (error) {
+      console.error('Failed to create tournament:', error);
+      // TODO: Show error message to user
+    }
   };
 
   return (

@@ -1,5 +1,6 @@
 import ConfigurationStep from './ConfigurationStep';
 import GeneralInfoStep from './GeneralInfoStep';
+import PreviewStep from './PreviewStep';
 import { TOURNAMENT_FORM_SCHEMA } from './validation';
 
 export const NEW_TOURNAMENT_FORM_STEPS = [
@@ -21,5 +22,14 @@ export const NEW_TOURNAMENT_FORM_STEPS = [
       description: 'form.steps.configuration.description',
     },
     component: ConfigurationStep,
+  },
+  {
+    id: 3,
+    label: 'form.steps.preview',
+    stepIntro: {
+      title: 'form.steps.preview.title',
+      description: 'form.steps.preview.description',
+    },
+    component: PreviewStep,
   },
 ];

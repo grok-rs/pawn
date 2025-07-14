@@ -21,7 +21,7 @@ const TournamentForm = () => {
     formState: { errors },
   } = useForm<TournamentFormValues>({
     defaultValues: DEFAULT_TOURNAMENT_FORM_VALUES,
-    resolver: (() => {}) as any, // yupResolver(TOURNAMENT_FORM_SCHEMA),
+    // resolver: yupResolver(TOURNAMENT_FORM_SCHEMA),
   });
 
   const onSubmit = (data: TournamentFormValues) => {

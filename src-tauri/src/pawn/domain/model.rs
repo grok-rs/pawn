@@ -14,6 +14,15 @@ pub struct Tournament {
     pub rounds_played: i32,
     pub total_rounds: i32,
     pub country_code: String,
+    // Advanced tournament information
+    pub status: Option<String>,
+    pub start_time: Option<String>,
+    pub end_time: Option<String>,
+    pub description: Option<String>,
+    pub website_url: Option<String>,
+    pub contact_email: Option<String>,
+    pub entry_fee: Option<f64>,
+    pub currency: Option<String>,
 }
 
 #[derive(Debug, Serialize, serde::Deserialize, FromRow, SpectaType, Clone)]
@@ -637,4 +646,85 @@ impl BracketPositionStatus {
             BracketPositionStatus::Advanced => "advanced",
         }
     }
+}
+
+// Scheveningen (Team-based) Tournament Models
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct Team {
+    pub id: i32,
+    pub tournament_id: i32,
+    pub name: String,
+    pub captain: Option<String>,
+    pub description: Option<String>,
+    pub color: Option<String>, // Team color for UI
+    pub created_at: String,
+}
+
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct TeamMembership {
+    pub id: i32,
+    pub team_id: i32,
+    pub player_id: i32,
+    pub board_number: i32, // Board position within the team (1, 2, 3, etc.)
+    pub is_captain: bool,
+    pub created_at: String,
+}
+
+#[derive(Debug, Serialize, SpectaType, Clone)]
+pub struct TeamStanding {
+    pub team: Team,
+    pub points: f64,
+    pub match_points: f64, // Team match points (2 for win, 1 for draw, 0 for loss)
+    pub board_points: f64, // Individual board points
+    pub games_played: i32,
+    pub matches_won: i32,
+    pub matches_drawn: i32,
+    pub matches_lost: i32,
+    pub players: Vec<Player>,
+}
+
+#[derive(Debug, Serialize, SpectaType, Clone)]
+pub struct SchevenigenenMatch {
+    pub round_number: i32,
+    pub team_a: Team,
+    pub team_b: Team,
+    pub board_pairings: Vec<BoardPairing>,
+    pub status: String, // "scheduled", "in_progress", "completed"
+}
+
+#[derive(Debug, Serialize, SpectaType, Clone)]
+pub struct BoardPairing {
+    pub board_number: i32,
+    pub white_player: Player,
+    pub black_player: Player,
+    pub white_team_id: i32,
+    pub black_team_id: i32,
+    pub result: Option<String>, // Game result
+}
+
+// Tournament Template System
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct TournamentTemplate {
+    pub id: i32,
+    pub name: String,
+    pub description: Option<String>,
+    pub tournament_type: String, // swiss, roundrobin, knockout, etc.
+    pub time_type: String, // classical, rapid, blitz
+    pub default_rounds: i32,
+    pub time_control_template_id: Option<i32>,
+    pub tiebreak_order: String, // JSON array of tiebreak types
+    pub forfeit_time_minutes: i32,
+    pub draw_offers_allowed: bool,
+    pub mobile_phone_policy: String,
+    pub late_entry_allowed: bool,
+    pub is_public: bool, // Whether template is available to all users
+    pub created_by: Option<String>, // User who created the template
+    pub created_at: String,
+    pub updated_at: Option<String>,
+}
+
+#[derive(Debug, Serialize, SpectaType, Clone)]
+pub struct TournamentTemplateWithTimeControl {
+    pub template: TournamentTemplate,
+    pub time_control: Option<TimeControl>,
 }

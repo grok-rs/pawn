@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use crate::pawn::{
     common::error::PawnError,
-    domain::model::{Player, PlayerResult, Pairing, PairingMethod, GameResult},
+    domain::model::{Player, PlayerResult, Pairing, PairingMethod, GameResult, Team, TeamMembership, BoardPairing},
 };
 
 pub struct PairingService;
@@ -23,7 +23,7 @@ impl PairingService {
             PairingMethod::RoundRobin => self.generate_round_robin_pairings(players, round_number),
             PairingMethod::Manual => Ok(vec![]), // Manual pairings are created by user
             PairingMethod::Knockout => Ok(vec![]), // Knockout pairings handled by KnockoutService
-            PairingMethod::Scheveningen => Ok(vec![]), // Team-based pairings - future implementation
+            PairingMethod::Scheveningen => self.generate_scheveningen_pairings(players, round_number),
         }
     }
 
@@ -40,7 +40,7 @@ impl PairingService {
             PairingMethod::RoundRobin => self.generate_round_robin_pairings(players, round_number),
             PairingMethod::Manual => Ok(vec![]), // Manual pairings are created by user
             PairingMethod::Knockout => Ok(vec![]), // Knockout pairings handled by KnockoutService
-            PairingMethod::Scheveningen => Ok(vec![]), // Team-based pairings - future implementation
+            PairingMethod::Scheveningen => self.generate_scheveningen_pairings(players, round_number),
         }
     }
 
@@ -398,6 +398,71 @@ impl PairingService {
             });
             board_number += 1;
         }
+
+        Ok(pairings)
+    }
+
+    /// Generate Scheveningen (team-based) pairings
+    /// In Scheveningen system, players from team A play against players from team B
+    /// Board 1 of team A plays board 1 of team B, etc.
+    /// Colors alternate: odd boards team A white, even boards team B white
+    fn generate_scheveningen_pairings(
+        &self,
+        players: Vec<Player>,
+        round_number: i32,
+    ) -> Result<Vec<Pairing>, PawnError> {
+        // Note: This is a simplified implementation
+        // In a full implementation, we would need team information from the database
+        // For now, we'll group players by some criteria (e.g., rating) to simulate teams
+        
+        if players.len() < 2 {
+            return Ok(vec![]);
+        }
+
+        // Sort players by rating (descending)
+        let mut sorted_players = players;
+        sorted_players.sort_by(|a, b| {
+            b.rating.unwrap_or(0).cmp(&a.rating.unwrap_or(0))
+        });
+
+        // Split into two teams (simplified approach)
+        let team_size = sorted_players.len() / 2;
+        let team_a: Vec<Player> = sorted_players.iter().take(team_size).cloned().collect();
+        let team_b: Vec<Player> = sorted_players.iter().skip(team_size).cloned().collect();
+
+        let mut pairings = Vec::new();
+        
+        // Pair players by board number
+        for (board_idx, (player_a, player_b)) in team_a.iter().zip(team_b.iter()).enumerate() {
+            let board_number = (board_idx + 1) as i32;
+            
+            // Alternate colors by round and board
+            // Odd rounds: Team A gets white on odd boards, black on even boards
+            // Even rounds: Team A gets black on odd boards, white on even boards
+            let team_a_white = if round_number % 2 == 1 {
+                board_number % 2 == 1 // Odd boards get white
+            } else {
+                board_number % 2 == 0 // Even boards get white
+            };
+
+            let (white_player, black_player) = if team_a_white {
+                (player_a.clone(), player_b.clone())
+            } else {
+                (player_b.clone(), player_a.clone())
+            };
+
+            pairings.push(Pairing {
+                white_player,
+                black_player: Some(black_player),
+                board_number,
+            });
+        }
+
+        tracing::info!(
+            "Generated {} Scheveningen pairings for round {}",
+            pairings.len(),
+            round_number
+        );
 
         Ok(pairings)
     }

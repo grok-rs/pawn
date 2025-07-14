@@ -43,6 +43,18 @@ pub struct UpdateTournamentSettings {
     pub tournament_id: i32,
     pub tiebreak_order: Vec<TiebreakType>,
     pub use_fide_defaults: bool,
+    // Advanced tournament settings
+    pub forfeit_time_minutes: Option<i32>,
+    pub draw_offers_allowed: Option<bool>,
+    pub mobile_phone_policy: Option<String>,
+    pub default_color_allocation: Option<String>,
+    pub late_entry_allowed: Option<bool>,
+    pub bye_assignment_rule: Option<String>,
+    pub arbiter_notes: Option<String>,
+    pub tournament_category: Option<String>,
+    pub organizer_name: Option<String>,
+    pub organizer_email: Option<String>,
+    pub prize_structure: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
@@ -283,5 +295,90 @@ pub struct TimeControlValidation {
     pub errors: Vec<String>,
     pub warnings: Vec<String>,
     pub estimated_game_duration_minutes: Option<i32>,
+}
+
+// Team Management DTOs for Scheveningen tournaments
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct CreateTeam {
+    pub tournament_id: i32,
+    pub name: String,
+    pub captain: Option<String>,
+    pub description: Option<String>,
+    pub color: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct UpdateTeam {
+    pub id: i32,
+    pub name: Option<String>,
+    pub captain: Option<String>,
+    pub description: Option<String>,
+    pub color: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct AddPlayerToTeam {
+    pub team_id: i32,
+    pub player_id: i32,
+    pub board_number: i32,
+    pub is_captain: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct RemovePlayerFromTeam {
+    pub team_id: i32,
+    pub player_id: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct GenerateSchevenigenenPairings {
+    pub tournament_id: i32,
+    pub round_number: i32,
+    pub team_a_id: i32,
+    pub team_b_id: i32,
+    pub alternate_colors: bool, // Whether to alternate colors by board number
+}
+
+// Tournament Template DTOs
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct CreateTournamentTemplate {
+    pub name: String,
+    pub description: Option<String>,
+    pub tournament_type: String,
+    pub time_type: String,
+    pub default_rounds: i32,
+    pub time_control_template_id: Option<i32>,
+    pub tiebreak_order: Vec<String>, // Will be serialized to JSON
+    pub forfeit_time_minutes: i32,
+    pub draw_offers_allowed: bool,
+    pub mobile_phone_policy: String,
+    pub late_entry_allowed: bool,
+    pub is_public: bool,
+    pub created_by: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct UpdateTournamentTemplate {
+    pub id: i32,
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub tournament_type: Option<String>,
+    pub time_type: Option<String>,
+    pub default_rounds: Option<i32>,
+    pub time_control_template_id: Option<i32>,
+    pub tiebreak_order: Option<Vec<String>>,
+    pub forfeit_time_minutes: Option<i32>,
+    pub draw_offers_allowed: Option<bool>,
+    pub mobile_phone_policy: Option<String>,
+    pub late_entry_allowed: Option<bool>,
+    pub is_public: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct TournamentTemplateFilter {
+    pub tournament_type: Option<String>,
+    pub time_type: Option<String>,
+    pub is_public: Option<bool>,
+    pub created_by: Option<String>,
 }
 

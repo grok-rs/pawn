@@ -102,6 +102,18 @@ pub struct TournamentTiebreakConfig {
     pub tournament_id: i32,
     pub tiebreaks: Vec<TiebreakType>,
     pub use_fide_defaults: bool,
+    // Advanced tournament settings
+    pub forfeit_time_minutes: Option<i32>,
+    pub draw_offers_allowed: Option<bool>,
+    pub mobile_phone_policy: Option<String>,
+    pub default_color_allocation: Option<String>,
+    pub late_entry_allowed: Option<bool>,
+    pub bye_assignment_rule: Option<String>,
+    pub arbiter_notes: Option<String>,
+    pub tournament_category: Option<String>,
+    pub organizer_name: Option<String>,
+    pub organizer_email: Option<String>,
+    pub prize_structure: Option<String>,
 }
 
 impl Default for TournamentTiebreakConfig {
@@ -115,6 +127,17 @@ impl Default for TournamentTiebreakConfig {
                 TiebreakType::DirectEncounter,
             ],
             use_fide_defaults: true,
+            forfeit_time_minutes: Some(30),
+            draw_offers_allowed: Some(true),
+            mobile_phone_policy: Some("prohibited".to_string()),
+            default_color_allocation: Some("automatic".to_string()),
+            late_entry_allowed: Some(true),
+            bye_assignment_rule: Some("lowest_rated".to_string()),
+            arbiter_notes: None,
+            tournament_category: None,
+            organizer_name: None,
+            organizer_email: None,
+            prize_structure: None,
         }
     }
 }
