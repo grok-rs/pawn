@@ -320,7 +320,15 @@ impl PairingService {
                 name: "BYE".to_string(),
                 rating: None,
                 country_code: None,
+                title: None,
+                birth_date: None,
+                gender: None,
+                email: None,
+                phone: None,
+                club: None,
+                status: "bye".to_string(),
                 created_at: String::new(),
+                updated_at: None,
             });
         }
 

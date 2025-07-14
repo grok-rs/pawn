@@ -258,7 +258,15 @@ impl<D: Db> RoundService<D> {
                     name: "BYE".to_string(),
                     rating: None,
                     country_code: None,
+                    title: None,
+                    birth_date: None,
+                    gender: None,
+                    email: None,
+                    phone: None,
+                    club: None,
+                    status: "bye".to_string(),
                     created_at: chrono::Utc::now().to_rfc3339(),
+                    updated_at: None,
                 };
 
                 let game = self.db.create_game(game_data).await.map_err(PawnError::Database)?;

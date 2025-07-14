@@ -5,7 +5,7 @@ use tracing::info;
 
 use super::{
     db::sqlite::SqliteDb, 
-    service::{tournament::TournamentService, tiebreak::TiebreakCalculator, round::RoundService}
+    service::{tournament::TournamentService, tiebreak::TiebreakCalculator, round::RoundService, player::PlayerService}
 };
 
 pub struct State<D> {
@@ -15,6 +15,7 @@ pub struct State<D> {
     pub tournament_service: Arc<TournamentService<D>>,
     pub tiebreak_calculator: Arc<TiebreakCalculator<D>>,
     pub round_service: Arc<RoundService<D>>,
+    pub player_service: Arc<PlayerService<D>>,
 }
 
 pub type PawnState = State<SqliteDb>;
@@ -49,6 +50,7 @@ impl PawnState {
         let tournament_service = Arc::new(TournamentService::new(Arc::clone(&sqlite)));
         let tiebreak_calculator = Arc::new(TiebreakCalculator::new(Arc::clone(&sqlite)));
         let round_service = Arc::new(RoundService::new(Arc::clone(&sqlite)));
+        let player_service = Arc::new(PlayerService::new(Arc::clone(&sqlite)));
 
         Self {
             app_data_dir,
@@ -56,6 +58,7 @@ impl PawnState {
             tournament_service,
             tiebreak_calculator,
             round_service,
+            player_service,
         }
     }
 }

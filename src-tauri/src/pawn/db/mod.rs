@@ -1,6 +1,6 @@
 use super::domain::{
-    dto::{CreateTournament, CreatePlayer, CreateGame, UpdateTournamentSettings, CreateRound, UpdateGameResult, ApproveGameResult},
-    model::{Tournament, Player, Game, TournamentDetails, PlayerResult, GameResult, Round, GameResultAudit, EnhancedGameResult},
+    dto::{CreateTournament, CreatePlayer, CreateGame, UpdateTournamentSettings, CreateRound, UpdateGameResult, ApproveGameResult, UpdatePlayer, CreatePlayerCategory, AssignPlayerToCategory},
+    model::{Tournament, Player, Game, TournamentDetails, PlayerResult, GameResult, Round, GameResultAudit, EnhancedGameResult, PlayerCategory, PlayerCategoryAssignment},
     tiebreak::TournamentTiebreakConfig,
 };
 
@@ -17,6 +17,8 @@ pub trait Db: Send + Sync {
     // Player operations
     async fn get_players_by_tournament(&self, tournament_id: i32) -> Result<Vec<Player>, sqlx::Error>;
     async fn create_player(&self, data: CreatePlayer) -> Result<Player, sqlx::Error>;
+    async fn update_player(&self, data: UpdatePlayer) -> Result<Player, sqlx::Error>;
+    async fn delete_player(&self, player_id: i32) -> Result<(), sqlx::Error>;
     
     // Game operations
     async fn get_games_by_tournament(&self, tournament_id: i32) -> Result<Vec<Game>, sqlx::Error>;
@@ -49,4 +51,11 @@ pub trait Db: Send + Sync {
     async fn create_round(&self, data: CreateRound) -> Result<Round, sqlx::Error>;
     async fn update_round_status(&self, round_id: i32, status: &str) -> Result<Round, sqlx::Error>;
     async fn get_games_by_round(&self, tournament_id: i32, round_number: i32) -> Result<Vec<GameResult>, sqlx::Error>;
+    
+    // Player category operations
+    async fn get_tournament_categories(&self, tournament_id: i32) -> Result<Vec<PlayerCategory>, sqlx::Error>;
+    async fn create_player_category(&self, data: CreatePlayerCategory) -> Result<PlayerCategory, sqlx::Error>;
+    async fn delete_player_category(&self, category_id: i32) -> Result<(), sqlx::Error>;
+    async fn assign_player_to_category(&self, data: AssignPlayerToCategory) -> Result<PlayerCategoryAssignment, sqlx::Error>;
+    async fn get_player_category_assignments(&self, tournament_id: i32) -> Result<Vec<PlayerCategoryAssignment>, sqlx::Error>;
 }

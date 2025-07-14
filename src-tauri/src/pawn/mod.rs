@@ -59,6 +59,25 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::game_result::approve_game_result,
             command::game_result::get_pending_approvals,
             command::game_result::get_game_result_types,
+            // Enhanced Player Management Commands
+            command::player::create_player_enhanced,
+            command::player::update_player,
+            command::player::delete_player,
+            command::player::get_player_by_id,
+            command::player::get_players_by_tournament_enhanced,
+            command::player::search_players,
+            command::player::bulk_import_players,
+            command::player::validate_bulk_import,
+            command::player::add_player_rating_history,
+            command::player::get_player_rating_history,
+            command::player::create_player_category,
+            command::player::get_tournament_categories,
+            command::player::delete_player_category,
+            command::player::assign_player_to_category,
+            command::player::update_player_status,
+            command::player::withdraw_player,
+            command::player::request_player_bye,
+            command::player::get_player_statistics,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Throw);
 
