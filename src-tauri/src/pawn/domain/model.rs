@@ -22,7 +22,15 @@ pub struct Player {
     pub name: String,
     pub rating: Option<i32>,
     pub country_code: Option<String>,
+    pub title: Option<String>,        // Chess titles: GM, IM, FM, etc.
+    pub birth_date: Option<String>,   // For age-based categories
+    pub gender: Option<String>,       // M, F, O
+    pub email: Option<String>,        // Contact information
+    pub phone: Option<String>,        // Contact information
+    pub club: Option<String>,         // Club/federation affiliation
+    pub status: String,               // Registration status
     pub created_at: String,
+    pub updated_at: Option<String>,
 }
 
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
@@ -245,6 +253,145 @@ impl PairingMethod {
             PairingMethod::Manual => "manual",
             PairingMethod::Swiss => "swiss",
             PairingMethod::RoundRobin => "round_robin",
+        }
+    }
+}
+
+// Enhanced Player Management Models
+
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct RatingHistory {
+    pub id: i32,
+    pub player_id: i32,
+    pub rating_type: String,    // fide, national, club, rapid, blitz
+    pub rating: i32,
+    pub is_provisional: bool,
+    pub effective_date: String,
+    pub created_at: String,
+}
+
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct PlayerCategory {
+    pub id: i32,
+    pub tournament_id: i32,
+    pub name: String,
+    pub description: Option<String>,
+    pub min_rating: Option<i32>,
+    pub max_rating: Option<i32>,
+    pub min_age: Option<i32>,
+    pub max_age: Option<i32>,
+    pub gender_restriction: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct PlayerCategoryAssignment {
+    pub id: i32,
+    pub player_id: i32,
+    pub category_id: i32,
+    pub assigned_at: String,
+}
+
+#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+pub enum PlayerStatus {
+    Active,
+    LateEntry,
+    Withdrawn,
+    ByeRequested,
+}
+
+#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+pub enum RatingType {
+    Fide,
+    National,
+    Club,
+    Rapid,
+    Blitz,
+}
+
+#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+pub enum ChessTitle {
+    GM,    // Grandmaster
+    IM,    // International Master
+    FM,    // FIDE Master
+    CM,    // Candidate Master
+    WGM,   // Woman Grandmaster
+    WIM,   // Woman International Master
+    WFM,   // Woman FIDE Master
+    WCM,   // Woman Candidate Master
+    None,
+}
+
+impl PlayerStatus {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "active" => PlayerStatus::Active,
+            "late_entry" => PlayerStatus::LateEntry,
+            "withdrawn" => PlayerStatus::Withdrawn,
+            "bye_requested" => PlayerStatus::ByeRequested,
+            _ => PlayerStatus::Active,
+        }
+    }
+
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            PlayerStatus::Active => "active",
+            PlayerStatus::LateEntry => "late_entry",
+            PlayerStatus::Withdrawn => "withdrawn",
+            PlayerStatus::ByeRequested => "bye_requested",
+        }
+    }
+}
+
+impl RatingType {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "fide" => RatingType::Fide,
+            "national" => RatingType::National,
+            "club" => RatingType::Club,
+            "rapid" => RatingType::Rapid,
+            "blitz" => RatingType::Blitz,
+            _ => RatingType::Fide,
+        }
+    }
+
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            RatingType::Fide => "fide",
+            RatingType::National => "national",
+            RatingType::Club => "club",
+            RatingType::Rapid => "rapid",
+            RatingType::Blitz => "blitz",
+        }
+    }
+}
+
+impl ChessTitle {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "GM" => ChessTitle::GM,
+            "IM" => ChessTitle::IM,
+            "FM" => ChessTitle::FM,
+            "CM" => ChessTitle::CM,
+            "WGM" => ChessTitle::WGM,
+            "WIM" => ChessTitle::WIM,
+            "WFM" => ChessTitle::WFM,
+            "WCM" => ChessTitle::WCM,
+            _ => ChessTitle::None,
+        }
+    }
+
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            ChessTitle::GM => "GM",
+            ChessTitle::IM => "IM",
+            ChessTitle::FM => "FM",
+            ChessTitle::CM => "CM",
+            ChessTitle::WGM => "WGM",
+            ChessTitle::WIM => "WIM",
+            ChessTitle::WFM => "WFM",
+            ChessTitle::WCM => "WCM",
+            ChessTitle::None => "",
         }
     }
 }
