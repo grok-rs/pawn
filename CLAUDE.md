@@ -34,7 +34,7 @@ This file provides comprehensive guidance to Claude Code (claude.ai/code) when w
 ### Technology Stack
 - **Frontend**: React 18 + TypeScript + Vite + Material-UI v6
 - **Backend**: Rust + Tauri 2.5 + SQLite + SQLx  
-- **Communication**: 40+ Tauri commands with auto-generated TypeScript bindings
+- **Communication**: 60+ Tauri commands with auto-generated TypeScript bindings
 - **Type Safety**: Complete Rust-TypeScript integration via tauri-specta
 
 ### Frontend Architecture
@@ -52,16 +52,20 @@ This file provides comprehensive guidance to Claude Code (claude.ai/code) when w
 **Backend Architecture - Service Layer Pattern**:
 ```
 src-tauri/src/pawn/
-├── command/              # 40+ Tauri command handlers
+├── command/              # 60+ Tauri command handlers
 │   ├── tournament.rs     # Tournament operations (12 commands)
 │   ├── player.rs         # Enhanced player management (15+ commands)
 │   ├── round.rs          # Round management (8 commands)
-│   └── game_result.rs    # Game result operations (6 commands)
+│   ├── game_result.rs    # Game result operations (6 commands)
+│   ├── knockout.rs       # Knockout tournament operations (10 commands)
+│   └── time_control.rs   # Time control management (8 commands)
 ├── service/              # Business logic layer
 │   ├── player.rs         # PlayerService - CRUD, search, bulk import
 │   ├── tournament.rs     # TournamentService - tournament lifecycle
 │   ├── round.rs          # RoundService - pairing and round management
-│   └── tiebreak.rs       # TiebreakCalculator - standings calculation
+│   ├── tiebreak.rs       # TiebreakCalculator - standings calculation
+│   ├── knockout.rs       # KnockoutService - bracket management & algorithms
+│   └── time_control.rs   # TimeControlService - FIDE-compliant time controls
 ├── domain/               # Data models and DTOs
 │   ├── model.rs          # Enhanced data models (Player, Tournament, etc.)
 │   ├── dto.rs            # Request/response types
@@ -77,13 +81,13 @@ src-tauri/src/pawn/
 - **Rust Structs**: Use `specta` and `tauri-specta` decorations (`#[derive(SpectaType)]`)
 - **Generated Output**: `src/dto/bindings.ts` with complete TypeScript definitions
 - **Auto-regeneration**: Bindings update automatically when dev server restarts after Rust changes
-- **40+ Commands**: All commands auto-generate TypeScript function signatures
+- **60+ Commands**: All commands auto-generate TypeScript function signatures
 
 ### Enhanced Database Schema
 
 **SQLite with Advanced Features**:
 - **Database File**: `~/.local/share/pawn/db/pawn.sqlite`
-- **7 Migrations**: Complete schema evolution from basic to professional system
+- **10 Migrations**: Complete schema evolution from basic to professional system
 - **Performance**: Optimized indexes for player search, rating queries, tournament operations
 
 **Key Tables**:
@@ -112,11 +116,27 @@ player_categories (
 )
 
 -- Plus: tournaments, games, rounds, game_result_audit, tournament_settings
+-- Knockout tournaments (Migrations 9-10)
+knockout_brackets (
+  id, tournament_id, bracket_type, total_rounds, created_at
+)
+
+bracket_positions (
+  id, bracket_id, round_number, position_number, player_id, 
+  advanced_from_position, status, created_at
+)
+
+-- Advanced time controls (Migration 10)
+time_controls (
+  id, name, time_control_type, base_time_minutes, increment_seconds,
+  moves_per_session, session_time_minutes, total_sessions,
+  is_default, description, created_at
+)
 ```
 
 ### Major System Enhancements
 
-**Enhanced Player Management System** (Recently Implemented):
+**Enhanced Player Management System**:
 - **Professional Registration**: Chess titles, contact info, demographics
 - **Multiple Rating Systems**: FIDE, national, club, rapid, blitz with history
 - **Advanced Search**: Multi-criteria filtering with performance optimization
@@ -125,9 +145,23 @@ player_categories (
 - **Status Management**: Player withdrawals, bye requests, late entries
 - **Interactive Demo**: Complete demonstration system at `/demo/enhanced-players`
 
+**Knockout Tournament System** (Latest):
+- **Bracket Generation**: Automatic seeding algorithms for single/double elimination
+- **Winner Advancement**: Systematic progression through tournament rounds
+- **Tournament Completion**: Winner determination and completion detection
+- **Flexible Configuration**: Support for various bracket sizes and formats
+- **Professional Integration**: Seamless integration with existing tournament workflow
+
+**Advanced Time Control System** (Latest):
+- **FIDE-Compliant Templates**: 8 pre-populated official time control configurations
+- **7 Time Control Types**: Classical, Rapid, Blitz, Bullet, Fischer, Bronstein, Correspondence
+- **Validation & Estimation**: Game duration calculation and FIDE compliance checking
+- **Template Management**: CRUD operations for custom time control creation
+- **Tournament Integration**: Dynamic template selection in tournament creation UI
+
 ## Complete Command Reference
 
-### Enhanced Player Management Commands (15+)
+### Enhanced Player Management Commands (18)
 ```typescript
 // Core CRUD Operations
 commands.createPlayerEnhanced(data: CreatePlayer): Promise<Player>
@@ -180,6 +214,40 @@ commands.approveGameResult(data: ApproveGameResult): Promise<null>
 // Plus: batch operations, validation, audit trail
 ```
 
+### Knockout Tournament Commands (10)
+```typescript
+// Bracket Management
+commands.createKnockoutBracket(data: CreateKnockoutBracket): Promise<KnockoutBracket>
+commands.getKnockoutBracket(tournamentId: number): Promise<KnockoutBracket | null>
+commands.initializeKnockoutTournament(tournamentId: number, bracketType: string): Promise<KnockoutBracket>
+
+// Bracket Operations
+commands.getBracketPositions(bracketId: number): Promise<BracketPosition[]>
+commands.getBracketPositionsByRound(bracketId: number, roundNumber: number): Promise<BracketPosition[]>
+commands.generateKnockoutPairings(bracketId: number, roundNumber: number): Promise<Pairing[]>
+
+// Tournament Progression
+commands.advanceKnockoutWinners(bracketId: number, roundNumber: number, winnerResults: ([number, number])[]): Promise<BracketPosition[]>
+commands.getKnockoutTournamentWinner(bracketId: number): Promise<number | null>
+commands.isKnockoutTournamentComplete(bracketId: number): Promise<boolean>
+commands.validateKnockoutBracket(bracketId: number): Promise<boolean>
+```
+
+### Time Control Commands (8)
+```typescript
+// CRUD Operations
+commands.createTimeControl(data: CreateTimeControl): Promise<TimeControl>
+commands.getTimeControl(id: number): Promise<TimeControl>
+commands.updateTimeControl(data: UpdateTimeControl): Promise<TimeControl>
+commands.deleteTimeControl(id: number): Promise<null>
+
+// Template & Query Operations
+commands.getTimeControls(filter: TimeControlFilter | null): Promise<TimeControl[]>
+commands.getDefaultTimeControls(): Promise<TimeControl[]>
+commands.getTimeControlTemplates(): Promise<TimeControlTemplate[]>
+commands.validateTimeControlData(data: CreateTimeControl): Promise<TimeControlValidation>
+```
+
 ## Development Guidelines
 
 ### Service Layer Pattern
@@ -190,7 +258,38 @@ When adding new features, follow the established pattern:
 3. **Database Layer** (`db/sqlite.rs`): Implement database operations
 4. **Service Layer** (`service/`): Add business logic with validation
 5. **Commands** (`command/`): Create Tauri command handlers
-6. **Frontend**: TypeScript bindings auto-generate
+6. **Permissions & Capabilities** ⚠️ **CRITICAL**: Update Tauri security configuration
+7. **Frontend**: TypeScript bindings auto-generate
+
+### ⚠️ IMPORTANT: Tauri Permissions & Capabilities
+
+**ALWAYS update permissions when adding new commands:**
+
+1. **Create Permission Files**: For each new command, create `/src-tauri/permissions/pawn/[command-name].toml`:
+   ```toml
+   [[permission]]
+   identifier = "allow-[command-name]"
+   description = "Allows [description]"
+   commands.allow = ["command_function_name"]
+
+   [[permission]]
+   identifier = "deny-[command-name]" 
+   description = "Denies the [command-name] command"
+   commands.deny = ["command_function_name"]
+   ```
+
+2. **Update Capabilities**: Add new permissions to `/src-tauri/capabilities/default.json`:
+   ```json
+   {
+     "permissions": [
+       "pawn:allow-[command-name]"
+     ]
+   }
+   ```
+
+3. **Register Commands**: Add to `/src-tauri/src/pawn/mod.rs` in `collect_commands![]` macro
+
+**Without proper permissions, commands will be blocked by Tauri security even if implemented correctly!**
 
 ### Enhanced Player System Development
 
