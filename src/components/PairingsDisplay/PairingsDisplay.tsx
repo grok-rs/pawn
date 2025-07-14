@@ -73,7 +73,7 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
     if (!player || !player.country_code) return null;
     return (
       <Chip
-        label={player.country_code}
+        label={t(`country.${player.country_code}`, player.country_code)}
         size="small"
         variant="outlined"
         sx={{ ml: 1, fontSize: '0.7rem', height: 20 }}

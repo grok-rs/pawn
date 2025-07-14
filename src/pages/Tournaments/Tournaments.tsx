@@ -215,20 +215,22 @@ const TournamentsPage = () => {
             >
               {t('tournaments')}
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => navigate(APP_ROUTES.NEW_TOURNAMENT)}
-              sx={{
-                backgroundColor: theme.palette.secondary.main,
-                color: theme.palette.secondary.contrastText,
-                '&:hover': {
-                  backgroundColor: theme.palette.secondary.dark,
-                },
-              }}
-            >
-              {t('newTournament')}
-            </Button>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={() => navigate(APP_ROUTES.NEW_TOURNAMENT)}
+                sx={{
+                  backgroundColor: theme.palette.secondary.main,
+                  color: theme.palette.secondary.contrastText,
+                  '&:hover': {
+                    backgroundColor: theme.palette.secondary.dark,
+                  },
+                }}
+              >
+                {t('newTournament')}
+              </Button>
+            </Box>
           </Box>
 
           {/* Stats Cards */}

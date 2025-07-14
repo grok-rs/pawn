@@ -14,7 +14,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Chip,
   Button,
   CircularProgress,
   Alert,
@@ -54,13 +53,14 @@ import {
   Assignment,
 } from '@mui/icons-material';
 import { commands } from '../../dto/bindings';
-import type { TournamentDetails, StandingsCalculationResult } from '../../dto/bindings';
+import type { TournamentDetails, StandingsCalculationResult, Player } from '../../dto/bindings';
 import BaseLayout from '../../components/BaseLayout';
 import { StandingsTable } from '../../components/StandingsTable';
 import RoundManager from '../../components/RoundManager';
 import { ResultsGrid } from '../../components/ResultsGrid';
 import { exportStandingsToCsv, exportStandingsToPdf } from '../../utils/export';
 import TournamentSettings from './TournamentSettings';
+import PlayerManagement from '../../components/PlayerManagement';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -98,6 +98,7 @@ const TournamentInfoPage: React.FC = () => {
   const { t } = useTranslation();
   const [tournamentDetails, setTournamentDetails] = useState<TournamentDetails | null>(null);
   const [standings, setStandings] = useState<StandingsCalculationResult | null>(null);
+  const [enhancedPlayers, setEnhancedPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingStandings, setLoadingStandings] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -106,6 +107,9 @@ const TournamentInfoPage: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [actualRoundsPlayed, setActualRoundsPlayed] = useState<number>(0);
+  const [actualPlayerCount, setActualPlayerCount] = useState<number | null>(null);
+  const [completedGamesCount, setCompletedGamesCount] = useState<number>(0);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -132,10 +136,14 @@ const TournamentInfoPage: React.FC = () => {
       setTournamentDetails(details);
       setHasMockData(details.players.length > 0);
       
-      // Fetch standings with tiebreaks if we have players
+      // Fetch standings and enhanced players if we have players
       if (details.players.length > 0) {
         fetchStandings(tournamentId);
+        fetchEnhancedPlayers(tournamentId);
       }
+      
+      // Always fetch actual tournament stats
+      fetchActualTournamentStats(tournamentId, details.games);
     } catch (err) {
       console.error('Failed to fetch tournament details:', err);
       setError(t('failedToLoadTournamentDetails'));
@@ -157,6 +165,40 @@ const TournamentInfoPage: React.FC = () => {
     }
   };
 
+  const fetchEnhancedPlayers = async (tournamentId: number) => {
+    try {
+      const playersData = await commands.getPlayersByTournamentEnhanced(tournamentId);
+      setEnhancedPlayers(playersData);
+      // Set actual player count (active players only)
+      const activePlayers = playersData.filter(p => p.status === 'active' || !p.status);
+      setActualPlayerCount(activePlayers.length);
+    } catch (err) {
+      console.error('Failed to fetch enhanced players:', err);
+      // Fall back to regular players
+      setEnhancedPlayers([]);
+      setActualPlayerCount(null);
+    }
+  };
+
+  const fetchActualTournamentStats = async (tournamentId: number, gamesList?: any[]) => {
+    try {
+      // Fetch rounds to calculate actual rounds played
+      const rounds = await commands.getRoundsByTournament(tournamentId);
+      const playedRounds = rounds.filter(round => round.status === 'Completed').length;
+      setActualRoundsPlayed(playedRounds);
+
+      // For completed games count, use the provided games data
+      if (gamesList) {
+        setCompletedGamesCount(gamesList.filter(game => game.result !== null).length);
+      }
+    } catch (err) {
+      console.error('Failed to fetch actual tournament stats:', err);
+      // Fallback to tournament static data
+      setActualRoundsPlayed(0);
+      setCompletedGamesCount(0);
+    }
+  };
+
   const handlePopulateMockData = async () => {
     if (!id) return;
 
@@ -168,6 +210,16 @@ const TournamentInfoPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to populate mock data:', err);
       setError(t('failedToPopulateMockData'));
+    }
+  };
+
+  const handlePlayersUpdated = () => {
+    // Refresh tournament details and enhanced players
+    fetchTournamentDetails();
+    if (id && tournamentDetails) {
+      const tournamentId = parseInt(id);
+      fetchEnhancedPlayers(tournamentId);
+      fetchActualTournamentStats(tournamentId, tournamentDetails.games);
     }
   };
 
@@ -339,10 +391,26 @@ const TournamentInfoPage: React.FC = () => {
                     </Avatar>
                     <Box>
                       <Typography variant="h4" fontWeight={700}>
-                        {players.length}
+                        {actualPlayerCount !== null ? (
+                          actualPlayerCount !== players.length ? (
+                            <>
+                              {actualPlayerCount}
+                              <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
+                                / {players.length}
+                              </Typography>
+                            </>
+                          ) : (
+                            actualPlayerCount
+                          )
+                        ) : (
+                          players.length
+                        )}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {t('players')}
+                        {actualPlayerCount !== null && actualPlayerCount !== players.length 
+                          ? t('activePlayers')
+                          : t('players')
+                        }
                       </Typography>
                     </Box>
                   </Box>
@@ -369,10 +437,22 @@ const TournamentInfoPage: React.FC = () => {
                     </Avatar>
                     <Box>
                       <Typography variant="h4" fontWeight={700}>
-                        {games.length}
+                        {completedGamesCount > 0 && completedGamesCount !== games.length ? (
+                          <>
+                            {completedGamesCount}
+                            <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
+                              / {games.length}
+                            </Typography>
+                          </>
+                        ) : (
+                          games.length
+                        )}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {t('tournament.gamesPlayed')}
+                        {completedGamesCount > 0 && completedGamesCount !== games.length
+                          ? t('tournament.gamesCompleted')
+                          : t('tournament.gamesPlayed')
+                        }
                       </Typography>
                     </Box>
                   </Box>
@@ -429,7 +509,7 @@ const TournamentInfoPage: React.FC = () => {
                     </Avatar>
                     <Box>
                       <Typography variant="h4" fontWeight={700}>
-                        {tournament.rounds_played}/{tournament.total_rounds}
+                        {actualRoundsPlayed}/{tournament.total_rounds}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         {t('tournament.roundsProgress')}
@@ -571,6 +651,10 @@ const TournamentInfoPage: React.FC = () => {
               onRoundUpdate={() => {
                 // Refresh tournament details when rounds are updated
                 fetchTournamentDetails();
+                // Also refresh actual tournament stats since rounds have changed
+                if (tournamentDetails) {
+                  fetchActualTournamentStats(parseInt(id!), tournamentDetails.games);
+                }
               }}
             />
           </TabPanel>
@@ -584,8 +668,10 @@ const TournamentInfoPage: React.FC = () => {
                 onResultsUpdated={() => {
                   // Refresh tournament details and standings when results are updated
                   fetchTournamentDetails();
-                  if (id) {
-                    fetchStandings(parseInt(id));
+                  if (id && tournamentDetails) {
+                    const tournamentId = parseInt(id);
+                    fetchStandings(tournamentId);
+                    fetchActualTournamentStats(tournamentId, tournamentDetails.games);
                   }
                 }}
               />
@@ -610,59 +696,13 @@ const TournamentInfoPage: React.FC = () => {
           </TabPanel>
 
           <TabPanel value={tabValue} index={3}>
-            {/* Players Table */}
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>{t('name')}</TableCell>
-                    <TableCell>{t('rating')}</TableCell>
-                    <TableCell>{t('country')}</TableCell>
-                    <TableCell>{t('registered')}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {players.map((playerResult) => (
-                    <TableRow key={playerResult.player.id} hover>
-                      <TableCell>
-                        <Typography variant="subtitle2">
-                          {playerResult.player.name}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        {playerResult.player.rating ? (
-                          <Chip
-                            label={playerResult.player.rating}
-                            variant="outlined"
-                            size="small"
-                          />
-                        ) : (
-                          'Unrated'
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Flag fontSize="small" />
-                          {playerResult.player.country_code || 'N/A'}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        {formatDate(playerResult.player.created_at)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {players.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4} align="center">
-                        <Typography variant="body2" color="textSecondary">
-                          {t('noDataAvailable')}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            {/* Enhanced Player Management */}
+            <PlayerManagement
+              tournamentId={parseInt(id!)}
+              players={enhancedPlayers}
+              tournamentDetails={tournamentDetails}
+              onPlayersUpdated={handlePlayersUpdated}
+            />
           </TabPanel>
         </Box>
 
