@@ -1,0 +1,3 @@
+-- Fix migration sequence issue
+-- This migration exists only to maintain sequence integrity
+-- No actual schema changes needed

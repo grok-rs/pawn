@@ -50,14 +50,15 @@ impl Db for SqliteDb {
 
         // Insert into database and return the created tournament
         let tournament: Tournament = sqlx::query_as(
-            "INSERT INTO tournaments (name, location, date, time_type, player_count, rounds_played, total_rounds, country_code)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            "INSERT INTO tournaments (name, location, date, time_type, tournament_type, player_count, rounds_played, total_rounds, country_code)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
              RETURNING *"
         )
         .bind(&data.name)
         .bind(&data.location)
         .bind(&data.date)
         .bind(&data.time_type)
+        .bind(&data.tournament_type)
         .bind(data.player_count)
         .bind(data.rounds_played)
         .bind(data.total_rounds)
@@ -119,7 +120,7 @@ impl Db for SqliteDb {
     #[instrument(ret, skip(self))]
     async fn get_players_by_tournament(&self, tournament_id: i32) -> Result<Vec<Player>, sqlx::Error> {
         let players = sqlx::query_as(
-            "SELECT * FROM players WHERE tournament_id = ? ORDER BY name"
+            "SELECT * FROM players WHERE tournament_id = ? AND name != 'BYE' ORDER BY name"
         )
         .bind(tournament_id)
         .fetch_all(&self.pool)
@@ -724,5 +725,214 @@ impl Db for SqliteDb {
         .await?;
 
         Ok(assignments)
+    }
+
+    // Knockout tournament operations
+    #[instrument(ret, skip(self))]
+    async fn create_knockout_bracket(&self, bracket: KnockoutBracket) -> Result<KnockoutBracket, sqlx::Error> {
+        let result = sqlx::query_as(
+            "INSERT INTO knockout_brackets (tournament_id, bracket_type, total_rounds)
+             VALUES (?, ?, ?)
+             RETURNING *"
+        )
+        .bind(bracket.tournament_id)
+        .bind(&bracket.bracket_type)
+        .bind(bracket.total_rounds)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn get_knockout_bracket(&self, tournament_id: i32) -> Result<Option<KnockoutBracket>, sqlx::Error> {
+        let result = sqlx::query_as("SELECT * FROM knockout_brackets WHERE tournament_id = ?")
+            .bind(tournament_id)
+            .fetch_optional(&self.pool)
+            .await?;
+
+        Ok(result)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn get_knockout_bracket_by_id(&self, bracket_id: i32) -> Result<Option<KnockoutBracket>, sqlx::Error> {
+        let result = sqlx::query_as("SELECT * FROM knockout_brackets WHERE id = ?")
+            .bind(bracket_id)
+            .fetch_optional(&self.pool)
+            .await?;
+
+        Ok(result)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn create_bracket_position(&self, position: BracketPosition) -> Result<BracketPosition, sqlx::Error> {
+        let result = sqlx::query_as(
+            "INSERT INTO bracket_positions (bracket_id, round_number, position_number, player_id, advanced_from_position, status)
+             VALUES (?, ?, ?, ?, ?, ?)
+             RETURNING *"
+        )
+        .bind(position.bracket_id)
+        .bind(position.round_number)
+        .bind(position.position_number)
+        .bind(position.player_id)
+        .bind(position.advanced_from_position)
+        .bind(&position.status)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn get_bracket_positions(&self, bracket_id: i32) -> Result<Vec<BracketPosition>, sqlx::Error> {
+        let positions = sqlx::query_as(
+            "SELECT * FROM bracket_positions 
+             WHERE bracket_id = ? 
+             ORDER BY round_number, position_number"
+        )
+        .bind(bracket_id)
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(positions)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn get_bracket_positions_by_round(&self, bracket_id: i32, round_number: i32) -> Result<Vec<BracketPosition>, sqlx::Error> {
+        let positions = sqlx::query_as(
+            "SELECT * FROM bracket_positions 
+             WHERE bracket_id = ? AND round_number = ?
+             ORDER BY position_number"
+        )
+        .bind(bracket_id)
+        .bind(round_number)
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(positions)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn update_bracket_position(&self, position_id: i32, player_id: Option<i32>, status: String) -> Result<(), sqlx::Error> {
+        sqlx::query(
+            "UPDATE bracket_positions 
+             SET player_id = ?, status = ?
+             WHERE id = ?"
+        )
+        .bind(player_id)
+        .bind(&status)
+        .bind(position_id)
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
+
+    // Time control operations
+    #[instrument(ret, skip(self))]
+    async fn get_time_controls(&self) -> Result<Vec<TimeControl>, sqlx::Error> {
+        let time_controls = sqlx::query_as("SELECT * FROM time_controls ORDER BY is_default DESC, time_control_type, name")
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(time_controls)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn get_time_control(&self, id: i32) -> Result<TimeControl, sqlx::Error> {
+        let time_control = sqlx::query_as("SELECT * FROM time_controls WHERE id = ?")
+            .bind(id)
+            .fetch_one(&self.pool)
+            .await?;
+
+        Ok(time_control)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn create_time_control(&self, time_control: TimeControl) -> Result<TimeControl, sqlx::Error> {
+        let result = sqlx::query_as(
+            "INSERT INTO time_controls (name, time_control_type, base_time_minutes, increment_seconds, moves_per_session, session_time_minutes, total_sessions, is_default, description)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+             RETURNING *"
+        )
+        .bind(&time_control.name)
+        .bind(&time_control.time_control_type)
+        .bind(time_control.base_time_minutes)
+        .bind(time_control.increment_seconds)
+        .bind(time_control.moves_per_session)
+        .bind(time_control.session_time_minutes)
+        .bind(time_control.total_sessions)
+        .bind(time_control.is_default)
+        .bind(&time_control.description)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn update_time_control(&self, data: UpdateTimeControl) -> Result<TimeControl, sqlx::Error> {
+        // Get current time control for field merging
+        let _current = self.get_time_control(data.id).await?;
+
+        let result = sqlx::query_as(
+            "UPDATE time_controls 
+             SET name = COALESCE(?, name),
+                 time_control_type = COALESCE(?, time_control_type),
+                 base_time_minutes = COALESCE(?, base_time_minutes),
+                 increment_seconds = COALESCE(?, increment_seconds),
+                 moves_per_session = COALESCE(?, moves_per_session),
+                 session_time_minutes = COALESCE(?, session_time_minutes),
+                 total_sessions = COALESCE(?, total_sessions),
+                 is_default = COALESCE(?, is_default),
+                 description = COALESCE(?, description),
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE id = ?
+             RETURNING *"
+        )
+        .bind(data.name)
+        .bind(data.time_control_type)
+        .bind(data.base_time_minutes)
+        .bind(data.increment_seconds)
+        .bind(data.moves_per_session)
+        .bind(data.session_time_minutes)
+        .bind(data.total_sessions)
+        .bind(data.is_default)
+        .bind(data.description)
+        .bind(data.id)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn delete_time_control(&self, id: i32) -> Result<(), sqlx::Error> {
+        sqlx::query("DELETE FROM time_controls WHERE id = ?")
+            .bind(id)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn get_tournaments_using_time_control(&self, time_control_id: i32) -> Result<Vec<Tournament>, sqlx::Error> {
+        let tournaments = sqlx::query_as("SELECT * FROM tournaments WHERE time_control_id = ?")
+            .bind(time_control_id)
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(tournaments)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn unset_default_time_controls(&self, time_control_type: &str) -> Result<(), sqlx::Error> {
+        sqlx::query("UPDATE time_controls SET is_default = 0 WHERE time_control_type = ?")
+            .bind(time_control_type)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
     }
 }

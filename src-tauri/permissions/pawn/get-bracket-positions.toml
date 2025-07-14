@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-bracket-positions"
+description = "Allows retrieving bracket positions for a knockout tournament"
+commands.allow = ["get_bracket_positions"]
+
+[[permission]]
+identifier = "deny-get-bracket-positions"
+description = "Denies the get bracket positions command"
+commands.deny = ["get_bracket_positions"]

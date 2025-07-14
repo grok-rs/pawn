@@ -9,6 +9,7 @@ pub struct Tournament {
     pub location: String,
     pub date: String,
     pub time_type: String,
+    pub tournament_type: Option<String>,
     pub player_count: i32,
     pub rounds_played: i32,
     pub total_rounds: i32,
@@ -112,10 +113,21 @@ pub enum RoundStatus {
 }
 
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+pub enum TournamentType {
+    Swiss,
+    RoundRobin,
+    Knockout,
+    Scheveningen,
+    Arena,
+}
+
+#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum PairingMethod {
     Manual,
     Swiss,
     RoundRobin,
+    Knockout,
+    Scheveningen,
 }
 
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
@@ -238,12 +250,55 @@ impl RoundStatus {
     }
 }
 
+impl TournamentType {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "swiss" => TournamentType::Swiss,
+            "round_robin" => TournamentType::RoundRobin,
+            "knockout" => TournamentType::Knockout,
+            "scheveningen" => TournamentType::Scheveningen,
+            "arena" => TournamentType::Arena,
+            _ => TournamentType::Swiss,
+        }
+    }
+
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            TournamentType::Swiss => "swiss",
+            TournamentType::RoundRobin => "round_robin",
+            TournamentType::Knockout => "knockout",
+            TournamentType::Scheveningen => "scheveningen",
+            TournamentType::Arena => "arena",
+        }
+    }
+
+    pub fn get_default_pairing_method(&self) -> PairingMethod {
+        match self {
+            TournamentType::Swiss => PairingMethod::Swiss,
+            TournamentType::RoundRobin => PairingMethod::RoundRobin,
+            TournamentType::Knockout => PairingMethod::Knockout,
+            TournamentType::Scheveningen => PairingMethod::Scheveningen,
+            TournamentType::Arena => PairingMethod::Swiss,
+        }
+    }
+
+    pub fn supports_byes(&self) -> bool {
+        matches!(self, TournamentType::Swiss | TournamentType::Arena)
+    }
+
+    pub fn is_single_elimination(&self) -> bool {
+        matches!(self, TournamentType::Knockout)
+    }
+}
+
 impl PairingMethod {
     pub fn from_str(s: &str) -> Self {
         match s {
             "manual" => PairingMethod::Manual,
             "swiss" => PairingMethod::Swiss,
             "round_robin" => PairingMethod::RoundRobin,
+            "knockout" => PairingMethod::Knockout,
+            "scheveningen" => PairingMethod::Scheveningen,
             _ => PairingMethod::Manual,
         }
     }
@@ -253,6 +308,8 @@ impl PairingMethod {
             PairingMethod::Manual => "manual",
             PairingMethod::Swiss => "swiss",
             PairingMethod::RoundRobin => "round_robin",
+            PairingMethod::Knockout => "knockout",
+            PairingMethod::Scheveningen => "scheveningen",
         }
     }
 }
@@ -392,6 +449,192 @@ impl ChessTitle {
             ChessTitle::WFM => "WFM",
             ChessTitle::WCM => "WCM",
             ChessTitle::None => "",
+        }
+    }
+}
+
+// Time Control Models
+
+#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+pub enum TimeControlType {
+    Classical,
+    Rapid,
+    Blitz,
+    Bullet,
+    Correspondence,
+    Fischer,      // Time added per move
+    Bronstein,    // Delay before time starts running
+    Custom,
+}
+
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct TimeControl {
+    pub id: i32,
+    pub name: String,
+    pub time_control_type: String,
+    pub base_time_minutes: Option<i32>,        // Base time in minutes
+    pub increment_seconds: Option<i32>,        // Increment/delay in seconds
+    pub moves_per_session: Option<i32>,        // For classical time controls
+    pub session_time_minutes: Option<i32>,     // Time for each session
+    pub total_sessions: Option<i32>,           // Number of sessions
+    pub is_default: bool,
+    pub description: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Debug, Serialize, SpectaType, Clone)]
+pub struct TimeControlTemplate {
+    pub id: i32,
+    pub name: String,
+    pub time_control_type: String,
+    pub base_time_minutes: Option<i32>,
+    pub increment_seconds: Option<i32>,
+    pub moves_per_session: Option<i32>,
+    pub session_time_minutes: Option<i32>,
+    pub total_sessions: Option<i32>,
+    pub description: Option<String>,
+}
+
+impl TimeControlType {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "classical" => TimeControlType::Classical,
+            "rapid" => TimeControlType::Rapid,
+            "blitz" => TimeControlType::Blitz,
+            "bullet" => TimeControlType::Bullet,
+            "correspondence" => TimeControlType::Correspondence,
+            "fischer" => TimeControlType::Fischer,
+            "bronstein" => TimeControlType::Bronstein,
+            "custom" => TimeControlType::Custom,
+            _ => TimeControlType::Classical,
+        }
+    }
+
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            TimeControlType::Classical => "classical",
+            TimeControlType::Rapid => "rapid",
+            TimeControlType::Blitz => "blitz",
+            TimeControlType::Bullet => "bullet",
+            TimeControlType::Correspondence => "correspondence",
+            TimeControlType::Fischer => "fischer",
+            TimeControlType::Bronstein => "bronstein",
+            TimeControlType::Custom => "custom",
+        }
+    }
+
+    pub fn get_default_time_minutes(&self) -> Option<i32> {
+        match self {
+            TimeControlType::Classical => Some(90),   // 90 minutes
+            TimeControlType::Rapid => Some(15),       // 15 minutes
+            TimeControlType::Blitz => Some(5),        // 5 minutes
+            TimeControlType::Bullet => Some(1),       // 1 minute
+            TimeControlType::Correspondence => None,   // Days/weeks
+            TimeControlType::Fischer => Some(15),     // 15 minutes base
+            TimeControlType::Bronstein => Some(15),   // 15 minutes base
+            TimeControlType::Custom => None,
+        }
+    }
+
+    pub fn get_default_increment_seconds(&self) -> Option<i32> {
+        match self {
+            TimeControlType::Classical => Some(30),   // 30 second increment
+            TimeControlType::Rapid => Some(10),       // 10 second increment
+            TimeControlType::Blitz => Some(3),        // 3 second increment
+            TimeControlType::Bullet => Some(1),       // 1 second increment
+            TimeControlType::Correspondence => None,
+            TimeControlType::Fischer => Some(10),     // 10 seconds per move
+            TimeControlType::Bronstein => Some(10),   // 10 second delay
+            TimeControlType::Custom => None,
+        }
+    }
+
+    pub fn is_real_time(&self) -> bool {
+        !matches!(self, TimeControlType::Correspondence)
+    }
+
+    pub fn requires_increment(&self) -> bool {
+        matches!(self, TimeControlType::Fischer | TimeControlType::Bronstein)
+    }
+}
+
+// Knockout Tournament Models
+
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct KnockoutBracket {
+    pub id: i32,
+    pub tournament_id: i32,
+    pub bracket_type: String,    // "main", "consolation", "third_place"
+    pub total_rounds: i32,
+    pub created_at: String,
+}
+
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct BracketPosition {
+    pub id: i32,
+    pub bracket_id: i32,
+    pub round_number: i32,
+    pub position_number: i32,
+    pub player_id: Option<i32>,
+    pub advanced_from_position: Option<i32>,
+    pub status: String,          // "waiting", "ready", "bye", "eliminated"
+    pub created_at: String,
+}
+
+#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+pub enum BracketType {
+    SingleElimination,
+    DoubleElimination,
+    ThirdPlacePlayoff,
+}
+
+#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+pub enum BracketPositionStatus {
+    Waiting,     // Waiting for opponent or previous match
+    Ready,       // Ready to play
+    Bye,         // Received a bye
+    Eliminated,  // Player eliminated
+    Advanced,    // Player advanced to next round
+}
+
+impl BracketType {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "single_elimination" => BracketType::SingleElimination,
+            "double_elimination" => BracketType::DoubleElimination,
+            "third_place_playoff" => BracketType::ThirdPlacePlayoff,
+            _ => BracketType::SingleElimination,
+        }
+    }
+
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            BracketType::SingleElimination => "single_elimination",
+            BracketType::DoubleElimination => "double_elimination",
+            BracketType::ThirdPlacePlayoff => "third_place_playoff",
+        }
+    }
+}
+
+impl BracketPositionStatus {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "waiting" => BracketPositionStatus::Waiting,
+            "ready" => BracketPositionStatus::Ready,
+            "bye" => BracketPositionStatus::Bye,
+            "eliminated" => BracketPositionStatus::Eliminated,
+            "advanced" => BracketPositionStatus::Advanced,
+            _ => BracketPositionStatus::Waiting,
+        }
+    }
+
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            BracketPositionStatus::Waiting => "waiting",
+            BracketPositionStatus::Ready => "ready",
+            BracketPositionStatus::Bye => "bye",
+            BracketPositionStatus::Eliminated => "eliminated",
+            BracketPositionStatus::Advanced => "advanced",
         }
     }
 }

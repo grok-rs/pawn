@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-advance-knockout-winners"
+description = "Allows advancing winners in knockout tournament brackets"
+commands.allow = ["advance_knockout_winners"]
+
+[[permission]]
+identifier = "deny-advance-knockout-winners"
+description = "Denies the advance knockout winners command"
+commands.deny = ["advance_knockout_winners"]

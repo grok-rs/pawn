@@ -59,6 +59,24 @@
     "pawn:allow-update-player-status",
     "pawn:allow-withdraw-player",
     "pawn:allow-request-player-bye",
-    "pawn:allow-get-player-statistics"
+    "pawn:allow-get-player-statistics",
+    "pawn:allow-create-knockout-bracket",
+    "pawn:allow-get-knockout-bracket",
+    "pawn:allow-initialize-knockout-tournament",
+    "pawn:allow-get-bracket-positions",
+    "pawn:allow-get-bracket-positions-by-round",
+    "pawn:allow-generate-knockout-pairings",
+    "pawn:allow-advance-knockout-winners",
+    "pawn:allow-get-knockout-tournament-winner",
+    "pawn:allow-is-knockout-tournament-complete",
+    "pawn:allow-validate-knockout-bracket",
+    "pawn:allow-create-time-control",
+    "pawn:allow-get-time-control",
+    "pawn:allow-get-time-controls",
+    "pawn:allow-get-default-time-controls",
+    "pawn:allow-update-time-control",
+    "pawn:allow-delete-time-control",
+    "pawn:allow-get-time-control-templates",
+    "pawn:allow-validate-time-control-data"
   ]
 }

@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-knockout-bracket"
+description = "Allows retrieving a knockout tournament bracket"
+commands.allow = ["get_knockout_bracket"]
+
+[[permission]]
+identifier = "deny-get-knockout-bracket"
+description = "Denies the get knockout bracket command"
+commands.deny = ["get_knockout_bracket"]

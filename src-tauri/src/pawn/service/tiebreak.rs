@@ -522,7 +522,15 @@ mod tests {
             name: name.to_string(),
             rating,
             country_code: Some("TST".to_string()),
+            title: Some("GM".to_string()),
+            birth_date: Some("1990-01-01".to_string()),
+            gender: Some("M".to_string()),
+            email: None,
+            phone: None,
+            club: None,
+            status: "active".to_string(),
             created_at: "2024-01-01T00:00:00".to_string(),
+            updated_at: None,
         }
     }
     
@@ -540,6 +548,11 @@ mod tests {
             white_player_id: white_id,
             black_player_id: black_id,
             result: result.to_string(),
+            result_type: None,
+            result_reason: None,
+            arbiter_notes: None,
+            last_updated: None,
+            approved_by: None,
             created_at: "2024-01-01T00:00:00".to_string(),
         }
     }

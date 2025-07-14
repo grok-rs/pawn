@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-update-time-control"
+description = "Allows updating a time control configuration"
+commands.allow = ["update_time_control"]
+
+[[permission]]
+identifier = "deny-update-time-control"
+description = "Denies the update time control command"
+commands.deny = ["update_time_control"]

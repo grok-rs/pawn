@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-validate-time-control-data"
+description = "Allows validating time control configuration data"
+commands.allow = ["validate_time_control_data"]
+
+[[permission]]
+identifier = "deny-validate-time-control-data"
+description = "Denies the validate time control data command"
+commands.deny = ["validate_time_control_data"]

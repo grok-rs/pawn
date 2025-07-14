@@ -1,6 +1,6 @@
 use super::domain::{
-    dto::{CreateTournament, CreatePlayer, CreateGame, UpdateTournamentSettings, CreateRound, UpdateGameResult, ApproveGameResult, UpdatePlayer, CreatePlayerCategory, AssignPlayerToCategory},
-    model::{Tournament, Player, Game, TournamentDetails, PlayerResult, GameResult, Round, GameResultAudit, EnhancedGameResult, PlayerCategory, PlayerCategoryAssignment},
+    dto::{CreateTournament, CreatePlayer, CreateGame, UpdateTournamentSettings, CreateRound, UpdateGameResult, ApproveGameResult, UpdatePlayer, CreatePlayerCategory, AssignPlayerToCategory, UpdateTimeControl},
+    model::{Tournament, Player, Game, TournamentDetails, PlayerResult, GameResult, Round, GameResultAudit, EnhancedGameResult, PlayerCategory, PlayerCategoryAssignment, KnockoutBracket, BracketPosition, TimeControl},
     tiebreak::TournamentTiebreakConfig,
 };
 
@@ -58,4 +58,22 @@ pub trait Db: Send + Sync {
     async fn delete_player_category(&self, category_id: i32) -> Result<(), sqlx::Error>;
     async fn assign_player_to_category(&self, data: AssignPlayerToCategory) -> Result<PlayerCategoryAssignment, sqlx::Error>;
     async fn get_player_category_assignments(&self, tournament_id: i32) -> Result<Vec<PlayerCategoryAssignment>, sqlx::Error>;
+
+    // Knockout tournament operations
+    async fn create_knockout_bracket(&self, bracket: KnockoutBracket) -> Result<KnockoutBracket, sqlx::Error>;
+    async fn get_knockout_bracket(&self, tournament_id: i32) -> Result<Option<KnockoutBracket>, sqlx::Error>;
+    async fn get_knockout_bracket_by_id(&self, bracket_id: i32) -> Result<Option<KnockoutBracket>, sqlx::Error>;
+    async fn create_bracket_position(&self, position: BracketPosition) -> Result<BracketPosition, sqlx::Error>;
+    async fn get_bracket_positions(&self, bracket_id: i32) -> Result<Vec<BracketPosition>, sqlx::Error>;
+    async fn get_bracket_positions_by_round(&self, bracket_id: i32, round_number: i32) -> Result<Vec<BracketPosition>, sqlx::Error>;
+    async fn update_bracket_position(&self, position_id: i32, player_id: Option<i32>, status: String) -> Result<(), sqlx::Error>;
+
+    // Time control operations  
+    async fn get_time_controls(&self) -> Result<Vec<TimeControl>, sqlx::Error>;
+    async fn get_time_control(&self, id: i32) -> Result<TimeControl, sqlx::Error>;
+    async fn create_time_control(&self, time_control: TimeControl) -> Result<TimeControl, sqlx::Error>;
+    async fn update_time_control(&self, data: UpdateTimeControl) -> Result<TimeControl, sqlx::Error>;
+    async fn delete_time_control(&self, id: i32) -> Result<(), sqlx::Error>;
+    async fn get_tournaments_using_time_control(&self, time_control_id: i32) -> Result<Vec<Tournament>, sqlx::Error>;
+    async fn unset_default_time_controls(&self, time_control_type: &str) -> Result<(), sqlx::Error>;
 }

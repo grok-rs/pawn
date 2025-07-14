@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-is-knockout-tournament-complete"
+description = "Allows checking if a knockout tournament is complete"
+commands.allow = ["is_knockout_tournament_complete"]
+
+[[permission]]
+identifier = "deny-is-knockout-tournament-complete"
+description = "Denies the is knockout tournament complete command"
+commands.deny = ["is_knockout_tournament_complete"]

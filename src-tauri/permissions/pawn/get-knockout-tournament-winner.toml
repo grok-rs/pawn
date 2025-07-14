@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-knockout-tournament-winner"
+description = "Allows retrieving the winner of a knockout tournament"
+commands.allow = ["get_knockout_tournament_winner"]
+
+[[permission]]
+identifier = "deny-get-knockout-tournament-winner"
+description = "Denies the get knockout tournament winner command"
+commands.deny = ["get_knockout_tournament_winner"]

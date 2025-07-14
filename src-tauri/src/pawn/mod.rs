@@ -78,6 +78,26 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::player::withdraw_player,
             command::player::request_player_bye,
             command::player::get_player_statistics,
+            // Knockout Tournament Commands
+            command::knockout::create_knockout_bracket,
+            command::knockout::get_knockout_bracket,
+            command::knockout::initialize_knockout_tournament,
+            command::knockout::get_bracket_positions,
+            command::knockout::get_bracket_positions_by_round,
+            command::knockout::generate_knockout_pairings,
+            command::knockout::advance_knockout_winners,
+            command::knockout::get_knockout_tournament_winner,
+            command::knockout::is_knockout_tournament_complete,
+            command::knockout::validate_knockout_bracket,
+            // Time Control Commands
+            command::time_control::create_time_control,
+            command::time_control::get_time_control,
+            command::time_control::get_time_controls,
+            command::time_control::get_default_time_controls,
+            command::time_control::update_time_control,
+            command::time_control::delete_time_control,
+            command::time_control::get_time_control_templates,
+            command::time_control::validate_time_control_data,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Throw);
 

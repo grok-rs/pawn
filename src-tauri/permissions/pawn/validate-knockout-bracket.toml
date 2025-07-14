@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-validate-knockout-bracket"
+description = "Allows validating a knockout tournament bracket"
+commands.allow = ["validate_knockout_bracket"]
+
+[[permission]]
+identifier = "deny-validate-knockout-bracket"
+description = "Denies the validate knockout bracket command"
+commands.deny = ["validate_knockout_bracket"]

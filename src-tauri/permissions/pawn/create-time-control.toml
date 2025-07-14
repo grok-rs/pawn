@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-create-time-control"
+description = "Allows creating a new time control configuration"
+commands.allow = ["create_time_control"]
+
+[[permission]]
+identifier = "deny-create-time-control"
+description = "Denies the create time control command"
+commands.deny = ["create_time_control"]

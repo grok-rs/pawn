@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-initialize-knockout-tournament"
+description = "Allows initializing a knockout tournament with bracket"
+commands.allow = ["initialize_knockout_tournament"]
+
+[[permission]]
+identifier = "deny-initialize-knockout-tournament"
+description = "Denies the initialize knockout tournament command"
+commands.deny = ["initialize_knockout_tournament"]

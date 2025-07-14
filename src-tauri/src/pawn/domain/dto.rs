@@ -8,6 +8,7 @@ pub struct CreateTournament {
     pub location: String,
     pub date: String,
     pub time_type: String,
+    pub tournament_type: Option<String>,
     pub player_count: i32,
     pub rounds_played: i32,
     pub total_rounds: i32,
@@ -208,5 +209,79 @@ pub struct BulkImportResult {
 pub struct AssignPlayerToCategory {
     pub player_id: i32,
     pub category_id: i32,
+}
+
+// Knockout Tournament DTOs
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct CreateKnockoutBracket {
+    pub tournament_id: i32,
+    pub bracket_type: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct CreateBracketPosition {
+    pub bracket_id: i32,
+    pub round_number: i32,
+    pub position_number: i32,
+    pub player_id: Option<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct AdvancePlayerRequest {
+    pub bracket_id: i32,
+    pub position_id: i32,
+    pub player_id: i32,
+    pub next_round: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct KnockoutRoundResult {
+    pub bracket_id: i32,
+    pub round_number: i32,
+    pub winner_advances: Vec<(i32, i32)>, // (position_id, player_id)
+}
+
+// Time Control DTOs
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct CreateTimeControl {
+    pub name: String,
+    pub time_control_type: String,
+    pub base_time_minutes: Option<i32>,
+    pub increment_seconds: Option<i32>,
+    pub moves_per_session: Option<i32>,
+    pub session_time_minutes: Option<i32>,
+    pub total_sessions: Option<i32>,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct UpdateTimeControl {
+    pub id: i32,
+    pub name: Option<String>,
+    pub time_control_type: Option<String>,
+    pub base_time_minutes: Option<i32>,
+    pub increment_seconds: Option<i32>,
+    pub moves_per_session: Option<i32>,
+    pub session_time_minutes: Option<i32>,
+    pub total_sessions: Option<i32>,
+    pub description: Option<String>,
+    pub is_default: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct TimeControlFilter {
+    pub time_control_type: Option<String>,
+    pub is_default: Option<bool>,
+    pub is_real_time: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct TimeControlValidation {
+    pub is_valid: bool,
+    pub errors: Vec<String>,
+    pub warnings: Vec<String>,
+    pub estimated_game_duration_minutes: Option<i32>,
 }
 

@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-default-time-controls"
+description = "Allows retrieving default time control templates"
+commands.allow = ["get_default_time_controls"]
+
+[[permission]]
+identifier = "deny-get-default-time-controls"
+description = "Denies the get default time controls command"
+commands.deny = ["get_default_time_controls"]

@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-delete-time-control"
+description = "Allows deleting a time control configuration"
+commands.allow = ["delete_time_control"]
+
+[[permission]]
+identifier = "deny-delete-time-control"
+description = "Denies the delete time control command"
+commands.deny = ["delete_time_control"]

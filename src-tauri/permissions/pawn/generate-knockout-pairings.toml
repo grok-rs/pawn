@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-generate-knockout-pairings"
+description = "Allows generating pairings for knockout tournament rounds"
+commands.allow = ["generate_knockout_pairings"]
+
+[[permission]]
+identifier = "deny-generate-knockout-pairings"
+description = "Denies the generate knockout pairings command"
+commands.deny = ["generate_knockout_pairings"]

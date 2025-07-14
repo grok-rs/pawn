@@ -22,6 +22,8 @@ impl PairingService {
             PairingMethod::Swiss => self.generate_swiss_pairings(players, player_results, round_number),
             PairingMethod::RoundRobin => self.generate_round_robin_pairings(players, round_number),
             PairingMethod::Manual => Ok(vec![]), // Manual pairings are created by user
+            PairingMethod::Knockout => Ok(vec![]), // Knockout pairings handled by KnockoutService
+            PairingMethod::Scheveningen => Ok(vec![]), // Team-based pairings - future implementation
         }
     }
 
@@ -37,6 +39,8 @@ impl PairingService {
             PairingMethod::Swiss => self.generate_swiss_pairings_with_history(players, player_results, game_history, round_number),
             PairingMethod::RoundRobin => self.generate_round_robin_pairings(players, round_number),
             PairingMethod::Manual => Ok(vec![]), // Manual pairings are created by user
+            PairingMethod::Knockout => Ok(vec![]), // Knockout pairings handled by KnockoutService
+            PairingMethod::Scheveningen => Ok(vec![]), // Team-based pairings - future implementation
         }
     }
 

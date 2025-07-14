@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-bracket-positions-by-round"
+description = "Allows retrieving bracket positions for a specific round"
+commands.allow = ["get_bracket_positions_by_round"]
+
+[[permission]]
+identifier = "deny-get-bracket-positions-by-round"
+description = "Denies the get bracket positions by round command"
+commands.deny = ["get_bracket_positions_by_round"]
