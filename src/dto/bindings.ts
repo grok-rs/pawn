@@ -106,6 +106,60 @@ async getPendingApprovals(tournamentId: number) : Promise<EnhancedGameResult[]> 
 },
 async getGameResultTypes() : Promise<([string, string])[]> {
     return await TAURI_INVOKE("plugin:pawn|get_game_result_types");
+},
+async createPlayerEnhanced(data: CreatePlayer) : Promise<Player> {
+    return await TAURI_INVOKE("plugin:pawn|create_player_enhanced", { data });
+},
+async updatePlayer(data: UpdatePlayer) : Promise<Player> {
+    return await TAURI_INVOKE("plugin:pawn|update_player", { data });
+},
+async deletePlayer(playerId: number) : Promise<null> {
+    return await TAURI_INVOKE("plugin:pawn|delete_player", { playerId });
+},
+async getPlayerById(playerId: number) : Promise<Player> {
+    return await TAURI_INVOKE("plugin:pawn|get_player_by_id", { playerId });
+},
+async getPlayersByTournamentEnhanced(tournamentId: number) : Promise<Player[]> {
+    return await TAURI_INVOKE("plugin:pawn|get_players_by_tournament_enhanced", { tournamentId });
+},
+async searchPlayers(filters: PlayerSearchFilters) : Promise<Player[]> {
+    return await TAURI_INVOKE("plugin:pawn|search_players", { filters });
+},
+async bulkImportPlayers(request: BulkImportRequest) : Promise<BulkImportResult> {
+    return await TAURI_INVOKE("plugin:pawn|bulk_import_players", { request });
+},
+async validateBulkImport(request: BulkImportRequest) : Promise<BulkImportResult> {
+    return await TAURI_INVOKE("plugin:pawn|validate_bulk_import", { request });
+},
+async addPlayerRatingHistory(data: CreateRatingHistory) : Promise<RatingHistory> {
+    return await TAURI_INVOKE("plugin:pawn|add_player_rating_history", { data });
+},
+async getPlayerRatingHistory(playerId: number) : Promise<RatingHistory[]> {
+    return await TAURI_INVOKE("plugin:pawn|get_player_rating_history", { playerId });
+},
+async createPlayerCategory(data: CreatePlayerCategory) : Promise<PlayerCategory> {
+    return await TAURI_INVOKE("plugin:pawn|create_player_category", { data });
+},
+async getTournamentCategories(tournamentId: number) : Promise<PlayerCategory[]> {
+    return await TAURI_INVOKE("plugin:pawn|get_tournament_categories", { tournamentId });
+},
+async deletePlayerCategory(categoryId: number) : Promise<null> {
+    return await TAURI_INVOKE("plugin:pawn|delete_player_category", { categoryId });
+},
+async assignPlayerToCategory(data: AssignPlayerToCategory) : Promise<PlayerCategoryAssignment> {
+    return await TAURI_INVOKE("plugin:pawn|assign_player_to_category", { data });
+},
+async updatePlayerStatus(playerId: number, status: string) : Promise<Player> {
+    return await TAURI_INVOKE("plugin:pawn|update_player_status", { playerId, status });
+},
+async withdrawPlayer(playerId: number) : Promise<Player> {
+    return await TAURI_INVOKE("plugin:pawn|withdraw_player", { playerId });
+},
+async requestPlayerBye(playerId: number) : Promise<Player> {
+    return await TAURI_INVOKE("plugin:pawn|request_player_bye", { playerId });
+},
+async getPlayerStatistics(tournamentId: number) : Promise<PlayerStatistics> {
+    return await TAURI_INVOKE("plugin:pawn|get_player_statistics", { tournamentId });
 }
 }
 
@@ -120,10 +174,16 @@ async getGameResultTypes() : Promise<([string, string])[]> {
 /** user-defined types **/
 
 export type ApproveGameResult = { game_id: number; approved_by: string; notes: string | null }
+export type AssignPlayerToCategory = { player_id: number; category_id: number }
 export type BatchUpdateResults = { tournament_id: number; updates: UpdateGameResult[]; validate_only: boolean }
 export type BatchValidationResult = { overall_valid: boolean; results: ([number, GameResultValidation])[] }
+export type BulkImportPlayer = { name: string; rating: number | null; country_code: string | null; title: string | null; birth_date: string | null; gender: string | null; email: string | null; phone: string | null; club: string | null }
+export type BulkImportRequest = { tournament_id: number; players: BulkImportPlayer[]; validate_only: boolean }
+export type BulkImportResult = { success_count: number; error_count: number; validations: PlayerImportValidation[]; imported_player_ids: number[] }
 export type CreateGame = { tournament_id: number; round_number: number; white_player_id: number; black_player_id: number; result: string }
-export type CreatePlayer = { tournament_id: number; name: string; rating: number | null; country_code: string | null }
+export type CreatePlayer = { tournament_id: number; name: string; rating: number | null; country_code: string | null; title: string | null; birth_date: string | null; gender: string | null; email: string | null; phone: string | null; club: string | null }
+export type CreatePlayerCategory = { tournament_id: number; name: string; description: string | null; min_rating: number | null; max_rating: number | null; min_age: number | null; max_age: number | null; gender_restriction: string | null }
+export type CreateRatingHistory = { player_id: number; rating_type: string; rating: number; is_provisional: boolean; effective_date: string }
 export type CreateRound = { tournament_id: number; round_number: number }
 export type CreateTournament = { name: string; location: string; date: string; time_type: string; player_count: number; rounds_played: number; total_rounds: number; country_code: string }
 export type EnhancedGameResult = { game: Game; white_player: Player; black_player: Player; audit_trail: GameResultAudit[]; requires_approval: boolean }
@@ -133,9 +193,15 @@ export type GameResultAudit = { id: number; game_id: number; old_result: string 
 export type GameResultValidation = { is_valid: boolean; errors: string[]; warnings: string[] }
 export type GeneratePairingsRequest = { tournament_id: number; round_number: number; pairing_method: string }
 export type Pairing = { white_player: Player; black_player: Player | null; board_number: number }
-export type Player = { id: number; tournament_id: number; name: string; rating: number | null; country_code: string | null; created_at: string }
+export type Player = { id: number; tournament_id: number; name: string; rating: number | null; country_code: string | null; title: string | null; birth_date: string | null; gender: string | null; email: string | null; phone: string | null; club: string | null; status: string; created_at: string; updated_at: string | null }
+export type PlayerCategory = { id: number; tournament_id: number; name: string; description: string | null; min_rating: number | null; max_rating: number | null; min_age: number | null; max_age: number | null; gender_restriction: string | null; created_at: string }
+export type PlayerCategoryAssignment = { id: number; player_id: number; category_id: number; assigned_at: string }
+export type PlayerImportValidation = { is_valid: boolean; errors: string[]; warnings: string[]; player_data: BulkImportPlayer }
 export type PlayerResult = { player: Player; points: number; games_played: number; wins: number; draws: number; losses: number }
+export type PlayerSearchFilters = { tournament_id: number | null; name: string | null; rating_min: number | null; rating_max: number | null; country_code: string | null; title: string | null; gender: string | null; status: string | null; category_id: number | null; limit: number | null; offset: number | null }
 export type PlayerStanding = { player: Player; rank: number; points: number; games_played: number; wins: number; draws: number; losses: number; tiebreak_scores: TiebreakScore[]; performance_rating: number | null; rating_change: number | null }
+export type PlayerStatistics = { total_players: number; active_players: number; withdrawn_players: number; late_entries: number; bye_requests: number; average_rating: number; titled_players: number }
+export type RatingHistory = { id: number; player_id: number; rating_type: string; rating: number; is_provisional: boolean; effective_date: string; created_at: string }
 export type Round = { id: number; tournament_id: number; round_number: number; status: string; created_at: string; completed_at: string | null }
 export type RoundDetails = { round: Round; games: GameResult[]; status: RoundStatus }
 export type RoundStatus = "Upcoming" | "InProgress" | "Completed"
@@ -158,6 +224,7 @@ message: string;
  */
 details: string }
 export type UpdateGameResult = { game_id: number; result: string; result_type: string | null; result_reason: string | null; arbiter_notes: string | null; changed_by: string | null }
+export type UpdatePlayer = { player_id: number; name: string | null; rating: number | null; country_code: string | null; title: string | null; birth_date: string | null; gender: string | null; email: string | null; phone: string | null; club: string | null; status: string | null }
 export type UpdateRoundStatus = { round_id: number; status: string }
 export type UpdateTournamentPairingMethod = { tournament_id: number; pairing_method: string }
 export type UpdateTournamentSettings = { tournament_id: number; tiebreak_order: TiebreakType[]; use_fide_defaults: boolean }
