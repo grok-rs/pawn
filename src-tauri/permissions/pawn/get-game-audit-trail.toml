@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-game-audit-trail"
+description = "Allows getting game audit trail"
+commands.allow = ["get_game_audit_trail"]
+
+[[permission]]
+identifier = "deny-get-game-audit-trail"
+description = "Denies the get game audit trail command"
+commands.deny = ["get_game_audit_trail"]

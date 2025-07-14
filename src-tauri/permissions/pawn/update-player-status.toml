@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-update-player-status"
+description = "Allows updating player status"
+commands.allow = ["update_player_status"]
+
+[[permission]]
+identifier = "deny-update-player-status"
+description = "Denies the update player status command"
+commands.deny = ["update_player_status"]

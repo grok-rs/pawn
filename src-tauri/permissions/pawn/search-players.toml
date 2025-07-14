@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-search-players"
+description = "Allows searching players with filters"
+commands.allow = ["search_players"]
+
+[[permission]]
+identifier = "deny-search-players"
+description = "Denies the search players command"
+commands.deny = ["search_players"]

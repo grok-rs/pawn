@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-assign-player-to-category"
+description = "Allows assigning players to categories"
+commands.allow = ["assign_player_to_category"]
+
+[[permission]]
+identifier = "deny-assign-player-to-category"
+description = "Denies the assign player to category command"
+commands.deny = ["assign_player_to_category"]

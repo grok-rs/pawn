@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-players-by-tournament-enhanced"
+description = "Allows getting players by tournament with enhanced fields"
+commands.allow = ["get_players_by_tournament_enhanced"]
+
+[[permission]]
+identifier = "deny-get-players-by-tournament-enhanced"
+description = "Denies the get players by tournament enhanced command"
+commands.deny = ["get_players_by_tournament_enhanced"]

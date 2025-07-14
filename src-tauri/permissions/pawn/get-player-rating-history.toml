@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-player-rating-history"
+description = "Allows getting player rating history"
+commands.allow = ["get_player_rating_history"]
+
+[[permission]]
+identifier = "deny-get-player-rating-history"
+description = "Denies the get player rating history command"
+commands.deny = ["get_player_rating_history"]

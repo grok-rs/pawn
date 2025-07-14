@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-player-statistics"
+description = "Allows getting player statistics"
+commands.allow = ["get_player_statistics"]
+
+[[permission]]
+identifier = "deny-get-player-statistics"
+description = "Denies the get player statistics command"
+commands.deny = ["get_player_statistics"]

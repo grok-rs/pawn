@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-request-player-bye"
+description = "Allows requesting player bye"
+commands.allow = ["request_player_bye"]
+
+[[permission]]
+identifier = "deny-request-player-bye"
+description = "Denies the request player bye command"
+commands.deny = ["request_player_bye"]

@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-game-result-types"
+description = "Allows getting game result types"
+commands.allow = ["get_game_result_types"]
+
+[[permission]]
+identifier = "deny-get-game-result-types"
+description = "Denies the get game result types command"
+commands.deny = ["get_game_result_types"]

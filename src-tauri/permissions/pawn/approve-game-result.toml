@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-approve-game-result"
+description = "Allows approving game results"
+commands.allow = ["approve_game_result"]
+
+[[permission]]
+identifier = "deny-approve-game-result"
+description = "Denies the approve game result command"
+commands.deny = ["approve_game_result"]

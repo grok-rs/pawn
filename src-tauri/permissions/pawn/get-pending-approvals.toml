@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-pending-approvals"
+description = "Allows getting pending game result approvals"
+commands.allow = ["get_pending_approvals"]
+
+[[permission]]
+identifier = "deny-get-pending-approvals"
+description = "Denies the get pending approvals command"
+commands.deny = ["get_pending_approvals"]

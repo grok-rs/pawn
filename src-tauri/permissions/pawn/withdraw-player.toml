@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-withdraw-player"
+description = "Allows withdrawing players"
+commands.allow = ["withdraw_player"]
+
+[[permission]]
+identifier = "deny-withdraw-player"
+description = "Denies the withdraw player command"
+commands.deny = ["withdraw_player"]

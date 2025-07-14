@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-tournament-categories"
+description = "Allows getting tournament categories"
+commands.allow = ["get_tournament_categories"]
+
+[[permission]]
+identifier = "deny-get-tournament-categories"
+description = "Denies the get tournament categories command"
+commands.deny = ["get_tournament_categories"]

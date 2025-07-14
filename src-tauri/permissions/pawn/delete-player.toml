@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-delete-player"
+description = "Allows deleting a player"
+commands.allow = ["delete_player"]
+
+[[permission]]
+identifier = "deny-delete-player"
+description = "Denies the delete player command"
+commands.deny = ["delete_player"]

@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-add-player-rating-history"
+description = "Allows adding player rating history"
+commands.allow = ["add_player_rating_history"]
+
+[[permission]]
+identifier = "deny-add-player-rating-history"
+description = "Denies the add player rating history command"
+commands.deny = ["add_player_rating_history"]

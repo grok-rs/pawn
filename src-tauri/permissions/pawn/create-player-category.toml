@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-create-player-category"
+description = "Allows creating player categories"
+commands.allow = ["create_player_category"]
+
+[[permission]]
+identifier = "deny-create-player-category"
+description = "Denies the create player category command"
+commands.deny = ["create_player_category"]

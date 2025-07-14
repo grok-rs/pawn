@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-bulk-import-players"
+description = "Allows bulk importing players from CSV"
+commands.allow = ["bulk_import_players"]
+
+[[permission]]
+identifier = "deny-bulk-import-players"
+description = "Denies the bulk import players command"
+commands.deny = ["bulk_import_players"]

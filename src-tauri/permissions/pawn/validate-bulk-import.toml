@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-validate-bulk-import"
+description = "Allows validating bulk import data"
+commands.allow = ["validate_bulk_import"]
+
+[[permission]]
+identifier = "deny-validate-bulk-import"
+description = "Denies the validate bulk import command"
+commands.deny = ["validate_bulk_import"]

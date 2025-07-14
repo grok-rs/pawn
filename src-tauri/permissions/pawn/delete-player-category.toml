@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-delete-player-category"
+description = "Allows deleting player categories"
+commands.allow = ["delete_player_category"]
+
+[[permission]]
+identifier = "deny-delete-player-category"
+description = "Denies the delete player category command"
+commands.deny = ["delete_player_category"]

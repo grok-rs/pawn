@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-player-by-id"
+description = "Allows getting a player by ID"
+commands.allow = ["get_player_by_id"]
+
+[[permission]]
+identifier = "deny-get-player-by-id"
+description = "Denies the get player by ID command"
+commands.deny = ["get_player_by_id"]

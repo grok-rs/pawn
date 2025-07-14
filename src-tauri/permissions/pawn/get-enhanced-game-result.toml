@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-enhanced-game-result"
+description = "Allows getting enhanced game results"
+commands.allow = ["get_enhanced_game_result"]
+
+[[permission]]
+identifier = "deny-get-enhanced-game-result"
+description = "Denies the get enhanced game result command"
+commands.deny = ["get_enhanced_game_result"]
