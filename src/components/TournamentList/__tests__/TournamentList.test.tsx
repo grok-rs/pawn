@@ -67,10 +67,7 @@ describe('TournamentList', () => {
 
   test('renders tournament list with correct data', () => {
     render(
-      <TournamentList
-        tournaments={mockTournaments}
-        onDelete={mockOnDelete}
-      />
+      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
     );
 
     expect(screen.getByText('Spring Championship')).toBeInTheDocument();
@@ -79,10 +76,7 @@ describe('TournamentList', () => {
 
   test('displays tournament types correctly', () => {
     render(
-      <TournamentList
-        tournaments={mockTournaments}
-        onDelete={mockOnDelete}
-      />
+      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
     );
 
     expect(screen.getByText('Swiss')).toBeInTheDocument();
@@ -91,10 +85,7 @@ describe('TournamentList', () => {
 
   test('displays tournament locations', () => {
     render(
-      <TournamentList
-        tournaments={mockTournaments}
-        onDelete={mockOnDelete}
-      />
+      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
     );
 
     expect(screen.getByText('New York')).toBeInTheDocument();
@@ -103,10 +94,7 @@ describe('TournamentList', () => {
 
   test('displays tournament dates', () => {
     render(
-      <TournamentList
-        tournaments={mockTournaments}
-        onDelete={mockOnDelete}
-      />
+      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
     );
 
     expect(screen.getByText('2024-03-15')).toBeInTheDocument();
@@ -115,10 +103,7 @@ describe('TournamentList', () => {
 
   test('displays tournament time types', () => {
     render(
-      <TournamentList
-        tournaments={mockTournaments}
-        onDelete={mockOnDelete}
-      />
+      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
     );
 
     expect(screen.getByText('Classical')).toBeInTheDocument();
@@ -127,10 +112,7 @@ describe('TournamentList', () => {
 
   test('displays tournament status', () => {
     render(
-      <TournamentList
-        tournaments={mockTournaments}
-        onDelete={mockOnDelete}
-      />
+      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
     );
 
     expect(screen.getByText('active')).toBeInTheDocument();
@@ -139,10 +121,7 @@ describe('TournamentList', () => {
 
   test('displays player count information', () => {
     render(
-      <TournamentList
-        tournaments={mockTournaments}
-        onDelete={mockOnDelete}
-      />
+      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
     );
 
     expect(screen.getByText('16')).toBeInTheDocument();
@@ -151,10 +130,7 @@ describe('TournamentList', () => {
 
   test('displays rounds information', () => {
     render(
-      <TournamentList
-        tournaments={mockTournaments}
-        onDelete={mockOnDelete}
-      />
+      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
     );
 
     // Check for total rounds
@@ -164,10 +140,7 @@ describe('TournamentList', () => {
 
   test('handles tournament selection', () => {
     render(
-      <TournamentList
-        tournaments={mockTournaments}
-        onDelete={mockOnDelete}
-      />
+      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
     );
 
     const firstTournament = screen.getByText('Spring Championship');
@@ -177,9 +150,7 @@ describe('TournamentList', () => {
   });
 
   test('displays empty state when no tournaments', () => {
-    render(
-      <TournamentList tournaments={[]} onDelete={mockOnDelete} />
-    );
+    render(<TournamentList tournaments={[]} onDelete={mockOnDelete} />);
 
     expect(screen.getByText('tournaments.empty')).toBeInTheDocument();
   });
@@ -222,10 +193,7 @@ describe('TournamentList', () => {
 
   test('displays country codes', () => {
     render(
-      <TournamentList
-        tournaments={mockTournaments}
-        onDelete={mockOnDelete}
-      />
+      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
     );
 
     const countryElements = screen.getAllByText('US');
@@ -234,10 +202,7 @@ describe('TournamentList', () => {
 
   test('handles tournament with description', () => {
     render(
-      <TournamentList
-        tournaments={mockTournaments}
-        onDelete={mockOnDelete}
-      />
+      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
     );
 
     expect(screen.getByText('Annual spring tournament')).toBeInTheDocument();
@@ -246,10 +211,7 @@ describe('TournamentList', () => {
 
   test('handles tournament with entry fee', () => {
     render(
-      <TournamentList
-        tournaments={mockTournaments}
-        onDelete={mockOnDelete}
-      />
+      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
     );
 
     expect(screen.getByText('50')).toBeInTheDocument();
@@ -258,40 +220,40 @@ describe('TournamentList', () => {
 
   test('displays tournament progress', () => {
     render(
-      <TournamentList
-        tournaments={mockTournaments}
-        onDelete={mockOnDelete}
-      />
+      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
     );
 
     // First tournament has played 3 out of 9 rounds
     expect(screen.getByText('3')).toBeInTheDocument();
-    
+
     // Second tournament has played 0 out of 11 rounds
     expect(screen.getByText('0')).toBeInTheDocument();
   });
 
   test('handles large tournament list', () => {
-    const largeTournamentList: Tournament[] = Array.from({ length: 50 }, (_, i) => ({
-      id: i + 1,
-      name: `Tournament ${i + 1}`,
-      location: `Location ${i + 1}`,
-      date: '2024-01-01',
-      time_type: 'Classical',
-      tournament_type: 'Swiss',
-      player_count: 16,
-      rounds_played: 0,
-      total_rounds: 9,
-      country_code: 'US',
-      status: 'upcoming',
-      start_time: null,
-      end_time: null,
-      description: null,
-      website_url: null,
-      contact_email: null,
-      entry_fee: null,
-      currency: null,
-    }));
+    const largeTournamentList: Tournament[] = Array.from(
+      { length: 50 },
+      (_, i) => ({
+        id: i + 1,
+        name: `Tournament ${i + 1}`,
+        location: `Location ${i + 1}`,
+        date: '2024-01-01',
+        time_type: 'Classical',
+        tournament_type: 'Swiss',
+        player_count: 16,
+        rounds_played: 0,
+        total_rounds: 9,
+        country_code: 'US',
+        status: 'upcoming',
+        start_time: null,
+        end_time: null,
+        description: null,
+        website_url: null,
+        contact_email: null,
+        entry_fee: null,
+        currency: null,
+      })
+    );
 
     render(
       <TournamentList
