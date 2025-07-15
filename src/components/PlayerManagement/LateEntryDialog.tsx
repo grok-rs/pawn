@@ -197,7 +197,7 @@ const LateEntryDialog: React.FC<LateEntryDialogProps> = ({
   const missedRounds = getMissedRounds();
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth={false} fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Person />

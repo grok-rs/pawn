@@ -7,7 +7,7 @@ import {
   Card,
   CardContent,
   CardActions,
-  Grid,
+  Grid2 as Grid,
   Chip,
   Dialog,
   DialogTitle,
@@ -436,7 +436,7 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ mobile: 12, tablet: 6 }}>
               <FormControl fullWidth>
                 <InputLabel>
                   {t('tournament.configuration.tournamentType')}
@@ -459,7 +459,7 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ mobile: 12, tablet: 6 }}>
               <FormControl fullWidth>
                 <InputLabel>{t('tournament.configuration.type')}</InputLabel>
                 <Select
@@ -477,7 +477,7 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ mobile: 12, tablet: 6 }}>
               <TextField
                 fullWidth
                 type="number"
@@ -492,7 +492,7 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                 inputProps={{ min: 1, max: 20 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ mobile: 12, tablet: 6 }}>
               <TextField
                 fullWidth
                 type="number"
@@ -507,7 +507,7 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                 inputProps={{ min: 1, max: 120 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ mobile: 12, tablet: 6 }}>
               <FormControl fullWidth>
                 <InputLabel>
                   {t('tournament.configuration.mobilePhonePolicy')}
@@ -530,7 +530,7 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ mobile: 12, tablet: 6 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <FormControlLabel
                   control={
@@ -604,7 +604,7 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
       <Dialog
         open={viewDialogOpen}
         onClose={() => setViewDialogOpen(false)}
-        maxWidth="sm"
+        maxWidth={false}
         fullWidth
       >
         <DialogTitle>

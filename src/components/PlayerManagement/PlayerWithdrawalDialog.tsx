@@ -24,14 +24,14 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  Divider,
+  // Divider,
   CircularProgress,
 } from '@mui/material';
 import {
   Person,
-  Warning,
+  // Warning,
   Info,
-  Schedule,
+  // Schedule,
   ExitToApp,
   Pause,
 } from '@mui/icons-material';
@@ -175,7 +175,7 @@ const PlayerWithdrawalDialog: React.FC<PlayerWithdrawalDialogProps> = ({
     player && ['withdrawn', 'bye_requested'].includes(player.status);
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth={false} fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Person />
