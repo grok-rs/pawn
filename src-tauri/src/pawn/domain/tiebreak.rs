@@ -162,3 +162,57 @@ pub struct StandingsCalculationResult {
     pub last_updated: String,
     pub tiebreak_config: TournamentTiebreakConfig,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tiebreak_type_display_names() {
+        assert_eq!(TiebreakType::BuchholzFull.display_name(), "Buchholz");
+        assert_eq!(
+            TiebreakType::SonnebornBerger.display_name(),
+            "Sonneborn-Berger"
+        );
+        assert_eq!(
+            TiebreakType::DirectEncounter.display_name(),
+            "Direct Encounter"
+        );
+        assert_eq!(TiebreakType::NumberOfWins.display_name(), "Number of Wins");
+    }
+
+    #[test]
+    fn test_default_tournament_tiebreak_config() {
+        let config = TournamentTiebreakConfig::default();
+        assert_eq!(config.tournament_id, 0);
+        assert!(config.use_fide_defaults);
+        assert!(!config.tiebreaks.is_empty());
+        assert_eq!(config.tiebreaks[0], TiebreakType::BuchholzFull);
+        assert_eq!(config.forfeit_time_minutes, Some(30));
+    }
+
+    #[test]
+    fn test_tiebreak_score_creation() {
+        let score = TiebreakScore {
+            tiebreak_type: TiebreakType::SonnebornBerger,
+            value: 42.5,
+            display_value: "42.5".to_string(),
+        };
+
+        assert_eq!(score.tiebreak_type, TiebreakType::SonnebornBerger);
+        assert_eq!(score.value, 42.5);
+        assert_eq!(score.display_value, "42.5");
+    }
+
+    #[test]
+    fn test_enum_variants_exist() {
+        // Simple test to ensure key enum variants exist
+        let _buchholz = TiebreakType::BuchholzFull;
+        let _sonneborn = TiebreakType::SonnebornBerger;
+        let _direct = TiebreakType::DirectEncounter;
+        let _wins = TiebreakType::NumberOfWins;
+
+        // This test passes if all variants compile
+        assert!(true);
+    }
+}
