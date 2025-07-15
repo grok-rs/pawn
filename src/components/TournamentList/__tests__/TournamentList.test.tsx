@@ -8,6 +8,19 @@ vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn(),
 }));
 
+// Mock the commands from bindings
+vi.mock('../../../dto/bindings', () => ({
+  commands: {
+    getPlayersByTournamentEnhanced: vi.fn().mockResolvedValue([]),
+    getRoundsByTournament: vi.fn().mockResolvedValue([]),
+  },
+}));
+
+// Mock react-router-dom
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => vi.fn(),
+}));
+
 // Mock react-i18next
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({

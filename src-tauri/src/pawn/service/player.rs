@@ -430,19 +430,21 @@ mod tests {
             if data.name.trim().is_empty() {
                 return Err(PawnError::InvalidInput("Name cannot be empty".to_string()));
             }
-            
+
             if let Some(rating) = data.rating {
                 if rating < 0 || rating > 4000 {
-                    return Err(PawnError::InvalidInput("Rating must be between 0 and 4000".to_string()));
+                    return Err(PawnError::InvalidInput(
+                        "Rating must be between 0 and 4000".to_string(),
+                    ));
                 }
             }
-            
+
             if let Some(email) = &data.email {
                 if !email.contains('@') {
                     return Err(PawnError::InvalidInput("Invalid email format".to_string()));
                 }
             }
-            
+
             Ok(())
         }
     }
@@ -574,9 +576,12 @@ mod tests {
         assert_eq!(stats.bye_requests, 1);
         assert_eq!(stats.average_rating, 1650.0);
         assert_eq!(stats.titled_players, 2);
-        
+
         // Test that the sum makes sense
-        assert_eq!(stats.active_players + stats.withdrawn_players + stats.bye_requests, 10);
+        assert_eq!(
+            stats.active_players + stats.withdrawn_players + stats.bye_requests,
+            10
+        );
     }
 
     #[test]
