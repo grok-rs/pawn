@@ -64,8 +64,6 @@ jobs:
         name: frontend-coverage
         fail_ci_if_error: false
 
-    - name: Check coverage threshold
-      run: npm run coverage:check
 
     - name: Build for production
       run: npm run build

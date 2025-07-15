@@ -217,10 +217,8 @@ impl ResultValidationService {
     ) -> ValidationResult {
         let mut validation = ValidationResult::new();
 
-        let requires_approval = match result {
-            "0-1F" | "1-0F" | "0-1D" | "1-0D" | "0-0" | "CANC" => true,
-            _ => false,
-        };
+        let requires_approval =
+            matches!(result, "0-1F" | "1-0F" | "0-1D" | "1-0D" | "0-0" | "CANC");
 
         if requires_approval && changed_by.is_none() {
             validation.add_error(format!(

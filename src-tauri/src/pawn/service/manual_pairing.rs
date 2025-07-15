@@ -166,21 +166,149 @@ impl ManualPairingController {
             final_pairings.push(pairing);
         }
 
-        // Step 2: Apply constraints to remaining automatic pairings
+        // Step 2: Apply force match constraints as additional forced pairings
+        for constraint in &request.constraints {
+            if constraint.constraint_type == ConstraintType::ForceMatch
+                && matches!(
+                    constraint.priority,
+                    ConstraintPriority::High | ConstraintPriority::Critical
+                )
+            {
+                // Check if constraint applies to this round
+                if let Some(constraint_round) = constraint.round_number {
+                    if constraint_round != request.round_number {
+                        continue;
+                    }
+                }
+
+                if let Some(player2_id) = constraint.player2_id {
+                    // Skip if either player is already used
+                    if used_players.contains(&constraint.player1_id)
+                        || used_players.contains(&player2_id)
+                    {
+                        continue;
+                    }
+
+                    let forced_pairing = ForcedPairing {
+                        white_player_id: constraint.player1_id,
+                        black_player_id: Some(player2_id),
+                        board_number: None,
+                    };
+
+                    let pairing =
+                        self.create_forced_pairing(&forced_pairing, players, &mut board_counter)?;
+                    used_players.insert(pairing.white_player.id);
+                    if let Some(ref black_player) = pairing.black_player {
+                        used_players.insert(black_player.id);
+                    }
+                    final_pairings.push(pairing);
+                }
+            }
+        }
+
+        // Step 3: Apply constraints to remaining automatic pairings
         if request.apply_to_remaining {
             let remaining_pairings = self.filter_pairings_by_constraints(
                 automatic_pairings,
                 &request.constraints,
                 &used_players,
+                request.round_number,
             )?;
 
             final_pairings.extend(remaining_pairings);
+        } else {
+            // If not applying to remaining, include original automatic pairings
+            // for players not already used in forced pairings, but still apply forbid constraints
+            let mut remaining_pairings: Vec<Pairing> = automatic_pairings
+                .into_iter()
+                .filter(|pairing| {
+                    !used_players.contains(&pairing.white_player.id)
+                        && !pairing
+                            .black_player
+                            .as_ref()
+                            .map_or(false, |p| used_players.contains(&p.id))
+                })
+                .collect();
+
+            // Apply forbid constraints to remaining pairings
+            for constraint in &request.constraints {
+                if constraint.constraint_type == ConstraintType::ForbidMatch {
+                    // Check if constraint applies to this round
+                    if let Some(constraint_round) = constraint.round_number {
+                        if constraint_round != request.round_number {
+                            continue;
+                        }
+                    }
+
+                    if let Some(player2_id) = constraint.player2_id {
+                        remaining_pairings.retain(|pairing| {
+                            !self.pairing_matches_players(
+                                pairing,
+                                constraint.player1_id,
+                                player2_id,
+                            )
+                        });
+                    }
+                }
+            }
+
+            final_pairings.extend(remaining_pairings);
+
+            // If we disrupted automatic pairings with force constraints,
+            // we need to pair up any orphaned players (but respecting forbid constraints)
+            let has_force_constraints = request
+                .constraints
+                .iter()
+                .any(|c| c.constraint_type == ConstraintType::ForceMatch);
+            if has_force_constraints {
+                let mut orphaned_players: Vec<&Player> = players
+                    .iter()
+                    .filter(|p| !used_players.contains(&p.id))
+                    .collect();
+
+                // Pair up orphaned players in pairs, respecting forbid constraints
+                while orphaned_players.len() >= 2 {
+                    let player1 = orphaned_players.remove(0);
+                    let mut found_valid_pairing = false;
+
+                    for i in 0..orphaned_players.len() {
+                        let player2 = orphaned_players[i];
+
+                        // Check if this pairing is forbidden
+                        let is_forbidden = request.constraints.iter().any(|constraint| {
+                            constraint.constraint_type == ConstraintType::ForbidMatch &&
+                            // Check if constraint applies to this round
+                            (constraint.round_number.is_none() || constraint.round_number == Some(request.round_number)) &&
+                            (constraint.player1_id == player1.id && constraint.player2_id == Some(player2.id) ||
+                             constraint.player1_id == player2.id && constraint.player2_id == Some(player1.id))
+                        });
+
+                        if !is_forbidden {
+                            let player2 = orphaned_players.remove(i);
+                            let orphaned_pairing = Pairing {
+                                white_player: player1.clone(),
+                                black_player: Some(player2.clone()),
+                                board_number: board_counter,
+                            };
+                            board_counter += 1;
+                            final_pairings.push(orphaned_pairing);
+                            found_valid_pairing = true;
+                            break;
+                        }
+                    }
+
+                    // If we couldn't find a valid pairing for player1, leave them unpaired
+                    if !found_valid_pairing {
+                        break;
+                    }
+                }
+            }
         }
 
-        // Step 3: Apply color constraints
+        // Step 4: Apply color constraints
         self.apply_color_constraints(&mut final_pairings, &request.color_constraints)?;
 
-        // Step 4: Validate the final result
+        // Step 5: Validate the final result
         let validation =
             self.validate_pairings(&final_pairings, players, game_history, &request)?;
 
@@ -256,6 +384,7 @@ impl ManualPairingController {
         mut pairings: Vec<Pairing>,
         constraints: &[PairingConstraint],
         used_players: &HashSet<i32>,
+        round_number: i32,
     ) -> Result<Vec<Pairing>, PawnError> {
         // Remove pairings involving already used players
         pairings.retain(|pairing| {
@@ -269,6 +398,13 @@ impl ManualPairingController {
         // Apply forbid constraints
         for constraint in constraints {
             if constraint.constraint_type == ConstraintType::ForbidMatch {
+                // Check if constraint applies to this round
+                if let Some(constraint_round) = constraint.round_number {
+                    if constraint_round != round_number {
+                        continue;
+                    }
+                }
+
                 if let Some(player2_id) = constraint.player2_id {
                     pairings.retain(|pairing| {
                         !self.pairing_matches_players(pairing, constraint.player1_id, player2_id)
@@ -277,7 +413,7 @@ impl ManualPairingController {
             }
         }
 
-        // TODO: Apply other constraint types (force match, color, bye, etc.)
+        // TODO: Apply other constraint types (color, bye, etc.)
 
         Ok(pairings)
     }
@@ -500,7 +636,7 @@ impl ManualPairingController {
                     error_type: ValidationErrorType::InvalidBoardAssignment,
                     message: format!("Board number {} used multiple times", pairing.board_number),
                     affected_players: vec![pairing.white_player.id],
-                    severity: ErrorSeverity::Major,
+                    severity: ErrorSeverity::Critical,
                 });
             }
         }

@@ -267,11 +267,142 @@ impl SwissPairingEngine {
         let mut pairings = Vec::new();
         let mut byes = Vec::new();
         let mut float_count = 0;
-        let max_floats_allowed = self.calculate_max_floats(all_players.len(), round_number);
+        let _max_floats_allowed = self.calculate_max_floats(all_players.len(), round_number);
 
-        let score_groups = self.form_score_groups_from_slice(all_players, paired_ids);
+        let mut score_groups = self.form_score_groups_from_slice(all_players, paired_ids);
+        let mut floated_players: HashSet<i32> = HashSet::new();
 
-        for (group_index, mut score_group) in score_groups.into_iter().enumerate() {
+        // First pass: handle single-player groups by floating them strategically
+        let mut players_to_float = Vec::new();
+        for (group_index, score_group) in score_groups.iter().enumerate() {
+            tracing::debug!(
+                "Score group {} has {} players: {:?}",
+                group_index,
+                score_group.players.len(),
+                score_group
+                    .players
+                    .iter()
+                    .map(|p| p.player.name.clone())
+                    .collect::<Vec<_>>()
+            );
+            if score_group.players.len() == 1 {
+                let player_to_float = &score_group.players[0];
+                tracing::debug!(
+                    "Single player group {}: {}",
+                    group_index,
+                    player_to_float.player.name
+                );
+
+                // Find the best group to float to (prioritize groups with odd number of players)
+                let mut best_target = None;
+                let mut _float_found = false;
+
+                // First, try to find a group with odd number of players (to make it even)
+                // Try both directions: down and up
+                for (next_group_index, next_group) in
+                    score_groups.iter().enumerate().skip(group_index + 1)
+                {
+                    if next_group.players.len() % 2 == 1 {
+                        // Check if this player can pair with anyone in the next group
+                        let can_pair = next_group
+                            .players
+                            .iter()
+                            .any(|p| !player_to_float.opponents.contains(&p.player.id));
+
+                        if can_pair {
+                            best_target = Some(next_group_index);
+                            _float_found = true;
+                            break;
+                        }
+                    }
+                }
+
+                // Try floating up to previous groups with odd number of players
+                if !_float_found {
+                    for prev_group_index in (0..group_index).rev() {
+                        if score_groups[prev_group_index].players.len() % 2 == 1 {
+                            // Check if this player can pair with anyone in the previous group
+                            let can_pair = score_groups[prev_group_index]
+                                .players
+                                .iter()
+                                .any(|p| !player_to_float.opponents.contains(&p.player.id));
+
+                            if can_pair {
+                                best_target = Some(prev_group_index);
+                                _float_found = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // If no odd groups found, try even groups (down first, then up)
+                if !_float_found {
+                    for (next_group_index, next_group) in
+                        score_groups.iter().enumerate().skip(group_index + 1)
+                    {
+                        if !next_group.players.is_empty() {
+                            // Check if this player can pair with anyone in the next group
+                            let can_pair = next_group
+                                .players
+                                .iter()
+                                .any(|p| !player_to_float.opponents.contains(&p.player.id));
+
+                            if can_pair {
+                                best_target = Some(next_group_index);
+                                _float_found = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Try floating up to previous groups with even number of players
+                if !_float_found {
+                    for prev_group_index in (0..group_index).rev() {
+                        if !score_groups[prev_group_index].players.is_empty() {
+                            // Check if this player can pair with anyone in the previous group
+                            let can_pair = score_groups[prev_group_index]
+                                .players
+                                .iter()
+                                .any(|p| !player_to_float.opponents.contains(&p.player.id));
+
+                            if can_pair {
+                                best_target = Some(prev_group_index);
+                                _float_found = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if let Some(target_group) = best_target {
+                    players_to_float.push((group_index, target_group, player_to_float.clone()));
+                } else {
+                    tracing::debug!(
+                        "No float target found for player {}, will get bye",
+                        player_to_float.player.name
+                    );
+                }
+            }
+        }
+
+        // Apply the floats
+        for (from_group, to_group, player_to_float) in players_to_float {
+            tracing::debug!(
+                "Floating player {} from group {} to group {}",
+                player_to_float.player.name,
+                from_group,
+                to_group
+            );
+
+            score_groups[to_group].players.push(player_to_float.clone());
+            score_groups[from_group].players.clear();
+            floated_players.insert(player_to_float.player.id);
+            float_count += 1;
+        }
+
+        for (group_index, score_group) in score_groups.iter_mut().enumerate() {
             tracing::debug!(
                 "Processing score group {} with {} points, {} players",
                 group_index,
@@ -279,25 +410,44 @@ impl SwissPairingEngine {
                 score_group.players.len()
             );
 
-            // Handle odd group size with float management
+            // Handle odd group size with byes (floating is handled in the initial pass)
             if score_group.players.len() % 2 == 1 {
-                let float_handled = self.handle_odd_group_with_floats(
-                    &mut score_group,
-                    all_players,
-                    paired_ids,
-                    &mut float_count,
-                    max_floats_allowed,
-                    group_index,
-                    &mut byes,
-                )?;
-
-                if !float_handled {
-                    tracing::debug!("No float possible, group remains odd");
+                // Assign bye to the most appropriate player
+                if let Some(bye_player) = self.select_bye_player(&score_group.players) {
+                    let bye_player_id = bye_player.player.id;
+                    let bye_player_name = bye_player.player.name.clone();
+                    byes.push(bye_player.clone());
+                    score_group.players.retain(|p| p.player.id != bye_player_id);
+                    tracing::debug!(
+                        "Assigned bye to: {} in group {}",
+                        bye_player_name,
+                        group_index
+                    );
                 }
             }
 
+            // Floated players are already handled in the pre-processing step
+
             // Pair players within the group
+            tracing::debug!(
+                "Pairing group {} with {} players",
+                group_index,
+                score_group.players.len()
+            );
+            for (i, player) in score_group.players.iter().enumerate() {
+                tracing::debug!(
+                    "  Player {}: {} (opponents: {:?})",
+                    i,
+                    player.player.name,
+                    player.opponents
+                );
+            }
             let group_pairings = self.pair_score_group(&mut score_group.players, board_number)?;
+            tracing::debug!(
+                "Group {} generated {} pairings",
+                group_index,
+                group_pairings.len()
+            );
 
             // Mark players as paired
             for pairing in &group_pairings {
@@ -309,6 +459,9 @@ impl SwissPairingEngine {
 
             pairings.extend(group_pairings);
         }
+
+        // Remove floated players from their original groups to prevent duplicate pairings
+        // This needs to happen before pairing generation, so we do it in the main loop
 
         Ok(PairingResult {
             pairings,
@@ -369,22 +522,28 @@ impl SwissPairingEngine {
         &self,
         score_group: &mut ScoreGroup,
         all_players: &[SwissPlayer],
-        paired_ids: &HashSet<i32>,
+        paired_ids: &mut HashSet<i32>,
         float_count: &mut usize,
-        max_floats_allowed: usize,
+        _max_floats_allowed: usize,
         group_index: usize,
         byes: &mut Vec<SwissPlayer>,
+        floated_players: &mut HashSet<i32>,
     ) -> Result<bool, PawnError> {
         // Try to get a downfloater if float limit allows
-        if *float_count < max_floats_allowed {
+        if *float_count < _max_floats_allowed {
             if let Some(floater) = self.find_suitable_downfloater(
                 all_players,
                 score_group.points,
                 paired_ids,
                 group_index,
             ) {
+                // Mark the floated player as paired to prevent duplicate processing
+                let floater_id = floater.player.id;
+                paired_ids.insert(floater_id);
+                floated_players.insert(floater_id);
                 score_group.players.push(floater);
                 *float_count += 1;
+                tracing::info!("Floated player {} to group {}", floater_id, group_index);
                 tracing::debug!(
                     "Added downfloater to group {}, total floats: {}",
                     group_index,
@@ -395,7 +554,7 @@ impl SwissPairingEngine {
         }
 
         // Try to send an upfloater to the group above
-        if group_index > 0 && *float_count < max_floats_allowed {
+        if group_index > 0 && *float_count < _max_floats_allowed {
             // This would require coordination with previous groups
             // For now, we'll assign a bye
         }
@@ -647,6 +806,47 @@ impl SwissPairingEngine {
         let mut pairings = Vec::new();
         let mut used_indices = HashSet::new();
 
+        println!("DEBUG: Pairing {} players with opponents:", players.len());
+        for (i, player) in players.iter().enumerate() {
+            println!(
+                "  Player {}: {} (opponents: {:?})",
+                i, player.player.name, player.opponents
+            );
+        }
+
+        // Try different pairing strategies to maximize pairings
+        let initial_pairings =
+            self.generate_greedy_pairings(players, &mut used_indices, board_number);
+
+        // If greedy approach leaves many players unpaired, try alternative strategies
+        let unpaired_count = players.len() - (used_indices.len());
+        if unpaired_count >= 2 {
+            // Try alternative pairing to maximize total pairings
+            let alt_pairings = self.generate_alternative_pairings(players, board_number);
+            if alt_pairings.len() > initial_pairings.len() {
+                println!(
+                    "DEBUG: Using alternative pairing strategy ({} vs {} pairings)",
+                    alt_pairings.len(),
+                    initial_pairings.len()
+                );
+                return Ok(alt_pairings);
+            }
+        }
+
+        pairings.extend(initial_pairings);
+
+        Ok(pairings)
+    }
+
+    /// Generate pairings using greedy approach
+    fn generate_greedy_pairings(
+        &self,
+        players: &[SwissPlayer],
+        used_indices: &mut HashSet<usize>,
+        board_number: &mut i32,
+    ) -> Vec<Pairing> {
+        let mut pairings = Vec::new();
+
         // Simple greedy pairing - can be enhanced with Hungarian algorithm for optimal matching
         for i in 0..players.len() {
             if used_indices.contains(&i) {
@@ -663,11 +863,19 @@ impl SwissPairingEngine {
 
                 // Skip if already played
                 if players[i].opponents.contains(&players[j].player.id) {
+                    println!(
+                        "DEBUG: Skipping rematch: {} vs {}",
+                        players[i].player.name, players[j].player.name
+                    );
                     continue;
                 }
 
                 // Calculate pairing quality score
                 let pairing_score = self.calculate_pairing_score(&players[i], &players[j]);
+                println!(
+                    "DEBUG: Pairing score for {} vs {}: {}",
+                    players[i].player.name, players[j].player.name, pairing_score
+                );
 
                 if pairing_score > best_score {
                     best_score = pairing_score;
@@ -682,6 +890,10 @@ impl SwissPairingEngine {
                 // Determine colors based on preferences
                 let (white_player, black_player) = self.assign_colors(&players[i], &players[j]);
 
+                println!(
+                    "DEBUG: Creating pairing: {} vs {}",
+                    white_player.player.name, black_player.player.name
+                );
                 pairings.push(Pairing {
                     white_player: white_player.player.clone(),
                     black_player: Some(black_player.player.clone()),
@@ -697,7 +909,59 @@ impl SwissPairingEngine {
             }
         }
 
-        Ok(pairings)
+        pairings
+    }
+
+    /// Generate alternative pairings to maximize total pairings
+    fn generate_alternative_pairings(
+        &self,
+        players: &[SwissPlayer],
+        board_number: &mut i32,
+    ) -> Vec<Pairing> {
+        let mut pairings = Vec::new();
+        let mut used_indices = HashSet::new();
+
+        // Build a graph of valid pairings with priority
+        let mut valid_pairings = Vec::new();
+        for i in 0..players.len() {
+            for j in (i + 1)..players.len() {
+                if !players[i].opponents.contains(&players[j].player.id) {
+                    // Calculate priority: prefer pairings involving constrained players
+                    let constraint_score = players[i].opponents.len() + players[j].opponents.len();
+                    valid_pairings.push((i, j, constraint_score));
+                }
+            }
+        }
+
+        // Sort by constraint score (higher = more constrained players first)
+        valid_pairings.sort_by(|a, b| b.2.cmp(&a.2));
+
+        // Try to find maximum matching prioritizing constrained players
+        for (i, j, _) in valid_pairings {
+            if used_indices.contains(&i) || used_indices.contains(&j) {
+                continue;
+            }
+
+            used_indices.insert(i);
+            used_indices.insert(j);
+
+            // Determine colors based on preferences
+            let (white_player, black_player) = self.assign_colors(&players[i], &players[j]);
+
+            println!(
+                "DEBUG: Alternative pairing: {} vs {}",
+                white_player.player.name, black_player.player.name
+            );
+            pairings.push(Pairing {
+                white_player: white_player.player.clone(),
+                black_player: Some(black_player.player.clone()),
+                board_number: *board_number,
+            });
+
+            *board_number += 1;
+        }
+
+        pairings
     }
 
     /// Calculate pairing quality score for two players with enhanced weighted factors
@@ -925,10 +1189,16 @@ fn opposite_color(color: Color) -> Color {
 }
 
 /// Wrapper for f64 to enable ordering in BTreeMap
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 struct OrderedFloat(f64);
 
 impl Eq for OrderedFloat {}
+
+impl PartialOrd for OrderedFloat {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
 
 impl Ord for OrderedFloat {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
@@ -1107,6 +1377,24 @@ mod tests {
                 2,
             )
             .unwrap();
+
+        println!("Generated {} pairings:", result.pairings.len());
+        for (i, pairing) in result.pairings.iter().enumerate() {
+            println!(
+                "  Pairing {}: {} vs {}",
+                i + 1,
+                pairing.white_player.name,
+                pairing
+                    .black_player
+                    .as_ref()
+                    .map(|p| p.name.as_str())
+                    .unwrap_or("BYE")
+            );
+        }
+        println!("Generated {} byes:", result.byes.len());
+        for (i, bye) in result.byes.iter().enumerate() {
+            println!("  Bye {}: {}", i + 1, bye.player.name);
+        }
 
         // Should create 2 pairings, avoiding the rematch
         assert_eq!(result.pairings.len(), 2);
