@@ -83,6 +83,21 @@ async createNextRound(tournamentId: number) : Promise<Round> {
 async updateTournamentPairingMethod(data: UpdateTournamentPairingMethod) : Promise<null> {
     return await TAURI_INVOKE("plugin:pawn|update_tournament_pairing_method", { data });
 },
+async generateEnhancedPairings(request: EnhancedPairingRequest) : Promise<EnhancedPairingResult> {
+    return await TAURI_INVOKE("plugin:pawn|generate_enhanced_pairings", { request });
+},
+async analyzeSwissPairings(tournamentId: number, roundNumber: number, options: SwissPairingOptions) : Promise<SwissPairingAnalysis> {
+    return await TAURI_INVOKE("plugin:pawn|analyze_swiss_pairings", { tournamentId, roundNumber, options });
+},
+async analyzeRoundRobinPairings(tournamentId: number, roundNumber: number, options: RoundRobinOptions) : Promise<RoundRobinAnalysis> {
+    return await TAURI_INVOKE("plugin:pawn|analyze_round_robin_pairings", { tournamentId, roundNumber, options });
+},
+async validatePairingConfiguration(tournamentId: number, pairings: Pairing[]) : Promise<PairingValidationResults> {
+    return await TAURI_INVOKE("plugin:pawn|validate_pairing_configuration", { tournamentId, pairings });
+},
+async benchmarkPairingPerformance(playerCounts: number[]) : Promise<PairingPerformanceMetrics[]> {
+    return await TAURI_INVOKE("plugin:pawn|benchmark_pairing_performance", { playerCounts });
+},
 async updateGameResult(data: UpdateGameResult) : Promise<Game> {
     return await TAURI_INVOKE("plugin:pawn|update_game_result", { data });
 },
@@ -231,10 +246,13 @@ export type ApproveGameResult = { game_id: number; approved_by: string; notes: s
 export type AssignPlayerToCategory = { player_id: number; category_id: number }
 export type BatchUpdateResults = { tournament_id: number; updates: UpdateGameResult[]; validate_only: boolean }
 export type BatchValidationResult = { overall_valid: boolean; results: ([number, GameResultValidation])[] }
+export type BergerTableInfoDto = { table_size: number; rotation_pattern: string; bye_player_position: number | null }
 export type BracketPosition = { id: number; bracket_id: number; round_number: number; position_number: number; player_id: number | null; advanced_from_position: number | null; status: string; created_at: string }
 export type BulkImportPlayer = { name: string; rating: number | null; country_code: string | null; title: string | null; birth_date: string | null; gender: string | null; email: string | null; phone: string | null; club: string | null }
 export type BulkImportRequest = { tournament_id: number; players: BulkImportPlayer[]; validate_only: boolean }
 export type BulkImportResult = { success_count: number; error_count: number; validations: PlayerImportValidation[]; imported_player_ids: number[] }
+export type ColorBalanceAnalysisDto = { players_with_color_imbalance: number; average_color_balance: number; players_needing_white: number; players_needing_black: number }
+export type ColorConstraintDto = { player_id: number; required_color: string; priority: string }
 export type CreateGame = { tournament_id: number; round_number: number; white_player_id: number; black_player_id: number; result: string }
 export type CreateKnockoutBracket = { tournament_id: number; bracket_type: string }
 export type CreatePlayer = { tournament_id: number; name: string; rating: number | null; country_code: string | null; title: string | null; birth_date: string | null; gender: string | null; email: string | null; phone: string | null; club: string | null }
@@ -244,26 +262,45 @@ export type CreateRound = { tournament_id: number; round_number: number }
 export type CreateTimeControl = { name: string; time_control_type: string; base_time_minutes: number | null; increment_seconds: number | null; moves_per_session: number | null; session_time_minutes: number | null; total_sessions: number | null; description: string | null }
 export type CreateTournament = { name: string; location: string; date: string; time_type: string; tournament_type: string | null; player_count: number; rounds_played: number; total_rounds: number; country_code: string }
 export type EnhancedGameResult = { game: Game; white_player: Player; black_player: Player; audit_trail: GameResultAudit[]; requires_approval: boolean }
+export type EnhancedPairingRequest = { tournament_id: number; round_number: number; pairing_method: string; use_accelerated_pairings: boolean | null; avoid_team_conflicts: boolean | null; manual_overrides: ManualPairingOverrides | null; optimization_config: PairingOptimizationConfig | null }
+export type EnhancedPairingResult = { pairings: Pairing[]; validation_results: PairingValidationResults; performance_metrics: PairingPerformanceMetrics | null; warnings: string[] }
+export type FloatStatisticsDto = { total_floats: number; up_floats: number; down_floats: number; float_percentage: number }
+export type ForbiddenPairingDto = { player1_id: number; player2_id: number; reason: string }
+export type ForcedPairingDto = { white_player_id: number; black_player_id: number | null; board_number: number | null }
 export type Game = { id: number; tournament_id: number; round_number: number; white_player_id: number; black_player_id: number; result: string; result_type: string | null; result_reason: string | null; arbiter_notes: string | null; last_updated: string | null; approved_by: string | null; created_at: string }
 export type GameResult = { game: Game; white_player: Player; black_player: Player }
 export type GameResultAudit = { id: number; game_id: number; old_result: string | null; new_result: string; old_result_type: string | null; new_result_type: string | null; reason: string | null; changed_by: string | null; changed_at: string; approved: boolean; approved_by: string | null; approved_at: string | null }
 export type GameResultValidation = { is_valid: boolean; errors: string[]; warnings: string[] }
 export type GeneratePairingsRequest = { tournament_id: number; round_number: number; pairing_method: string }
 export type KnockoutBracket = { id: number; tournament_id: number; bracket_type: string; total_rounds: number; created_at: string }
+export type ManualPairingOverrides = { forced_pairings: ForcedPairingDto[]; forbidden_pairings: ForbiddenPairingDto[]; color_constraints: ColorConstraintDto[]; bye_assignments: number[] }
 export type Pairing = { white_player: Player; black_player: Player | null; board_number: number }
+export type PairingErrorDto = { error_type: string; message: string; affected_players: number[]; severity: string }
+export type PairingOptimizationConfig = { max_players_for_basic_algorithm: number | null; use_parallel_processing: boolean | null; batch_size_for_large_tournaments: number | null; timeout_seconds: number | null; cache_opponent_history: boolean | null; use_heuristic_pruning: boolean | null }
+export type PairingPerformanceMetrics = { total_duration_ms: number; pairing_generation_ms: number; validation_duration_ms: number; players_processed: number; pairings_generated: number; cache_hits: number; cache_misses: number; algorithm_used: string }
+export type PairingSuggestionDto = { suggestion_type: string; message: string; alternative_pairing: Pairing | null }
+export type PairingValidationResults = { is_valid: boolean; critical_errors: PairingErrorDto[]; warnings: PairingWarningDto[]; suggestions: PairingSuggestionDto[] }
+export type PairingWarningDto = { warning_type: string; message: string; affected_players: number[] }
 export type Player = { id: number; tournament_id: number; name: string; rating: number | null; country_code: string | null; title: string | null; birth_date: string | null; gender: string | null; email: string | null; phone: string | null; club: string | null; status: string; created_at: string; updated_at: string | null }
 export type PlayerCategory = { id: number; tournament_id: number; name: string; description: string | null; min_rating: number | null; max_rating: number | null; min_age: number | null; max_age: number | null; gender_restriction: string | null; created_at: string }
 export type PlayerCategoryAssignment = { id: number; player_id: number; category_id: number; assigned_at: string }
+export type PlayerColorStatsDto = { player_id: number; player_name: string; white_games: number; black_games: number; color_balance: number }
 export type PlayerImportValidation = { is_valid: boolean; errors: string[]; warnings: string[]; player_data: BulkImportPlayer }
 export type PlayerResult = { player: Player; points: number; games_played: number; wins: number; draws: number; losses: number }
 export type PlayerSearchFilters = { tournament_id: number | null; name: string | null; rating_min: number | null; rating_max: number | null; country_code: string | null; title: string | null; gender: string | null; status: string | null; category_id: number | null; limit: number | null; offset: number | null }
 export type PlayerStanding = { player: Player; rank: number; points: number; games_played: number; wins: number; draws: number; losses: number; tiebreak_scores: TiebreakScore[]; performance_rating: number | null; rating_change: number | null }
 export type PlayerStatistics = { total_players: number; active_players: number; withdrawn_players: number; late_entries: number; bye_requests: number; average_rating: number; titled_players: number }
+export type RatingDistributionDto = { average_rating_difference: number; max_rating_difference: number; min_rating_difference: number; pairs_with_large_rating_gap: number }
 export type RatingHistory = { id: number; player_id: number; rating_type: string; rating: number; is_provisional: boolean; effective_date: string; created_at: string }
 export type Round = { id: number; tournament_id: number; round_number: number; status: string; created_at: string; completed_at: string | null }
 export type RoundDetails = { round: Round; games: GameResult[]; status: RoundStatus }
+export type RoundRobinAnalysis = { total_rounds_needed: number; current_progress: number; berger_table_info: BergerTableInfoDto | null; color_distribution: PlayerColorStatsDto[] }
+export type RoundRobinOptions = { tournament_type: string; optimize_colors: boolean; use_berger_tables: boolean; team_size: number | null }
 export type RoundStatus = "Upcoming" | "InProgress" | "Completed"
+export type ScoreGroupDto = { score: number; player_count: number; average_rating: number; floats_up: number; floats_down: number }
 export type StandingsCalculationResult = { standings: PlayerStanding[]; last_updated: string; tiebreak_config: TournamentTiebreakConfig }
+export type SwissPairingAnalysis = { score_groups: ScoreGroupDto[]; float_statistics: FloatStatisticsDto; color_balance_analysis: ColorBalanceAnalysisDto; rating_distribution: RatingDistributionDto }
+export type SwissPairingOptions = { use_accelerated_pairings: boolean; accelerated_rounds: number; virtual_points_round1: number; virtual_points_round2: number; avoid_same_team: boolean; color_preference_weight: number; rating_difference_penalty: number }
 export type TiebreakScore = { tiebreak_type: TiebreakType; value: number; display_value: string }
 export type TiebreakType = "buchholz_full" | "buchholz_cut_1" | "buchholz_cut_2" | "buchholz_median" | "sonneborn_berger" | "progressive_score" | "cumulative_score" | "direct_encounter" | "average_rating_of_opponents" | "tournament_performance_rating" | "number_of_wins" | "number_of_games_with_black" | "number_of_wins_with_black" | "koya_system" | "aroc_cut_1" | "aroc_cut_2" | "match_points" | "game_points" | "board_points"
 export type TimeControl = { id: number; name: string; time_control_type: string; base_time_minutes: number | null; increment_seconds: number | null; moves_per_session: number | null; session_time_minutes: number | null; total_sessions: number | null; is_default: boolean; description: string | null; created_at: string }

@@ -1,14 +1,25 @@
 use std::collections::{HashMap, HashSet};
 use crate::pawn::{
     common::error::PawnError,
-    domain::model::{Player, PlayerResult, Pairing, PairingMethod, GameResult, Team, TeamMembership, BoardPairing},
+    domain::model::{Player, PlayerResult, Pairing, PairingMethod, GameResult},
+    service::swiss_pairing::SwissPairingEngine,
+    service::round_robin_pairing::{RoundRobinEngine, RoundRobinType},
+    service::manual_pairing::{ManualPairingController, ManualPairingRequest, PairingValidationResult},
 };
 
-pub struct PairingService;
+pub struct PairingService {
+    swiss_engine: SwissPairingEngine,
+    round_robin_engine: RoundRobinEngine,
+    manual_controller: ManualPairingController,
+}
 
 impl PairingService {
     pub fn new() -> Self {
-        Self
+        Self {
+            swiss_engine: SwissPairingEngine::new(),
+            round_robin_engine: RoundRobinEngine::new(),
+            manual_controller: ManualPairingController::new(),
+        }
     }
 
     pub fn generate_pairings(
@@ -25,6 +36,121 @@ impl PairingService {
             PairingMethod::Knockout => Ok(vec![]), // Knockout pairings handled by KnockoutService
             PairingMethod::Scheveningen => self.generate_scheveningen_pairings(players, round_number),
         }
+    }
+
+    /// Generate double round-robin pairings (each player plays each other twice)
+    pub fn generate_double_round_robin_pairings(
+        &self,
+        players: Vec<Player>,
+        round_number: i32,
+    ) -> Result<Vec<Pairing>, PawnError> {
+        let result = self.round_robin_engine.generate_berger_pairings(
+            players,
+            round_number,
+            RoundRobinType::Double,
+        )?;
+
+        tracing::info!(
+            "Double Round-Robin generated {} pairings for round {}/{}",
+            result.pairings.len(),
+            result.round_info.round_number,
+            result.round_info.total_rounds
+        );
+
+        Ok(result.pairings)
+    }
+
+    /// Generate balanced round-robin with enhanced color distribution
+    pub fn generate_balanced_round_robin_pairings(
+        &self,
+        players: Vec<Player>,
+        round_number: i32,
+        optimize_colors: bool,
+    ) -> Result<Vec<Pairing>, PawnError> {
+        let result = self.round_robin_engine.generate_balanced_round_robin(
+            players,
+            round_number,
+            optimize_colors,
+        )?;
+
+        tracing::info!(
+            "Balanced Round-Robin generated {} pairings for round {}/{}, color optimized: {}",
+            result.pairings.len(),
+            result.round_info.round_number,
+            result.round_info.total_rounds,
+            result.round_info.color_balance_achieved
+        );
+
+        Ok(result.pairings)
+    }
+
+    /// Generate pairings with manual overrides and constraints
+    pub fn generate_manual_pairings(
+        &self,
+        players: Vec<Player>,
+        player_results: Vec<PlayerResult>,
+        game_history: Vec<GameResult>,
+        request: ManualPairingRequest,
+        base_method: &PairingMethod,
+    ) -> Result<Vec<Pairing>, PawnError> {
+        tracing::info!(
+            "Generating manual pairings with base method: {:?}, {} forced pairings",
+            base_method,
+            request.forced_pairings.len()
+        );
+
+        // Generate automatic pairings as base
+        let automatic_pairings = self.generate_pairings_with_history(
+            players.clone(),
+            player_results,
+            game_history.clone(),
+            request.round_number,
+            base_method,
+        )?;
+
+        // Apply manual overrides
+        let final_pairings = self.manual_controller.apply_manual_overrides(
+            automatic_pairings,
+            &players,
+            request,
+            &game_history,
+        )?;
+
+        tracing::info!("Manual pairings completed: {} final pairings", final_pairings.len());
+        Ok(final_pairings)
+    }
+
+    /// Validate a set of pairings for correctness and quality
+    pub fn validate_pairings_with_context(
+        &self,
+        pairings: &[Pairing],
+        players: &[Player],
+        game_history: &[GameResult],
+        request: &ManualPairingRequest,
+    ) -> Result<PairingValidationResult, PawnError> {
+        self.manual_controller.validate_pairings(pairings, players, game_history, request)
+    }
+
+    /// Quick validation without manual pairing context
+    pub fn quick_validate_pairings(
+        &self,
+        pairings: &[Pairing],
+        players: &[Player],
+        game_history: &[GameResult],
+        tournament_id: i32,
+        round_number: i32,
+    ) -> Result<PairingValidationResult, PawnError> {
+        // Create minimal request for validation
+        let request = ManualPairingRequest {
+            tournament_id,
+            round_number,
+            forced_pairings: vec![],
+            constraints: vec![],
+            color_constraints: vec![],
+            apply_to_remaining: true,
+        };
+
+        self.validate_pairings_with_context(pairings, players, game_history, &request)
     }
 
     pub fn generate_pairings_with_history(
@@ -45,6 +171,16 @@ impl PairingService {
     }
 
     fn generate_swiss_pairings(
+        &self,
+        players: Vec<Player>,
+        player_results: Vec<PlayerResult>,
+        round_number: i32,
+    ) -> Result<Vec<Pairing>, PawnError> {
+        // For first round or when no history is available, use Dutch System with empty history
+        self.generate_swiss_pairings_with_history(players, player_results, vec![], round_number)
+    }
+
+    fn generate_swiss_pairings_basic(
         &self,
         players: Vec<Player>,
         player_results: Vec<PlayerResult>,
@@ -129,6 +265,32 @@ impl PairingService {
     }
 
     fn generate_swiss_pairings_with_history(
+        &self,
+        players: Vec<Player>,
+        player_results: Vec<PlayerResult>,
+        game_history: Vec<GameResult>,
+        round_number: i32,
+    ) -> Result<Vec<Pairing>, PawnError> {
+        // Use the new FIDE-compliant Dutch System
+        let pairing_result = self.swiss_engine.generate_dutch_system_pairings(
+            players, 
+            player_results, 
+            game_history, 
+            round_number
+        )?;
+        
+        // Log any validation errors but still return pairings
+        if !pairing_result.validation_errors.is_empty() {
+            tracing::warn!("Pairing validation warnings: {:?}", pairing_result.validation_errors);
+        }
+        
+        tracing::info!("Dutch System generated {} pairings with {} floats", 
+                      pairing_result.pairings.len(), pairing_result.float_count);
+        
+        Ok(pairing_result.pairings)
+    }
+
+    fn generate_swiss_pairings_with_history_legacy(
         &self,
         players: Vec<Player>,
         player_results: Vec<PlayerResult>,
@@ -297,6 +459,28 @@ impl PairingService {
         players: Vec<Player>,
         round_number: i32,
     ) -> Result<Vec<Pairing>, PawnError> {
+        // Use the enhanced Berger table Round-Robin engine
+        let result = self.round_robin_engine.generate_berger_pairings(
+            players,
+            round_number,
+            RoundRobinType::Single,
+        )?;
+        
+        tracing::info!(
+            "Berger Round-Robin generated {} pairings for round {}/{}",
+            result.pairings.len(),
+            result.round_info.round_number,
+            result.round_info.total_rounds
+        );
+        
+        Ok(result.pairings)
+    }
+
+    fn generate_round_robin_pairings_legacy(
+        &self,
+        players: Vec<Player>,
+        round_number: i32,
+    ) -> Result<Vec<Pairing>, PawnError> {
         if players.is_empty() {
             return Ok(vec![]);
         }
@@ -411,10 +595,44 @@ impl PairingService {
         players: Vec<Player>,
         round_number: i32,
     ) -> Result<Vec<Pairing>, PawnError> {
-        // Note: This is a simplified implementation
-        // In a full implementation, we would need team information from the database
-        // For now, we'll group players by some criteria (e.g., rating) to simulate teams
-        
+        if players.len() < 2 {
+            return Ok(vec![]);
+        }
+
+        // Sort players by rating (descending) for fair team division
+        let mut sorted_players = players;
+        sorted_players.sort_by(|a, b| {
+            b.rating.unwrap_or(0).cmp(&a.rating.unwrap_or(0))
+        });
+
+        // Split into two balanced teams
+        let team_size = sorted_players.len() / 2;
+        let team_a: Vec<Player> = sorted_players.iter().take(team_size).cloned().collect();
+        let team_b: Vec<Player> = sorted_players.iter().skip(team_size).cloned().collect();
+
+        // Use the enhanced Scheveningen engine
+        let result = self.round_robin_engine.generate_scheveningen_pairings(
+            team_a,
+            team_b,
+            round_number,
+        )?;
+
+        tracing::info!(
+            "Enhanced Scheveningen generated {} pairings for round {}/{}",
+            result.pairings.len(),
+            result.round_info.round_number,
+            result.round_info.total_rounds
+        );
+
+        Ok(result.pairings)
+    }
+
+    fn generate_scheveningen_pairings_legacy(
+        &self,
+        players: Vec<Player>,
+        round_number: i32,
+    ) -> Result<Vec<Pairing>, PawnError> {
+        // Legacy implementation for reference
         if players.len() < 2 {
             return Ok(vec![]);
         }

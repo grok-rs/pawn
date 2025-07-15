@@ -297,6 +297,196 @@ pub struct TimeControlValidation {
     pub estimated_game_duration_minutes: Option<i32>,
 }
 
+// Enhanced Pairing System DTOs
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct EnhancedPairingRequest {
+    pub tournament_id: i32,
+    pub round_number: i32,
+    pub pairing_method: String,
+    pub use_accelerated_pairings: Option<bool>,
+    pub avoid_team_conflicts: Option<bool>,
+    pub manual_overrides: Option<ManualPairingOverrides>,
+    pub optimization_config: Option<PairingOptimizationConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct ManualPairingOverrides {
+    pub forced_pairings: Vec<ForcedPairingDto>,
+    pub forbidden_pairings: Vec<ForbiddenPairingDto>,
+    pub color_constraints: Vec<ColorConstraintDto>,
+    pub bye_assignments: Vec<i32>, // Player IDs to receive byes
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct ForcedPairingDto {
+    pub white_player_id: i32,
+    pub black_player_id: Option<i32>, // None for bye
+    pub board_number: Option<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct ForbiddenPairingDto {
+    pub player1_id: i32,
+    pub player2_id: i32,
+    pub reason: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct ColorConstraintDto {
+    pub player_id: i32,
+    pub required_color: String, // "white" or "black"
+    pub priority: String, // "low", "medium", "high", "critical"
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct PairingOptimizationConfig {
+    pub max_players_for_basic_algorithm: Option<usize>,
+    pub use_parallel_processing: Option<bool>,
+    pub batch_size_for_large_tournaments: Option<usize>,
+    pub timeout_seconds: Option<u64>,
+    pub cache_opponent_history: Option<bool>,
+    pub use_heuristic_pruning: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct EnhancedPairingResult {
+    pub pairings: Vec<crate::pawn::domain::model::Pairing>,
+    pub validation_results: PairingValidationResults,
+    pub performance_metrics: Option<PairingPerformanceMetrics>,
+    pub warnings: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct PairingValidationResults {
+    pub is_valid: bool,
+    pub critical_errors: Vec<PairingErrorDto>,
+    pub warnings: Vec<PairingWarningDto>,
+    pub suggestions: Vec<PairingSuggestionDto>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct PairingErrorDto {
+    pub error_type: String,
+    pub message: String,
+    pub affected_players: Vec<i32>,
+    pub severity: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct PairingWarningDto {
+    pub warning_type: String,
+    pub message: String,
+    pub affected_players: Vec<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct PairingSuggestionDto {
+    pub suggestion_type: String,
+    pub message: String,
+    pub alternative_pairing: Option<crate::pawn::domain::model::Pairing>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct PairingPerformanceMetrics {
+    pub total_duration_ms: u128,
+    pub pairing_generation_ms: u128,
+    pub validation_duration_ms: u128,
+    pub players_processed: usize,
+    pub pairings_generated: usize,
+    pub cache_hits: usize,
+    pub cache_misses: usize,
+    pub algorithm_used: String,
+}
+
+// Swiss System Specific DTOs
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct SwissPairingOptions {
+    pub use_accelerated_pairings: bool,
+    pub accelerated_rounds: i32,
+    pub virtual_points_round1: f64,
+    pub virtual_points_round2: f64,
+    pub avoid_same_team: bool,
+    pub color_preference_weight: f64,
+    pub rating_difference_penalty: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct SwissPairingAnalysis {
+    pub score_groups: Vec<ScoreGroupDto>,
+    pub float_statistics: FloatStatisticsDto,
+    pub color_balance_analysis: ColorBalanceAnalysisDto,
+    pub rating_distribution: RatingDistributionDto,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct ScoreGroupDto {
+    pub score: f64,
+    pub player_count: usize,
+    pub average_rating: f64,
+    pub floats_up: usize,
+    pub floats_down: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct FloatStatisticsDto {
+    pub total_floats: usize,
+    pub up_floats: usize,
+    pub down_floats: usize,
+    pub float_percentage: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct ColorBalanceAnalysisDto {
+    pub players_with_color_imbalance: usize,
+    pub average_color_balance: f64,
+    pub players_needing_white: usize,
+    pub players_needing_black: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct RatingDistributionDto {
+    pub average_rating_difference: f64,
+    pub max_rating_difference: f64,
+    pub min_rating_difference: f64,
+    pub pairs_with_large_rating_gap: usize,
+}
+
+// Round-Robin System DTOs
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct RoundRobinOptions {
+    pub tournament_type: String, // "single", "double", "scheveningen"
+    pub optimize_colors: bool,
+    pub use_berger_tables: bool,
+    pub team_size: Option<usize>, // For Scheveningen
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct RoundRobinAnalysis {
+    pub total_rounds_needed: i32,
+    pub current_progress: f64, // Percentage complete
+    pub berger_table_info: Option<BergerTableInfoDto>,
+    pub color_distribution: Vec<PlayerColorStatsDto>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct BergerTableInfoDto {
+    pub table_size: usize,
+    pub rotation_pattern: String,
+    pub bye_player_position: Option<usize>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct PlayerColorStatsDto {
+    pub player_id: i32,
+    pub player_name: String,
+    pub white_games: i32,
+    pub black_games: i32,
+    pub color_balance: i32,
+}
+
 // Team Management DTOs for Scheveningen tournaments
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateTeam {

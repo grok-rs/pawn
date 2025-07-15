@@ -51,6 +51,12 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::round::complete_round,
             command::round::create_next_round,
             command::round::update_tournament_pairing_method,
+            // Enhanced Pairing System Commands
+            command::round::generate_enhanced_pairings,
+            command::round::analyze_swiss_pairings,
+            command::round::analyze_round_robin_pairings,
+            command::round::validate_pairing_configuration,
+            command::round::benchmark_pairing_performance,
             command::game_result::update_game_result,
             command::game_result::validate_game_result,
             command::game_result::batch_update_results,
