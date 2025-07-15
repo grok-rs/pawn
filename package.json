@@ -21,7 +21,7 @@
     "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
-    "test:integration": "vitest --run --config vitest.integration.config.ts",
+    "test:integration": "cd src-tauri && cargo test --test integration",
     "coverage:check": "vitest --coverage --reporter=verbose && node scripts/check-coverage.js",
     "coverage:report": "vitest --coverage --reporter=html",
     "performance:test": "cd src-tauri && cargo bench",

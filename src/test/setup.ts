@@ -3,8 +3,8 @@ import { beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { server } from './mocks/server';
 
 // Silence console outputs during tests
-const originalConsole = global.console;
-global.console = {
+const originalConsole = globalThis.console;
+globalThis.console = {
   ...originalConsole,
   log: vi.fn(),
   debug: vi.fn(),
