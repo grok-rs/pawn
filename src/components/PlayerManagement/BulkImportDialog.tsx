@@ -29,7 +29,7 @@ import {
 import {
   CloudUpload,
   CheckCircle,
-  Error,
+  Error as ErrorIcon,
   Warning,
   Visibility,
   Save,
@@ -360,7 +360,7 @@ const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
                       variant="outlined"
                     />
                     <Chip
-                      icon={<Error />}
+                      icon={<ErrorIcon />}
                       label={`${summary.errors} ${t('errors')}`}
                       color="error"
                       variant="outlined"
@@ -414,7 +414,7 @@ const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
                               {validation.errors.map((error, i) => (
                                 <ListItem key={i} sx={{ py: 0 }}>
                                   <ListItemIcon sx={{ minWidth: 24 }}>
-                                    <Error color="error" fontSize="small" />
+                                    <ErrorIcon color="error" fontSize="small" />
                                   </ListItemIcon>
                                   <ListItemText primary={error} />
                                 </ListItem>

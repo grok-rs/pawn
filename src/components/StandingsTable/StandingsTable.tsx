@@ -126,9 +126,11 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
           </Typography>
           {params.row.player.country_code && (
             <Chip
-              label={t(
-                `country.${params.row.player.country_code}`,
-                params.row.player.country_code
+              label={String(
+                t(
+                  `country.${params.row.player.country_code}`,
+                  params.row.player.country_code
+                )
               )}
               size="small"
               variant="outlined"

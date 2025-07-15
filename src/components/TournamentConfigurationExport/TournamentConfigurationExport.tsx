@@ -12,7 +12,7 @@ import {
   Chip,
   Stack,
   IconButton,
-  Tooltip,
+  // Tooltip,
 } from '@mui/material';
 import {
   Download,
@@ -163,7 +163,7 @@ const TournamentConfigurationExport: React.FC<
       <Dialog
         open={exportDialogOpen}
         onClose={() => setExportDialogOpen(false)}
-        maxWidth="md"
+        maxWidth={false}
         fullWidth
       >
         <DialogTitle>
@@ -232,7 +232,7 @@ const TournamentConfigurationExport: React.FC<
       <Dialog
         open={importDialogOpen}
         onClose={() => setImportDialogOpen(false)}
-        maxWidth="md"
+        maxWidth={false}
         fullWidth
       >
         <DialogTitle>
