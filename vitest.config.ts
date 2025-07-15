@@ -14,11 +14,12 @@ export default defineConfig({
       'dist/',
       'src-tauri/',
       'src/test/mocks/',
+      'src/test/e2e/**',
       '**/*.d.ts',
-      '**/*.config.*'
+      '**/*.config.*',
     ],
     coverage: {
-      provider: 'c8',
+      provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       reportsDirectory: './coverage',
       exclude: [
@@ -35,8 +36,8 @@ export default defineConfig({
           branches: 90,
           functions: 90,
           lines: 90,
-          statements: 90
-        }
+          statements: 90,
+        },
       },
       // Fail if coverage is below thresholds
       checkCoverage: true,

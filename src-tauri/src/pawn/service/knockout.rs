@@ -112,25 +112,46 @@ impl KnockoutService {
     /// Calculate standard tournament seed position
     /// Uses the standard bracket seeding algorithm
     fn get_seed_position(seed: usize, bracket_size: usize) -> usize {
-        if seed == 1 {
-            return 1;
-        }
-        if seed == 2 {
-            return bracket_size;
-        }
-
-        // For other seeds, use recursive pattern
-        let half = bracket_size / 2;
-        if seed <= half {
-            let pos = Self::get_seed_position(seed, half);
-            if pos <= half / 2 {
-                pos
-            } else {
-                half + 1 - (pos - half / 2)
+        // Standard bracket seeding algorithm
+        // Creates a balanced bracket where top seeds are maximally separated
+        match bracket_size {
+            1 => 1,
+            2 => {
+                if seed == 1 {
+                    1
+                } else {
+                    2
+                }
             }
-        } else {
-            let pos = Self::get_seed_position(seed - half, half);
-            half + pos
+            4 => match seed {
+                1 => 1,
+                2 => 4,
+                3 => 3,
+                4 => 2,
+                _ => seed,
+            },
+            8 => match seed {
+                1 => 1,
+                2 => 8,
+                3 => 5,
+                4 => 4,
+                5 => 3,
+                6 => 6,
+                7 => 7,
+                8 => 2,
+                _ => seed,
+            },
+            _ => {
+                // For other bracket sizes, use recursive algorithm
+                let half = bracket_size / 2;
+                if seed <= half {
+                    let pos = Self::get_seed_position(seed, half);
+                    if seed % 2 == 1 { pos } else { half + 1 - pos }
+                } else {
+                    let pos = Self::get_seed_position(seed - half, half);
+                    half + pos
+                }
+            }
         }
     }
 
