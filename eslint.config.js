@@ -123,11 +123,12 @@ export default [
       ],
       // TypeScript rules
       '@typescript-eslint/no-unused-vars': [
-        'error',
+        'warn',
         {
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
           ignoreRestSiblings: true,
+          destructuredArrayIgnorePattern: '^_',
         },
       ],
       '@typescript-eslint/explicit-function-return-type': 'off',

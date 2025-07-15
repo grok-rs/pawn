@@ -11,12 +11,6 @@ import {
   DialogContent,
   DialogActions,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Typography,
   IconButton,
   Chip,
@@ -26,7 +20,6 @@ import {
   MenuItem,
   Card,
   CardContent,
-  CardActions,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -44,7 +37,6 @@ import {
   Category,
   Person,
   Groups,
-  EmojiEvents,
   Flag,
 } from '@mui/icons-material';
 import { commands } from '../../dto/bindings';
@@ -84,7 +76,7 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
 }) => {
   const { t } = useTranslation();
   const [categories, setCategories] = useState<PlayerCategory[]>([]);
-  const [assignments, setAssignments] = useState<
+  const [_assignments, _setAssignments] = useState<
     Map<number, PlayerCategoryAssignment[]>
   >(new Map());
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
