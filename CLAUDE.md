@@ -6,12 +6,60 @@ This file provides comprehensive guidance to Claude Code (claude.ai/code) when w
 
 **Pawn** is a professional-grade chess tournament management system built with Tauri, featuring a comprehensive **Enhanced Player Registration and Management System** alongside advanced tournament administration capabilities.
 
+## 🧪 Test-Driven Development Guidelines
+
+**Pawn follows a strict Test-Driven Development (TDD) approach. ALWAYS write tests before implementing features.**
+
+### TDD Core Principles
+
+**Red-Green-Refactor Cycle**:
+1. **🔴 RED**: Write a failing test that describes the desired functionality
+2. **🟢 GREEN**: Write the minimal code to make the test pass
+3. **🔵 REFACTOR**: Clean up code while keeping tests green
+
+### Test Categories & Coverage Requirements
+
+**Test Types** (in order of implementation):
+1. **Unit Tests**: Test individual functions/methods (90%+ coverage required)
+2. **Integration Tests**: Test service layer with database (80%+ coverage required)
+3. **Command Tests**: Test Tauri commands and API contracts (100% coverage required)
+4. **End-to-End Tests**: Test complete user workflows (critical paths only)
+
+**Coverage Standards**:
+- **New Features**: 90% minimum test coverage before code review
+- **Bug Fixes**: Must include regression tests
+- **Refactoring**: All tests must pass, coverage cannot decrease
+
+### TDD Workflow Commands
+
+**Backend Testing**:
+- **Run All Tests**: `cd src-tauri && cargo test`
+- **Run Specific Module**: `cd src-tauri && cargo test swiss_pairing`
+- **Run with Coverage**: `cd src-tauri && cargo tarpaulin --out Html`
+- **Watch Tests**: `cd src-tauri && cargo watch -x test`
+
+**Frontend Testing**:
+- **Run Unit Tests**: `npm test` or `yarn test`
+- **Run with Coverage**: `npm run test:coverage`
+- **Watch Tests**: `npm run test:watch`
+- **E2E Tests**: `npm run test:e2e`
+
+**Integration Testing**:
+- **Database Tests**: `cd src-tauri && cargo test --test integration`
+- **Full Stack Tests**: `npm run test:integration`
+
 ## Essential Commands
 
 ### Development
 - **Primary**: `yarn tauri dev` - Starts complete application with hot reload
 - **Frontend Only**: `yarn dev` - Vite dev server on port 1420 (for UI-only work)
 - **Backend Only**: `cd src-tauri && cargo build` - Compile Rust backend
+
+### Testing (TDD Workflow)
+- **Test First**: `cd src-tauri && cargo test [module_name] --watch` - Write failing tests
+- **Implement**: Write minimal code to pass tests
+- **Refactor**: Clean up while maintaining green tests
+- **Coverage Check**: `cd src-tauri && cargo tarpaulin --out Html`
 
 ### Building
 - **Frontend**: `yarn build` - TypeScript compilation and Vite build
@@ -256,16 +304,31 @@ commands.validateTimeControlData(data: CreateTimeControl): Promise<TimeControlVa
 
 ## Development Guidelines
 
-### Service Layer Pattern
-When adding new features, follow the established pattern:
+### TDD Service Layer Pattern
+When adding new features, follow the **Tests-First** approach:
 
-1. **Domain Models** (`domain/model.rs`): Add new structs with `#[derive(SpectaType)]`
-2. **DTOs** (`domain/dto.rs`): Create request/response types  
-3. **Database Layer** (`db/sqlite.rs`): Implement database operations
-4. **Service Layer** (`service/`): Add business logic with validation
-5. **Commands** (`command/`): Create Tauri command handlers
-6. **Permissions & Capabilities** ⚠️ **CRITICAL**: Update Tauri security configuration
-7. **Frontend**: TypeScript bindings auto-generate
+**🔴 RED Phase (Write Failing Tests)**:
+1. **Unit Tests** (`#[cfg(test)]` modules): Write tests for expected behavior
+2. **Integration Tests** (`tests/` directory): Write database integration tests
+3. **Command Tests**: Write tests for Tauri command contracts
+
+**🟢 GREEN Phase (Minimal Implementation)**:
+4. **Domain Models** (`domain/model.rs`): Add new structs with `#[derive(SpectaType)]`
+5. **DTOs** (`domain/dto.rs`): Create request/response types to satisfy tests
+6. **Database Layer** (`db/sqlite.rs`): Implement operations to pass integration tests
+7. **Service Layer** (`service/`): Add business logic to pass unit tests
+8. **Commands** (`command/`): Create Tauri command handlers to pass command tests
+
+**🔵 REFACTOR Phase (Clean Implementation)**:
+9. **Permissions & Capabilities** ⚠️ **CRITICAL**: Update Tauri security configuration
+10. **Frontend Tests**: Write component and integration tests
+11. **Frontend Implementation**: TypeScript bindings auto-generate, implement UI
+
+**Quality Gates**:
+- All tests must pass before proceeding to next phase
+- Minimum 90% test coverage for new code
+- Integration tests must cover database operations
+- Command tests must validate all API contracts
 
 ### ⚠️ IMPORTANT: Tauri Permissions & Capabilities
 
@@ -311,17 +374,446 @@ When adding new features, follow the established pattern:
 - Implement COALESCE for partial updates
 - Use transactions for multi-table operations
 
+### Test Structure & Organization
+
+**Backend Test Organization** (Rust):
+```
+src-tauri/src/pawn/
+├── service/
+│   ├── player.rs           # Business logic
+│   └── tests/              # Unit tests
+│       └── player_tests.rs # Test player service
+├── command/
+│   ├── player.rs           # Tauri commands
+│   └── tests/              # Command tests
+│       └── player_cmd_tests.rs
+└── tests/                  # Integration tests
+    ├── integration/
+    │   ├── player_integration.rs
+    │   └── database_integration.rs
+    └── common/             # Shared test utilities
+        └── mod.rs
+```
+
+**Frontend Test Organization** (TypeScript):
+```
+src/
+├── components/
+│   ├── PlayerList.tsx
+│   └── __tests__/
+│       ├── PlayerList.test.tsx    # Unit tests
+│       └── PlayerList.integration.test.tsx
+├── pages/
+│   ├── Tournament.tsx
+│   └── __tests__/
+├── services/
+│   └── __tests__/
+└── __tests__/              # E2E tests
+    └── tournament-flow.test.ts
+```
+
+**Test File Naming Conventions**:
+- **Unit Tests**: `[module_name]_test.rs` or `[component].test.tsx`
+- **Integration Tests**: `[feature]_integration.rs` or `[feature].integration.test.tsx`
+- **E2E Tests**: `[workflow]-flow.test.ts`
+
+### Testing Patterns & Best Practices
+
+**Rust Test Patterns**:
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    // Test data builders
+    fn create_test_player() -> Player { /* ... */ }
+    
+    // Happy path tests
+    #[test]
+    fn test_create_player_success() { /* ... */ }
+    
+    // Error case tests
+    #[test]
+    fn test_create_player_invalid_input() { /* ... */ }
+    
+    // Integration tests with database
+    #[tokio::test]
+    async fn test_player_crud_operations() { /* ... */ }
+}
+```
+
+**Frontend Test Patterns**:
+```typescript
+// Component unit tests
+describe('PlayerList', () => {
+  test('renders player data correctly', () => { /* ... */ });
+  test('handles empty state', () => { /* ... */ });
+});
+
+// Integration tests with API
+describe('PlayerList Integration', () => {
+  test('fetches and displays players', async () => { /* ... */ });
+});
+```
+
+### Enhanced Testing Commands
+
+**Backend Testing Workflow**:
+- **Start TDD**: `cd src-tauri && cargo test [feature] --watch` (write failing tests)
+- **Run All Tests**: `cd src-tauri && cargo test`
+- **Run Specific Tests**: `cd src-tauri && cargo test player_service`
+- **Integration Tests**: `cd src-tauri && cargo test --test integration`
+- **Coverage Report**: `cd src-tauri && cargo tarpaulin --out Html --output-dir coverage`
+- **Performance Tests**: `cd src-tauri && cargo test --release perf_`
+
+**Frontend Testing Workflow**:
+- **Unit Tests**: `npm test` or `yarn test`
+- **Watch Mode**: `npm run test:watch`
+- **Coverage**: `npm run test:coverage`
+- **Integration**: `npm run test:integration`
+- **E2E Tests**: `npm run test:e2e`
+
+**Quality Assurance Commands**:
+- **Lint & Test**: `npm run lint && npm test && cd src-tauri && cargo test`
+- **Pre-commit Check**: `npm run pre-commit` (runs all quality checks)
+- **Coverage Threshold**: All tests must maintain 90%+ coverage
+
+### Quality Gates & CI/CD Integration
+
+**Pre-commit Quality Gates**:
+1. **Code Formatting**: `cargo fmt --check` and `prettier --check`
+2. **Linting**: `cargo clippy -- -D warnings` and `eslint src/`
+3. **Type Checking**: `cargo check` and `tsc --noEmit`
+4. **Unit Tests**: `cargo test` and `npm test`
+5. **Coverage Check**: Minimum 90% coverage for new code
+6. **Integration Tests**: All database operations must pass
+
+**Git Hooks Setup**:
+```bash
+# Install pre-commit hooks
+npm install --save-dev husky lint-staged
+npx husky install
+npx husky add .husky/pre-commit "npm run pre-commit"
+```
+
+**Continuous Integration Pipeline**:
+```yaml
+# .github/workflows/test.yml
+name: Test Suite
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+      - name: Setup Rust
+      - name: Setup Node.js
+      - name: Run backend tests
+        run: cd src-tauri && cargo test
+      - name: Run frontend tests
+        run: npm test -- --coverage
+      - name: Check coverage threshold
+        run: npm run coverage:check
+```
+
+**Quality Metrics Tracking**:
+- **Test Coverage**: Must be ≥90% for new features
+- **Performance**: Pairing algorithms must handle 500+ players
+- **Memory Usage**: No memory leaks in long-running tournaments
+- **API Response Time**: Commands must respond <100ms for typical operations
+
 ### Testing Enhanced Features
 
-**Demo System**:
-- Navigate to `/demo/enhanced-players` for interactive testing
-- Use "Create Sample Tournament" for quick setup
-- Test all CRUD operations, search, and bulk import
+**TDD Demo Workflow**:
+1. Navigate to `/demo/enhanced-players` for interactive testing
+2. Use "Create Sample Tournament" for quick setup
+3. Write tests for new features before implementation
+4. Test all CRUD operations, search, and bulk import
+5. Verify performance with large datasets
 
 **Database Testing**:
-- Reset database: Remove `~/.local/share/pawn/db/pawn.sqlite`
-- Check migrations: Verify all 7 migrations apply cleanly
-- Performance: Test with hundreds of players
+- **Clean State**: Remove `~/.local/share/pawn/db/pawn.sqlite`
+- **Migration Tests**: Verify all migrations apply cleanly
+- **Performance Tests**: Test with hundreds of players
+- **Transaction Tests**: Verify rollback behavior
+
+### Concrete TDD Workflow Examples
+
+**Example 1: Implementing Swiss Pairing Algorithm**
+
+**🔴 RED Phase - Write Failing Tests**:
+```rust
+// src-tauri/src/pawn/service/swiss_pairing.rs
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_generate_swiss_pairings_basic() {
+        let engine = SwissPairingEngine::new();
+        let players = create_test_players(4);
+        
+        let result = engine.generate_pairings(players, 1);
+        
+        assert!(result.is_ok());
+        let pairings = result.unwrap();
+        assert_eq!(pairings.len(), 2); // 4 players = 2 pairings
+        // Should fail initially - algorithm not implemented
+    }
+}
+```
+
+**🟢 GREEN Phase - Minimal Implementation**:
+```rust
+impl SwissPairingEngine {
+    pub fn generate_pairings(&self, players: Vec<Player>, round: i32) -> Result<Vec<Pairing>, PawnError> {
+        // Minimal implementation to pass test
+        if players.len() == 4 {
+            Ok(vec![
+                Pairing { /* basic pairing 1 */ },
+                Pairing { /* basic pairing 2 */ },
+            ])
+        } else {
+            Err(PawnError::InvalidInput("Not implemented".to_string()))
+        }
+    }
+}
+```
+
+**🔵 REFACTOR Phase - Full Implementation**:
+```rust
+impl SwissPairingEngine {
+    pub fn generate_pairings(&self, players: Vec<Player>, round: i32) -> Result<Vec<Pairing>, PawnError> {
+        // Full FIDE-compliant Dutch System implementation
+        let swiss_players = self.prepare_swiss_players(players);
+        let score_groups = self.create_score_groups(&swiss_players);
+        self.generate_group_pairings(score_groups, round)
+    }
+}
+```
+
+**Example 2: Frontend Component TDD**
+
+**🔴 RED Phase - Write Failing Tests**:
+```typescript
+// src/components/__tests__/TournamentList.test.tsx
+import { render, screen } from '@testing-library/react';
+import TournamentList from '../TournamentList';
+
+test('displays tournament list with correct data', async () => {
+  const mockTournaments = [
+    { id: 1, name: 'Test Tournament', playerCount: 10 }
+  ];
+  
+  render(<TournamentList tournaments={mockTournaments} />);
+  
+  expect(screen.getByText('Test Tournament')).toBeInTheDocument();
+  expect(screen.getByText('10 players')).toBeInTheDocument();
+  // Will fail - component doesn't exist yet
+});
+```
+
+**🟢 GREEN Phase - Minimal Implementation**:
+```typescript
+// src/components/TournamentList.tsx
+export default function TournamentList({ tournaments }) {
+  return (
+    <div>
+      {tournaments.map(t => (
+        <div key={t.id}>
+          <span>{t.name}</span>
+          <span>{t.playerCount} players</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+**🔵 REFACTOR Phase - Production-Ready**:
+```typescript
+// Enhanced component with proper TypeScript, styling, error handling
+export default function TournamentList({ tournaments, onSelect }: TournamentListProps) {
+  return (
+    <Grid container spacing={2}>
+      {tournaments.map(tournament => (
+        <TournamentCard 
+          key={tournament.id}
+          tournament={tournament}
+          onClick={() => onSelect(tournament)}
+        />
+      ))}
+    </Grid>
+  );
+}
+```
+
+### TDD Best Practices for Chess Tournament Features
+
+**When implementing pairing algorithms**:
+1. Start with simple cases (2-4 players)
+2. Test edge cases (odd players, byes)
+3. Test FIDE compliance (color balance, team avoidance)
+4. Test performance with large datasets
+
+**When adding database operations**:
+1. Test with in-memory SQLite for speed
+2. Test transaction rollback scenarios
+3. Test concurrent access patterns
+4. Test migration compatibility
+
+**When building UI components**:
+1. Test component rendering first
+2. Test user interactions (clicks, inputs)
+3. Test API integration with mocked services
+4. Test error states and loading states
+
+### Required Testing Dependencies
+
+**Backend Testing (Cargo.toml)**:
+```toml
+[dev-dependencies]
+# Core testing framework
+tokio-test = "0.4"           # Async testing utilities
+tempfile = "3.8"             # Temporary files for testing
+mockall = "0.12"             # Mocking framework
+
+# Database testing
+sqlx = { version = "0.8", features = ["sqlite", "testing"] }
+sqlite = "0.36"              # In-memory database for tests
+
+# Property-based testing
+proptest = "1.4"             # Property-based testing
+quickcheck = "1.0"           # Alternative property testing
+
+# Performance testing
+criterion = "0.5"            # Benchmarking framework
+
+# Coverage reporting
+tarpaulin = "0.29"           # Code coverage for Rust
+```
+
+**Frontend Testing (package.json)**:
+```json
+{
+  "devDependencies": {
+    // Core testing framework
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/jest-dom": "^6.1.0",
+    "@testing-library/user-event": "^14.5.0",
+    
+    // Test runner and utilities
+    "vitest": "^1.0.0",
+    "jsdom": "^23.0.0",
+    "happy-dom": "^12.0.0",
+    
+    // Mocking and fixtures
+    "msw": "^2.0.0",              // Mock Service Worker for API mocking
+    "@faker-js/faker": "^8.3.0",  // Test data generation
+    
+    // Component testing
+    "@storybook/react": "^7.6.0", // Component development and testing
+    "chromatic": "^8.0.0",        // Visual regression testing
+    
+    // E2E testing
+    "playwright": "^1.40.0",      // End-to-end testing
+    "@playwright/test": "^1.40.0",
+    
+    // Coverage and reporting
+    "c8": "^8.0.0",               // Coverage reporting
+    "eslint-plugin-testing-library": "^6.2.0"
+  },
+  "scripts": {
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "test:ui": "vitest --ui",
+    "test:e2e": "playwright test",
+    "test:storybook": "test-storybook",
+    "coverage:check": "c8 check-coverage --lines 90 --functions 90 --branches 90"
+  }
+}
+```
+
+### Testing Environment Setup
+
+**Vitest Configuration (vitest.config.ts)**:
+```typescript
+/// <reference types="vitest" />
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    coverage: {
+      provider: 'c8',
+      reporter: ['text', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/test/',
+        '**/*.d.ts',
+        '**/*.config.*'
+      ],
+      thresholds: {
+        global: {
+          branches: 90,
+          functions: 90,
+          lines: 90,
+          statements: 90
+        }
+      }
+    }
+  }
+})
+```
+
+**Test Setup (src/test/setup.ts)**:
+```typescript
+import '@testing-library/jest-dom'
+import { server } from './mocks/server'
+
+// Establish API mocking before all tests
+beforeAll(() => server.listen())
+
+// Reset any request handlers that we may add during the tests
+afterEach(() => server.resetHandlers())
+
+// Clean up after the tests are finished
+afterAll(() => server.close())
+```
+
+### Mock Service Setup for API Testing
+
+**MSW Server Setup (src/test/mocks/server.ts)**:
+```typescript
+import { setupServer } from 'msw/node'
+import { handlers } from './handlers'
+
+export const server = setupServer(...handlers)
+```
+
+**API Handlers (src/test/mocks/handlers.ts)**:
+```typescript
+import { rest } from 'msw'
+
+export const handlers = [
+  rest.get('/api/tournaments', (req, res, ctx) => {
+    return res(
+      ctx.json([
+        { id: 1, name: 'Test Tournament', players: 16 }
+      ])
+    )
+  }),
+  
+  rest.post('/api/tournaments', (req, res, ctx) => {
+    return res(ctx.json({ id: 2, name: 'New Tournament' }))
+  })
+]
+```
 
 ## Technical Implementation Notes
 
