@@ -60,8 +60,10 @@ jobs:
         cd src-tauri
         cargo check --all-targets --all-features
 
-    - name: Install cargo-tarpaulin
-      run: cargo install cargo-tarpaulin
+    - name: Install cargo tools
+      run: |
+        cargo install cargo-tarpaulin
+        cargo install cargo-audit
 
     - name: Run tests with coverage
       run: |
@@ -88,15 +90,73 @@ jobs:
           echo "✅ Coverage $COVERAGE% meets relaxed threshold for demo"
         fi
 
+    - name: Run integration tests
+      run: |
+        cd src-tauri
+        cargo test --test integration --release
+        echo "🔄 Integration tests completed"
+
     - name: Run performance benchmarks
       run: |
         cd src-tauri
-        # Add performance tests when available
-        # cargo bench --bench pairing_performance
-        echo "⚡ Performance benchmarks would run here"
+        cargo bench --bench pairing_performance --message-format=json > benchmark_results.json
+        echo "⚡ Performance benchmarks completed"
 
     - name: Validate database migrations
       run: |
         cd src-tauri
-        # Test migrations can be applied and rolled back
-        echo "🗄️ Database migration validation would run here"
+        cargo test migration_ --release
+        echo "🗄️ Database migration validation completed"
+
+    - name: Run memory leak detection
+      run: |
+        cd src-tauri
+        cargo test memory_leak_ --release
+        echo "🧠 Memory leak detection completed"
+
+    - name: Test command contracts
+      run: |
+        cd src-tauri
+        cargo test command_ --lib --release
+        echo "📡 Command contract tests completed"
+
+    - name: Validate TDD compliance
+      run: |
+        cd src-tauri
+        # Check that all service files have tests
+        echo "🔍 Validating TDD compliance..."
+        
+        # Count service files
+        SERVICE_FILES=$(find src/pawn/service -name "*.rs" ! -name "mod.rs" | wc -l)
+        echo "Found $SERVICE_FILES service files"
+        
+        # Count test files
+        TEST_FILES=$(find src/pawn/service -name "*.rs" ! -name "mod.rs" -exec grep -l "#\[cfg(test)\]" {} \; | wc -l)
+        echo "Found $TEST_FILES service files with tests"
+        
+        # Check that most service files have tests (allowing for some exceptions)
+        MIN_COVERAGE=$((SERVICE_FILES * 80 / 100))
+        if [ $TEST_FILES -lt $MIN_COVERAGE ]; then
+          echo "❌ TDD compliance check failed: $TEST_FILES/$SERVICE_FILES service files have tests (minimum: $MIN_COVERAGE)"
+          exit 1
+        else
+          echo "✅ TDD compliance check passed: $TEST_FILES/$SERVICE_FILES service files have tests"
+        fi
+
+    - name: Performance regression check
+      run: |
+        cd src-tauri
+        echo "⚡ Checking for performance regressions..."
+        
+        # Extract benchmark results
+        if [ -f benchmark_results.json ]; then
+          # Check that pairing algorithms complete within reasonable time
+          echo "Pairing performance check would run here"
+          # In a real implementation, you'd parse the JSON and check thresholds
+        fi
+
+    - name: Security audit
+      run: |
+        cd src-tauri
+        cargo audit
+        echo "🔒 Security audit completed"

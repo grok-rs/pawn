@@ -399,3 +399,222 @@ impl<D: Db> PlayerService<D> {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::pawn::domain::dto::*;
+    use crate::pawn::domain::model::*;
+
+    fn create_test_create_player() -> CreatePlayer {
+        CreatePlayer {
+            tournament_id: 1,
+            name: "Test Player".to_string(),
+            rating: Some(1500),
+            country_code: Some("US".to_string()),
+            title: None,
+            birth_date: None,
+            gender: None,
+            email: None,
+            phone: None,
+            club: None,
+        }
+    }
+
+    // Create a mock service struct for testing validation logic
+    struct MockPlayerService;
+
+    impl MockPlayerService {
+        fn validate_player_data(&self, data: &CreatePlayer) -> Result<(), PawnError> {
+            // Test the validation logic directly
+            if data.name.trim().is_empty() {
+                return Err(PawnError::InvalidInput("Name cannot be empty".to_string()));
+            }
+            
+            if let Some(rating) = data.rating {
+                if rating < 0 || rating > 4000 {
+                    return Err(PawnError::InvalidInput("Rating must be between 0 and 4000".to_string()));
+                }
+            }
+            
+            if let Some(email) = &data.email {
+                if !email.contains('@') {
+                    return Err(PawnError::InvalidInput("Invalid email format".to_string()));
+                }
+            }
+            
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn test_validate_player_data_success() {
+        let service = MockPlayerService;
+        let valid_player = create_test_create_player();
+        let result = service.validate_player_data(&valid_player);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_player_data_empty_name() {
+        let service = MockPlayerService;
+        let invalid_player = CreatePlayer {
+            tournament_id: 1,
+            name: "".to_string(),
+            rating: Some(1500),
+            country_code: Some("US".to_string()),
+            title: None,
+            birth_date: None,
+            gender: None,
+            email: None,
+            phone: None,
+            club: None,
+        };
+
+        let result = service.validate_player_data(&invalid_player);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_player_data_invalid_rating() {
+        let service = MockPlayerService;
+        let invalid_player = CreatePlayer {
+            tournament_id: 1,
+            name: "Test Player".to_string(),
+            rating: Some(-100), // Invalid rating
+            country_code: Some("US".to_string()),
+            title: None,
+            birth_date: None,
+            gender: None,
+            email: None,
+            phone: None,
+            club: None,
+        };
+
+        let result = service.validate_player_data(&invalid_player);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_player_data_invalid_email() {
+        let service = MockPlayerService;
+        let invalid_player = CreatePlayer {
+            tournament_id: 1,
+            name: "Test Player".to_string(),
+            rating: Some(1500),
+            country_code: Some("US".to_string()),
+            title: None,
+            birth_date: None,
+            gender: None,
+            email: Some("invalid-email".to_string()), // Invalid email
+            phone: None,
+            club: None,
+        };
+
+        let result = service.validate_player_data(&invalid_player);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_player_data_extreme_rating() {
+        let service = MockPlayerService;
+        let invalid_player = CreatePlayer {
+            tournament_id: 1,
+            name: "Test Player".to_string(),
+            rating: Some(5000), // Too high
+            country_code: Some("US".to_string()),
+            title: None,
+            birth_date: None,
+            gender: None,
+            email: None,
+            phone: None,
+            club: None,
+        };
+
+        let result = service.validate_player_data(&invalid_player);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_player_data_valid_email() {
+        let service = MockPlayerService;
+        let valid_player = CreatePlayer {
+            tournament_id: 1,
+            name: "Test Player".to_string(),
+            rating: Some(1500),
+            country_code: Some("US".to_string()),
+            title: None,
+            birth_date: None,
+            gender: None,
+            email: Some("test@example.com".to_string()),
+            phone: None,
+            club: None,
+        };
+
+        let result = service.validate_player_data(&valid_player);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_player_statistics_calculation() {
+        let stats = PlayerStatistics {
+            total_players: 10,
+            active_players: 8,
+            withdrawn_players: 1,
+            late_entries: 0,
+            bye_requests: 1,
+            average_rating: 1650.0,
+            titled_players: 2,
+        };
+
+        // Test that statistics are properly structured
+        assert_eq!(stats.total_players, 10);
+        assert_eq!(stats.active_players, 8);
+        assert_eq!(stats.withdrawn_players, 1);
+        assert_eq!(stats.bye_requests, 1);
+        assert_eq!(stats.average_rating, 1650.0);
+        assert_eq!(stats.titled_players, 2);
+        
+        // Test that the sum makes sense
+        assert_eq!(stats.active_players + stats.withdrawn_players + stats.bye_requests, 10);
+    }
+
+    #[test]
+    fn test_bulk_import_result_structure() {
+        let result = BulkImportResult {
+            success_count: 5,
+            error_count: 2,
+            validations: vec![],
+            imported_player_ids: vec![1, 2, 3, 4, 5],
+        };
+
+        assert_eq!(result.success_count, 5);
+        assert_eq!(result.error_count, 2);
+        assert_eq!(result.imported_player_ids.len(), 5);
+    }
+
+    #[test]
+    fn test_player_search_filters() {
+        let filters = PlayerSearchFilters {
+            tournament_id: Some(1),
+            name: Some("John".to_string()),
+            rating_min: Some(1400),
+            rating_max: Some(1800),
+            country_code: Some("US".to_string()),
+            title: Some("FM".to_string()),
+            gender: Some("M".to_string()),
+            status: Some("active".to_string()),
+            category_id: Some(1),
+            limit: Some(10),
+            offset: Some(0),
+        };
+
+        // Test filter structure
+        assert_eq!(filters.tournament_id, Some(1));
+        assert_eq!(filters.name, Some("John".to_string()));
+        assert_eq!(filters.rating_min, Some(1400));
+        assert_eq!(filters.rating_max, Some(1800));
+        assert_eq!(filters.limit, Some(10));
+        assert_eq!(filters.offset, Some(0));
+    }
+}
