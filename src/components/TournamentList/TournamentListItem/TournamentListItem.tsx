@@ -8,6 +8,7 @@ import {
   Timer,
   EmojiEvents,
   MoreVert,
+  Category,
 } from '@mui/icons-material';
 import {
   Box,
@@ -209,6 +210,12 @@ const TournamentListItem = ({
                   {tournament.time_type
                     ? t(`timeControls.${tournament.time_type}`)
                     : '-'}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Category fontSize="small" />
+                <Typography variant="body2">
+                  {tournament.tournament_type || '-'}
                 </Typography>
               </Box>
             </Box>

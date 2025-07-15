@@ -245,3 +245,81 @@ pub struct PlayerStatistics {
     pub average_rating: f32,
     pub titled_players: i32,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::pawn::db::sqlite::SqliteDb;
+    use crate::pawn::state::PawnState;
+    use sqlx::SqlitePool;
+    use tempfile::TempDir;
+
+    async fn setup_test_state() -> PawnState {
+        let temp_dir = TempDir::new().unwrap();
+        
+        // Use in-memory SQLite for testing
+        let database_url = "sqlite::memory:";
+        let pool = SqlitePool::connect(database_url).await.unwrap();
+        
+        sqlx::migrate!("./migrations").run(&pool).await.unwrap();
+        
+        let db = Arc::new(SqliteDb::new(pool));
+        
+        use crate::pawn::service::{
+            player::PlayerService, round::RoundService, tiebreak::TiebreakCalculator,
+            time_control::TimeControlService, tournament::TournamentService,
+        };
+        use crate::pawn::state::State;
+        use std::sync::Arc;
+        
+        let tournament_service = Arc::new(TournamentService::new(Arc::clone(&db)));
+        let tiebreak_calculator = Arc::new(TiebreakCalculator::new(Arc::clone(&db)));
+        let round_service = Arc::new(RoundService::new(Arc::clone(&db)));
+        let player_service = Arc::new(PlayerService::new(Arc::clone(&db)));
+        let time_control_service = Arc::new(TimeControlService::new(Arc::clone(&db)));
+        
+        State {
+            app_data_dir: temp_dir.path().to_path_buf(),
+            db,
+            tournament_service,
+            tiebreak_calculator,
+            round_service,
+            player_service,
+            time_control_service,
+        }
+    }
+
+    #[tokio::test]
+    async fn command_get_players_by_tournament_enhanced_contract() {
+        let state = setup_test_state().await;
+        
+        // Test the underlying service directly to validate the command contract
+        let result = state.player_service.get_players_by_tournament(1).await;
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn command_search_players_contract() {
+        let state = setup_test_state().await;
+        
+        let filters = PlayerSearchFilters {
+            tournament_id: Some(1),
+            name: None,
+            rating_min: None,
+            rating_max: None,
+            country_code: None,
+            title: None,
+            gender: None,
+            status: None,
+            category_id: None,
+            limit: Some(10),
+            offset: Some(0),
+        };
+        
+        // Test the underlying service directly to validate the command contract
+        let result = state.player_service.search_players(filters).await;
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_empty());
+    }
+}

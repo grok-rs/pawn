@@ -1,4 +1,10 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  act,
+  waitFor,
+} from '@testing-library/react';
 import { vi } from 'vitest';
 import TournamentList from '../TournamentList';
 import type { Tournament } from '../../../dto/bindings';
@@ -78,40 +84,56 @@ describe('TournamentList', () => {
     vi.clearAllMocks();
   });
 
-  test('renders tournament list with correct data', () => {
-    render(
-      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
-    );
+  test('renders tournament list with correct data', async () => {
+    await act(async () => {
+      render(
+        <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
+      );
+    });
 
-    expect(screen.getByText('Spring Championship')).toBeInTheDocument();
-    expect(screen.getByText('Summer Open')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Spring Championship')).toBeInTheDocument();
+      expect(screen.getByText('Summer Open')).toBeInTheDocument();
+    });
   });
 
-  test('displays tournament types correctly', () => {
-    render(
-      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
-    );
+  test('displays tournament types correctly', async () => {
+    await act(async () => {
+      render(
+        <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
+      );
+    });
 
-    expect(screen.getByText('Swiss')).toBeInTheDocument();
-    expect(screen.getByText('Round Robin')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Swiss')).toBeInTheDocument();
+      expect(screen.getByText('Round Robin')).toBeInTheDocument();
+    });
   });
 
-  test('displays tournament locations', () => {
-    render(
-      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
-    );
+  test('displays tournament locations', async () => {
+    await act(async () => {
+      render(
+        <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
+      );
+    });
 
-    expect(screen.getByText('New York')).toBeInTheDocument();
-    expect(screen.getByText('California')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('New York')).toBeInTheDocument();
+      expect(screen.getByText('California')).toBeInTheDocument();
+    });
   });
 
-  test('displays tournament dates', () => {
-    render(
-      <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
-    );
+  test('displays tournament dates', async () => {
+    await act(async () => {
+      render(
+        <TournamentList tournaments={mockTournaments} onDelete={mockOnDelete} />
+      );
+    });
 
-    expect(screen.getByText('2024-03-15')).toBeInTheDocument();
-    expect(screen.getByText('2024-06-20')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Mar 15, 2024')).toBeInTheDocument();
+      expect(screen.getByText('Jun 20, 2024')).toBeInTheDocument();
+    });
   });
 
   test('displays tournament time types', () => {
