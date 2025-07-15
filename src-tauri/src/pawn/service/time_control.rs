@@ -231,7 +231,7 @@ impl<D: Db> TimeControlService<D> {
             }
             TimeControlType::Rapid => {
                 if let Some(base) = data.base_time_minutes {
-                    if base < 3 || base > 60 {
+                    if !(3..=60).contains(&base) {
                         warnings.push("Rapid games are typically between 3-60 minutes".to_string());
                     }
                 } else {
@@ -310,18 +310,18 @@ impl<D: Db> TimeControlService<D> {
     pub fn format_time_control(&self, time_control: &TimeControl) -> String {
         let base = time_control
             .base_time_minutes
-            .map(|t| format!("{}min", t))
+            .map(|t| format!("{t}min"))
             .unwrap_or_else(|| "No limit".to_string());
 
         let increment = time_control
             .increment_seconds
-            .map(|i| format!("+{}s", i))
+            .map(|i| format!("+{i}s"))
             .unwrap_or_default();
 
         if increment.is_empty() {
             base
         } else {
-            format!("{} {}", base, increment)
+            format!("{base} {increment}")
         }
     }
 }

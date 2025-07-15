@@ -16,7 +16,7 @@ pub async fn create_player_enhanced(
     data: CreatePlayer,
     state: State<'_, PawnState>,
 ) -> Result<Player, TxError> {
-    Ok(state.player_service.create_player(data).await?)
+    state.player_service.create_player(data).await
 }
 
 #[tauri::command]
@@ -25,13 +25,13 @@ pub async fn update_player(
     data: UpdatePlayer,
     state: State<'_, PawnState>,
 ) -> Result<Player, TxError> {
-    Ok(state.player_service.update_player(data).await?)
+    state.player_service.update_player(data).await
 }
 
 #[tauri::command]
 #[specta::specta]
 pub async fn delete_player(player_id: i32, state: State<'_, PawnState>) -> Result<(), TxError> {
-    Ok(state.player_service.delete_player(player_id).await?)
+    state.player_service.delete_player(player_id).await
 }
 
 #[tauri::command]
@@ -40,7 +40,7 @@ pub async fn get_player_by_id(
     player_id: i32,
     state: State<'_, PawnState>,
 ) -> Result<Player, TxError> {
-    Ok(state.player_service.get_player_by_id(player_id).await?)
+    state.player_service.get_player_by_id(player_id).await
 }
 
 #[tauri::command]
@@ -49,10 +49,10 @@ pub async fn get_players_by_tournament_enhanced(
     tournament_id: i32,
     state: State<'_, PawnState>,
 ) -> Result<Vec<Player>, TxError> {
-    Ok(state
+    state
         .player_service
         .get_players_by_tournament(tournament_id)
-        .await?)
+        .await
 }
 
 #[tauri::command]
@@ -61,7 +61,7 @@ pub async fn search_players(
     filters: PlayerSearchFilters,
     state: State<'_, PawnState>,
 ) -> Result<Vec<Player>, TxError> {
-    Ok(state.player_service.search_players(filters).await?)
+    state.player_service.search_players(filters).await
 }
 
 // Bulk Import Operations
@@ -72,7 +72,7 @@ pub async fn bulk_import_players(
     request: BulkImportRequest,
     state: State<'_, PawnState>,
 ) -> Result<BulkImportResult, TxError> {
-    Ok(state.player_service.bulk_import_players(request).await?)
+    state.player_service.bulk_import_players(request).await
 }
 
 #[tauri::command]
@@ -83,10 +83,10 @@ pub async fn validate_bulk_import(
 ) -> Result<BulkImportResult, TxError> {
     let mut validation_request = request;
     validation_request.validate_only = true;
-    Ok(state
+    state
         .player_service
         .bulk_import_players(validation_request)
-        .await?)
+        .await
 }
 
 // Rating History Management
@@ -97,7 +97,7 @@ pub async fn add_player_rating_history(
     data: CreateRatingHistory,
     state: State<'_, PawnState>,
 ) -> Result<RatingHistory, TxError> {
-    Ok(state.player_service.add_rating_history(data).await?)
+    state.player_service.add_rating_history(data).await
 }
 
 #[tauri::command]
@@ -106,10 +106,10 @@ pub async fn get_player_rating_history(
     player_id: i32,
     state: State<'_, PawnState>,
 ) -> Result<Vec<RatingHistory>, TxError> {
-    Ok(state
+    state
         .player_service
         .get_player_rating_history(player_id)
-        .await?)
+        .await
 }
 
 // Player Category Management
@@ -120,7 +120,7 @@ pub async fn create_player_category(
     data: CreatePlayerCategory,
     state: State<'_, PawnState>,
 ) -> Result<PlayerCategory, TxError> {
-    Ok(state.player_service.create_player_category(data).await?)
+    state.player_service.create_player_category(data).await
 }
 
 #[tauri::command]
@@ -129,10 +129,10 @@ pub async fn get_tournament_categories(
     tournament_id: i32,
     state: State<'_, PawnState>,
 ) -> Result<Vec<PlayerCategory>, TxError> {
-    Ok(state
+    state
         .player_service
         .get_tournament_categories(tournament_id)
-        .await?)
+        .await
 }
 
 #[tauri::command]
@@ -141,10 +141,10 @@ pub async fn delete_player_category(
     category_id: i32,
     state: State<'_, PawnState>,
 ) -> Result<(), TxError> {
-    Ok(state
+    state
         .player_service
         .delete_player_category(category_id)
-        .await?)
+        .await
 }
 
 #[tauri::command]
@@ -153,7 +153,7 @@ pub async fn assign_player_to_category(
     data: AssignPlayerToCategory,
     state: State<'_, PawnState>,
 ) -> Result<PlayerCategoryAssignment, TxError> {
-    Ok(state.player_service.assign_player_to_category(data).await?)
+    state.player_service.assign_player_to_category(data).await
 }
 
 // Player Status Management
@@ -165,10 +165,10 @@ pub async fn update_player_status(
     status: String,
     state: State<'_, PawnState>,
 ) -> Result<Player, TxError> {
-    Ok(state
+    state
         .player_service
         .update_player_status(player_id, status)
-        .await?)
+        .await
 }
 
 #[tauri::command]
@@ -177,7 +177,7 @@ pub async fn withdraw_player(
     player_id: i32,
     state: State<'_, PawnState>,
 ) -> Result<Player, TxError> {
-    Ok(state.player_service.withdraw_player(player_id).await?)
+    state.player_service.withdraw_player(player_id).await
 }
 
 #[tauri::command]
@@ -186,7 +186,7 @@ pub async fn request_player_bye(
     player_id: i32,
     state: State<'_, PawnState>,
 ) -> Result<Player, TxError> {
-    Ok(state.player_service.request_player_bye(player_id).await?)
+    state.player_service.request_player_bye(player_id).await
 }
 
 // Utility Commands

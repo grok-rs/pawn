@@ -164,7 +164,7 @@ impl KnockoutService {
                         white_player: Player {
                             id: white_id,
                             tournament_id: 0,
-                            name: format!("Player {}", white_id),
+                            name: format!("Player {white_id}"),
                             rating: None,
                             country_code: None,
                             title: None,
@@ -180,7 +180,7 @@ impl KnockoutService {
                         black_player: Some(Player {
                             id: black_id,
                             tournament_id: 0,
-                            name: format!("Player {}", black_id),
+                            name: format!("Player {black_id}"),
                             rating: None,
                             country_code: None,
                             title: None,
@@ -205,7 +205,7 @@ impl KnockoutService {
                         white_player: Player {
                             id: player_id,
                             tournament_id: 0,
-                            name: format!("Player {}", player_id),
+                            name: format!("Player {player_id}"),
                             rating: None,
                             country_code: None,
                             title: None,
@@ -292,8 +292,7 @@ impl KnockoutService {
                 let count = round_positions.len();
                 if !count.is_power_of_two() {
                     return Err(PawnError::InvalidInput(format!(
-                        "Round {} must have power of 2 positions, found {}",
-                        round_num, count
+                        "Round {round_num} must have power of 2 positions, found {count}"
                     )));
                 }
                 count

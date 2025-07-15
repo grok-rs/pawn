@@ -210,9 +210,10 @@ impl PairingOptimizer {
 
             // Check timeout
             if preprocessing_time.as_secs() > config.timeout_seconds {
-                warnings.push(format!(
+                warnings.push(
                     "Pairing generation approaching timeout, may have incomplete optimization"
-                ));
+                        .to_string(),
+                );
                 break;
             }
         }
@@ -252,7 +253,7 @@ impl PairingOptimizer {
             let points = results_map.get(&player.id).map(|r| r.points).unwrap_or(0.0);
             player_points.insert(player.id, points as f64);
 
-            let score_key = format!("{:.1}", points);
+            let score_key = format!("{points:.1}");
             players_by_score
                 .entry(score_key)
                 .or_default()
@@ -534,7 +535,7 @@ impl PairingOptimizer {
             .map(|i| Player {
                 id: i as i32,
                 tournament_id: 1,
-                name: format!("Player {}", i),
+                name: format!("Player {i}"),
                 rating: Some(1200 + (i % 800) as i32), // Ratings from 1200-2000
                 country_code: Some("XX".to_string()),
                 title: None,
@@ -721,7 +722,7 @@ mod tests {
 
         // Create 150 players (above default threshold of 100)
         let players: Vec<Player> = (1..=150)
-            .map(|i| create_test_player(i, &format!("Player {}", i), Some(1500 + (i % 500))))
+            .map(|i| create_test_player(i, &format!("Player {i}"), Some(1500 + (i % 500))))
             .collect();
 
         let results: Vec<PlayerResult> = players
@@ -852,7 +853,7 @@ mod tests {
 
         // Create enough players to trigger batch processing
         let players: Vec<Player> = (1..=30)
-            .map(|i| create_test_player(i, &format!("Player {}", i), Some(1500)))
+            .map(|i| create_test_player(i, &format!("Player {i}"), Some(1500)))
             .collect();
 
         let results: Vec<PlayerResult> = players
@@ -1039,7 +1040,7 @@ mod tests {
         // Create a scenario that might generate warnings
         let players: Vec<Player> =
             (1..=201) // Odd number for potential bye warnings
-                .map(|i| create_test_player(i, &format!("Player {}", i), Some(1500)))
+                .map(|i| create_test_player(i, &format!("Player {i}"), Some(1500)))
                 .collect();
 
         let results: Vec<PlayerResult> = players

@@ -211,7 +211,7 @@ impl<D: Db> TiebreakCalculator<D> {
         Ok(TiebreakScore {
             tiebreak_type: tiebreak_type.clone(),
             value,
-            display_value: format!("{:.3}", value),
+            display_value: format!("{value:.3}"),
         })
     }
 
@@ -735,7 +735,7 @@ mod tests {
         );
 
         // Calculate Buchholz manually
-        let opponent_ids = vec![2, 3, 4];
+        let opponent_ids = [2, 3, 4];
         let buchholz: f64 = opponent_ids
             .iter()
             .filter_map(|id| results.get(id).map(|r| r.points as f64))

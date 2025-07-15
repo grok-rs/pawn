@@ -17,14 +17,14 @@ use crate::pawn::{
 #[tauri::command]
 #[specta::specta]
 pub async fn get_tournaments(state: State<'_, PawnState>) -> CommandResult<Vec<Tournament>> {
-    Ok(state.tournament_service.get_tournaments().await?)
+    state.tournament_service.get_tournaments().await
 }
 
 #[instrument(ret, skip(state))]
 #[tauri::command]
 #[specta::specta]
 pub async fn get_tournament(state: State<'_, PawnState>, id: i32) -> CommandResult<Tournament> {
-    Ok(state.tournament_service.get_tournament(id).await?)
+    state.tournament_service.get_tournament(id).await
 }
 
 #[instrument(ret, skip(state))]
@@ -34,7 +34,7 @@ pub async fn create_tournament(
     state: State<'_, PawnState>,
     data: CreateTournament,
 ) -> CommandResult<Tournament> {
-    Ok(state.tournament_service.create_tournament(data).await?)
+    state.tournament_service.create_tournament(data).await
 }
 
 #[instrument(ret, skip(state))]
@@ -44,14 +44,14 @@ pub async fn get_tournament_details(
     state: State<'_, PawnState>,
     id: i32,
 ) -> CommandResult<TournamentDetails> {
-    Ok(state.tournament_service.get_tournament_details(id).await?)
+    state.tournament_service.get_tournament_details(id).await
 }
 
 #[instrument(ret, skip(state))]
 #[tauri::command]
 #[specta::specta]
 pub async fn delete_tournament(state: State<'_, PawnState>, id: i32) -> CommandResult<()> {
-    Ok(state.tournament_service.delete_tournament(id).await?)
+    state.tournament_service.delete_tournament(id).await
 }
 
 // Player operations
@@ -62,10 +62,10 @@ pub async fn get_players_by_tournament(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<Vec<Player>> {
-    Ok(state
+    state
         .tournament_service
         .get_players_by_tournament(tournament_id)
-        .await?)
+        .await
 }
 
 #[instrument(ret, skip(state))]
@@ -75,7 +75,7 @@ pub async fn create_player(
     state: State<'_, PawnState>,
     data: CreatePlayer,
 ) -> CommandResult<Player> {
-    Ok(state.tournament_service.create_player(data).await?)
+    state.tournament_service.create_player(data).await
 }
 
 // Game operations
@@ -86,17 +86,17 @@ pub async fn get_games_by_tournament(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<Vec<Game>> {
-    Ok(state
+    state
         .tournament_service
         .get_games_by_tournament(tournament_id)
-        .await?)
+        .await
 }
 
 #[instrument(ret, skip(state))]
 #[tauri::command]
 #[specta::specta]
 pub async fn create_game(state: State<'_, PawnState>, data: CreateGame) -> CommandResult<Game> {
-    Ok(state.tournament_service.create_game(data).await?)
+    state.tournament_service.create_game(data).await
 }
 
 // Statistics
@@ -107,10 +107,10 @@ pub async fn get_player_results(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<Vec<PlayerResult>> {
-    Ok(state
+    state
         .tournament_service
         .get_player_results(tournament_id)
-        .await?)
+        .await
 }
 
 #[instrument(ret, skip(state))]
@@ -120,10 +120,10 @@ pub async fn get_game_results(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<Vec<GameResult>> {
-    Ok(state
+    state
         .tournament_service
         .get_game_results(tournament_id)
-        .await?)
+        .await
 }
 
 // Utility for development
@@ -134,17 +134,17 @@ pub async fn populate_mock_data(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<()> {
-    Ok(state
+    state
         .tournament_service
         .populate_mock_data(tournament_id)
-        .await?)
+        .await
 }
 
 #[instrument(ret, skip(state))]
 #[tauri::command]
 #[specta::specta]
 pub async fn populate_mock_tournaments(state: State<'_, PawnState>) -> CommandResult<()> {
-    Ok(state.tournament_service.populate_mock_tournaments().await?)
+    state.tournament_service.populate_mock_tournaments().await
 }
 
 // Standings with tiebreaks
@@ -165,10 +165,10 @@ pub async fn get_tournament_standings(
         }
     };
 
-    Ok(state
+    state
         .tiebreak_calculator
         .calculate_standings(tournament_id, &config)
-        .await?)
+        .await
 }
 
 // Tournament settings

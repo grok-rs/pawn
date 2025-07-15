@@ -361,8 +361,7 @@ impl<D: Db> RoundService<D> {
         let incomplete_games = games.iter().filter(|game| game.game.result == "*").count();
         if incomplete_games > 0 {
             return Err(PawnError::InvalidInput(format!(
-                "Cannot complete round: {} games are still in progress",
-                incomplete_games
+                "Cannot complete round: {incomplete_games} games are still in progress"
             )));
         }
 

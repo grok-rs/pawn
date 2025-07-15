@@ -511,7 +511,7 @@ impl Db for SqliteDb {
                 // Parse the JSON tiebreak_order string
                 let tiebreaks: Vec<TiebreakType> = serde_json::from_str(&row.tiebreak_order)
                     .map_err(|e| {
-                        sqlx::Error::Protocol(format!("Failed to parse tiebreak_order: {}", e))
+                        sqlx::Error::Protocol(format!("Failed to parse tiebreak_order: {e}"))
                     })?;
 
                 Ok(Some(TournamentTiebreakConfig {
@@ -547,7 +547,7 @@ impl Db for SqliteDb {
     ) -> Result<(), sqlx::Error> {
         // Serialize tiebreaks to JSON string
         let tiebreak_order_json = serde_json::to_string(&settings.tiebreak_order).map_err(|e| {
-            sqlx::Error::Protocol(format!("Failed to serialize tiebreak_order: {}", e))
+            sqlx::Error::Protocol(format!("Failed to serialize tiebreak_order: {e}"))
         })?;
 
         sqlx::query(
@@ -785,7 +785,7 @@ impl Db for SqliteDb {
         &self,
         data: AssignPlayerToCategory,
     ) -> Result<PlayerCategoryAssignment, sqlx::Error> {
-        let result = sqlx::query(
+        let _result = sqlx::query(
             "INSERT INTO player_category_assignments (player_id, category_id) VALUES (?, ?) ON CONFLICT(player_id, category_id) DO NOTHING"
         )
         .bind(data.player_id)

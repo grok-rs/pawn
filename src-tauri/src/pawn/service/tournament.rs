@@ -118,7 +118,7 @@ impl<D: Db> TournamentService<D> {
             ));
         }
         if let Some(rating) = data.rating {
-            if rating < 0 || rating > 4000 {
+            if !(0..=4000).contains(&rating) {
                 return Err(PawnError::InvalidInput(
                     "Rating must be between 0 and 4000".into(),
                 ));

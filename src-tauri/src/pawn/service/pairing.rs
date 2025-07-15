@@ -588,8 +588,7 @@ impl PairingService {
         // Ensure round_number is valid
         if round_number < 1 || round_number > rounds_needed as i32 {
             return Err(PawnError::InvalidInput(format!(
-                "Round number {} is invalid. Must be between 1 and {}",
-                round_number, rounds_needed
+                "Round number {round_number} is invalid. Must be between 1 and {rounds_needed}"
             )));
         }
 
@@ -609,8 +608,7 @@ impl PairingService {
             // Validate that we're not reusing positions
             if used_positions.contains(&pos1) || used_positions.contains(&pos2) {
                 return Err(PawnError::InvalidInput(format!(
-                    "Round-robin algorithm error: duplicate position assignment for round {}, iteration {}. pos1={}, pos2={}",
-                    round_number, i, pos1, pos2
+                    "Round-robin algorithm error: duplicate position assignment for round {round_number}, iteration {i}. pos1={pos1}, pos2={pos2}"
                 )));
             }
             used_positions.insert(pos1);

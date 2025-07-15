@@ -138,7 +138,7 @@ pub async fn batch_update_results(
 
     // Perform all updates in a transaction-like manner
     // Note: For true ACID compliance, this should use database transactions
-    let mut update_results: Vec<String> = Vec::new();
+    let _update_results: Vec<String> = Vec::new();
     for update_request in data.updates {
         match db.update_game_result(update_request.clone()).await {
             Ok(_) => {
@@ -147,7 +147,7 @@ pub async fn batch_update_results(
             Err(e) => {
                 warn!("Failed to update game {}: {}", update_request.game_id, e);
                 // Add this as an error to the corresponding result
-                if let Some(result_index) = results.iter_mut().find(|(_, _)| true) {
+                if let Some(_result_index) = results.iter_mut().find(|(_, _)| true) {
                     // This is a simplified error handling - in production you'd want more precise mapping
                     overall_valid = false;
                 }
