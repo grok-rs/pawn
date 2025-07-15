@@ -82,7 +82,7 @@ const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
         setCsvData(players);
         setActiveStep(1);
         setError(null);
-      } catch (_err) {
+      } catch {
         setError(t('failedToParseCSV'));
       }
     };
