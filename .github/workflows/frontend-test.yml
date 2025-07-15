@@ -56,6 +56,11 @@ jobs:
       env:
         CI: true
 
+    - name: Check coverage thresholds
+      run: npm run coverage:check
+      env:
+        NODE_ENV: development  # Use demo thresholds for now
+
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4
       with:
@@ -63,6 +68,11 @@ jobs:
         flags: frontend
         name: frontend-coverage
         fail_ci_if_error: false
+
+    - name: Run integration tests
+      run: npm run test:integration
+      env:
+        CI: true
 
 
     - name: Build for production

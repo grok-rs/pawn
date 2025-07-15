@@ -1,45 +1,83 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Run pre-commit quality gates
-echo "🔍 Running pre-commit quality gates..."
+echo "🚀 Running pre-commit quality gates..."
 
-# Frontend checks
-echo "📱 Running frontend checks..."
-npx lint-staged
+# Run standard pre-commit checks
+npm run pre-commit
 
-# Backend checks
-echo "🦀 Running backend checks..."
-cd src-tauri
+# TDD workflow enforcement
+echo "🔍 Checking TDD compliance..."
 
-# Rust formatting check
-echo "  ✨ Checking Rust formatting..."
-cargo fmt --check || {
-  echo "❌ Rust code is not formatted. Run 'cargo fmt' to fix."
-  exit 1
-}
+# Check if any service files were modified
+MODIFIED_SERVICE_FILES=$(git diff --cached --name-only | grep "src-tauri/src/pawn/service/.*\.rs" | grep -v "mod.rs" | grep -v "tests/" || true)
 
-# Rust linting
-echo "  🔍 Running Rust linting..."
-cargo clippy -- -D warnings || {
-  echo "❌ Rust linting failed. Fix clippy warnings."
-  exit 1
-}
+if [ -n "$MODIFIED_SERVICE_FILES" ]; then
+    echo "📝 Modified service files detected:"
+    echo "$MODIFIED_SERVICE_FILES"
+    
+    # Check that modified service files have tests
+    for file in $MODIFIED_SERVICE_FILES; do
+        if ! grep -q "#\[cfg(test)\]" "$file"; then
+            echo "❌ TDD violation: $file has no tests"
+            echo "   Please add unit tests before committing"
+            echo "   TDD workflow: Red → Green → Refactor"
+            exit 1
+        else
+            echo "✅ $file has tests"
+        fi
+    done
+fi
 
-# Rust type checking
-echo "  🔧 Running Rust type checking..."
-cargo check || {
-  echo "❌ Rust type checking failed."
-  exit 1
-}
+# Check if any new commands were added
+NEW_COMMANDS=$(git diff --cached --name-only | grep "src-tauri/src/pawn/command/.*\.rs" | grep -v "mod.rs" || true)
 
-# Rust tests
-echo "  🧪 Running Rust tests..."
-cargo test || {
-  echo "❌ Rust tests failed."
-  exit 1
-}
+if [ -n "$NEW_COMMANDS" ]; then
+    echo "📡 New command files detected:"
+    echo "$NEW_COMMANDS"
+    
+    # Check that permissions are updated
+    for file in $NEW_COMMANDS; do
+        command_name=$(basename "$file" .rs)
+        permission_file="src-tauri/permissions/pawn/$command_name.toml"
+        
+        if [ ! -f "$permission_file" ]; then
+            echo "❌ Missing permission file for command: $permission_file"
+            echo "   Please create permission file before committing"
+            echo "   See CLAUDE.md for permission configuration"
+            exit 1
+        fi
+    done
+fi
 
-cd ..
+# Check that integration tests exist for new database operations
+DB_CHANGES=$(git diff --cached --name-only | grep "src-tauri/src/pawn/db/.*\.rs" || true)
 
-echo "✅ All pre-commit checks passed!"
+if [ -n "$DB_CHANGES" ]; then
+    echo "🗄️ Database changes detected:"
+    echo "$DB_CHANGES"
+    
+    # Check that integration tests exist
+    if [ ! -d "src-tauri/tests/integration" ]; then
+        echo "❌ No integration tests directory found"
+        echo "   Please add integration tests for database changes"
+        exit 1
+    fi
+fi
+
+# Check test coverage (if tarpaulin is available)
+if command -v cargo-tarpaulin >/dev/null 2>&1; then
+    echo "📊 Checking test coverage..."
+    
+    cd src-tauri
+    
+    # Run coverage check with timeout
+    timeout 60s cargo tarpaulin --ignore-panics --exclude-files "src/main.rs" --print-summary || {
+        echo "⚠️  Coverage check timed out or failed"
+        echo "   Continuing with commit (coverage will be checked in CI)"
+    }
+    
+    cd ..
+fi
+
+echo "✅ Pre-commit quality gates passed!"

@@ -20,7 +20,17 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:integration": "vitest --run --config vitest.integration.config.ts",
+    "coverage:check": "vitest --coverage --reporter=verbose && node scripts/check-coverage.js",
+    "coverage:report": "vitest --coverage --reporter=html",
+    "performance:test": "cd src-tauri && cargo bench",
+    "performance:profile": "cd src-tauri && cargo bench --bench pairing_performance -- --profile-time=10",
+    "db:test": "cd src-tauri && cargo test --test integration",
+    "db:migrate": "cd src-tauri && sqlx migrate run --database-url sqlite:pawn.sqlite",
+    "db:reset": "rm -f ~/.local/share/pawn/db/pawn.sqlite && npm run db:migrate",
+    "quality:check": "npm run format:check && npm run lint && npm run type-check && npm run test:coverage && npm run performance:test",
+    "quality:fix": "npm run format && npm run lint:fix && npm run type-check"
   },
   "dependencies": {
     "@ag-grid-community/client-side-row-model": "^32.1.0",
