@@ -23,14 +23,14 @@ import {
   TableRow,
   Paper,
   Chip,
-  IconButton,
+  // IconButton,
   MenuItem,
   Grid2 as Grid,
   Tabs,
   Tab,
-  List,
-  ListItem,
-  ListItemText,
+  // List,
+  // ListItem,
+  // ListItemText,
   FormControlLabel,
   Checkbox,
   CircularProgress,
@@ -41,8 +41,8 @@ import {
   History,
   TrendingUp,
   TrendingDown,
-  Remove,
-  Edit,
+  // Remove,
+  // Edit,
   Person,
   EmojiEvents,
   Speed,
@@ -96,7 +96,7 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
   const { t } = useTranslation();
   const [ratingHistory, setRatingHistory] = useState<RatingHistory[]>([]);
   const [loading, setLoading] = useState(false);
-  const [addingRating, setAddingRating] = useState(false);
+  const [_addingRating, setAddingRating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
 

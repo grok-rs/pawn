@@ -519,7 +519,7 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
       <Dialog
         open={categoryFormOpen}
         onClose={() => setCategoryFormOpen(false)}
-        maxWidth="sm"
+        maxWidth={false}
         fullWidth
       >
         <Box component="form" onSubmit={handleSubmit(onSubmitCategory)}>
