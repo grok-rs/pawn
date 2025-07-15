@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import type { Dayjs } from 'dayjs';
 import {
   Dialog,
   DialogTitle,
