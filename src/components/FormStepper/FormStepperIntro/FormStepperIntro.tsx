@@ -12,7 +12,11 @@ const FormStepperIntro = () => {
 
   return (
     <StyledBox>
-      {title && <Typography variant="h4" color="black">{t(title)}</Typography>}
+      {title && (
+        <Typography variant="h4" color="black">
+          {t(title)}
+        </Typography>
+      )}
       {description && (
         <Typography sx={{ mt: 1.5, color: 'action.disabled' }} variant="body2">
           {t(description)}

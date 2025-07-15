@@ -81,12 +81,17 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
   onResultsUpdated,
   readOnly = false,
 }) => {
-  const [resultEntries, setResultEntries] = useState<Map<number, ResultEntry>>(new Map());
-  const [selectedAuditGame, setSelectedAuditGame] = useState<number | null>(null);
+  const [resultEntries, setResultEntries] = useState<Map<number, ResultEntry>>(
+    new Map()
+  );
+  const [selectedAuditGame, setSelectedAuditGame] = useState<number | null>(
+    null
+  );
   const [auditTrail, setAuditTrail] = useState<GameResultAudit[]>([]);
   const [isAuditDialogOpen, setIsAuditDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [validationResults, setValidationResults] = useState<BatchValidationResult | null>(null);
+  const [validationResults, setValidationResults] =
+    useState<BatchValidationResult | null>(null);
 
   // Initialize result entries from games
   useEffect(() => {
@@ -99,73 +104,97 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
         resultReason: game.game.result_reason || undefined,
         arbiterNotes: game.game.arbiter_notes || undefined,
         isModified: false,
-        requiresApproval: game.game.result_type ? 
-          ['white_forfeit', 'black_forfeit', 'white_default', 'black_default', 'double_forfeit', 'cancelled']
-            .includes(game.game.result_type) : false,
+        requiresApproval: game.game.result_type
+          ? [
+              'white_forfeit',
+              'black_forfeit',
+              'white_default',
+              'black_default',
+              'double_forfeit',
+              'cancelled',
+            ].includes(game.game.result_type)
+          : false,
       });
     });
     setResultEntries(entries);
   }, [games]);
 
-  const updateResultEntry = useCallback((gameId: number, updates: Partial<ResultEntry>) => {
-    setResultEntries(prev => {
-      const entry = prev.get(gameId);
-      if (!entry) return prev;
+  const updateResultEntry = useCallback(
+    (gameId: number, updates: Partial<ResultEntry>) => {
+      setResultEntries(prev => {
+        const entry = prev.get(gameId);
+        if (!entry) return prev;
 
-      const updated = { ...entry, ...updates, isModified: true };
-      const newMap = new Map(prev);
-      newMap.set(gameId, updated);
-      return newMap;
-    });
-  }, []);
-
-  const validateResult = useCallback(async (gameId: number, result: string, resultType?: string) => {
-    try {
-      const validation = await invoke<GameResultValidation>('plugin:pawn|validate_game_result', {
-        data: {
-          game_id: gameId,
-          result,
-          result_type: resultType,
-          tournament_id: tournamentId,
-          changed_by: 'current_user', // This should come from user context
-        },
+        const updated = { ...entry, ...updates, isModified: true };
+        const newMap = new Map(prev);
+        newMap.set(gameId, updated);
+        return newMap;
       });
+    },
+    []
+  );
 
-      updateResultEntry(gameId, { validation });
-      return validation;
-    } catch (error) {
-      console.error('Failed to validate result:', error);
-      return {
-        is_valid: false,
-        errors: ['Validation failed'],
-        warnings: [],
-      };
-    }
-  }, [tournamentId, updateResultEntry]);
+  const validateResult = useCallback(
+    async (gameId: number, result: string, resultType?: string) => {
+      try {
+        const validation = await invoke<GameResultValidation>(
+          'plugin:pawn|validate_game_result',
+          {
+            data: {
+              game_id: gameId,
+              result,
+              result_type: resultType,
+              tournament_id: tournamentId,
+              changed_by: 'current_user', // This should come from user context
+            },
+          }
+        );
 
-  const handleResultChange = useCallback(async (gameId: number, result: string) => {
-    updateResultEntry(gameId, { result });
-    
-    // Auto-validate on change
-    if (result && result !== '*') {
-      await validateResult(gameId, result);
-    }
-  }, [updateResultEntry, validateResult]);
+        updateResultEntry(gameId, { validation });
+        return validation;
+      } catch (error) {
+        console.error('Failed to validate result:', error);
+        return {
+          is_valid: false,
+          errors: ['Validation failed'],
+          warnings: [],
+        };
+      }
+    },
+    [tournamentId, updateResultEntry]
+  );
 
-  const handleResultTypeChange = useCallback(async (gameId: number, resultType: string) => {
-    const entry = resultEntries.get(gameId);
-    if (!entry) return;
+  const handleResultChange = useCallback(
+    async (gameId: number, result: string) => {
+      updateResultEntry(gameId, { result });
 
-    updateResultEntry(gameId, { resultType });
-    
-    // Re-validate with new type
-    if (entry.result && entry.result !== '*') {
-      await validateResult(gameId, entry.result, resultType);
-    }
-  }, [resultEntries, updateResultEntry, validateResult]);
+      // Auto-validate on change
+      if (result && result !== '*') {
+        await validateResult(gameId, result);
+      }
+    },
+    [updateResultEntry, validateResult]
+  );
+
+  const handleResultTypeChange = useCallback(
+    async (gameId: number, resultType: string) => {
+      const entry = resultEntries.get(gameId);
+      if (!entry) return;
+
+      updateResultEntry(gameId, { resultType });
+
+      // Re-validate with new type
+      if (entry.result && entry.result !== '*') {
+        await validateResult(gameId, entry.result, resultType);
+      }
+    },
+    [resultEntries, updateResultEntry, validateResult]
+  );
 
   const batchValidate = useCallback(async () => {
-    const modifiedEntries = Array.from(resultEntries.values()).filter(entry => entry.isModified);
+    const modifiedEntries = Array.from(resultEntries.values()).filter(
+      entry => entry.isModified
+    );
     if (modifiedEntries.length === 0) return;
 
     try {
@@ -178,13 +207,16 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
         changed_by: 'current_user', // This should come from user context
       }));
 
-      const results = await invoke<BatchValidationResult>('plugin:pawn|batch_update_results', {
-        data: {
-          tournament_id: tournamentId,
-          updates,
-          validate_only: true,
-        },
-      });
+      const results = await invoke<BatchValidationResult>(
+        'plugin:pawn|batch_update_results',
+        {
+          data: {
+            tournament_id: tournamentId,
+            updates,
+            validate_only: true,
+          },
+        }
+      );
 
       setValidationResults(results);
 
@@ -201,7 +233,9 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
   }, [resultEntries, tournamentId, updateResultEntry]);
 
   const handleSaveAll = useCallback(async () => {
-    const modifiedEntries = Array.from(resultEntries.values()).filter(entry => entry.isModified);
+    const modifiedEntries = Array.from(resultEntries.values()).filter(
+      entry => entry.isModified
+    );
     if (modifiedEntries.length === 0) return;
 
     setIsSaving(true);
@@ -215,13 +249,16 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
         changed_by: 'current_user', // This should come from user context
       }));
 
-      const results = await invoke<BatchValidationResult>('plugin:pawn|batch_update_results', {
-        data: {
-          tournament_id: tournamentId,
-          updates,
-          validate_only: false,
-        },
-      });
+      const results = await invoke<BatchValidationResult>(
+        'plugin:pawn|batch_update_results',
+        {
+          data: {
+            tournament_id: tournamentId,
+            updates,
+            validate_only: false,
+          },
+        }
+      );
 
       if (results.overall_valid) {
         // Mark all entries as saved
@@ -248,9 +285,12 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
 
   const handleShowAuditTrail = useCallback(async (gameId: number) => {
     try {
-      const trail = await invoke<GameResultAudit[]>('plugin:pawn|get_game_audit_trail', {
-        gameId,
-      });
+      const trail = await invoke<GameResultAudit[]>(
+        'plugin:pawn|get_game_audit_trail',
+        {
+          gameId,
+        }
+      );
       setAuditTrail(trail);
       setSelectedAuditGame(gameId);
       setIsAuditDialogOpen(true);
@@ -259,7 +299,9 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
     }
   }, []);
 
-  const modifiedCount = Array.from(resultEntries.values()).filter(entry => entry.isModified).length;
+  const modifiedCount = Array.from(resultEntries.values()).filter(
+    entry => entry.isModified
+  ).length;
   const hasErrors = validationResults && !validationResults.overall_valid;
 
   return (
@@ -287,7 +329,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                 startIcon={<SaveIcon />}
                 onClick={handleSaveAll}
                 disabled={modifiedCount === 0 || isSaving}
-                color={hasErrors ? "error" : "primary"}
+                color={hasErrors ? 'error' : 'primary'}
               >
                 Save All ({modifiedCount})
               </Button>
@@ -298,7 +340,8 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
 
       {hasErrors && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Validation failed for some results. Please review and correct the errors.
+          Validation failed for some results. Please review and correct the
+          errors.
         </Alert>
       )}
 
@@ -326,7 +369,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{gameResult.white_player.name}</TableCell>
                   <TableCell>{gameResult.black_player.name}</TableCell>
-                  
+
                   <TableCell>
                     {readOnly ? (
                       entry.result
@@ -334,7 +377,12 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                       <FormControl size="small" fullWidth>
                         <Select
                           value={entry.result}
-                          onChange={(e) => handleResultChange(gameResult.game.id, e.target.value)}
+                          onChange={e =>
+                            handleResultChange(
+                              gameResult.game.id,
+                              e.target.value
+                            )
+                          }
                         >
                           {RESULT_OPTIONS.map(option => (
                             <MenuItem key={option.value} value={option.value}>
@@ -351,17 +399,32 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                       <FormControl size="small" fullWidth>
                         <Select
                           value={entry.resultType || ''}
-                          onChange={(e) => handleResultTypeChange(gameResult.game.id, e.target.value)}
+                          onChange={e =>
+                            handleResultTypeChange(
+                              gameResult.game.id,
+                              e.target.value
+                            )
+                          }
                           displayEmpty
                         >
                           <MenuItem value="">Standard</MenuItem>
-                          <MenuItem value="white_forfeit">White Forfeit</MenuItem>
-                          <MenuItem value="black_forfeit">Black Forfeit</MenuItem>
-                          <MenuItem value="white_default">White Default</MenuItem>
-                          <MenuItem value="black_default">Black Default</MenuItem>
+                          <MenuItem value="white_forfeit">
+                            White Forfeit
+                          </MenuItem>
+                          <MenuItem value="black_forfeit">
+                            Black Forfeit
+                          </MenuItem>
+                          <MenuItem value="white_default">
+                            White Default
+                          </MenuItem>
+                          <MenuItem value="black_default">
+                            Black Default
+                          </MenuItem>
                           <MenuItem value="timeout">Timeout</MenuItem>
                           <MenuItem value="adjourned">Adjourned</MenuItem>
-                          <MenuItem value="double_forfeit">Double Forfeit</MenuItem>
+                          <MenuItem value="double_forfeit">
+                            Double Forfeit
+                          </MenuItem>
                           <MenuItem value="cancelled">Cancelled</MenuItem>
                         </Select>
                       </FormControl>
@@ -375,25 +438,39 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                         fullWidth
                         placeholder="Reason/Notes"
                         value={entry.resultReason || ''}
-                        onChange={(e) => updateResultEntry(gameResult.game.id, { resultReason: e.target.value })}
+                        onChange={e =>
+                          updateResultEntry(gameResult.game.id, {
+                            resultReason: e.target.value,
+                          })
+                        }
                       />
                     </TableCell>
                   )}
 
                   <TableCell>
                     <Box display="flex" gap={1} alignItems="center">
-                      {entry.isModified && <Chip label="Modified" size="small" color="warning" />}
-                      {entry.requiresApproval && <Chip label="Needs Approval" size="small" color="error" />}
-                      {entry.validation?.errors && entry.validation.errors.length > 0 && (
-                        <Tooltip title={entry.validation.errors.join(', ')}>
-                          <WarningIcon color="error" />
-                        </Tooltip>
+                      {entry.isModified && (
+                        <Chip label="Modified" size="small" color="warning" />
                       )}
-                      {entry.validation?.warnings && entry.validation.warnings.length > 0 && (
-                        <Tooltip title={entry.validation.warnings.join(', ')}>
-                          <WarningIcon color="warning" />
-                        </Tooltip>
+                      {entry.requiresApproval && (
+                        <Chip
+                          label="Needs Approval"
+                          size="small"
+                          color="error"
+                        />
                       )}
+                      {entry.validation?.errors &&
+                        entry.validation.errors.length > 0 && (
+                          <Tooltip title={entry.validation.errors.join(', ')}>
+                            <WarningIcon color="error" />
+                          </Tooltip>
+                        )}
+                      {entry.validation?.warnings &&
+                        entry.validation.warnings.length > 0 && (
+                          <Tooltip title={entry.validation.warnings.join(', ')}>
+                            <WarningIcon color="warning" />
+                          </Tooltip>
+                        )}
                     </Box>
                   </TableCell>
 
@@ -414,10 +491,13 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
       </TableContainer>
 
       {/* Audit Trail Dialog */}
-      <Dialog open={isAuditDialogOpen} onClose={() => setIsAuditDialogOpen(false)} maxWidth={false} fullWidth>
-        <DialogTitle>
-          Audit Trail - Game {selectedAuditGame}
-        </DialogTitle>
+      <Dialog
+        open={isAuditDialogOpen}
+        onClose={() => setIsAuditDialogOpen(false)}
+        maxWidth={false}
+        fullWidth
+      >
+        <DialogTitle>Audit Trail - Game {selectedAuditGame}</DialogTitle>
         <DialogContent>
           {auditTrail.length === 0 ? (
             <Typography>No audit trail available</Typography>
@@ -435,9 +515,11 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {auditTrail.map((record) => (
+                  {auditTrail.map(record => (
                     <TableRow key={record.id}>
-                      <TableCell>{new Date(record.changed_at).toLocaleString()}</TableCell>
+                      <TableCell>
+                        {new Date(record.changed_at).toLocaleString()}
+                      </TableCell>
                       <TableCell>{record.old_result || 'N/A'}</TableCell>
                       <TableCell>{record.new_result}</TableCell>
                       <TableCell>{record.changed_by || 'System'}</TableCell>

@@ -36,8 +36,22 @@ interface AddPlayerFormProps {
 
 // Chess titles
 const CHESS_TITLES = [
-  'GM', 'IM', 'FM', 'CM', 'WGM', 'WIM', 'WFM', 'WCM',
-  'NM', 'CM', 'FM', 'Expert', 'Class A', 'Class B', 'Class C', 'Class D'
+  'GM',
+  'IM',
+  'FM',
+  'CM',
+  'WGM',
+  'WIM',
+  'WFM',
+  'WCM',
+  'NM',
+  'CM',
+  'FM',
+  'Expert',
+  'Class A',
+  'Class B',
+  'Class C',
+  'Class D',
 ];
 
 // Common countries
@@ -65,14 +79,31 @@ const COUNTRIES = [
 ];
 
 const schema = yup.object({
-  name: yup.string().required('Name is required').min(2, 'Name must be at least 2 characters'),
-  rating: yup.number().nullable().min(0, 'Rating must be positive').max(4000, 'Rating must be realistic'),
+  name: yup
+    .string()
+    .required('Name is required')
+    .min(2, 'Name must be at least 2 characters'),
+  rating: yup
+    .number()
+    .nullable()
+    .min(0, 'Rating must be positive')
+    .max(4000, 'Rating must be realistic'),
   country_code: yup.string().nullable(),
   title: yup.string().nullable(),
-  birth_date: yup.mixed().nullable().test('is-valid-date', 'Birth date cannot be in the future', function(value) {
-    if (!value) return true;
-    return dayjs.isDayjs(value) && (value.isBefore(dayjs(), 'day') || value.isSame(dayjs(), 'day'));
-  }),
+  birth_date: yup
+    .mixed()
+    .nullable()
+    .test(
+      'is-valid-date',
+      'Birth date cannot be in the future',
+      function (value) {
+        if (!value) return true;
+        return (
+          dayjs.isDayjs(value) &&
+          (value.isBefore(dayjs(), 'day') || value.isSame(dayjs(), 'day'))
+        );
+      }
+    ),
   gender: yup.string().nullable().oneOf(['M', 'F', 'O'], 'Invalid gender'),
   email: yup.string().nullable().email('Invalid email format'),
   phone: yup.string().nullable(),
@@ -119,7 +150,9 @@ const AddPlayerForm: React.FC<AddPlayerFormProps> = ({
         rating: editingPlayer.rating,
         country_code: editingPlayer.country_code || '',
         title: editingPlayer.title || '',
-        birth_date: editingPlayer.birth_date ? dayjs(editingPlayer.birth_date) : null,
+        birth_date: editingPlayer.birth_date
+          ? dayjs(editingPlayer.birth_date)
+          : null,
         gender: editingPlayer.gender || '',
         email: editingPlayer.email || '',
         phone: editingPlayer.phone || '',
@@ -153,7 +186,10 @@ const AddPlayerForm: React.FC<AddPlayerFormProps> = ({
           rating: data.rating ?? null,
           country_code: data.country_code || null,
           title: data.title || null,
-          birth_date: data.birth_date && dayjs.isDayjs(data.birth_date) ? data.birth_date.format('YYYY-MM-DD') : null,
+          birth_date:
+            data.birth_date && dayjs.isDayjs(data.birth_date)
+              ? data.birth_date.format('YYYY-MM-DD')
+              : null,
           gender: data.gender || null,
           email: data.email || null,
           phone: data.phone || null,
@@ -169,7 +205,10 @@ const AddPlayerForm: React.FC<AddPlayerFormProps> = ({
           rating: data.rating ?? null,
           country_code: data.country_code || null,
           title: data.title || null,
-          birth_date: data.birth_date && dayjs.isDayjs(data.birth_date) ? data.birth_date.format('YYYY-MM-DD') : null,
+          birth_date:
+            data.birth_date && dayjs.isDayjs(data.birth_date)
+              ? data.birth_date.format('YYYY-MM-DD')
+              : null,
           gender: data.gender || null,
           email: data.email || null,
           phone: data.phone || null,
@@ -181,7 +220,9 @@ const AddPlayerForm: React.FC<AddPlayerFormProps> = ({
       onSuccess();
     } catch (err) {
       console.error('Failed to save player:', err);
-      setError(editingPlayer ? t('failedToUpdatePlayer') : t('failedToCreatePlayer'));
+      setError(
+        editingPlayer ? t('failedToUpdatePlayer') : t('failedToCreatePlayer')
+      );
     } finally {
       setLoading(false);
     }
@@ -195,7 +236,13 @@ const AddPlayerForm: React.FC<AddPlayerFormProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth={false} fullWidth sx={{ '& .MuiDialog-paper': { maxWidth: '800px' } }}>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth={false}
+      fullWidth
+      sx={{ '& .MuiDialog-paper': { maxWidth: '800px' } }}
+    >
       <DialogTitle>
         {editingPlayer ? t('editPlayer') : t('addNewPlayer')}
       </DialogTitle>
@@ -247,7 +294,11 @@ const AddPlayerForm: React.FC<AddPlayerFormProps> = ({
                       error={!!errors.rating}
                       helperText={errors.rating?.message}
                       value={field.value || ''}
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                      onChange={e =>
+                        field.onChange(
+                          e.target.value ? Number(e.target.value) : null
+                        )
+                      }
                     />
                   )}
                 />
@@ -266,7 +317,7 @@ const AddPlayerForm: React.FC<AddPlayerFormProps> = ({
                       value={field.value || ''}
                     >
                       <MenuItem value="">{t('noTitle')}</MenuItem>
-                      {CHESS_TITLES.map((title) => (
+                      {CHESS_TITLES.map(title => (
                         <MenuItem key={title} value={title}>
                           {title}
                         </MenuItem>
@@ -289,7 +340,7 @@ const AddPlayerForm: React.FC<AddPlayerFormProps> = ({
                       value={field.value || ''}
                     >
                       <MenuItem value="">{t('selectCountry')}</MenuItem>
-                      {COUNTRIES.map((country) => (
+                      {COUNTRIES.map(country => (
                         <MenuItem key={country.code} value={country.code}>
                           {country.name} ({country.code})
                         </MenuItem>

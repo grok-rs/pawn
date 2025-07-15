@@ -15,7 +15,12 @@ interface PageHeaderProps {
   action?: ReactNode;
 }
 
-const PageHeader = ({ title, subtitle, breadcrumbs, action }: PageHeaderProps) => {
+const PageHeader = ({
+  title,
+  subtitle,
+  breadcrumbs,
+  action,
+}: PageHeaderProps) => {
   return (
     <Box sx={{ mb: 4 }}>
       {breadcrumbs && breadcrumbs.length > 0 && (
@@ -45,8 +50,14 @@ const PageHeader = ({ title, subtitle, breadcrumbs, action }: PageHeaderProps) =
           })}
         </Breadcrumbs>
       )}
-      
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+        }}
+      >
         <Box>
           <Typography variant="h4" fontWeight={700} gutterBottom>
             {title}

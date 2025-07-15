@@ -8,9 +8,15 @@ type TournamentStatusProps = {
   onClick: () => void;
 };
 
-const TournamentStatusButton = ({ label, count, onClick }: TournamentStatusProps) => (
+const TournamentStatusButton = ({
+  label,
+  count,
+  onClick,
+}: TournamentStatusProps) => (
   <StatusButton onClick={onClick} fullWidth>
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+    <Box
+      sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
+    >
       <Typography variant="body1">{label}</Typography>
       <Typography variant="body2">{count}</Typography>
     </Box>

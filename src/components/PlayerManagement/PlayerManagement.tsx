@@ -69,7 +69,9 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
   const [ratingHistoryOpen, setRatingHistoryOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [managingPlayer, setManagingPlayer] = useState<Player | null>(null);
-  const [ratingHistoryPlayer, setRatingHistoryPlayer] = useState<Player | null>(null);
+  const [ratingHistoryPlayer, setRatingHistoryPlayer] = useState<Player | null>(
+    null
+  );
   const [searchTerm, setSearchTerm] = useState('');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
@@ -77,17 +79,23 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
 
-  const filteredPlayers = players.filter(player =>
-    player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (player.country_code && player.country_code.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (player.title && player.title.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredPlayers = players.filter(
+    player =>
+      player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (player.country_code &&
+        player.country_code.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (player.title &&
+        player.title.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, playerId: number) => {
+  const handleMenuClick = (
+    event: React.MouseEvent<HTMLElement>,
+    playerId: number
+  ) => {
     setAnchorEl(event.currentTarget);
     setSelectedPlayerId(playerId);
   };
@@ -186,8 +194,20 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
       )}
 
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6" component="h2" color="text.primary" sx={{ fontWeight: 600 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3,
+        }}
+      >
+        <Typography
+          variant="h6"
+          component="h2"
+          color="text.primary"
+          sx={{ fontWeight: 600 }}
+        >
           {t('playerManagement')} ({players.length} {t('players')})
         </Typography>
       </Box>
@@ -207,11 +227,7 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
             },
           }}
         >
-          <Tab
-            icon={<Groups />}
-            label={t('players')}
-            iconPosition="start"
-          />
+          <Tab icon={<Groups />} label={t('players')} iconPosition="start" />
           <Tab
             icon={<Category />}
             label={t('categories')}
@@ -224,7 +240,14 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
       {tabValue === 0 && (
         <Box>
           {/* Actions */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 2,
+            }}
+          >
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Button
                 variant="outlined"
@@ -260,7 +283,7 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
             variant="outlined"
             placeholder={t('searchPlayers')}
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -271,121 +294,159 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
             sx={{ mb: 2 }}
           />
 
-      {/* Players Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>{t('name')}</TableCell>
-              <TableCell>{t('rating')}</TableCell>
-              <TableCell>{t('title')}</TableCell>
-              <TableCell>{t('country')}</TableCell>
-              <TableCell>{t('contact')}</TableCell>
-              <TableCell>{t('status')}</TableCell>
-              <TableCell>{t('registered')}</TableCell>
-              <TableCell align="right">{t('actions')}</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredPlayers.map((player) => (
-              <TableRow key={player.id} hover>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Person fontSize="small" color="action" />
-                    <Typography variant="subtitle2" fontWeight={500}>
-                      {player.name}
-                    </Typography>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  {player.rating ? (
-                    <Chip
-                      label={player.rating}
-                      variant="outlined"
-                      size="small"
-                      color="primary"
-                    />
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      {t('unrated')}
-                    </Typography>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {player.title ? (
-                    <Chip
-                      label={t(`title.${player.title}`, player.title)}
-                      size="small"
-                      color="secondary"
-                      icon={<EmojiEvents />}
-                    />
-                  ) : (
-                    '-'
-                  )}
-                </TableCell>
-                <TableCell>
-                  {player.country_code ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Flag fontSize="small" />
-                      {t(`country.${player.country_code}`, player.country_code)}
-                    </Box>
-                  ) : (
-                    '-'
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                    {player.email && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Email fontSize="small" color="action" />
-                        <Typography variant="caption">{player.email}</Typography>
+          {/* Players Table */}
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>{t('name')}</TableCell>
+                  <TableCell>{t('rating')}</TableCell>
+                  <TableCell>{t('title')}</TableCell>
+                  <TableCell>{t('country')}</TableCell>
+                  <TableCell>{t('contact')}</TableCell>
+                  <TableCell>{t('status')}</TableCell>
+                  <TableCell>{t('registered')}</TableCell>
+                  <TableCell align="right">{t('actions')}</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredPlayers.map(player => (
+                  <TableRow key={player.id} hover>
+                    <TableCell>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                      >
+                        <Person fontSize="small" color="action" />
+                        <Typography variant="subtitle2" fontWeight={500}>
+                          {player.name}
+                        </Typography>
                       </Box>
-                    )}
-                    {player.phone && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Phone fontSize="small" color="action" />
-                        <Typography variant="caption">{player.phone}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      {player.rating ? (
+                        <Chip
+                          label={player.rating}
+                          variant="outlined"
+                          size="small"
+                          color="primary"
+                        />
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          {t('unrated')}
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {player.title ? (
+                        <Chip
+                          label={t(`title.${player.title}`, player.title)}
+                          size="small"
+                          color="secondary"
+                          icon={<EmojiEvents />}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {player.country_code ? (
+                        <Box
+                          sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                        >
+                          <Flag fontSize="small" />
+                          {t(
+                            `country.${player.country_code}`,
+                            player.country_code
+                          )}
+                        </Box>
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 0.5,
+                        }}
+                      >
+                        {player.email && (
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                            }}
+                          >
+                            <Email fontSize="small" color="action" />
+                            <Typography variant="caption">
+                              {player.email}
+                            </Typography>
+                          </Box>
+                        )}
+                        {player.phone && (
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                            }}
+                          >
+                            <Phone fontSize="small" color="action" />
+                            <Typography variant="caption">
+                              {player.phone}
+                            </Typography>
+                          </Box>
+                        )}
+                        {!player.email && !player.phone && '-'}
                       </Box>
-                    )}
-                    {!player.email && !player.phone && '-'}
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={t(`playerStatus.${player.status}`, player.status)}
-                    size="small"
-                    color={getStatusColor(player.status) as any}
-                    variant="outlined"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="text.secondary">
-                    {formatDate(player.created_at)}
-                  </Typography>
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton
-                    size="small"
-                    onClick={(e) => handleMenuClick(e, player.id)}
-                    disabled={loading}
-                  >
-                    <MoreVert />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-            {filteredPlayers.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={8} align="center">
-                  <Typography variant="body2" color="text.secondary" sx={{ py: 4 }}>
-                    {searchTerm ? t('noPlayersMatchSearch') : t('noPlayersRegistered')}
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={t(
+                          `playerStatus.${player.status}`,
+                          player.status
+                        )}
+                        size="small"
+                        color={getStatusColor(player.status) as any}
+                        variant="outlined"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary">
+                        {formatDate(player.created_at)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <IconButton
+                        size="small"
+                        onClick={e => handleMenuClick(e, player.id)}
+                        disabled={loading}
+                      >
+                        <MoreVert />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {filteredPlayers.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={8} align="center">
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ py: 4 }}
+                      >
+                        {searchTerm
+                          ? t('noPlayersMatchSearch')
+                          : t('noPlayersRegistered')}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Box>
       )}
 

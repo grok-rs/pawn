@@ -34,11 +34,11 @@ import {
   EmojiEvents,
 } from '@mui/icons-material';
 import { commands } from '../../dto/bindings';
-import type { 
-  CreatePlayer, 
-  Player, 
-  Round, 
-  TournamentDetails 
+import type {
+  CreatePlayer,
+  Player,
+  Round,
+  TournamentDetails,
 } from '../../dto/bindings';
 
 interface LateEntryDialogProps {
@@ -50,8 +50,15 @@ interface LateEntryDialogProps {
 }
 
 const lateEntrySchema = yup.object({
-  name: yup.string().required('Name is required').min(2, 'Name must be at least 2 characters'),
-  rating: yup.number().nullable().min(0, 'Rating must be positive').max(4000, 'Rating must be realistic'),
+  name: yup
+    .string()
+    .required('Name is required')
+    .min(2, 'Name must be at least 2 characters'),
+  rating: yup
+    .number()
+    .nullable()
+    .min(0, 'Rating must be positive')
+    .max(4000, 'Rating must be realistic'),
   country_code: yup.string().nullable(),
   title: yup.string().nullable(),
   email: yup.string().nullable().email('Invalid email format'),
@@ -107,7 +114,8 @@ const LateEntryDialog: React.FC<LateEntryDialogProps> = ({
 
   useEffect(() => {
     if (rounds.length > 0) {
-      const nextRound = rounds.find(r => r.status === 'Upcoming') || rounds[rounds.length - 1];
+      const nextRound =
+        rounds.find(r => r.status === 'Upcoming') || rounds[rounds.length - 1];
       if (nextRound) {
         reset(prev => ({ ...prev, start_from_round: nextRound.round_number }));
       }
@@ -212,9 +220,9 @@ const LateEntryDialog: React.FC<LateEntryDialogProps> = ({
               {t('lateEntryWarning')}
             </Typography>
             <Typography variant="body2">
-              {t('tournamentInProgress', { 
-                completed: completedRounds.length, 
-                total: tournament?.total_rounds || 0 
+              {t('tournamentInProgress', {
+                completed: completedRounds.length,
+                total: tournament?.total_rounds || 0,
               })}
             </Typography>
           </Alert>
@@ -232,7 +240,8 @@ const LateEntryDialog: React.FC<LateEntryDialogProps> = ({
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Schedule fontSize="small" />
                     <Typography variant="body2">
-                      {t('rounds')}: {tournament.rounds_played}/{tournament.total_rounds}
+                      {t('rounds')}: {tournament.rounds_played}/
+                      {tournament.total_rounds}
                     </Typography>
                   </Box>
                 </Grid>
@@ -289,7 +298,11 @@ const LateEntryDialog: React.FC<LateEntryDialogProps> = ({
                     error={!!errors.rating}
                     helperText={errors.rating?.message}
                     value={field.value || ''}
-                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                    onChange={e =>
+                      field.onChange(
+                        e.target.value ? Number(e.target.value) : null
+                      )
+                    }
                   />
                 )}
               />
@@ -404,12 +417,7 @@ const LateEntryDialog: React.FC<LateEntryDialogProps> = ({
                 control={control}
                 render={({ field }) => (
                   <FormControlLabel
-                    control={
-                      <Checkbox
-                        {...field}
-                        checked={field.value}
-                      />
-                    }
+                    control={<Checkbox {...field} checked={field.value} />}
                     label={t('applyStandardPenalties')}
                   />
                 )}
@@ -430,18 +438,28 @@ const LateEntryDialog: React.FC<LateEntryDialogProps> = ({
                         <ListItemIcon>
                           <Warning fontSize="small" />
                         </ListItemIcon>
-                        <ListItemText 
-                          primary={t('missedRounds', { count: missedRounds.length })}
-                          secondary={missedRounds.map(r => `Round ${r.round_number}`).join(', ')}
+                        <ListItemText
+                          primary={t('missedRounds', {
+                            count: missedRounds.length,
+                          })}
+                          secondary={missedRounds
+                            .map(r => `Round ${r.round_number}`)
+                            .join(', ')}
                         />
                       </ListItem>
                       <ListItem>
                         <ListItemIcon>
                           <EmojiEvents fontSize="small" />
                         </ListItemIcon>
-                        <ListItemText 
-                          primary={t('pointsPenalty', { penalty: calculatePenalty() })}
-                          secondary={applyPenalties ? t('standardPenaltyApplied') : t('noPenaltyApplied')}
+                        <ListItemText
+                          primary={t('pointsPenalty', {
+                            penalty: calculatePenalty(),
+                          })}
+                          secondary={
+                            applyPenalties
+                              ? t('standardPenaltyApplied')
+                              : t('noPenaltyApplied')
+                          }
                         />
                       </ListItem>
                     </List>

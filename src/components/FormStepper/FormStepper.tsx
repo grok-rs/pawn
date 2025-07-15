@@ -1,6 +1,12 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { ReactNode, useCallback, useState } from 'react';
-import { DefaultValues, FieldValues, FormProvider, Resolver, useForm } from 'react-hook-form';
+import {
+  DefaultValues,
+  FieldValues,
+  FormProvider,
+  Resolver,
+  useForm,
+} from 'react-hook-form';
 
 import FormStepperContent from './FormStepperContent';
 import FormStepperContextProvider from './FormStepperContext';
@@ -28,14 +34,17 @@ const FormStepperComponent = <T extends FieldValues>({
   children,
 }: Props<T>) => {
   const [activeStep, setActiveStep] = useState<number>(0);
-  const [isSubmitButtonDisabled, setIsSubmitButtonDisabled] = useState<boolean>(false);
+  const [isSubmitButtonDisabled, setIsSubmitButtonDisabled] =
+    useState<boolean>(false);
 
   const isLastStep = activeStep === steps.length - 1;
   const isFirstStep = activeStep === 0;
 
   const activeSchema = steps[activeStep].schema;
 
-  const resolver = activeSchema ? (yupResolver(activeSchema) as unknown as Resolver<T>) : undefined;
+  const resolver = activeSchema
+    ? (yupResolver(activeSchema) as unknown as Resolver<T>)
+    : undefined;
 
   const methods = useForm<T>({
     defaultValues,
@@ -49,17 +58,20 @@ const FormStepperComponent = <T extends FieldValues>({
       if (isLastStep) {
         await onLastStep(data);
       } else {
-        setActiveStep((prev) => prev + 1);
+        setActiveStep(prev => prev + 1);
       }
     },
-    [onLastStep, isLastStep],
+    [onLastStep, isLastStep]
   );
 
-  const handleDisableSubmitButton = useCallback(() => setIsSubmitButtonDisabled(true), []);
+  const handleDisableSubmitButton = useCallback(
+    () => setIsSubmitButtonDisabled(true),
+    []
+  );
 
   const onStepBack = useCallback(() => {
     if (activeStep !== 0) {
-      setActiveStep((prev) => prev - 1);
+      setActiveStep(prev => prev - 1);
       clearFormErrors();
     }
   }, [activeStep, clearFormErrors]);
@@ -81,7 +93,9 @@ const FormStepperComponent = <T extends FieldValues>({
   return (
     <FormProvider {...methods}>
       <StyledForm onSubmit={methods.handleSubmit(onSubmit)}>
-        <FormStepperContextProvider value={contextValue}>{children}</FormStepperContextProvider>
+        <FormStepperContextProvider value={contextValue}>
+          {children}
+        </FormStepperContextProvider>
       </StyledForm>
     </FormProvider>
   );

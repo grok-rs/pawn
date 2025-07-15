@@ -4,8 +4,8 @@ use crate::pawn::{
     common::error::PawnError,
     db::Db,
     domain::{
-        dto::{CreateTournament, CreatePlayer, CreateGame},
-        model::{Tournament, Player, Game, TournamentDetails, PlayerResult, GameResult},
+        dto::{CreateGame, CreatePlayer, CreateTournament},
+        model::{Game, GameResult, Player, PlayerResult, Tournament, TournamentDetails},
     },
 };
 
@@ -19,7 +19,12 @@ impl<D: Db> TournamentService<D> {
     }
 
     // Helper function to create players with basic fields for mock data
-    fn create_basic_player(tournament_id: i32, name: &str, rating: Option<i32>, country_code: Option<&str>) -> CreatePlayer {
+    fn create_basic_player(
+        tournament_id: i32,
+        name: &str,
+        rating: Option<i32>,
+        country_code: Option<&str>,
+    ) -> CreatePlayer {
         CreatePlayer {
             tournament_id,
             name: name.to_string(),
@@ -36,10 +41,7 @@ impl<D: Db> TournamentService<D> {
 
     // Tournament operations
     pub async fn get_tournaments(&self) -> Result<Vec<Tournament>, PawnError> {
-        self.db
-            .get_tournaments()
-            .await
-            .map_err(PawnError::Database)
+        self.db.get_tournaments().await.map_err(PawnError::Database)
     }
 
     pub async fn get_tournament(&self, id: i32) -> Result<Tournament, PawnError> {
@@ -52,19 +54,29 @@ impl<D: Db> TournamentService<D> {
     pub async fn create_tournament(&self, data: CreateTournament) -> Result<Tournament, PawnError> {
         // Validate tournament data
         if data.name.trim().is_empty() {
-            return Err(PawnError::InvalidInput("Tournament name cannot be empty".into()));
+            return Err(PawnError::InvalidInput(
+                "Tournament name cannot be empty".into(),
+            ));
         }
         if data.player_count <= 0 {
-            return Err(PawnError::InvalidInput("Player count must be positive".into()));
+            return Err(PawnError::InvalidInput(
+                "Player count must be positive".into(),
+            ));
         }
         if data.total_rounds <= 0 {
-            return Err(PawnError::InvalidInput("Total rounds must be positive".into()));
+            return Err(PawnError::InvalidInput(
+                "Total rounds must be positive".into(),
+            ));
         }
         if data.rounds_played < 0 {
-            return Err(PawnError::InvalidInput("Rounds played cannot be negative".into()));
+            return Err(PawnError::InvalidInput(
+                "Rounds played cannot be negative".into(),
+            ));
         }
         if data.rounds_played > data.total_rounds {
-            return Err(PawnError::InvalidInput("Rounds played cannot exceed total rounds".into()));
+            return Err(PawnError::InvalidInput(
+                "Rounds played cannot exceed total rounds".into(),
+            ));
         }
 
         self.db
@@ -88,7 +100,10 @@ impl<D: Db> TournamentService<D> {
     }
 
     // Player operations
-    pub async fn get_players_by_tournament(&self, tournament_id: i32) -> Result<Vec<Player>, PawnError> {
+    pub async fn get_players_by_tournament(
+        &self,
+        tournament_id: i32,
+    ) -> Result<Vec<Player>, PawnError> {
         self.db
             .get_players_by_tournament(tournament_id)
             .await
@@ -98,11 +113,15 @@ impl<D: Db> TournamentService<D> {
     pub async fn create_player(&self, data: CreatePlayer) -> Result<Player, PawnError> {
         // Validate player data
         if data.name.trim().is_empty() {
-            return Err(PawnError::InvalidInput("Player name cannot be empty".into()));
+            return Err(PawnError::InvalidInput(
+                "Player name cannot be empty".into(),
+            ));
         }
         if let Some(rating) = data.rating {
             if rating < 0 || rating > 4000 {
-                return Err(PawnError::InvalidInput("Rating must be between 0 and 4000".into()));
+                return Err(PawnError::InvalidInput(
+                    "Rating must be between 0 and 4000".into(),
+                ));
             }
         }
 
@@ -113,7 +132,10 @@ impl<D: Db> TournamentService<D> {
     }
 
     // Game operations
-    pub async fn get_games_by_tournament(&self, tournament_id: i32) -> Result<Vec<Game>, PawnError> {
+    pub async fn get_games_by_tournament(
+        &self,
+        tournament_id: i32,
+    ) -> Result<Vec<Game>, PawnError> {
         self.db
             .get_games_by_tournament(tournament_id)
             .await
@@ -123,23 +145,27 @@ impl<D: Db> TournamentService<D> {
     pub async fn create_game(&self, data: CreateGame) -> Result<Game, PawnError> {
         // Validate game data
         if data.white_player_id == data.black_player_id {
-            return Err(PawnError::InvalidInput("Players cannot play against themselves".into()));
+            return Err(PawnError::InvalidInput(
+                "Players cannot play against themselves".into(),
+            ));
         }
         if data.round_number <= 0 {
-            return Err(PawnError::InvalidInput("Round number must be positive".into()));
+            return Err(PawnError::InvalidInput(
+                "Round number must be positive".into(),
+            ));
         }
         if !["1-0", "0-1", "1/2-1/2", "*"].contains(&data.result.as_str()) {
             return Err(PawnError::InvalidInput("Invalid game result".into()));
         }
 
-        self.db
-            .create_game(data)
-            .await
-            .map_err(PawnError::Database)
+        self.db.create_game(data).await.map_err(PawnError::Database)
     }
 
     // Statistics
-    pub async fn get_player_results(&self, tournament_id: i32) -> Result<Vec<PlayerResult>, PawnError> {
+    pub async fn get_player_results(
+        &self,
+        tournament_id: i32,
+    ) -> Result<Vec<PlayerResult>, PawnError> {
         self.db
             .get_player_results(tournament_id)
             .await
@@ -191,7 +217,6 @@ impl<D: Db> TournamentService<D> {
                 total_rounds: 15,
                 country_code: "RU".to_string(),
             },
-            
             // ONGOING TOURNAMENTS
             CreateTournament {
                 name: "Spring Rapid Open 2024".to_string(),
@@ -226,7 +251,6 @@ impl<D: Db> TournamentService<D> {
                 total_rounds: 6,
                 country_code: "GB".to_string(),
             },
-            
             // NOT STARTED TOURNAMENTS
             CreateTournament {
                 name: "Summer Grandmaster Invitational".to_string(),
@@ -254,7 +278,7 @@ impl<D: Db> TournamentService<D> {
 
         for tournament_data in tournaments {
             let tournament = self.create_tournament(tournament_data.clone()).await?;
-            
+
             // Populate each tournament with appropriate players and games
             match tournament_data.name.as_str() {
                 "Elite Grandmaster Championship 2024" => {
@@ -398,40 +422,208 @@ impl<D: Db> TournamentService<D> {
         // Complete round-robin tournament (7 rounds for 8 players)
         let games = vec![
             // Round 1
-            CreateGame { tournament_id, round_number: 1, white_player_id: player_ids[0], black_player_id: player_ids[1], result: "1/2-1/2".to_string() },
-            CreateGame { tournament_id, round_number: 1, white_player_id: player_ids[2], black_player_id: player_ids[3], result: "1-0".to_string() },
-            CreateGame { tournament_id, round_number: 1, white_player_id: player_ids[4], black_player_id: player_ids[5], result: "0-1".to_string() },
-            CreateGame { tournament_id, round_number: 1, white_player_id: player_ids[6], black_player_id: player_ids[7], result: "1-0".to_string() },
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[0],
+                black_player_id: player_ids[1],
+                result: "1/2-1/2".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[2],
+                black_player_id: player_ids[3],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[4],
+                black_player_id: player_ids[5],
+                result: "0-1".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[6],
+                black_player_id: player_ids[7],
+                result: "1-0".to_string(),
+            },
             // Round 2
-            CreateGame { tournament_id, round_number: 2, white_player_id: player_ids[1], black_player_id: player_ids[2], result: "1/2-1/2".to_string() },
-            CreateGame { tournament_id, round_number: 2, white_player_id: player_ids[3], black_player_id: player_ids[4], result: "0-1".to_string() },
-            CreateGame { tournament_id, round_number: 2, white_player_id: player_ids[5], black_player_id: player_ids[6], result: "1-0".to_string() },
-            CreateGame { tournament_id, round_number: 2, white_player_id: player_ids[7], black_player_id: player_ids[0], result: "1/2-1/2".to_string() },
+            CreateGame {
+                tournament_id,
+                round_number: 2,
+                white_player_id: player_ids[1],
+                black_player_id: player_ids[2],
+                result: "1/2-1/2".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 2,
+                white_player_id: player_ids[3],
+                black_player_id: player_ids[4],
+                result: "0-1".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 2,
+                white_player_id: player_ids[5],
+                black_player_id: player_ids[6],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 2,
+                white_player_id: player_ids[7],
+                black_player_id: player_ids[0],
+                result: "1/2-1/2".to_string(),
+            },
             // Round 3
-            CreateGame { tournament_id, round_number: 3, white_player_id: player_ids[0], black_player_id: player_ids[2], result: "1-0".to_string() },
-            CreateGame { tournament_id, round_number: 3, white_player_id: player_ids[1], black_player_id: player_ids[3], result: "1/2-1/2".to_string() },
-            CreateGame { tournament_id, round_number: 3, white_player_id: player_ids[4], black_player_id: player_ids[6], result: "1-0".to_string() },
-            CreateGame { tournament_id, round_number: 3, white_player_id: player_ids[5], black_player_id: player_ids[7], result: "1/2-1/2".to_string() },
+            CreateGame {
+                tournament_id,
+                round_number: 3,
+                white_player_id: player_ids[0],
+                black_player_id: player_ids[2],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 3,
+                white_player_id: player_ids[1],
+                black_player_id: player_ids[3],
+                result: "1/2-1/2".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 3,
+                white_player_id: player_ids[4],
+                black_player_id: player_ids[6],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 3,
+                white_player_id: player_ids[5],
+                black_player_id: player_ids[7],
+                result: "1/2-1/2".to_string(),
+            },
             // Round 4
-            CreateGame { tournament_id, round_number: 4, white_player_id: player_ids[2], black_player_id: player_ids[1], result: "0-1".to_string() },
-            CreateGame { tournament_id, round_number: 4, white_player_id: player_ids[3], black_player_id: player_ids[0], result: "1/2-1/2".to_string() },
-            CreateGame { tournament_id, round_number: 4, white_player_id: player_ids[6], black_player_id: player_ids[5], result: "1-0".to_string() },
-            CreateGame { tournament_id, round_number: 4, white_player_id: player_ids[7], black_player_id: player_ids[4], result: "1/2-1/2".to_string() },
+            CreateGame {
+                tournament_id,
+                round_number: 4,
+                white_player_id: player_ids[2],
+                black_player_id: player_ids[1],
+                result: "0-1".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 4,
+                white_player_id: player_ids[3],
+                black_player_id: player_ids[0],
+                result: "1/2-1/2".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 4,
+                white_player_id: player_ids[6],
+                black_player_id: player_ids[5],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 4,
+                white_player_id: player_ids[7],
+                black_player_id: player_ids[4],
+                result: "1/2-1/2".to_string(),
+            },
             // Round 5
-            CreateGame { tournament_id, round_number: 5, white_player_id: player_ids[0], black_player_id: player_ids[4], result: "1-0".to_string() },
-            CreateGame { tournament_id, round_number: 5, white_player_id: player_ids[1], black_player_id: player_ids[5], result: "1/2-1/2".to_string() },
-            CreateGame { tournament_id, round_number: 5, white_player_id: player_ids[2], black_player_id: player_ids[6], result: "1-0".to_string() },
-            CreateGame { tournament_id, round_number: 5, white_player_id: player_ids[3], black_player_id: player_ids[7], result: "1/2-1/2".to_string() },
+            CreateGame {
+                tournament_id,
+                round_number: 5,
+                white_player_id: player_ids[0],
+                black_player_id: player_ids[4],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 5,
+                white_player_id: player_ids[1],
+                black_player_id: player_ids[5],
+                result: "1/2-1/2".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 5,
+                white_player_id: player_ids[2],
+                black_player_id: player_ids[6],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 5,
+                white_player_id: player_ids[3],
+                black_player_id: player_ids[7],
+                result: "1/2-1/2".to_string(),
+            },
             // Round 6
-            CreateGame { tournament_id, round_number: 6, white_player_id: player_ids[4], black_player_id: player_ids[1], result: "1/2-1/2".to_string() },
-            CreateGame { tournament_id, round_number: 6, white_player_id: player_ids[5], black_player_id: player_ids[2], result: "0-1".to_string() },
-            CreateGame { tournament_id, round_number: 6, white_player_id: player_ids[6], black_player_id: player_ids[3], result: "1-0".to_string() },
-            CreateGame { tournament_id, round_number: 6, white_player_id: player_ids[7], black_player_id: player_ids[0], result: "1/2-1/2".to_string() },
+            CreateGame {
+                tournament_id,
+                round_number: 6,
+                white_player_id: player_ids[4],
+                black_player_id: player_ids[1],
+                result: "1/2-1/2".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 6,
+                white_player_id: player_ids[5],
+                black_player_id: player_ids[2],
+                result: "0-1".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 6,
+                white_player_id: player_ids[6],
+                black_player_id: player_ids[3],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 6,
+                white_player_id: player_ids[7],
+                black_player_id: player_ids[0],
+                result: "1/2-1/2".to_string(),
+            },
             // Round 7
-            CreateGame { tournament_id, round_number: 7, white_player_id: player_ids[0], black_player_id: player_ids[5], result: "1-0".to_string() },
-            CreateGame { tournament_id, round_number: 7, white_player_id: player_ids[1], black_player_id: player_ids[6], result: "1/2-1/2".to_string() },
-            CreateGame { tournament_id, round_number: 7, white_player_id: player_ids[2], black_player_id: player_ids[7], result: "1-0".to_string() },
-            CreateGame { tournament_id, round_number: 7, white_player_id: player_ids[3], black_player_id: player_ids[4], result: "1/2-1/2".to_string() },
+            CreateGame {
+                tournament_id,
+                round_number: 7,
+                white_player_id: player_ids[0],
+                black_player_id: player_ids[5],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 7,
+                white_player_id: player_ids[1],
+                black_player_id: player_ids[6],
+                result: "1/2-1/2".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 7,
+                white_player_id: player_ids[2],
+                black_player_id: player_ids[7],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 7,
+                white_player_id: player_ids[3],
+                black_player_id: player_ids[4],
+                result: "1/2-1/2".to_string(),
+            },
         ];
 
         for game_data in games {
@@ -550,10 +742,34 @@ impl<D: Db> TournamentService<D> {
         // Complete women's championship games (similar structure to elite championship)
         let games = vec![
             // Round 1
-            CreateGame { tournament_id, round_number: 1, white_player_id: player_ids[0], black_player_id: player_ids[1], result: "1-0".to_string() },
-            CreateGame { tournament_id, round_number: 1, white_player_id: player_ids[2], black_player_id: player_ids[3], result: "1/2-1/2".to_string() },
-            CreateGame { tournament_id, round_number: 1, white_player_id: player_ids[4], black_player_id: player_ids[5], result: "1-0".to_string() },
-            CreateGame { tournament_id, round_number: 1, white_player_id: player_ids[6], black_player_id: player_ids[7], result: "1-0".to_string() },
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[0],
+                black_player_id: player_ids[1],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[2],
+                black_player_id: player_ids[3],
+                result: "1/2-1/2".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[4],
+                black_player_id: player_ids[5],
+                result: "1-0".to_string(),
+            },
+            CreateGame {
+                tournament_id,
+                round_number: 1,
+                white_player_id: player_ids[6],
+                black_player_id: player_ids[7],
+                result: "1-0".to_string(),
+            },
             // Add remaining rounds (truncated for brevity)
         ];
 
@@ -569,7 +785,12 @@ impl<D: Db> TournamentService<D> {
         let players = vec![
             Self::create_basic_player(tournament_id, "Magnus Carlsen", Some(2845), Some("NO")),
             Self::create_basic_player(tournament_id, "Hikaru Nakamura", Some(2835), Some("US")),
-            Self::create_basic_player(tournament_id, "Maxime Vachier-Lagrave", Some(2820), Some("FR")),
+            Self::create_basic_player(
+                tournament_id,
+                "Maxime Vachier-Lagrave",
+                Some(2820),
+                Some("FR"),
+            ),
             Self::create_basic_player(tournament_id, "Levon Aronian", Some(2815), Some("AM")),
             Self::create_basic_player(tournament_id, "Wesley So", Some(2810), Some("US")),
             Self::create_basic_player(tournament_id, "Pentala Harikrishna", Some(2800), Some("IN")),
@@ -597,14 +818,14 @@ impl<D: Db> TournamentService<D> {
             for pair_idx in 0..(player_ids.len() / 2) {
                 let white_idx = (pair_idx + round - 1) % player_ids.len();
                 let black_idx = (pair_idx + round + 7) % player_ids.len();
-                
+
                 if white_idx != black_idx {
                     let result = match (round + pair_idx) % 3 {
                         0 => "1-0",
-                        1 => "0-1", 
+                        1 => "0-1",
                         _ => "1/2-1/2",
                     };
-                    
+
                     let game = CreateGame {
                         tournament_id,
                         round_number: round as i32,
@@ -648,9 +869,9 @@ impl<D: Db> TournamentService<D> {
             for pair_idx in 0..(player_ids.len() / 2) {
                 let white_idx = (pair_idx + round - 1) % player_ids.len();
                 let black_idx = (pair_idx + round + 5) % player_ids.len();
-                
+
                 if white_idx != black_idx {
-                    let result = if round == 4 && pair_idx > 2 { 
+                    let result = if round == 4 && pair_idx > 2 {
                         "*" // Some games still in progress
                     } else {
                         match (round + pair_idx) % 3 {
@@ -659,7 +880,7 @@ impl<D: Db> TournamentService<D> {
                             _ => "1/2-1/2",
                         }
                     };
-                    
+
                     let game = CreateGame {
                         tournament_id,
                         round_number: round as i32,
@@ -810,14 +1031,14 @@ impl<D: Db> TournamentService<D> {
             for pair_idx in 0..(player_ids.len() / 2) {
                 let white_idx = (pair_idx + round - 1) % player_ids.len();
                 let black_idx = (pair_idx + round + 4) % player_ids.len();
-                
+
                 if white_idx != black_idx {
                     let result = match (round + pair_idx) % 3 {
                         0 => "1-0",
                         1 => "0-1",
                         _ => "1/2-1/2",
                     };
-                    
+
                     let game = CreateGame {
                         tournament_id,
                         round_number: round as i32,
@@ -862,7 +1083,7 @@ impl<D: Db> TournamentService<D> {
             for pair_idx in 0..(player_ids.len() / 2) {
                 let white_idx = (pair_idx + round - 1) % player_ids.len();
                 let black_idx = (pair_idx + round + 6) % player_ids.len();
-                
+
                 if white_idx != black_idx {
                     let result = match (round + pair_idx) % 4 {
                         0 => "1-0",
@@ -870,7 +1091,7 @@ impl<D: Db> TournamentService<D> {
                         2 => "1/2-1/2",
                         _ => "1/2-1/2",
                     };
-                    
+
                     let game = CreateGame {
                         tournament_id,
                         round_number: round as i32,
@@ -890,9 +1111,19 @@ impl<D: Db> TournamentService<D> {
     async fn populate_gm_invitational(&self, tournament_id: i32) -> Result<(), PawnError> {
         let players = vec![
             Self::create_basic_player(tournament_id, "Sergey Karjakin", Some(2750), Some("RU")),
-            Self::create_basic_player(tournament_id, "Maxime Vachier-Lagrave", Some(2760), Some("FR")),
+            Self::create_basic_player(
+                tournament_id,
+                "Maxime Vachier-Lagrave",
+                Some(2760),
+                Some("FR"),
+            ),
             Self::create_basic_player(tournament_id, "Teimour Radjabov", Some(2740), Some("AZ")),
-            Self::create_basic_player(tournament_id, "Shakhriyar Mamedyarov", Some(2745), Some("AZ")),
+            Self::create_basic_player(
+                tournament_id,
+                "Shakhriyar Mamedyarov",
+                Some(2745),
+                Some("AZ"),
+            ),
             Self::create_basic_player(tournament_id, "Alexander Grischuk", Some(2735), Some("RU")),
             Self::create_basic_player(tournament_id, "Pentala Harikrishna", Some(2730), Some("IN")),
             Self::create_basic_player(tournament_id, "Vladimir Fedoseev", Some(2720), Some("RU")),

@@ -12,7 +12,7 @@ export const NEW_TOURNAMENT_FORM_STEPS = [
       description: 'form.steps.generalInfo.description',
     },
     component: GeneralInfoStep,
-    schema: TOURNAMENT_FORM_SCHEMA
+    schema: TOURNAMENT_FORM_SCHEMA,
   },
   {
     id: 2,

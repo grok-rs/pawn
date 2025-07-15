@@ -45,7 +45,9 @@ const ConfigurationStep = () => {
     'direct_encounter',
   ]);
   const [useFideDefaults, setUseFideDefaults] = useState(true);
-  const [timeControlTemplates, setTimeControlTemplates] = useState<TimeControlTemplate[]>([]);
+  const [timeControlTemplates, setTimeControlTemplates] = useState<
+    TimeControlTemplate[]
+  >([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
 
   const {
@@ -88,16 +90,18 @@ const ConfigurationStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Person color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                {t("form.sections.tournamentOfficials")}
+                {t('form.sections.tournamentOfficials')}
               </Typography>
             </Box>
             <TextField
               fullWidth
-              label={t("tournament.configuration.mainReferee")}
-              placeholder={t("form.placeholders.enterArbiterName")}
+              label={t('tournament.configuration.mainReferee')}
+              placeholder={t('form.placeholders.enterArbiterName')}
               {...register('mainReferee')}
               error={Boolean(errors.mainReferee)}
-              helperText={<CustomFormHelperText errorMessage={errors.mainReferee} />}
+              helperText={
+                <CustomFormHelperText errorMessage={errors.mainReferee} />
+              }
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -115,17 +119,17 @@ const ConfigurationStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <EmojiEvents color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                {t("form.sections.tournamentFormat")}
+                {t('form.sections.tournamentFormat')}
               </Typography>
             </Box>
             <StyledGrid container spacing={2}>
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <FormControl fullWidth error={Boolean(errors.type)}>
-                  <InputLabel>{t("tournament.configuration.type")}</InputLabel>
+                  <InputLabel>{t('tournament.configuration.type')}</InputLabel>
                   <Select
                     defaultValue="rapid"
                     {...register('type', { required: true })}
-                    label={t("tournament.configuration.type")}
+                    label={t('tournament.configuration.type')}
                     startAdornment={
                       <InputAdornment position="start">
                         <Speed color="action" />
@@ -133,21 +137,54 @@ const ConfigurationStep = () => {
                     }
                   >
                     <MenuItem value="rapid">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                        <span>{t("tournament.types.rapid")}</span>
-                        <Chip label={t("tournament.types.rapid.timeRange")} size="small" variant="outlined" />
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          width: '100%',
+                        }}
+                      >
+                        <span>{t('tournament.types.rapid')}</span>
+                        <Chip
+                          label={t('tournament.types.rapid.timeRange')}
+                          size="small"
+                          variant="outlined"
+                        />
                       </Box>
                     </MenuItem>
                     <MenuItem value="classical">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                        <span>{t("tournament.types.classic")}</span>
-                        <Chip label={t("tournament.types.classical.timeRange")} size="small" variant="outlined" />
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          width: '100%',
+                        }}
+                      >
+                        <span>{t('tournament.types.classic')}</span>
+                        <Chip
+                          label={t('tournament.types.classical.timeRange')}
+                          size="small"
+                          variant="outlined"
+                        />
                       </Box>
                     </MenuItem>
                     <MenuItem value="blitz">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                        <span>{t("tournament.types.blitz")}</span>
-                        <Chip label={t("tournament.types.blitz.timeRange")} size="small" variant="outlined" />
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          width: '100%',
+                        }}
+                      >
+                        <span>{t('tournament.types.blitz')}</span>
+                        <Chip
+                          label={t('tournament.types.blitz.timeRange')}
+                          size="small"
+                          variant="outlined"
+                        />
                       </Box>
                     </MenuItem>
                   </Select>
@@ -156,11 +193,13 @@ const ConfigurationStep = () => {
               </StyledGrid>
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <FormControl fullWidth error={Boolean(errors.pairingSystem)}>
-                  <InputLabel>{t("tournament.configuration.tournamentType")}</InputLabel>
+                  <InputLabel>
+                    {t('tournament.configuration.tournamentType')}
+                  </InputLabel>
                   <Select
                     defaultValue="swiss"
                     {...register('pairingSystem', { required: true })}
-                    label={t("tournament.configuration.tournamentType")}
+                    label={t('tournament.configuration.tournamentType')}
                     startAdornment={
                       <InputAdornment position="start">
                         <ViewModule color="action" />
@@ -169,33 +208,39 @@ const ConfigurationStep = () => {
                   >
                     <MenuItem value="swiss">
                       <Box>
-                        <Typography>{t("tournament.types.swiss")}</Typography>
+                        <Typography>{t('tournament.types.swiss')}</Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {t("tournament.types.swiss.description")}
+                          {t('tournament.types.swiss.description')}
                         </Typography>
                       </Box>
                     </MenuItem>
                     <MenuItem value="roundRobin">
                       <Box>
-                        <Typography>{t("tournament.types.roundRobin")}</Typography>
+                        <Typography>
+                          {t('tournament.types.roundRobin')}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {t("tournament.types.roundRobin.description")}
+                          {t('tournament.types.roundRobin.description')}
                         </Typography>
                       </Box>
                     </MenuItem>
                     <MenuItem value="knockout">
                       <Box>
-                        <Typography>{t("tournament.types.knockout")}</Typography>
+                        <Typography>
+                          {t('tournament.types.knockout')}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {t("tournament.types.knockout.description")}
+                          {t('tournament.types.knockout.description')}
                         </Typography>
                       </Box>
                     </MenuItem>
                     <MenuItem value="elimination">
                       <Box>
-                        <Typography>{t("tournament.types.elimination")}</Typography>
+                        <Typography>
+                          {t('tournament.types.elimination')}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {t("tournament.types.elimination.description")}
+                          {t('tournament.types.elimination.description')}
                         </Typography>
                       </Box>
                     </MenuItem>
@@ -212,16 +257,21 @@ const ConfigurationStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Timer color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                {t("form.sections.timeControlSettings")}
+                {t('form.sections.timeControlSettings')}
               </Typography>
             </Box>
             <StyledGrid container spacing={2}>
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
-                <FormControl fullWidth error={Boolean(errors.timeControlTemplate)}>
-                  <InputLabel>{t("tournament.configuration.timeControlTemplate")}</InputLabel>
+                <FormControl
+                  fullWidth
+                  error={Boolean(errors.timeControlTemplate)}
+                >
+                  <InputLabel>
+                    {t('tournament.configuration.timeControlTemplate')}
+                  </InputLabel>
                   <Select
                     {...register('timeControlTemplate')}
-                    label={t("tournament.configuration.timeControlTemplate")}
+                    label={t('tournament.configuration.timeControlTemplate')}
                     disabled={loadingTemplates}
                     startAdornment={
                       <InputAdornment position="start">
@@ -229,23 +279,28 @@ const ConfigurationStep = () => {
                       </InputAdornment>
                     }
                   >
-                    {timeControlTemplates.map((template) => (
+                    {timeControlTemplates.map(template => (
                       <MenuItem key={template.id} value={template.id}>
                         <Box>
                           <Typography>{template.name}</Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {template.description || t(`tournament.timeControl.${template.time_control_type}`)}
+                            {template.description ||
+                              t(
+                                `tournament.timeControl.${template.time_control_type}`
+                              )}
                           </Typography>
                         </Box>
                       </MenuItem>
                     ))}
                   </Select>
-                  <CustomFormHelperText errorMessage={errors.timeControlTemplate} />
+                  <CustomFormHelperText
+                    errorMessage={errors.timeControlTemplate}
+                  />
                 </FormControl>
               </StyledGrid>
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <TimeInputWithUnits
-                  label={t("tournament.configuration.additionalTime")}
+                  label={t('tournament.configuration.additionalTime')}
                   inputName="additionalTime"
                   unitName="additionalTimeUnit"
                   error={errors.additionalTime}
@@ -263,26 +318,27 @@ const ConfigurationStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Numbers color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                {t("form.sections.tournamentStructure")}
+                {t('form.sections.tournamentStructure')}
               </Typography>
             </Box>
             <TextField
               fullWidth
-              label={t("tournament.configuration.numberOfRounds")}
+              label={t('tournament.configuration.numberOfRounds')}
               type="number"
               {...register('rounds', { min: 1 })}
               error={Boolean(errors.rounds)}
               helperText={
                 errors.rounds ? (
                   <CustomFormHelperText errorMessage={errors.rounds} />
+                ) : selectedPairingSystem === 'swiss' ? (
+                  t('form.helpers.swissRounds')
+                ) : selectedPairingSystem === 'roundRobin' ? (
+                  t('form.helpers.roundRobinRounds')
+                ) : selectedPairingSystem === 'knockout' ||
+                  selectedPairingSystem === 'elimination' ? (
+                  t('form.helpers.knockoutRounds')
                 ) : (
-                  selectedPairingSystem === 'swiss' 
-                    ? t('form.helpers.swissRounds')
-                    : selectedPairingSystem === 'roundRobin'
-                    ? t('form.helpers.roundRobinRounds')
-                    : selectedPairingSystem === 'knockout' || selectedPairingSystem === 'elimination'
-                    ? t('form.helpers.knockoutRounds')
-                    : t('form.helpers.defaultRounds')
+                  t('form.helpers.defaultRounds')
                 )
               }
               slotProps={{
@@ -308,11 +364,11 @@ const ConfigurationStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <CompareArrows color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                {t("tiebreakSettings")}
+                {t('tiebreakSettings')}
               </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              {t("tiebreakConfiguration")}
+              {t('tiebreakConfiguration')}
             </Typography>
             <TiebreakConfig
               tiebreaks={tiebreaks}
@@ -329,25 +385,27 @@ const ConfigurationStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Settings color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                {t("form.sections.advancedRules")}
+                {t('form.sections.advancedRules')}
               </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              {t("form.sections.advancedRules.description")}
+              {t('form.sections.advancedRules.description')}
             </Typography>
             <StyledGrid container spacing={2}>
               {/* Forfeit Time */}
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <TextField
                   fullWidth
-                  label={t("tournament.configuration.forfeitTime")}
+                  label={t('tournament.configuration.forfeitTime')}
                   type="number"
                   defaultValue={30}
                   {...register('forfeitTimeMinutes')}
                   error={Boolean(errors.forfeitTimeMinutes)}
                   helperText={
                     errors.forfeitTimeMinutes ? (
-                      <CustomFormHelperText errorMessage={errors.forfeitTimeMinutes} />
+                      <CustomFormHelperText
+                        errorMessage={errors.forfeitTimeMinutes}
+                      />
                     ) : (
                       t('form.helpers.forfeitTime')
                     )
@@ -365,7 +423,7 @@ const ConfigurationStep = () => {
                       ),
                       endAdornment: (
                         <InputAdornment position="end">
-                          {t("tournament.timeUnits.minutes.short")}
+                          {t('tournament.timeUnits.minutes.short')}
                         </InputAdornment>
                       ),
                     },
@@ -376,11 +434,13 @@ const ConfigurationStep = () => {
               {/* Draw Offers Policy */}
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <FormControl fullWidth>
-                  <InputLabel>{t("tournament.configuration.drawOffersPolicy")}</InputLabel>
+                  <InputLabel>
+                    {t('tournament.configuration.drawOffersPolicy')}
+                  </InputLabel>
                   <Select
                     defaultValue="allowed"
                     {...register('drawOffersPolicy')}
-                    label={t("tournament.configuration.drawOffersPolicy")}
+                    label={t('tournament.configuration.drawOffersPolicy')}
                     startAdornment={
                       <InputAdornment position="start">
                         <Gavel color="action" />
@@ -389,25 +449,31 @@ const ConfigurationStep = () => {
                   >
                     <MenuItem value="allowed">
                       <Box>
-                        <Typography>{t("tournament.drawOffers.allowed")}</Typography>
+                        <Typography>
+                          {t('tournament.drawOffers.allowed')}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {t("tournament.drawOffers.allowed.description")}
+                          {t('tournament.drawOffers.allowed.description')}
                         </Typography>
                       </Box>
                     </MenuItem>
                     <MenuItem value="restricted">
                       <Box>
-                        <Typography>{t("tournament.drawOffers.restricted")}</Typography>
+                        <Typography>
+                          {t('tournament.drawOffers.restricted')}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {t("tournament.drawOffers.restricted.description")}
+                          {t('tournament.drawOffers.restricted.description')}
                         </Typography>
                       </Box>
                     </MenuItem>
                     <MenuItem value="prohibited">
                       <Box>
-                        <Typography>{t("tournament.drawOffers.prohibited")}</Typography>
+                        <Typography>
+                          {t('tournament.drawOffers.prohibited')}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {t("tournament.drawOffers.prohibited.description")}
+                          {t('tournament.drawOffers.prohibited.description')}
                         </Typography>
                       </Box>
                     </MenuItem>
@@ -418,11 +484,13 @@ const ConfigurationStep = () => {
               {/* Mobile Phone Policy */}
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <FormControl fullWidth>
-                  <InputLabel>{t("tournament.configuration.mobilePhonePolicy")}</InputLabel>
+                  <InputLabel>
+                    {t('tournament.configuration.mobilePhonePolicy')}
+                  </InputLabel>
                   <Select
                     defaultValue="prohibited"
                     {...register('mobilePhonePolicy')}
-                    label={t("tournament.configuration.mobilePhonePolicy")}
+                    label={t('tournament.configuration.mobilePhonePolicy')}
                     startAdornment={
                       <InputAdornment position="start">
                         <Phone color="action" />
@@ -431,25 +499,31 @@ const ConfigurationStep = () => {
                   >
                     <MenuItem value="allowed">
                       <Box>
-                        <Typography>{t("tournament.mobilePhone.allowed")}</Typography>
+                        <Typography>
+                          {t('tournament.mobilePhone.allowed')}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {t("tournament.mobilePhone.allowed.description")}
+                          {t('tournament.mobilePhone.allowed.description')}
                         </Typography>
                       </Box>
                     </MenuItem>
                     <MenuItem value="silent_only">
                       <Box>
-                        <Typography>{t("tournament.mobilePhone.silentOnly")}</Typography>
+                        <Typography>
+                          {t('tournament.mobilePhone.silentOnly')}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {t("tournament.mobilePhone.silentOnly.description")}
+                          {t('tournament.mobilePhone.silentOnly.description')}
                         </Typography>
                       </Box>
                     </MenuItem>
                     <MenuItem value="prohibited">
                       <Box>
-                        <Typography>{t("tournament.mobilePhone.prohibited")}</Typography>
+                        <Typography>
+                          {t('tournament.mobilePhone.prohibited')}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {t("tournament.mobilePhone.prohibited.description")}
+                          {t('tournament.mobilePhone.prohibited.description')}
                         </Typography>
                       </Box>
                     </MenuItem>
@@ -460,11 +534,13 @@ const ConfigurationStep = () => {
               {/* Late Entry Policy */}
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <FormControl fullWidth>
-                  <InputLabel>{t("tournament.configuration.lateEntryPolicy")}</InputLabel>
+                  <InputLabel>
+                    {t('tournament.configuration.lateEntryPolicy')}
+                  </InputLabel>
                   <Select
                     defaultValue="allowed"
                     {...register('lateEntryPolicy')}
-                    label={t("tournament.configuration.lateEntryPolicy")}
+                    label={t('tournament.configuration.lateEntryPolicy')}
                     startAdornment={
                       <InputAdornment position="start">
                         <PersonAdd color="action" />
@@ -473,25 +549,31 @@ const ConfigurationStep = () => {
                   >
                     <MenuItem value="allowed">
                       <Box>
-                        <Typography>{t("tournament.lateEntry.allowed")}</Typography>
+                        <Typography>
+                          {t('tournament.lateEntry.allowed')}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {t("tournament.lateEntry.allowed.description")}
+                          {t('tournament.lateEntry.allowed.description')}
                         </Typography>
                       </Box>
                     </MenuItem>
                     <MenuItem value="restricted">
                       <Box>
-                        <Typography>{t("tournament.lateEntry.restricted")}</Typography>
+                        <Typography>
+                          {t('tournament.lateEntry.restricted')}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {t("tournament.lateEntry.restricted.description")}
+                          {t('tournament.lateEntry.restricted.description')}
                         </Typography>
                       </Box>
                     </MenuItem>
                     <MenuItem value="prohibited">
                       <Box>
-                        <Typography>{t("tournament.lateEntry.prohibited")}</Typography>
+                        <Typography>
+                          {t('tournament.lateEntry.prohibited')}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {t("tournament.lateEntry.prohibited.description")}
+                          {t('tournament.lateEntry.prohibited.description')}
                         </Typography>
                       </Box>
                     </MenuItem>
@@ -503,11 +585,13 @@ const ConfigurationStep = () => {
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <TextField
                   fullWidth
-                  label={t("tournament.configuration.organizerName")}
-                  placeholder={t("form.placeholders.enterOrganizerName")}
+                  label={t('tournament.configuration.organizerName')}
+                  placeholder={t('form.placeholders.enterOrganizerName')}
                   {...register('organizerName')}
                   error={Boolean(errors.organizerName)}
-                  helperText={<CustomFormHelperText errorMessage={errors.organizerName} />}
+                  helperText={
+                    <CustomFormHelperText errorMessage={errors.organizerName} />
+                  }
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -521,17 +605,19 @@ const ConfigurationStep = () => {
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <TextField
                   fullWidth
-                  label={t("tournament.configuration.organizerEmail")}
-                  placeholder={t("form.placeholders.enterOrganizerEmail")}
+                  label={t('tournament.configuration.organizerEmail')}
+                  placeholder={t('form.placeholders.enterOrganizerEmail')}
                   type="email"
                   {...register('organizerEmail')}
                   error={Boolean(errors.organizerEmail)}
-                  helperText={<CustomFormHelperText errorMessage={errors.organizerEmail} />}
+                  helperText={
+                    <CustomFormHelperText
+                      errorMessage={errors.organizerEmail}
+                    />
+                  }
                   InputProps={{
                     startAdornment: (
-                      <InputAdornment position="start">
-                        @
-                      </InputAdornment>
+                      <InputAdornment position="start">@</InputAdornment>
                     ),
                   }}
                 />
@@ -543,14 +629,19 @@ const ConfigurationStep = () => {
                   fullWidth
                   multiline
                   rows={3}
-                  label={t("tournament.configuration.arbiterNotes")}
-                  placeholder={t("form.placeholders.enterArbiterNotes")}
+                  label={t('tournament.configuration.arbiterNotes')}
+                  placeholder={t('form.placeholders.enterArbiterNotes')}
                   {...register('arbiterNotes')}
                   error={Boolean(errors.arbiterNotes)}
-                  helperText={<CustomFormHelperText errorMessage={errors.arbiterNotes} />}
+                  helperText={
+                    <CustomFormHelperText errorMessage={errors.arbiterNotes} />
+                  }
                   InputProps={{
                     startAdornment: (
-                      <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
+                      <InputAdornment
+                        position="start"
+                        sx={{ alignSelf: 'flex-start', mt: 1 }}
+                      >
                         <Gavel color="action" />
                       </InputAdornment>
                     ),
@@ -566,4 +657,3 @@ const ConfigurationStep = () => {
 };
 
 export default ConfigurationStep;
-

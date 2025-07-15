@@ -48,12 +48,12 @@ import {
   Flag,
 } from '@mui/icons-material';
 import { commands } from '../../dto/bindings';
-import type { 
-  PlayerCategory, 
-  CreatePlayerCategory, 
-  Player, 
+import type {
+  PlayerCategory,
+  CreatePlayerCategory,
+  Player,
   PlayerCategoryAssignment,
-  AssignPlayerToCategory 
+  AssignPlayerToCategory,
 } from '../../dto/bindings';
 
 interface PlayerCategoryManagementProps {
@@ -69,7 +69,10 @@ const categorySchema = yup.object({
   max_rating: yup.number().nullable().min(0, 'Maximum rating must be positive'),
   min_age: yup.number().nullable().min(0, 'Minimum age must be positive'),
   max_age: yup.number().nullable().min(0, 'Maximum age must be positive'),
-  gender_restriction: yup.string().nullable().oneOf(['M', 'F', '', null], 'Invalid gender restriction'),
+  gender_restriction: yup
+    .string()
+    .nullable()
+    .oneOf(['M', 'F', '', null], 'Invalid gender restriction'),
 });
 
 type CategoryFormData = yup.InferType<typeof categorySchema>;
@@ -81,9 +84,13 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
 }) => {
   const { t } = useTranslation();
   const [categories, setCategories] = useState<PlayerCategory[]>([]);
-  const [assignments, setAssignments] = useState<Map<number, PlayerCategoryAssignment[]>>(new Map());
+  const [assignments, setAssignments] = useState<
+    Map<number, PlayerCategoryAssignment[]>
+  >(new Map());
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<PlayerCategory | null>(null);
+  const [editingCategory, setEditingCategory] = useState<PlayerCategory | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -112,7 +119,8 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const categoriesData = await commands.getTournamentCategories(tournamentId);
+      const categoriesData =
+        await commands.getTournamentCategories(tournamentId);
       setCategories(categoriesData);
       setError(null);
     } catch (err) {
@@ -164,7 +172,10 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
         max_rating: data.max_rating,
         min_age: data.min_age,
         max_age: data.max_age,
-        gender_restriction: data.gender_restriction && data.gender_restriction !== '' ? data.gender_restriction : null,
+        gender_restriction:
+          data.gender_restriction && data.gender_restriction !== ''
+            ? data.gender_restriction
+            : null,
       };
 
       console.log('Creating category with data:', categoryData);
@@ -193,7 +204,7 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
     if (!window.confirm(t('confirmDeleteCategory'))) {
       return;
     }
-    
+
     setLoading(true);
     try {
       await commands.deletePlayerCategory(categoryId);
@@ -226,22 +237,34 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
   const getEligiblePlayers = (category: PlayerCategory): Player[] => {
     return players.filter(player => {
       // Check rating range
-      if (category.min_rating && player.rating && player.rating < category.min_rating) {
+      if (
+        category.min_rating &&
+        player.rating &&
+        player.rating < category.min_rating
+      ) {
         return false;
       }
-      if (category.max_rating && player.rating && player.rating > category.max_rating) {
+      if (
+        category.max_rating &&
+        player.rating &&
+        player.rating > category.max_rating
+      ) {
         return false;
       }
 
       // Check gender restriction
-      if (category.gender_restriction && player.gender !== category.gender_restriction) {
+      if (
+        category.gender_restriction &&
+        player.gender !== category.gender_restriction
+      ) {
         return false;
       }
 
       // Check age range (would need birth_date calculation)
       if (category.min_age || category.max_age) {
         if (!player.birth_date) return false;
-        const age = new Date().getFullYear() - new Date(player.birth_date).getFullYear();
+        const age =
+          new Date().getFullYear() - new Date(player.birth_date).getFullYear();
         if (category.min_age && age < category.min_age) return false;
         if (category.max_age && age > category.max_age) return false;
       }
@@ -252,7 +275,7 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
 
   const formatCategoryRules = (category: PlayerCategory): string[] => {
     const rules: string[] = [];
-    
+
     if (category.min_rating || category.max_rating) {
       if (category.min_rating && category.max_rating) {
         rules.push(`Rating: ${category.min_rating}-${category.max_rating}`);
@@ -274,7 +297,9 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
     }
 
     if (category.gender_restriction) {
-      rules.push(`${t('gender')}: ${t(`gender.${category.gender_restriction}`)}`);
+      rules.push(
+        `${t('gender')}: ${t(`gender.${category.gender_restriction}`)}`
+      );
     }
 
     return rules;
@@ -289,8 +314,20 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
       )}
 
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6" component="h2" color="text.primary" sx={{ fontWeight: 600 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3,
+        }}
+      >
+        <Typography
+          variant="h6"
+          component="h2"
+          color="text.primary"
+          sx={{ fontWeight: 600 }}
+        >
           {t('playerCategories')} ({categories.length} {t('categories')})
         </Typography>
         <Button
@@ -312,20 +349,31 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             {t('createCategoriesDescription')}
           </Typography>
-          <Button variant="outlined" startIcon={<Add />} onClick={handleCreateCategory}>
+          <Button
+            variant="outlined"
+            startIcon={<Add />}
+            onClick={handleCreateCategory}
+          >
             {t('createFirstCategory')}
           </Button>
         </Paper>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {categories.map((category) => {
+          {categories.map(category => {
             const eligiblePlayers = getEligiblePlayers(category);
             const rules = formatCategoryRules(category);
-            
+
             return (
               <Card key={category.id} variant="outlined">
                 <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      mb: 2,
+                    }}
+                  >
                     <Box>
                       <Typography variant="h6" component="h3">
                         {category.name}
@@ -337,10 +385,17 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
                       )}
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                      <IconButton size="small" onClick={() => handleEditCategory(category)}>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleEditCategory(category)}
+                      >
                         <Edit />
                       </IconButton>
-                      <IconButton size="small" color="error" onClick={() => handleDeleteCategory(category.id)}>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDeleteCategory(category.id)}
+                      >
                         <Delete />
                       </IconButton>
                     </Box>
@@ -354,7 +409,12 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
                       </Typography>
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                         {rules.map((rule, index) => (
-                          <Chip key={index} label={rule} size="small" variant="outlined" />
+                          <Chip
+                            key={index}
+                            label={rule}
+                            size="small"
+                            variant="outlined"
+                          />
                         ))}
                       </Box>
                     </Box>
@@ -363,7 +423,9 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
                   {/* Eligible Players */}
                   <Accordion>
                     <AccordionSummary expandIcon={<ExpandMore />}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                      >
                         <Groups />
                         <Typography variant="subtitle2">
                           {t('eligiblePlayers')} ({eligiblePlayers.length})
@@ -377,23 +439,54 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
                         </Typography>
                       ) : (
                         <List dense>
-                          {eligiblePlayers.map((player) => (
+                          {eligiblePlayers.map(player => (
                             <ListItem key={player.id}>
                               <ListItemText
                                 primary={
-                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Box
+                                    sx={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: 1,
+                                    }}
+                                  >
                                     <Person fontSize="small" />
-                                    <Typography variant="body2">{player.name}</Typography>
+                                    <Typography variant="body2">
+                                      {player.name}
+                                    </Typography>
                                     {player.title && (
-                                      <Chip label={t(`title.${player.title}`, player.title)} size="small" color="secondary" />
+                                      <Chip
+                                        label={t(
+                                          `title.${player.title}`,
+                                          player.title
+                                        )}
+                                        size="small"
+                                        color="secondary"
+                                      />
                                     )}
                                     {player.rating && (
-                                      <Chip label={player.rating} size="small" color="primary" variant="outlined" />
+                                      <Chip
+                                        label={player.rating}
+                                        size="small"
+                                        color="primary"
+                                        variant="outlined"
+                                      />
                                     )}
                                     {player.country_code && (
-                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                      <Box
+                                        sx={{
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: 0.5,
+                                        }}
+                                      >
                                         <Flag fontSize="small" />
-                                        <Typography variant="caption">{t(`country.${player.country_code}`, player.country_code)}</Typography>
+                                        <Typography variant="caption">
+                                          {t(
+                                            `country.${player.country_code}`,
+                                            player.country_code
+                                          )}
+                                        </Typography>
                                       </Box>
                                     )}
                                   </Box>
@@ -403,7 +496,9 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
                                 <Button
                                   size="small"
                                   variant="outlined"
-                                  onClick={() => handleAssignPlayer(player.id, category.id)}
+                                  onClick={() =>
+                                    handleAssignPlayer(player.id, category.id)
+                                  }
                                 >
                                   {t('assign')}
                                 </Button>
@@ -429,7 +524,12 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
       )}
 
       {/* Category Form Dialog */}
-      <Dialog open={categoryFormOpen} onClose={() => setCategoryFormOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={categoryFormOpen}
+        onClose={() => setCategoryFormOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <Box component="form" onSubmit={handleSubmit(onSubmitCategory)}>
           <DialogTitle>
             {editingCategory ? t('editCategory') : t('createNewCategory')}
@@ -488,7 +588,11 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
                       error={!!errors.min_rating}
                       helperText={errors.min_rating?.message}
                       value={field.value || ''}
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                      onChange={e =>
+                        field.onChange(
+                          e.target.value ? Number(e.target.value) : null
+                        )
+                      }
                     />
                   )}
                 />
@@ -507,7 +611,11 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
                       error={!!errors.max_rating}
                       helperText={errors.max_rating?.message}
                       value={field.value || ''}
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                      onChange={e =>
+                        field.onChange(
+                          e.target.value ? Number(e.target.value) : null
+                        )
+                      }
                     />
                   )}
                 />
@@ -526,7 +634,11 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
                       error={!!errors.min_age}
                       helperText={errors.min_age?.message}
                       value={field.value || ''}
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                      onChange={e =>
+                        field.onChange(
+                          e.target.value ? Number(e.target.value) : null
+                        )
+                      }
                     />
                   )}
                 />
@@ -545,7 +657,11 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
                       error={!!errors.max_age}
                       helperText={errors.max_age?.message}
                       value={field.value || ''}
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                      onChange={e =>
+                        field.onChange(
+                          e.target.value ? Number(e.target.value) : null
+                        )
+                      }
                     />
                   )}
                 />
@@ -573,7 +689,11 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
             </Grid>
           </DialogContent>
           <DialogActions>
-            <Button type="button" onClick={() => setCategoryFormOpen(false)} disabled={loading}>
+            <Button
+              type="button"
+              onClick={() => setCategoryFormOpen(false)}
+              disabled={loading}
+            >
               {t('cancel')}
             </Button>
             <Button
@@ -581,7 +701,11 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
               variant="contained"
               disabled={loading || isSubmitting}
             >
-              {loading || isSubmitting ? 'Creating...' : (editingCategory ? t('updateCategory') : t('createCategory'))}
+              {loading || isSubmitting
+                ? 'Creating...'
+                : editingCategory
+                  ? t('updateCategory')
+                  : t('createCategory')}
             </Button>
           </DialogActions>
         </Box>

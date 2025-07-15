@@ -1,6 +1,6 @@
-import { Box, useTheme, useMediaQuery } from "@mui/material";
-import { ReactNode, useState } from "react";
-import Sidebar from "../Sidebar";
+import { Box, useTheme, useMediaQuery } from '@mui/material';
+import { ReactNode, useState } from 'react';
+import Sidebar from '../Sidebar';
 
 type BaseLayoutProps = {
   children: ReactNode;
@@ -16,7 +16,13 @@ const BaseLayout = ({ children }: BaseLayoutProps) => {
   };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: theme.palette.background.default }}>
+    <Box
+      sx={{
+        display: 'flex',
+        minHeight: '100vh',
+        backgroundColor: theme.palette.background.default,
+      }}
+    >
       <Sidebar open={sidebarOpen} onToggle={handleSidebarToggle} />
       <Box
         component="main"

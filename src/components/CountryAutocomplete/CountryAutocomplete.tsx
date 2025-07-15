@@ -1,9 +1,9 @@
-import { Autocomplete, TextField } from "@mui/material";
-import { ReactNode } from "react";
-import { Control, Controller } from "react-hook-form";
+import { Autocomplete, TextField } from '@mui/material';
+import { ReactNode } from 'react';
+import { Control, Controller } from 'react-hook-form';
 
-import { TournamentFormValues } from "../NewTournamentForm/types";
-import { countries } from "./constants";
+import { TournamentFormValues } from '../NewTournamentForm/types';
+import { countries } from './constants';
 
 interface CountryAutocompleteProps {
   control: Control<TournamentFormValues>;
@@ -28,10 +28,10 @@ const CountryAutocomplete = ({
         <Autocomplete
           {...field}
           options={countries}
-          getOptionLabel={(option) => option.label}
-          onChange={(_, value) => field.onChange(value ? value.label : "")}
-          value={countries.find((c) => c.label === field.value) || null}
-          renderInput={(params) => (
+          getOptionLabel={option => option.label}
+          onChange={(_, value) => field.onChange(value ? value.label : '')}
+          value={countries.find(c => c.label === field.value) || null}
+          renderInput={params => (
             <TextField
               {...params}
               label={label}

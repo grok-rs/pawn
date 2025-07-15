@@ -53,10 +53,10 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import { commands } from '../../dto/bindings';
-import type { 
-  Player, 
-  RatingHistory, 
-  CreateRatingHistory 
+import type {
+  Player,
+  RatingHistory,
+  CreateRatingHistory,
 } from '../../dto/bindings';
 
 interface RatingHistoryDialogProps {
@@ -67,7 +67,11 @@ interface RatingHistoryDialogProps {
 
 const ratingSchema = yup.object({
   rating_type: yup.string().required('Rating type is required'),
-  rating: yup.number().required('Rating is required').min(0, 'Rating must be positive').max(4000, 'Rating must be realistic'),
+  rating: yup
+    .number()
+    .required('Rating is required')
+    .min(0, 'Rating must be positive')
+    .max(4000, 'Rating must be realistic'),
   is_provisional: yup.boolean(),
   effective_date: yup.mixed().required('Date is required'),
 });
@@ -143,8 +147,8 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
         rating_type: data.rating_type,
         rating: data.rating!,
         is_provisional: data.is_provisional || false,
-        effective_date: dayjs.isDayjs(data.effective_date) 
-          ? data.effective_date.format('YYYY-MM-DD') 
+        effective_date: dayjs.isDayjs(data.effective_date)
+          ? data.effective_date.format('YYYY-MM-DD')
           : dayjs(data.effective_date).format('YYYY-MM-DD'),
       };
 
@@ -181,8 +185,10 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
 
     // Sort by effective date for each type
     Object.keys(groupedRatings).forEach(type => {
-      groupedRatings[type].sort((a, b) => 
-        new Date(b.effective_date).getTime() - new Date(a.effective_date).getTime()
+      groupedRatings[type].sort(
+        (a, b) =>
+          new Date(b.effective_date).getTime() -
+          new Date(a.effective_date).getTime()
       );
     });
 
@@ -192,7 +198,7 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
   const getCurrentRatings = () => {
     const groupedRatings = getRatingsByType();
     const currentRatings: Record<string, RatingHistory> = {};
-    
+
     Object.keys(groupedRatings).forEach(type => {
       if (groupedRatings[type].length > 0) {
         currentRatings[type] = groupedRatings[type][0]; // Most recent
@@ -225,8 +231,13 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
   };
 
   const getRatingTypeInfo = (type: string) => {
-    return RATING_TYPES.find(rt => rt.value === type) || 
-           { value: type, label: type.toUpperCase(), icon: <History /> };
+    return (
+      RATING_TYPES.find(rt => rt.value === type) || {
+        value: type,
+        label: type.toUpperCase(),
+        icon: <History />,
+      }
+    );
   };
 
   const groupedRatings = getRatingsByType();
@@ -258,7 +269,9 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
                 <Grid size={12}>
                   <Card variant="outlined">
                     <CardContent sx={{ textAlign: 'center', py: 4 }}>
-                      <History sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
+                      <History
+                        sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }}
+                      />
                       <Typography variant="body1" color="text.secondary">
                         {t('noRatingHistory')}
                       </Typography>
@@ -269,32 +282,74 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
                 Object.entries(currentRatings).map(([type, rating]) => {
                   const typeInfo = getRatingTypeInfo(type);
                   const trend = getRatingTrend(type);
-                  
+
                   return (
-                    <Grid size={{ mobile: 12, tablet: 6, laptop: 4 }} key={type}>
+                    <Grid
+                      size={{ mobile: 12, tablet: 6, laptop: 4 }}
+                      key={type}
+                    >
                       <Card variant="outlined">
                         <CardContent>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                              mb: 1,
+                            }}
+                          >
                             {typeInfo.icon}
-                            <Typography variant="subtitle2">{typeInfo.label}</Typography>
+                            <Typography variant="subtitle2">
+                              {typeInfo.label}
+                            </Typography>
                           </Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                            }}
+                          >
                             <Typography variant="h4" color="primary">
                               {rating.rating}
                             </Typography>
                             {rating.is_provisional && (
-                              <Chip label={t('provisional')} size="small" color="warning" />
+                              <Chip
+                                label={t('provisional')}
+                                size="small"
+                                color="warning"
+                              />
                             )}
                             {trend && (
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 0.5,
+                                }}
+                              >
                                 {trend.direction === 'up' ? (
-                                  <TrendingUp color="success" fontSize="small" />
+                                  <TrendingUp
+                                    color="success"
+                                    fontSize="small"
+                                  />
                                 ) : trend.direction === 'down' ? (
-                                  <TrendingDown color="error" fontSize="small" />
+                                  <TrendingDown
+                                    color="error"
+                                    fontSize="small"
+                                  />
                                 ) : null}
                                 {trend.change > 0 && (
-                                  <Typography variant="caption" color={trend.direction === 'up' ? 'success.main' : 'error.main'}>
-                                    {trend.direction === 'up' ? '+' : '-'}{trend.change}
+                                  <Typography
+                                    variant="caption"
+                                    color={
+                                      trend.direction === 'up'
+                                        ? 'success.main'
+                                        : 'error.main'
+                                    }
+                                  >
+                                    {trend.direction === 'up' ? '+' : '-'}
+                                    {trend.change}
                                   </Typography>
                                 )}
                               </Box>
@@ -325,18 +380,18 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
                 label={t('history')}
                 iconPosition="start"
               />
-              <Tab
-                icon={<Add />}
-                label={t('addRating')}
-                iconPosition="start"
-              />
+              <Tab icon={<Add />} label={t('addRating')} iconPosition="start" />
             </Tabs>
 
             {/* Tab Panel 0: History */}
             {tabValue === 0 && (
               <Box>
                 {Object.keys(groupedRatings).length === 0 ? (
-                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ textAlign: 'center', py: 4 }}
+                  >
                     {t('noRatingHistoryFound')}
                   </Typography>
                 ) : (
@@ -345,10 +400,22 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
                     return (
                       <Card key={type} variant="outlined" sx={{ mb: 2 }}>
                         <CardContent>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                              mb: 2,
+                            }}
+                          >
                             {typeInfo.icon}
-                            <Typography variant="h6">{typeInfo.label}</Typography>
-                            <Chip label={`${ratings.length} ${t('entries')}`} size="small" />
+                            <Typography variant="h6">
+                              {typeInfo.label}
+                            </Typography>
+                            <Chip
+                              label={`${ratings.length} ${t('entries')}`}
+                              size="small"
+                            />
                           </Box>
                           <TableContainer component={Paper} variant="outlined">
                             <Table size="small">
@@ -363,8 +430,10 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
                               <TableBody>
                                 {ratings.map((rating, index) => {
                                   const previousRating = ratings[index + 1];
-                                  const change = previousRating ? rating.rating - previousRating.rating : null;
-                                  
+                                  const change = previousRating
+                                    ? rating.rating - previousRating.rating
+                                    : null;
+
                                   return (
                                     <TableRow key={rating.id}>
                                       <TableCell>
@@ -377,24 +446,51 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
                                       </TableCell>
                                       <TableCell>
                                         {rating.is_provisional ? (
-                                          <Chip label={t('provisional')} size="small" color="warning" />
+                                          <Chip
+                                            label={t('provisional')}
+                                            size="small"
+                                            color="warning"
+                                          />
                                         ) : (
-                                          <Chip label={t('established')} size="small" color="success" />
+                                          <Chip
+                                            label={t('established')}
+                                            size="small"
+                                            color="success"
+                                          />
                                         )}
                                       </TableCell>
                                       <TableCell>
                                         {change !== null && (
-                                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                          <Box
+                                            sx={{
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              gap: 0.5,
+                                            }}
+                                          >
                                             {change > 0 ? (
-                                              <TrendingUp color="success" fontSize="small" />
+                                              <TrendingUp
+                                                color="success"
+                                                fontSize="small"
+                                              />
                                             ) : change < 0 ? (
-                                              <TrendingDown color="error" fontSize="small" />
+                                              <TrendingDown
+                                                color="error"
+                                                fontSize="small"
+                                              />
                                             ) : null}
-                                            <Typography 
-                                              variant="body2" 
-                                              color={change > 0 ? 'success.main' : change < 0 ? 'error.main' : 'text.secondary'}
+                                            <Typography
+                                              variant="body2"
+                                              color={
+                                                change > 0
+                                                  ? 'success.main'
+                                                  : change < 0
+                                                    ? 'error.main'
+                                                    : 'text.secondary'
+                                              }
                                             >
-                                              {change > 0 ? '+' : ''}{change}
+                                              {change > 0 ? '+' : ''}
+                                              {change}
                                             </Typography>
                                           </Box>
                                         )}
@@ -437,9 +533,15 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
                           helperText={errors.rating_type?.message}
                           required
                         >
-                          {RATING_TYPES.map((type) => (
+                          {RATING_TYPES.map(type => (
                             <MenuItem key={type.value} value={type.value}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1,
+                                }}
+                              >
                                 {type.icon}
                                 {type.label}
                               </Box>
@@ -464,7 +566,13 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
                           helperText={errors.rating?.message}
                           required
                           value={field.value || ''}
-                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                          onChange={e =>
+                            field.onChange(
+                              e.target.value
+                                ? Number(e.target.value)
+                                : undefined
+                            )
+                          }
                         />
                       )}
                     />
@@ -500,10 +608,7 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
                       render={({ field }) => (
                         <FormControlLabel
                           control={
-                            <Checkbox
-                              {...field}
-                              checked={field.value}
-                            />
+                            <Checkbox {...field} checked={field.value} />
                           }
                           label={t('provisionalRating')}
                         />
@@ -512,12 +617,20 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
                   </Grid>
 
                   <Grid size={12}>
-                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        gap: 2,
+                        justifyContent: 'flex-end',
+                      }}
+                    >
                       <Button
                         type="submit"
                         variant="contained"
                         disabled={loading}
-                        startIcon={loading ? <CircularProgress size={16} /> : <Add />}
+                        startIcon={
+                          loading ? <CircularProgress size={16} /> : <Add />
+                        }
                       >
                         {t('addRating')}
                       </Button>

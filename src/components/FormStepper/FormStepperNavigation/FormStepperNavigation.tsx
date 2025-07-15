@@ -21,8 +21,14 @@ type Props = {
 };
 
 const FormStepperNavigation = ({ component: NavigationComponent }: Props) => {
-  const { onCancel, onStepBack, isSubmitButtonDisabled, isLastStep, isFirstStep, isSubmitting } =
-    useFormStepperContext();
+  const {
+    onCancel,
+    onStepBack,
+    isSubmitButtonDisabled,
+    isLastStep,
+    isFirstStep,
+    isSubmitting,
+  } = useFormStepperContext();
 
   return (
     <>
@@ -37,7 +43,12 @@ const FormStepperNavigation = ({ component: NavigationComponent }: Props) => {
         />
       ) : (
         <Stack direction="row" marginTop="auto" spacing={2}>
-          <Button fullWidth variant="outlined" disabled={isSubmitting} onClick={onCancel}>
+          <Button
+            fullWidth
+            variant="outlined"
+            disabled={isSubmitting}
+            onClick={onCancel}
+          >
             Cancel
           </Button>
           <LoadingButton

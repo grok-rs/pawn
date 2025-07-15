@@ -30,12 +30,16 @@ import type { TournamentFormValues } from '../NewTournamentForm/types';
 
 interface TournamentPreviewProps {
   formData: TournamentFormValues;
-  timeControlTemplates?: Array<{ id: number; name: string; description?: string }>;
+  timeControlTemplates?: Array<{
+    id: number;
+    name: string;
+    description?: string;
+  }>;
 }
 
-const TournamentPreview: React.FC<TournamentPreviewProps> = ({ 
-  formData, 
-  timeControlTemplates = [] 
+const TournamentPreview: React.FC<TournamentPreviewProps> = ({
+  formData,
+  timeControlTemplates = [],
 }) => {
   const { t } = useTranslation();
 
@@ -85,7 +89,10 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
         prohibited: t('tournament.lateEntry.prohibited'),
       },
     };
-    return policyMaps[type][policy as keyof typeof policyMaps[typeof type]] || policy;
+    return (
+      policyMaps[type][policy as keyof (typeof policyMaps)[typeof type]] ||
+      policy
+    );
   };
 
   return (
@@ -93,13 +100,15 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
       <Typography variant="h5" fontWeight={700} gutterBottom sx={{ mb: 3 }}>
         {t('form.preview.title')}
       </Typography>
-      
+
       <Grid container spacing={3}>
         {/* Basic Information */}
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
+              >
                 <EmojiEvents color="primary" />
                 <Typography variant="h6" fontWeight={600}>
                   {t('form.sections.basicInformation')}
@@ -139,7 +148,9 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
                   </ListItemIcon>
                   <ListItemText
                     primary={t('tournament.configuration.mainReferee')}
-                    secondary={formData.mainReferee || t('form.placeholders.notSet')}
+                    secondary={
+                      formData.mainReferee || t('form.placeholders.notSet')
+                    }
                   />
                 </ListItem>
               </List>
@@ -151,7 +162,9 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
+              >
                 <ViewModule color="primary" />
                 <Typography variant="h6" fontWeight={600}>
                   {t('form.sections.tournamentFormat')}
@@ -165,11 +178,11 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
                   <ListItemText
                     primary={t('tournament.configuration.type')}
                     secondary={
-                      <Chip 
-                        label={getTypeLabel(formData.type)} 
-                        size="small" 
-                        color="primary" 
-                        variant="outlined" 
+                      <Chip
+                        label={getTypeLabel(formData.type)}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
                       />
                     }
                   />
@@ -181,11 +194,11 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
                   <ListItemText
                     primary={t('tournament.configuration.tournamentType')}
                     secondary={
-                      <Chip 
-                        label={getPairingSystemLabel(formData.pairingSystem)} 
-                        size="small" 
-                        color="secondary" 
-                        variant="outlined" 
+                      <Chip
+                        label={getPairingSystemLabel(formData.pairingSystem)}
+                        size="small"
+                        color="secondary"
+                        variant="outlined"
                       />
                     }
                   />
@@ -205,7 +218,9 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
                   </ListItemIcon>
                   <ListItemText
                     primary={t('tournament.configuration.timeControlTemplate')}
-                    secondary={selectedTimeControl?.name || t('form.placeholders.notSet')}
+                    secondary={
+                      selectedTimeControl?.name || t('form.placeholders.notSet')
+                    }
                   />
                 </ListItem>
               </List>
@@ -217,7 +232,9 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
         <Grid item xs={12}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
+              >
                 <Settings color="primary" />
                 <Typography variant="h6" fontWeight={600}>
                   {t('form.sections.advancedRules')}
@@ -230,7 +247,8 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
                       {t('tournament.configuration.forfeitTime')}
                     </Typography>
                     <Typography variant="h6" fontWeight={600}>
-                      {formData.forfeitTimeMinutes} {t('tournament.timeUnits.minutes.short')}
+                      {formData.forfeitTimeMinutes}{' '}
+                      {t('tournament.timeUnits.minutes.short')}
                     </Typography>
                   </Paper>
                 </Grid>
@@ -266,7 +284,9 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
                 </Grid>
               </Grid>
 
-              {(formData.organizerName || formData.organizerEmail || formData.arbiterNotes) && (
+              {(formData.organizerName ||
+                formData.organizerEmail ||
+                formData.arbiterNotes) && (
                 <>
                   <Divider sx={{ my: 2 }} />
                   <Grid container spacing={2}>

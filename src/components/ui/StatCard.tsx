@@ -1,4 +1,12 @@
-import { Card, CardContent, Box, Typography, Avatar, useTheme, Skeleton } from '@mui/material';
+import {
+  Card,
+  CardContent,
+  Box,
+  Typography,
+  Avatar,
+  useTheme,
+  Skeleton,
+} from '@mui/material';
 import { ReactNode } from 'react';
 
 interface StatCardProps {
@@ -10,10 +18,17 @@ interface StatCardProps {
   loading?: boolean;
 }
 
-const StatCard = ({ title, value, icon, color, gradient = false, loading = false }: StatCardProps) => {
+const StatCard = ({
+  title,
+  value,
+  icon,
+  color,
+  gradient = false,
+  loading = false,
+}: StatCardProps) => {
   const theme = useTheme();
   const displayColor = color || theme.palette.primary.main;
-  
+
   if (loading) {
     return (
       <Card>

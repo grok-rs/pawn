@@ -53,7 +53,11 @@ import {
   Assignment,
 } from '@mui/icons-material';
 import { commands } from '../../dto/bindings';
-import type { TournamentDetails, StandingsCalculationResult, Player } from '../../dto/bindings';
+import type {
+  TournamentDetails,
+  StandingsCalculationResult,
+  Player,
+} from '../../dto/bindings';
 import BaseLayout from '../../components/BaseLayout';
 import { StandingsTable } from '../../components/StandingsTable';
 import RoundManager from '../../components/RoundManager';
@@ -96,8 +100,11 @@ const TournamentInfoPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const { t } = useTranslation();
-  const [tournamentDetails, setTournamentDetails] = useState<TournamentDetails | null>(null);
-  const [standings, setStandings] = useState<StandingsCalculationResult | null>(null);
+  const [tournamentDetails, setTournamentDetails] =
+    useState<TournamentDetails | null>(null);
+  const [standings, setStandings] = useState<StandingsCalculationResult | null>(
+    null
+  );
   const [enhancedPlayers, setEnhancedPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingStandings, setLoadingStandings] = useState(false);
@@ -108,7 +115,9 @@ const TournamentInfoPage: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [actualRoundsPlayed, setActualRoundsPlayed] = useState<number>(0);
-  const [actualPlayerCount, setActualPlayerCount] = useState<number | null>(null);
+  const [actualPlayerCount, setActualPlayerCount] = useState<number | null>(
+    null
+  );
   const [completedGamesCount, setCompletedGamesCount] = useState<number>(0);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -135,13 +144,13 @@ const TournamentInfoPage: React.FC = () => {
       const details = await commands.getTournamentDetails(tournamentId);
       setTournamentDetails(details);
       setHasMockData(details.players.length > 0);
-      
+
       // Fetch standings and enhanced players if we have players
       if (details.players.length > 0) {
         fetchStandings(tournamentId);
         fetchEnhancedPlayers(tournamentId);
       }
-      
+
       // Always fetch actual tournament stats
       fetchActualTournamentStats(tournamentId, details.games);
     } catch (err) {
@@ -167,10 +176,13 @@ const TournamentInfoPage: React.FC = () => {
 
   const fetchEnhancedPlayers = async (tournamentId: number) => {
     try {
-      const playersData = await commands.getPlayersByTournamentEnhanced(tournamentId);
+      const playersData =
+        await commands.getPlayersByTournamentEnhanced(tournamentId);
       setEnhancedPlayers(playersData);
       // Set actual player count (active players only)
-      const activePlayers = playersData.filter(p => p.status === 'active' || !p.status);
+      const activePlayers = playersData.filter(
+        p => p.status === 'active' || !p.status
+      );
       setActualPlayerCount(activePlayers.length);
     } catch (err) {
       console.error('Failed to fetch enhanced players:', err);
@@ -180,16 +192,23 @@ const TournamentInfoPage: React.FC = () => {
     }
   };
 
-  const fetchActualTournamentStats = async (tournamentId: number, gamesList?: any[]) => {
+  const fetchActualTournamentStats = async (
+    tournamentId: number,
+    gamesList?: any[]
+  ) => {
     try {
       // Fetch rounds to calculate actual rounds played
       const rounds = await commands.getRoundsByTournament(tournamentId);
-      const playedRounds = rounds.filter(round => round.status === 'Completed').length;
+      const playedRounds = rounds.filter(
+        round => round.status === 'Completed'
+      ).length;
       setActualRoundsPlayed(playedRounds);
 
       // For completed games count, use the provided games data
       if (gamesList) {
-        setCompletedGamesCount(gamesList.filter(game => game.result !== null).length);
+        setCompletedGamesCount(
+          gamesList.filter(game => game.result !== null).length
+        );
       }
     } catch (err) {
       console.error('Failed to fetch actual tournament stats:', err);
@@ -225,13 +244,19 @@ const TournamentInfoPage: React.FC = () => {
 
   const handleExportCsv = () => {
     if (standings && tournamentDetails) {
-      exportStandingsToCsv(standings.standings, tournamentDetails.tournament.name);
+      exportStandingsToCsv(
+        standings.standings,
+        tournamentDetails.tournament.name
+      );
     }
   };
 
   const handleExportPdf = () => {
     if (standings && tournamentDetails) {
-      exportStandingsToPdf(standings.standings, tournamentDetails.tournament.name);
+      exportStandingsToPdf(
+        standings.standings,
+        tournamentDetails.tournament.name
+      );
     }
   };
 
@@ -246,7 +271,7 @@ const TournamentInfoPage: React.FC = () => {
 
   const handleConfirmDelete = async () => {
     if (!id) return;
-    
+
     try {
       await commands.deleteTournament(parseInt(id));
       navigate('/');
@@ -264,7 +289,6 @@ const TournamentInfoPage: React.FC = () => {
   useEffect(() => {
     fetchTournamentDetails();
   }, [id]);
-
 
   const formatDate = (dateString: string) => {
     try {
@@ -337,9 +361,22 @@ const TournamentInfoPage: React.FC = () => {
 
         {/* Header */}
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              mb: 3,
+            }}
+          >
             <Box>
-              <Typography variant="h4" component="h1" fontWeight={700} gutterBottom color="text.primary">
+              <Typography
+                variant="h4"
+                component="h1"
+                fontWeight={700}
+                gutterBottom
+                color="text.primary"
+              >
                 {tournament.name}
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, color: 'text.secondary' }}>
@@ -349,7 +386,9 @@ const TournamentInfoPage: React.FC = () => {
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <CalendarToday fontSize="small" />
-                  <Typography variant="body1">{formatDate(tournament.date)}</Typography>
+                  <Typography variant="body1">
+                    {formatDate(tournament.date)}
+                  </Typography>
                 </Box>
               </Box>
             </Box>
@@ -395,7 +434,12 @@ const TournamentInfoPage: React.FC = () => {
                           actualPlayerCount !== players.length ? (
                             <>
                               {actualPlayerCount}
-                              <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
+                              <Typography
+                                component="span"
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ ml: 0.5 }}
+                              >
                                 / {players.length}
                               </Typography>
                             </>
@@ -407,10 +451,10 @@ const TournamentInfoPage: React.FC = () => {
                         )}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {actualPlayerCount !== null && actualPlayerCount !== players.length 
+                        {actualPlayerCount !== null &&
+                        actualPlayerCount !== players.length
                           ? t('activePlayers')
-                          : t('players')
-                        }
+                          : t('players')}
                       </Typography>
                     </Box>
                   </Box>
@@ -437,10 +481,16 @@ const TournamentInfoPage: React.FC = () => {
                     </Avatar>
                     <Box>
                       <Typography variant="h4" fontWeight={700}>
-                        {completedGamesCount > 0 && completedGamesCount !== games.length ? (
+                        {completedGamesCount > 0 &&
+                        completedGamesCount !== games.length ? (
                           <>
                             {completedGamesCount}
-                            <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{ ml: 0.5 }}
+                            >
                               / {games.length}
                             </Typography>
                           </>
@@ -449,10 +499,10 @@ const TournamentInfoPage: React.FC = () => {
                         )}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {completedGamesCount > 0 && completedGamesCount !== games.length
+                        {completedGamesCount > 0 &&
+                        completedGamesCount !== games.length
                           ? t('tournament.gamesCompleted')
-                          : t('tournament.gamesPlayed')
-                        }
+                          : t('tournament.gamesPlayed')}
                       </Typography>
                     </Box>
                   </Box>
@@ -479,7 +529,9 @@ const TournamentInfoPage: React.FC = () => {
                     </Avatar>
                     <Box>
                       <Typography variant="h4" fontWeight={700}>
-                        {tournament.time_type ? t(`timeControls.${tournament.time_type}`) : 'N/A'}
+                        {tournament.time_type
+                          ? t(`timeControls.${tournament.time_type}`)
+                          : 'N/A'}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         {t('tournament.timeControl')}
@@ -574,7 +626,9 @@ const TournamentInfoPage: React.FC = () => {
               <StandingsTable
                 standings={standings.standings}
                 loading={loadingStandings}
-                onPlayerClick={(playerId) => console.log('Player clicked:', playerId)}
+                onPlayerClick={playerId =>
+                  console.log('Player clicked:', playerId)
+                }
                 onExportCsv={handleExportCsv}
                 onExportPdf={handleExportPdf}
                 onPrint={handlePrint}
@@ -599,7 +653,13 @@ const TournamentInfoPage: React.FC = () => {
                     {players.map((playerResult, index) => (
                       <TableRow key={playerResult.player.id} hover>
                         <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                            }}
+                          >
                             {index + 1}
                             {index === 0 && <EmojiEvents color="warning" />}
                           </Box>
@@ -613,7 +673,13 @@ const TournamentInfoPage: React.FC = () => {
                           {playerResult.player.rating || t('unrated')}
                         </TableCell>
                         <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                            }}
+                          >
                             <Flag fontSize="small" />
                             {playerResult.player.country_code || 'N/A'}
                           </Box>
@@ -623,10 +689,18 @@ const TournamentInfoPage: React.FC = () => {
                             {playerResult.points}
                           </Typography>
                         </TableCell>
-                        <TableCell align="center">{playerResult.games_played}</TableCell>
-                        <TableCell align="center">{playerResult.wins}</TableCell>
-                        <TableCell align="center">{playerResult.draws}</TableCell>
-                        <TableCell align="center">{playerResult.losses}</TableCell>
+                        <TableCell align="center">
+                          {playerResult.games_played}
+                        </TableCell>
+                        <TableCell align="center">
+                          {playerResult.wins}
+                        </TableCell>
+                        <TableCell align="center">
+                          {playerResult.draws}
+                        </TableCell>
+                        <TableCell align="center">
+                          {playerResult.losses}
+                        </TableCell>
                       </TableRow>
                     ))}
                     {players.length === 0 && (
@@ -646,14 +720,17 @@ const TournamentInfoPage: React.FC = () => {
 
           <TabPanel value={tabValue} index={1}>
             {/* Round Management */}
-            <RoundManager 
+            <RoundManager
               tournamentId={parseInt(id!)}
               onRoundUpdate={() => {
                 // Refresh tournament details when rounds are updated
                 fetchTournamentDetails();
                 // Also refresh actual tournament stats since rounds have changed
                 if (tournamentDetails) {
-                  fetchActualTournamentStats(parseInt(id!), tournamentDetails.games);
+                  fetchActualTournamentStats(
+                    parseInt(id!),
+                    tournamentDetails.games
+                  );
                 }
               }}
             />
@@ -671,7 +748,10 @@ const TournamentInfoPage: React.FC = () => {
                   if (id && tournamentDetails) {
                     const tournamentId = parseInt(id);
                     fetchStandings(tournamentId);
-                    fetchActualTournamentStats(tournamentId, tournamentDetails.games);
+                    fetchActualTournamentStats(
+                      tournamentId,
+                      tournamentDetails.games
+                    );
                   }
                 }}
               />
@@ -712,10 +792,12 @@ const TournamentInfoPage: React.FC = () => {
           open={Boolean(anchorEl)}
           onClose={handleMenuClose}
         >
-          <MenuItem onClick={() => {
-            handleMenuClose();
-            setSettingsOpen(true);
-          }}>
+          <MenuItem
+            onClick={() => {
+              handleMenuClose();
+              setSettingsOpen(true);
+            }}
+          >
             <Edit fontSize="small" sx={{ mr: 1 }} />
             {t('tournament.menuSettings')}
           </MenuItem>
@@ -732,11 +814,14 @@ const TournamentInfoPage: React.FC = () => {
             {t('tournament.menuShareTournament')}
           </MenuItem>
           <Divider />
-          <MenuItem onClick={handleDeleteTournament} sx={{ color: 'error.main' }}>
+          <MenuItem
+            onClick={handleDeleteTournament}
+            sx={{ color: 'error.main' }}
+          >
             {t('deleteTournament')}
           </MenuItem>
         </Menu>
-        
+
         {/* Tournament Settings Dialog */}
         <TournamentSettings
           open={settingsOpen}
@@ -749,7 +834,7 @@ const TournamentInfoPage: React.FC = () => {
             }
           }}
         />
-        
+
         {/* Delete Confirmation Dialog */}
         <Dialog
           open={deleteDialogOpen}
@@ -762,14 +847,19 @@ const TournamentInfoPage: React.FC = () => {
           </DialogTitle>
           <DialogContent>
             <DialogContentText id="delete-dialog-description">
-              {t('confirmDeleteMessage')} "{tournamentDetails?.tournament.name}"?
+              {t('confirmDeleteMessage')} "{tournamentDetails?.tournament.name}
+              "?
             </DialogContentText>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCancelDelete} color="primary">
               {t('cancel')}
             </Button>
-            <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            <Button
+              onClick={handleConfirmDelete}
+              color="error"
+              variant="contained"
+            >
               {t('delete')}
             </Button>
           </DialogActions>

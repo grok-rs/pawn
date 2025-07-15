@@ -35,10 +35,9 @@ interface TournamentConfiguration {
   config: Partial<TournamentFormValues>;
 }
 
-const TournamentConfigurationExport: React.FC<TournamentConfigurationExportProps> = ({
-  formData,
-  onImport,
-}) => {
+const TournamentConfigurationExport: React.FC<
+  TournamentConfigurationExportProps
+> = ({ formData, onImport }) => {
   const { t } = useTranslation();
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -102,7 +101,7 @@ const TournamentConfigurationExport: React.FC<TournamentConfigurationExportProps
     try {
       setImportError('');
       const parsed = JSON.parse(importText) as TournamentConfiguration;
-      
+
       // Validate the structure
       if (!parsed.version || !parsed.config) {
         throw new Error('Invalid configuration format');
@@ -117,8 +116,8 @@ const TournamentConfigurationExport: React.FC<TournamentConfigurationExportProps
       setImportText('');
     } catch (error) {
       setImportError(
-        error instanceof Error 
-          ? error.message 
+        error instanceof Error
+          ? error.message
           : 'Invalid JSON format. Please check your configuration.'
       );
     }
@@ -128,7 +127,7 @@ const TournamentConfigurationExport: React.FC<TournamentConfigurationExportProps
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         const content = e.target?.result as string;
         setImportText(content);
       };
@@ -149,7 +148,7 @@ const TournamentConfigurationExport: React.FC<TournamentConfigurationExportProps
             {t('tournament.configuration.export')}
           </Button>
         )}
-        
+
         <Button
           variant="outlined"
           startIcon={<Upload />}
@@ -168,7 +167,13 @@ const TournamentConfigurationExport: React.FC<TournamentConfigurationExportProps
         fullWidth
       >
         <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
             {t('tournament.configuration.exportTitle')}
             <IconButton onClick={() => setExportDialogOpen(false)}>
               <Close />
@@ -179,13 +184,13 @@ const TournamentConfigurationExport: React.FC<TournamentConfigurationExportProps
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             {t('tournament.configuration.exportDescription')}
           </Typography>
-          
+
           <Box sx={{ mb: 2 }}>
-            <Chip 
-              label={t('tournament.configuration.configurationReady')} 
-              color="success" 
-              icon={<CheckCircle />} 
-              size="small" 
+            <Chip
+              label={t('tournament.configuration.configurationReady')}
+              color="success"
+              icon={<CheckCircle />}
+              size="small"
             />
           </Box>
 
@@ -231,7 +236,13 @@ const TournamentConfigurationExport: React.FC<TournamentConfigurationExportProps
         fullWidth
       >
         <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
             {t('tournament.configuration.importTitle')}
             <IconButton onClick={() => setImportDialogOpen(false)}>
               <Close />
@@ -274,7 +285,7 @@ const TournamentConfigurationExport: React.FC<TournamentConfigurationExportProps
             multiline
             rows={12}
             value={importText}
-            onChange={(e) => {
+            onChange={e => {
               setImportText(e.target.value);
               setImportError('');
             }}

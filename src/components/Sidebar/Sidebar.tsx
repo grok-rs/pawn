@@ -202,9 +202,11 @@ const Sidebar = ({ open, onToggle }: SidebarProps) => {
                             borderRadius: 2,
                             mb: 0.5,
                             '&.Mui-selected': {
-                              backgroundColor: theme.palette.primary.light + '20',
+                              backgroundColor:
+                                theme.palette.primary.light + '20',
                               '&:hover': {
-                                backgroundColor: theme.palette.primary.light + '30',
+                                backgroundColor:
+                                  theme.palette.primary.light + '30',
                               },
                             },
                           }}
@@ -260,8 +262,8 @@ const Sidebar = ({ open, onToggle }: SidebarProps) => {
                     color: item.primary
                       ? theme.palette.secondary.main
                       : item.path && isActive(item.path)
-                      ? theme.palette.primary.main
-                      : 'inherit',
+                        ? theme.palette.primary.main
+                        : 'inherit',
                   }}
                 >
                   {item.icon}

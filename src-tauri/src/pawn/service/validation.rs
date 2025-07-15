@@ -1,7 +1,7 @@
-use crate::pawn::domain::{dto::*, model::*};
-use crate::pawn::db::Db;
 use crate::pawn::common::error::PawnError;
-use tracing::{info, warn, instrument};
+use crate::pawn::db::Db;
+use crate::pawn::domain::{dto::*, model::*};
+use tracing::{info, instrument, warn};
 
 pub struct ResultValidationService;
 
@@ -64,7 +64,8 @@ impl ResultValidationService {
         }
 
         // Check for duplicate results
-        let duplicate_validation = Self::validate_no_duplicate_result(db, game_id, new_result).await?;
+        let duplicate_validation =
+            Self::validate_no_duplicate_result(db, game_id, new_result).await?;
         validation.merge(duplicate_validation);
 
         // Validate players are active in tournament
@@ -76,7 +77,8 @@ impl ResultValidationService {
         validation.merge(round_validation);
 
         // Validate special results require approval
-        let approval_validation = Self::validate_approval_requirements(new_result, result_type, changed_by);
+        let approval_validation =
+            Self::validate_approval_requirements(new_result, result_type, changed_by);
         validation.merge(approval_validation);
 
         Ok(validation)
@@ -87,12 +89,15 @@ impl ResultValidationService {
         let mut validation = ValidationResult::new();
 
         let valid_results = vec![
-            "1-0", "0-1", "1/2-1/2", "*", "0-1F", "1-0F", "0-1D", "1-0D", 
-            "ADJ", "0-1T", "1-0T", "0-0", "CANC"
+            "1-0", "0-1", "1/2-1/2", "*", "0-1F", "1-0F", "0-1D", "1-0D", "ADJ", "0-1T", "1-0T",
+            "0-0", "CANC",
         ];
 
         if !valid_results.contains(&result) {
-            validation.add_error(format!("Invalid result format: '{}'. Valid formats: {:?}", result, valid_results));
+            validation.add_error(format!(
+                "Invalid result format: '{}'. Valid formats: {:?}",
+                result, valid_results
+            ));
         }
 
         // Validate result_type consistency
@@ -252,7 +257,8 @@ impl ResultValidationService {
                 update_request.result_type.as_deref(),
                 tournament_id,
                 update_request.changed_by.as_deref(),
-            ).await?;
+            )
+            .await?;
 
             batch_results.push((index, validation));
         }

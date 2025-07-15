@@ -31,7 +31,7 @@ export const StyledStepLabel = styled(StepLabel)(({ theme }) => ({
       paddingTop: '1px',
     },
     [`&.${stepIconClasses.completed} span`]: {
-      height: '24px'
+      height: '24px',
     },
     [`&.${stepIconClasses.active}`]: {
       backgroundColor: theme.palette.primary.dark,

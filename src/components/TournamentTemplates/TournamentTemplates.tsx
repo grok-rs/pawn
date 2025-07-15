@@ -95,7 +95,8 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<TournamentTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<TournamentTemplate | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -119,7 +120,12 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
         tournament_type: 'swiss',
         time_type: 'classical',
         default_rounds: 9,
-        tiebreak_order: ['buchholz_full', 'buchholz_cut_1', 'number_of_wins', 'direct_encounter'],
+        tiebreak_order: [
+          'buchholz_full',
+          'buchholz_cut_1',
+          'number_of_wins',
+          'direct_encounter',
+        ],
         forfeit_time_minutes: 30,
         draw_offers_allowed: true,
         mobile_phone_policy: 'prohibited',
@@ -233,7 +239,10 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
     setViewDialogOpen(true);
   };
 
-  const getTypeLabel = (type: string, types: Array<{ value: string; label: string }>) => {
+  const getTypeLabel = (
+    type: string,
+    types: Array<{ value: string; label: string }>
+  ) => {
     const typeObj = types.find(t => t.value === type);
     return typeObj ? t(typeObj.label) : type;
   };
@@ -244,7 +253,14 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3,
+        }}
+      >
         <Typography variant="h5" fontWeight={700}>
           {t('tournament.templates.title')}
         </Typography>
@@ -267,11 +283,24 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
         </Alert>
       ) : (
         <Grid container spacing={3}>
-          {templates.map((template) => (
+          {templates.map(template => (
             <Grid item xs={12} md={6} lg={4} key={template.id}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <Card
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
                 <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      mb: 2,
+                    }}
+                  >
                     <Typography variant="h6" fontWeight={600}>
                       {template.name}
                     </Typography>
@@ -289,15 +318,24 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                   </Box>
 
                   {template.description && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 2 }}
+                    >
                       {template.description}
                     </Typography>
                   )}
 
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                  <Box
+                    sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}
+                  >
                     <Chip
                       icon={<EmojiEvents />}
-                      label={getTypeLabel(template.tournament_type, TOURNAMENT_TYPES)}
+                      label={getTypeLabel(
+                        template.tournament_type,
+                        TOURNAMENT_TYPES
+                      )}
                       size="small"
                       color="primary"
                       variant="outlined"
@@ -312,8 +350,10 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                   </Box>
 
                   <Typography variant="caption" color="text.secondary">
-                    {t('tournament.templates.rounds')}: {template.default_rounds} • 
-                    {t('tournament.templates.createdBy')}: {template.created_by || t('common.unknown')} • 
+                    {t('tournament.templates.rounds')}:{' '}
+                    {template.default_rounds} •
+                    {t('tournament.templates.createdBy')}:{' '}
+                    {template.created_by || t('common.unknown')} •
                     {formatDate(template.created_at)}
                   </Typography>
                 </CardContent>
@@ -368,10 +408,9 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
         fullWidth
       >
         <DialogTitle>
-          {createDialogOpen 
-            ? t('tournament.templates.create') 
-            : t('tournament.templates.edit')
-          }
+          {createDialogOpen
+            ? t('tournament.templates.create')
+            : t('tournament.templates.edit')}
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -380,7 +419,9 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                 fullWidth
                 label={t('tournament.templates.name')}
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
               />
             </Grid>
             <Grid item xs={12}>
@@ -390,18 +431,27 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                 rows={3}
                 label={t('tournament.templates.description')}
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>{t('tournament.configuration.tournamentType')}</InputLabel>
+                <InputLabel>
+                  {t('tournament.configuration.tournamentType')}
+                </InputLabel>
                 <Select
                   value={formData.tournament_type}
-                  onChange={(e) => setFormData({ ...formData, tournament_type: e.target.value })}
+                  onChange={e =>
+                    setFormData({
+                      ...formData,
+                      tournament_type: e.target.value,
+                    })
+                  }
                   label={t('tournament.configuration.tournamentType')}
                 >
-                  {TOURNAMENT_TYPES.map((type) => (
+                  {TOURNAMENT_TYPES.map(type => (
                     <MenuItem key={type.value} value={type.value}>
                       {t(type.label)}
                     </MenuItem>
@@ -414,10 +464,12 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                 <InputLabel>{t('tournament.configuration.type')}</InputLabel>
                 <Select
                   value={formData.time_type}
-                  onChange={(e) => setFormData({ ...formData, time_type: e.target.value })}
+                  onChange={e =>
+                    setFormData({ ...formData, time_type: e.target.value })
+                  }
                   label={t('tournament.configuration.type')}
                 >
-                  {TIME_TYPES.map((type) => (
+                  {TIME_TYPES.map(type => (
                     <MenuItem key={type.value} value={type.value}>
                       {t(type.label)}
                     </MenuItem>
@@ -431,7 +483,12 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                 type="number"
                 label={t('tournament.configuration.numberOfRounds')}
                 value={formData.default_rounds}
-                onChange={(e) => setFormData({ ...formData, default_rounds: Number(e.target.value) })}
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    default_rounds: Number(e.target.value),
+                  })
+                }
                 inputProps={{ min: 1, max: 20 }}
               />
             </Grid>
@@ -441,19 +498,31 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                 type="number"
                 label={t('tournament.configuration.forfeitTime')}
                 value={formData.forfeit_time_minutes}
-                onChange={(e) => setFormData({ ...formData, forfeit_time_minutes: Number(e.target.value) })}
+                onChange={e =>
+                  setFormData({
+                    ...formData,
+                    forfeit_time_minutes: Number(e.target.value),
+                  })
+                }
                 inputProps={{ min: 1, max: 120 }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>{t('tournament.configuration.mobilePhonePolicy')}</InputLabel>
+                <InputLabel>
+                  {t('tournament.configuration.mobilePhonePolicy')}
+                </InputLabel>
                 <Select
                   value={formData.mobile_phone_policy}
-                  onChange={(e) => setFormData({ ...formData, mobile_phone_policy: e.target.value })}
+                  onChange={e =>
+                    setFormData({
+                      ...formData,
+                      mobile_phone_policy: e.target.value,
+                    })
+                  }
                   label={t('tournament.configuration.mobilePhonePolicy')}
                 >
-                  {MOBILE_PHONE_POLICIES.map((policy) => (
+                  {MOBILE_PHONE_POLICIES.map(policy => (
                     <MenuItem key={policy.value} value={policy.value}>
                       {t(policy.label)}
                     </MenuItem>
@@ -467,7 +536,12 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                   control={
                     <Switch
                       checked={formData.draw_offers_allowed}
-                      onChange={(e) => setFormData({ ...formData, draw_offers_allowed: e.target.checked })}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          draw_offers_allowed: e.target.checked,
+                        })
+                      }
                     />
                   }
                   label={t('tournament.configuration.drawOffersAllowed')}
@@ -476,7 +550,12 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                   control={
                     <Switch
                       checked={formData.late_entry_allowed}
-                      onChange={(e) => setFormData({ ...formData, late_entry_allowed: e.target.checked })}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          late_entry_allowed: e.target.checked,
+                        })
+                      }
                     />
                   }
                   label={t('tournament.configuration.lateEntryAllowed')}
@@ -485,7 +564,12 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                   control={
                     <Switch
                       checked={formData.is_public}
-                      onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          is_public: e.target.checked,
+                        })
+                      }
                     />
                   }
                   label={t('tournament.templates.makePublic')}
@@ -495,15 +579,19 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => {
-            setCreateDialogOpen(false);
-            setEditDialogOpen(false);
-            resetForm();
-          }}>
+          <Button
+            onClick={() => {
+              setCreateDialogOpen(false);
+              setEditDialogOpen(false);
+              resetForm();
+            }}
+          >
             {t('common.cancel')}
           </Button>
           <Button
-            onClick={createDialogOpen ? handleCreateTemplate : handleUpdateTemplate}
+            onClick={
+              createDialogOpen ? handleCreateTemplate : handleUpdateTemplate
+            }
             disabled={!formData.name.trim()}
             variant="contained"
           >
@@ -520,7 +608,13 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
         fullWidth
       >
         <DialogTitle>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             {selectedTemplate?.name}
             <IconButton onClick={() => setViewDialogOpen(false)}>
               <Close />
@@ -531,22 +625,32 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
           {selectedTemplate && (
             <Box>
               {selectedTemplate.description && (
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 2 }}
+                >
                   {selectedTemplate.description}
                 </Typography>
               )}
-              
+
               <List dense>
                 <ListItem>
                   <ListItemText
                     primary={t('tournament.configuration.tournamentType')}
-                    secondary={getTypeLabel(selectedTemplate.tournament_type, TOURNAMENT_TYPES)}
+                    secondary={getTypeLabel(
+                      selectedTemplate.tournament_type,
+                      TOURNAMENT_TYPES
+                    )}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
                     primary={t('tournament.configuration.type')}
-                    secondary={getTypeLabel(selectedTemplate.time_type, TIME_TYPES)}
+                    secondary={getTypeLabel(
+                      selectedTemplate.time_type,
+                      TIME_TYPES
+                    )}
                   />
                 </ListItem>
                 <ListItem>
@@ -564,13 +668,21 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                 <ListItem>
                   <ListItemText
                     primary={t('tournament.configuration.drawOffersAllowed')}
-                    secondary={selectedTemplate.draw_offers_allowed ? t('common.yes') : t('common.no')}
+                    secondary={
+                      selectedTemplate.draw_offers_allowed
+                        ? t('common.yes')
+                        : t('common.no')
+                    }
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
                     primary={t('tournament.configuration.lateEntryAllowed')}
-                    secondary={selectedTemplate.late_entry_allowed ? t('common.yes') : t('common.no')}
+                    secondary={
+                      selectedTemplate.late_entry_allowed
+                        ? t('common.yes')
+                        : t('common.no')
+                    }
                   />
                 </ListItem>
               </List>

@@ -40,13 +40,13 @@
   "form.helpers.knockoutRounds": "Automatically calculated based on number of players",
   "form.helpers.defaultRounds": "Choose appropriate number of rounds for your tournament",
   "tournament.timeControl.classical": "Classical time control",
-  "tournament.timeControl.rapid": "Rapid time control", 
+  "tournament.timeControl.rapid": "Rapid time control",
   "tournament.timeControl.blitz": "Blitz time control",
   "tournament.timeControl.bullet": "Bullet time control",
   "tournament.timeControl.fischer": "Fischer time control",
   "tournament.timeControl.bronstein": "Bronstein time control",
   "tournament.timeControl.correspondence": "Correspondence time control",
-  
+
   "dashboard": "Dashboard",
   "tournaments": "Tournaments",
   "players": "Players",
@@ -56,13 +56,13 @@
   "user": "User",
   "allTournaments": "All Tournaments",
   "importTournament": "Import Tournament",
-  
+
   "totalTournaments": "Total Tournaments",
   "ongoing": "Ongoing",
   "notStarted": "Not Started",
   "finished": "Finished",
   "all": "All",
-  
+
   "tournamentName": "Tournament Name",
   "mainArbiter": "Main Arbiter / Referee",
   "enterArbiterName": "Enter arbiter name",
@@ -72,7 +72,7 @@
   "mainTime": "Main Time",
   "incrementPerMove": "Increment per Move",
   "searchTournaments": "Search tournaments...",
-  
+
   "rank": "Rank",
   "player": "Player",
   "rating": "Rating",
@@ -87,19 +87,19 @@
   "result": "Result",
   "date": "Date",
   "registered": "Registered",
-  
+
   "whiteWins": "White wins",
   "blackWins": "Black wins",
   "draw": "Draw",
   "unrated": "Unrated",
-  
+
   "tournamentIdNotProvided": "Tournament ID not provided",
   "failedToLoadTournamentDetails": "Failed to load tournament details",
   "failedToPopulateMockData": "Failed to populate mock data",
   "failedToCreateGames": "Failed to create games",
   "tournamentNotFound": "Tournament not found",
   "noDataAvailable": "No data available",
-  
+
   "standings": "Standings",
   "gamesTab": "Games",
   "resultsTab": "Results",
@@ -107,9 +107,9 @@
   "noGamesMessage": "No games available",
   "createRoundsFirstMessage": "Create rounds and generate pairings first to enter game results",
   "goToRoundsTab": "Go to Rounds",
-  
+
   "getStartedByCreatingTournament": "Get started by creating your first tournament",
-  
+
   "back": "Back",
   "createTournament": "Create Tournament",
   "creating": "Creating...",
@@ -118,12 +118,12 @@
   "confirmDeleteTitle": "Confirm Tournament Deletion",
   "confirmDeleteMessage": "Are you sure you want to delete tournament",
   "delete": "Delete",
-  
+
   "generalInfo": "General Info",
   "configuration": "Configuration",
   "review": "Review",
   "progress": "Progress",
-  
+
   "createNewTournament": "Create New Tournament",
   "setupNewChessTournament": "Set up a new chess tournament with custom rules and configurations",
   "importTournamentDescription": "Have an existing tournament file? Import it directly to save time.",
@@ -132,14 +132,14 @@
   "quickTips.roundRobin": "Round-robin works best for smaller groups",
   "quickTips.timeControls": "Set time controls based on your event duration",
   "quickTips.editLater": "You can always edit tournament details later",
-  
+
   "form.steps.generalInformation": "General Information",
   "form.steps.tournamentSettings": "Tournament Settings",
   "form.steps.generalInfo.title": "Tournament Details",
   "form.steps.generalInfo.description": "Enter the basic information about your tournament",
   "form.steps.configuration.title": "Configure Tournament",
   "form.steps.configuration.description": "Set up the rules and format for your tournament",
-  
+
   "form.sections.tournamentIdentity": "Tournament Identity",
   "form.sections.locationDetails": "Location Details",
   "form.sections.tournamentSchedule": "Tournament Schedule",
@@ -147,30 +147,30 @@
   "form.sections.tournamentFormat": "Tournament Format",
   "form.sections.timeControlSettings": "Time Control Settings",
   "form.sections.tournamentStructure": "Tournament Structure",
-  
+
   "form.placeholders.tournamentName": "e.g., Spring Chess Championship 2024",
   "form.placeholders.enterCityName": "Enter city name",
   "form.placeholders.enterArbiterName": "Enter arbiter name",
-  
+
   "tournament.types.rapid.timeRange": "15-60 min",
   "tournament.types.classical.timeRange": "60+ min",
   "tournament.types.blitz.timeRange": "3-15 min",
-  
+
   "tournament.pairingSystems.swiss.description": "Best for large tournaments",
   "tournament.pairingSystems.roundRobin.description": "Everyone plays everyone",
-  
+
   "tournament.timeUnits.seconds.label": "Seconds",
   "tournament.timeUnits.minutes.label": "Minutes",
   "tournament.timeUnits.hours.label": "Hours",
   "tournament.timeUnits.days.label": "Days",
-  
+
   "form.helpers.swissRounds": "Recommended: 7-9 rounds for Swiss system",
   "form.helpers.roundRobinRounds": "Round Robin: Each player plays everyone once",
-  
+
   "viewDetails": "View Details",
   "editTournament": "Edit Tournament",
   "exportData": "Export Data",
-  
+
   "showTiebreaks": "Show Tiebreaks",
   "denseView": "Dense View",
   "export": "Export",
@@ -178,14 +178,14 @@
   "exportPdf": "Export to PDF",
   "print": "Print",
   "tournamentPerformanceRating": "Tournament Performance Rating",
-  
+
   "tiebreakOrder": "Tiebreak Order",
   "useFideDefaults": "Use FIDE Defaults",
   "resetToDefaults": "Reset to Defaults",
   "noTiebreaksConfigured": "No tiebreaks configured. Add at least one tiebreak method.",
   "addTiebreak": "Add Tiebreak",
   "selectTiebreak": "Select Tiebreak Method",
-  
+
   "tiebreakSettings": "Tiebreak Settings",
   "tiebreakConfiguration": "Configure how tied players are ranked",
   "dragToReorder": "Drag to reorder tiebreak priority",
@@ -278,7 +278,7 @@
 
   "tiebreaks.buchholz_cut1.name": "Buchholz Cut-1",
   "tiebreaks.buchholz_cut1.description": "Sum of opponents' scores excluding the lowest",
-  "tiebreaks.buchholz_cut2.name": "Buchholz Cut-2", 
+  "tiebreaks.buchholz_cut2.name": "Buchholz Cut-2",
   "tiebreaks.buchholz_cut2.description": "Sum of opponents' scores excluding highest and lowest",
   "tiebreaks.short.buchholz_cut1": "Buch-1",
   "tiebreaks.short.buchholz_cut2": "Buch-2",
@@ -876,7 +876,7 @@
   "tournament.lateEntry.prohibited.description": "No late entries accepted",
 
   "tournament.timeUnits.seconds.label": "Seconds",
-  "tournament.timeUnits.minutes.label": "Minutes", 
+  "tournament.timeUnits.minutes.label": "Minutes",
   "tournament.timeUnits.hours.label": "Hours",
   "tournament.timeUnits.days.label": "Days",
   "tournament.timeUnits.minutes.short": "min",
@@ -909,7 +909,7 @@
   "tournament.templates.edit": "Edit Template",
   "tournament.templates.noTemplatesMessage": "No templates available. Create your first template to get started.",
   "tournament.templates.public": "Public Template",
-  "tournament.templates.private": "Private Template", 
+  "tournament.templates.private": "Private Template",
   "tournament.templates.rounds": "Rounds",
   "tournament.templates.createdBy": "Created by",
   "tournament.templates.useTemplate": "Use Template",

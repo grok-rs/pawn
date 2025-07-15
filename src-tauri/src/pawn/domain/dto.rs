@@ -1,6 +1,6 @@
+use crate::pawn::domain::tiebreak::TiebreakType;
 use serde::{Deserialize, Serialize};
 use specta::Type;
-use crate::pawn::domain::tiebreak::TiebreakType;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateTournament {
@@ -148,7 +148,7 @@ pub struct UpdatePlayer {
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateRatingHistory {
     pub player_id: i32,
-    pub rating_type: String,    // fide, national, club, rapid, blitz
+    pub rating_type: String, // fide, national, club, rapid, blitz
     pub rating: i32,
     pub is_provisional: bool,
     pub effective_date: String,
@@ -336,7 +336,7 @@ pub struct ForbiddenPairingDto {
 pub struct ColorConstraintDto {
     pub player_id: i32,
     pub required_color: String, // "white" or "black"
-    pub priority: String, // "low", "medium", "high", "critical"
+    pub priority: String,       // "low", "medium", "high", "critical"
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
@@ -571,4 +571,3 @@ pub struct TournamentTemplateFilter {
     pub is_public: Option<bool>,
     pub created_by: Option<String>,
 }
-

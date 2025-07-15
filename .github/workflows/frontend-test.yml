@@ -1,0 +1,93 @@
+name: Frontend Quality Gates
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'vite.config.ts'
+      - '.github/workflows/frontend-test.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'vite.config.ts'
+      - '.github/workflows/frontend-test.yml'
+
+jobs:
+  test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Check Prettier formatting
+      run: npm run format:check
+
+    - name: Run ESLint
+      run: npm run lint
+
+    - name: Run TypeScript type checking
+      run: npm run type-check
+
+    - name: Run unit tests with coverage
+      run: npm run test:coverage
+      env:
+        CI: true
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage/lcov.info
+        flags: frontend
+        name: frontend-coverage
+        fail_ci_if_error: false
+
+    - name: Check coverage threshold
+      run: npm run coverage:check
+
+    - name: Build for production
+      run: npm run build
+
+    - name: Run E2E tests
+      run: |
+        # Install Playwright browsers
+        npx playwright install --with-deps
+        # Run E2E tests when available
+        # npm run test:e2e
+        echo "🎭 E2E tests would run here"
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      if: matrix.node-version == '20.x'
+      with:
+        name: build-artifacts
+        path: dist/
+        retention-days: 7
+
+    - name: Check bundle size
+      if: matrix.node-version == '20.x'
+      run: |
+        echo "📦 Bundle size analysis would run here"
+        # npx bundlesize

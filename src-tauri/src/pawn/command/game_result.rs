@@ -1,15 +1,15 @@
 use tauri::State;
-use tracing::{info, warn, instrument};
+use tracing::{info, instrument, warn};
 
 use crate::pawn::{
+    common::error::PawnError,
+    db::Db,
     domain::{
         dto::*,
-        model::{Game, EnhancedGameResult, GameResultAudit},
+        model::{EnhancedGameResult, Game, GameResultAudit},
     },
     service::validation::ResultValidationService,
     state::PawnState,
-    common::error::PawnError,
-    db::Db,
 };
 
 #[instrument(ret, skip(state))]
@@ -31,7 +31,8 @@ pub async fn update_game_result(
         data.result_type.as_deref(),
         0, // Tournament ID will be fetched from game
         data.changed_by.as_deref(),
-    ).await?;
+    )
+    .await?;
 
     if !validation.is_valid {
         warn!("Game result validation failed: {:?}", validation.errors);
@@ -44,8 +45,11 @@ pub async fn update_game_result(
 
     // Update the game result
     let updated_game = db.update_game_result(data).await?;
-    
-    info!("Successfully updated game {} result to {}", updated_game.id, updated_game.result);
+
+    info!(
+        "Successfully updated game {} result to {}",
+        updated_game.id, updated_game.result
+    );
     Ok(updated_game)
 }
 
@@ -67,7 +71,8 @@ pub async fn validate_game_result(
         data.result_type.as_deref(),
         data.tournament_id,
         data.changed_by.as_deref(),
-    ).await?;
+    )
+    .await?;
 
     Ok(GameResultValidation {
         is_valid: validation.is_valid,
@@ -83,16 +88,18 @@ pub async fn batch_update_results(
     state: State<'_, PawnState>,
     data: BatchUpdateResults,
 ) -> Result<BatchValidationResult, PawnError> {
-    info!("Batch updating {} results for tournament {}", data.updates.len(), data.tournament_id);
+    info!(
+        "Batch updating {} results for tournament {}",
+        data.updates.len(),
+        data.tournament_id
+    );
 
     let db = &*state.db;
 
     // Validate all results first
-    let validation_results = ResultValidationService::validate_batch_results(
-        db,
-        &data.updates,
-        data.tournament_id,
-    ).await?;
+    let validation_results =
+        ResultValidationService::validate_batch_results(db, &data.updates, data.tournament_id)
+            .await?;
 
     let mut results = Vec::new();
     let mut overall_valid = true;
@@ -102,11 +109,14 @@ pub async fn batch_update_results(
             overall_valid = false;
         }
 
-        results.push((index, GameResultValidation {
-            is_valid: validation.is_valid,
-            errors: validation.errors,
-            warnings: validation.warnings,
-        }));
+        results.push((
+            index,
+            GameResultValidation {
+                is_valid: validation.is_valid,
+                errors: validation.errors,
+                warnings: validation.warnings,
+            },
+        ));
     }
 
     // If validate_only is true, return validation results without updating
@@ -145,7 +155,10 @@ pub async fn batch_update_results(
         }
     }
 
-    info!("Batch update completed with overall_valid: {}", overall_valid);
+    info!(
+        "Batch update completed with overall_valid: {}",
+        overall_valid
+    );
     Ok(BatchValidationResult {
         overall_valid,
         results,

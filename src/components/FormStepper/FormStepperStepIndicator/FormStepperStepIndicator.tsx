@@ -13,11 +13,15 @@ const FormStepperStepIndicator = () => {
       {steps.map((step, index) => {
         const isStepCompleted = index < activeStep;
 
-        const labelIcon = <span>{isStepCompleted ? <CheckIcon /> : step.id}</span>;
+        const labelIcon = (
+          <span>{isStepCompleted ? <CheckIcon /> : step.id}</span>
+        );
 
         return (
           <StyledStep key={step.id} completed={isStepCompleted}>
-            <StyledStepLabel icon={labelIcon}>{step.label ? t(step.label) : ''}</StyledStepLabel>
+            <StyledStepLabel icon={labelIcon}>
+              {step.label ? t(step.label) : ''}
+            </StyledStepLabel>
           </StyledStep>
         );
       })}

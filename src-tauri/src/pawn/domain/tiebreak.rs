@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use specta::Type as SpectaType;
 
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType, PartialEq)]
@@ -9,31 +9,31 @@ pub enum TiebreakType {
     BuchholzCut1,
     BuchholzCut2,
     BuchholzMedian,
-    
+
     // Sonneborn-Berger
     SonnebornBerger,
-    
+
     // Progressive scores
     ProgressiveScore,
     CumulativeScore,
-    
+
     // Direct encounter
     DirectEncounter,
-    
+
     // Performance based
     AverageRatingOfOpponents,
     TournamentPerformanceRating,
-    
+
     // Game based
     NumberOfWins,
     NumberOfGamesWithBlack,
     NumberOfWinsWithBlack,
-    
+
     // Advanced
     KoyaSystem,
     ArocCut1,
     ArocCut2,
-    
+
     // Team specific
     MatchPoints,
     GamePoints,
@@ -64,7 +64,7 @@ impl TiebreakType {
             TiebreakType::BoardPoints => "Board Points",
         }
     }
-    
+
     pub fn short_name(&self) -> &'static str {
         match self {
             TiebreakType::BuchholzFull => "Buch",

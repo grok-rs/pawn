@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -20,7 +20,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-} from "@mui/material";
+} from '@mui/material';
 import {
   Add,
   Search,
@@ -29,33 +29,36 @@ import {
   Schedule,
   CheckCircle,
   PlayArrow,
-} from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import BaseLayout from "../../components/BaseLayout/BaseLayout";
-import TournamentList from "../../components/TournamentList/TournamentList";
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import BaseLayout from '../../components/BaseLayout/BaseLayout';
+import TournamentList from '../../components/TournamentList/TournamentList';
 import {
   isDraftTournament,
   isFinishedTournament,
   isOngoingTournament,
-} from "../../utils";
-import { APP_ROUTES } from "../../constants/appRoutes";
+} from '../../utils';
+import { APP_ROUTES } from '../../constants/appRoutes';
 
-import type { Tournament } from "../../dto/bindings";
-import { commands } from "../../dto/bindings";
+import type { Tournament } from '../../dto/bindings';
+import { commands } from '../../dto/bindings';
 
 const TournamentsPage = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [filteredTournaments, setFilteredTournaments] = useState<Tournament[]>([]);
-  const [filter, setFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredTournaments, setFilteredTournaments] = useState<Tournament[]>(
+    []
+  );
+  const [filter, setFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [tournamentToDelete, setTournamentToDelete] = useState<Tournament | null>(null);
+  const [tournamentToDelete, setTournamentToDelete] =
+    useState<Tournament | null>(null);
   const [populatingTournaments, setPopulatingTournaments] = useState(false);
 
   const stats = {
@@ -73,7 +76,7 @@ const TournamentsPage = () => {
         setTournaments(data);
         setFilteredTournaments(data);
       } catch (error) {
-        console.error("Failed to fetch tournaments:", error);
+        console.error('Failed to fetch tournaments:', error);
       } finally {
         setLoading(false);
       }
@@ -87,13 +90,13 @@ const TournamentsPage = () => {
 
     // Apply status filter
     switch (filter) {
-      case "ongoing":
+      case 'ongoing':
         filtered = filtered.filter(isOngoingTournament);
         break;
-      case "draft":
+      case 'draft':
         filtered = filtered.filter(isDraftTournament);
         break;
-      case "finished":
+      case 'finished':
         filtered = filtered.filter(isFinishedTournament);
         break;
     }
@@ -101,7 +104,7 @@ const TournamentsPage = () => {
     // Apply search filter
     if (searchQuery) {
       filtered = filtered.filter(
-        (t) =>
+        t =>
           t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           t.location.toLowerCase().includes(searchQuery.toLowerCase())
       );
@@ -133,7 +136,7 @@ const TournamentsPage = () => {
 
   const handleConfirmDelete = async () => {
     if (!tournamentToDelete) return;
-    
+
     try {
       await commands.deleteTournament(tournamentToDelete.id);
       // Refresh the tournaments list
@@ -141,7 +144,7 @@ const TournamentsPage = () => {
       setTournaments(data);
       setFilteredTournaments(data);
     } catch (error) {
-      console.error("Failed to delete tournament:", error);
+      console.error('Failed to delete tournament:', error);
     }
     setDeleteDialogOpen(false);
     setTournamentToDelete(null);
@@ -161,7 +164,7 @@ const TournamentsPage = () => {
       setTournaments(data);
       setFilteredTournaments(data);
     } catch (error) {
-      console.error("Failed to populate sample tournaments:", error);
+      console.error('Failed to populate sample tournaments:', error);
     }
     setPopulatingTournaments(false);
   };
@@ -207,9 +210,16 @@ const TournamentsPage = () => {
       <Box>
         {/* Page Header */}
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography 
-              variant="h4" 
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 3,
+            }}
+          >
+            <Typography
+              variant="h4"
               fontWeight={700}
               sx={{ color: theme.palette.text.primary }}
             >
@@ -300,7 +310,7 @@ const TournamentsPage = () => {
               variant="outlined"
               size="small"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               sx={{ flex: 1 }}
               InputProps={{
                 startAdornment: (
@@ -344,10 +354,18 @@ const TournamentsPage = () => {
               open={Boolean(anchorEl)}
               onClose={handleFilterClose}
             >
-              <MenuItem onClick={() => handleFilterSelect('all')}>{t('all')}</MenuItem>
-              <MenuItem onClick={() => handleFilterSelect('ongoing')}>{t('ongoing')}</MenuItem>
-              <MenuItem onClick={() => handleFilterSelect('draft')}>{t('notStarted')}</MenuItem>
-              <MenuItem onClick={() => handleFilterSelect('finished')}>{t('finished')}</MenuItem>
+              <MenuItem onClick={() => handleFilterSelect('all')}>
+                {t('all')}
+              </MenuItem>
+              <MenuItem onClick={() => handleFilterSelect('ongoing')}>
+                {t('ongoing')}
+              </MenuItem>
+              <MenuItem onClick={() => handleFilterSelect('draft')}>
+                {t('notStarted')}
+              </MenuItem>
+              <MenuItem onClick={() => handleFilterSelect('finished')}>
+                {t('finished')}
+              </MenuItem>
             </Menu>
           </Paper>
         </Box>
@@ -360,7 +378,10 @@ const TournamentsPage = () => {
             ))}
           </Box>
         ) : (
-          <TournamentList tournaments={filteredTournaments} onDelete={handleDeleteClick} />
+          <TournamentList
+            tournaments={filteredTournaments}
+            onDelete={handleDeleteClick}
+          />
         )}
 
         {/* Empty State */}
@@ -372,7 +393,9 @@ const TournamentsPage = () => {
               backgroundColor: 'background.paper',
             }}
           >
-            <EmojiEvents sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+            <EmojiEvents
+              sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }}
+            />
             <Typography variant="h6" gutterBottom>
               No tournaments found
             </Typography>
@@ -380,8 +403,8 @@ const TournamentsPage = () => {
               {searchQuery
                 ? `No tournaments match "${searchQuery}"`
                 : filter !== 'all'
-                ? `No ${filter} tournaments`
-                : 'Get started by creating your first tournament'}
+                  ? `No ${filter} tournaments`
+                  : 'Get started by creating your first tournament'}
             </Typography>
             {filter === 'all' && !searchQuery && (
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
@@ -398,14 +421,16 @@ const TournamentsPage = () => {
                   onClick={handlePopulateSampleTournaments}
                   disabled={populatingTournaments}
                 >
-                  {populatingTournaments ? 'Adding Sample Tournaments...' : 'Add Sample Tournaments'}
+                  {populatingTournaments
+                    ? 'Adding Sample Tournaments...'
+                    : 'Add Sample Tournaments'}
                 </Button>
               </Box>
             )}
           </Paper>
         )}
       </Box>
-      
+
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
@@ -425,7 +450,11 @@ const TournamentsPage = () => {
           <Button onClick={handleCancelDelete} color="primary">
             {t('cancel')}
           </Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+          >
             {t('delete')}
           </Button>
         </DialogActions>

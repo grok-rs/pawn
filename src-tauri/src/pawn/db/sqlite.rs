@@ -2,7 +2,7 @@ use sqlx::SqlitePool;
 use tracing::instrument;
 
 use super::*;
-use crate::pawn::domain::{tiebreak::TiebreakType, model::GameResultType};
+use crate::pawn::domain::{model::GameResultType, tiebreak::TiebreakType};
 
 pub struct SqliteDb {
     pool: SqlitePool,
@@ -74,7 +74,7 @@ impl Db for SqliteDb {
         let tournament = self.get_tournament(id).await?;
         let players = self.get_player_results(id).await?;
         let games = self.get_game_results(id).await?;
-        
+
         Ok(TournamentDetails {
             tournament,
             players,
@@ -118,9 +118,12 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_players_by_tournament(&self, tournament_id: i32) -> Result<Vec<Player>, sqlx::Error> {
+    async fn get_players_by_tournament(
+        &self,
+        tournament_id: i32,
+    ) -> Result<Vec<Player>, sqlx::Error> {
         let players = sqlx::query_as(
-            "SELECT * FROM players WHERE tournament_id = ? AND name != 'BYE' ORDER BY name"
+            "SELECT * FROM players WHERE tournament_id = ? AND name != 'BYE' ORDER BY name",
         )
         .bind(tournament_id)
         .fetch_all(&self.pool)
@@ -170,7 +173,7 @@ impl Db for SqliteDb {
                 status = COALESCE(?, status),
                 updated_at = CURRENT_TIMESTAMP
              WHERE id = ?
-             RETURNING *"
+             RETURNING *",
         )
         .bind(&data.name)
         .bind(data.rating)
@@ -193,7 +196,7 @@ impl Db for SqliteDb {
     async fn delete_player(&self, player_id: i32) -> Result<(), sqlx::Error> {
         // Check if player has any games first
         let game_count: i64 = sqlx::query_scalar(
-            "SELECT COUNT(*) FROM games WHERE white_player_id = ? OR black_player_id = ?"
+            "SELECT COUNT(*) FROM games WHERE white_player_id = ? OR black_player_id = ?",
         )
         .bind(player_id)
         .bind(player_id)
@@ -214,12 +217,11 @@ impl Db for SqliteDb {
 
     #[instrument(ret, skip(self))]
     async fn get_games_by_tournament(&self, tournament_id: i32) -> Result<Vec<Game>, sqlx::Error> {
-        let games = sqlx::query_as(
-            "SELECT * FROM games WHERE tournament_id = ? ORDER BY round_number, id"
-        )
-        .bind(tournament_id)
-        .fetch_all(&self.pool)
-        .await?;
+        let games =
+            sqlx::query_as("SELECT * FROM games WHERE tournament_id = ? ORDER BY round_number, id")
+                .bind(tournament_id)
+                .fetch_all(&self.pool)
+                .await?;
 
         Ok(games)
     }
@@ -283,14 +285,18 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_enhanced_game_result(&self, game_id: i32) -> Result<EnhancedGameResult, sqlx::Error> {
+    async fn get_enhanced_game_result(
+        &self,
+        game_id: i32,
+    ) -> Result<EnhancedGameResult, sqlx::Error> {
         let game = self.get_game(game_id).await?;
         let white_player = self.get_player(game.white_player_id).await?;
         let black_player = self.get_player(game.black_player_id).await?;
         let audit_trail = self.get_game_audit_trail(game_id).await?;
-        
+
         let result_type = GameResultType::from_str(&game.result);
-        let requires_approval = result_type.requires_arbiter_approval() && game.approved_by.is_none();
+        let requires_approval =
+            result_type.requires_arbiter_approval() && game.approved_by.is_none();
 
         Ok(EnhancedGameResult {
             game,
@@ -302,11 +308,16 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_game_audit_trail(&self, game_id: i32) -> Result<Vec<GameResultAudit>, sqlx::Error> {
-        let audit_records = sqlx::query_as("SELECT * FROM game_result_audit WHERE game_id = ? ORDER BY changed_at DESC")
-            .bind(game_id)
-            .fetch_all(&self.pool)
-            .await?;
+    async fn get_game_audit_trail(
+        &self,
+        game_id: i32,
+    ) -> Result<Vec<GameResultAudit>, sqlx::Error> {
+        let audit_records = sqlx::query_as(
+            "SELECT * FROM game_result_audit WHERE game_id = ? ORDER BY changed_at DESC",
+        )
+        .bind(game_id)
+        .fetch_all(&self.pool)
+        .await?;
 
         Ok(audit_records)
     }
@@ -331,7 +342,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_pending_approvals(&self, tournament_id: i32) -> Result<Vec<EnhancedGameResult>, sqlx::Error> {
+    async fn get_pending_approvals(
+        &self,
+        tournament_id: i32,
+    ) -> Result<Vec<EnhancedGameResult>, sqlx::Error> {
         let games = sqlx::query_as::<_, Game>(
             "SELECT id, tournament_id, round_number, white_player_id, black_player_id, result, result_type, result_reason, arbiter_notes, last_updated, approved_by, created_at 
              FROM games 
@@ -345,7 +359,9 @@ impl Db for SqliteDb {
         for game in games {
             match self.get_enhanced_game_result(game.id).await {
                 Ok(enhanced) => enhanced_results.push(enhanced),
-                Err(e) => tracing::warn!("Failed to get enhanced result for game {}: {}", game.id, e),
+                Err(e) => {
+                    tracing::warn!("Failed to get enhanced result for game {}: {}", game.id, e)
+                }
             }
         }
 
@@ -353,18 +369,26 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_round_by_number(&self, tournament_id: i32, round_number: i32) -> Result<Round, sqlx::Error> {
-        let round = sqlx::query_as("SELECT * FROM rounds WHERE tournament_id = ? AND round_number = ?")
-            .bind(tournament_id)
-            .bind(round_number)
-            .fetch_one(&self.pool)
-            .await?;
+    async fn get_round_by_number(
+        &self,
+        tournament_id: i32,
+        round_number: i32,
+    ) -> Result<Round, sqlx::Error> {
+        let round =
+            sqlx::query_as("SELECT * FROM rounds WHERE tournament_id = ? AND round_number = ?")
+                .bind(tournament_id)
+                .bind(round_number)
+                .fetch_one(&self.pool)
+                .await?;
 
         Ok(round)
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_player_results(&self, tournament_id: i32) -> Result<Vec<PlayerResult>, sqlx::Error> {
+    async fn get_player_results(
+        &self,
+        tournament_id: i32,
+    ) -> Result<Vec<PlayerResult>, sqlx::Error> {
         let players = self.get_players_by_tournament(tournament_id).await?;
         let mut results = Vec::new();
 
@@ -398,7 +422,7 @@ impl Db for SqliteDb {
             .await?;
 
             let points = stats.1 as f32 + (stats.2 as f32 * 0.5);
-            
+
             results.push(PlayerResult {
                 player,
                 points,
@@ -411,7 +435,9 @@ impl Db for SqliteDb {
 
         // Sort by points (descending), then by name
         results.sort_by(|a, b| {
-            b.points.partial_cmp(&a.points).unwrap_or(std::cmp::Ordering::Equal)
+            b.points
+                .partial_cmp(&a.points)
+                .unwrap_or(std::cmp::Ordering::Equal)
                 .then_with(|| a.player.name.cmp(&b.player.name))
         });
 
@@ -424,19 +450,15 @@ impl Db for SqliteDb {
         let mut results = Vec::new();
 
         for game in games {
-            let white_player = sqlx::query_as::<_, Player>(
-                "SELECT * FROM players WHERE id = ?"
-            )
-            .bind(game.white_player_id)
-            .fetch_one(&self.pool)
-            .await?;
+            let white_player = sqlx::query_as::<_, Player>("SELECT * FROM players WHERE id = ?")
+                .bind(game.white_player_id)
+                .fetch_one(&self.pool)
+                .await?;
 
-            let black_player = sqlx::query_as::<_, Player>(
-                "SELECT * FROM players WHERE id = ?"
-            )
-            .bind(game.black_player_id)
-            .fetch_one(&self.pool)
-            .await?;
+            let black_player = sqlx::query_as::<_, Player>("SELECT * FROM players WHERE id = ?")
+                .bind(game.black_player_id)
+                .fetch_one(&self.pool)
+                .await?;
 
             results.push(GameResult {
                 game,
@@ -449,7 +471,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_tournament_settings(&self, tournament_id: i32) -> Result<Option<TournamentTiebreakConfig>, sqlx::Error> {
+    async fn get_tournament_settings(
+        &self,
+        tournament_id: i32,
+    ) -> Result<Option<TournamentTiebreakConfig>, sqlx::Error> {
         #[derive(sqlx::FromRow)]
         struct TournamentSettingsRow {
             tiebreak_order: String,
@@ -475,7 +500,7 @@ impl Db for SqliteDb {
                    tournament_category, organizer_name, organizer_email, prize_structure
             FROM tournament_settings
             WHERE tournament_id = ?
-            "#
+            "#,
         )
         .bind(tournament_id)
         .fetch_optional(&self.pool)
@@ -485,8 +510,10 @@ impl Db for SqliteDb {
             Some(row) => {
                 // Parse the JSON tiebreak_order string
                 let tiebreaks: Vec<TiebreakType> = serde_json::from_str(&row.tiebreak_order)
-                    .map_err(|e| sqlx::Error::Protocol(format!("Failed to parse tiebreak_order: {}", e)))?;
-                
+                    .map_err(|e| {
+                        sqlx::Error::Protocol(format!("Failed to parse tiebreak_order: {}", e))
+                    })?;
+
                 Ok(Some(TournamentTiebreakConfig {
                     tournament_id,
                     tiebreaks,
@@ -514,10 +541,14 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn upsert_tournament_settings(&self, settings: &UpdateTournamentSettings) -> Result<(), sqlx::Error> {
+    async fn upsert_tournament_settings(
+        &self,
+        settings: &UpdateTournamentSettings,
+    ) -> Result<(), sqlx::Error> {
         // Serialize tiebreaks to JSON string
-        let tiebreak_order_json = serde_json::to_string(&settings.tiebreak_order)
-            .map_err(|e| sqlx::Error::Protocol(format!("Failed to serialize tiebreak_order: {}", e)))?;
+        let tiebreak_order_json = serde_json::to_string(&settings.tiebreak_order).map_err(|e| {
+            sqlx::Error::Protocol(format!("Failed to serialize tiebreak_order: {}", e))
+        })?;
 
         sqlx::query(
             r#"
@@ -544,7 +575,7 @@ impl Db for SqliteDb {
                 organizer_email = excluded.organizer_email,
                 prize_structure = excluded.prize_structure,
                 updated_at = CURRENT_TIMESTAMP
-            "#
+            "#,
         )
         .bind(settings.tournament_id)
         .bind(tiebreak_order_json)
@@ -568,11 +599,15 @@ impl Db for SqliteDb {
 
     // Round operations
     #[instrument(ret, skip(self))]
-    async fn get_rounds_by_tournament(&self, tournament_id: i32) -> Result<Vec<Round>, sqlx::Error> {
-        let rounds = sqlx::query_as("SELECT * FROM rounds WHERE tournament_id = ? ORDER BY round_number")
-            .bind(tournament_id)
-            .fetch_all(&self.pool)
-            .await?;
+    async fn get_rounds_by_tournament(
+        &self,
+        tournament_id: i32,
+    ) -> Result<Vec<Round>, sqlx::Error> {
+        let rounds =
+            sqlx::query_as("SELECT * FROM rounds WHERE tournament_id = ? ORDER BY round_number")
+                .bind(tournament_id)
+                .fetch_all(&self.pool)
+                .await?;
 
         Ok(rounds)
     }
@@ -581,7 +616,7 @@ impl Db for SqliteDb {
     async fn get_current_round(&self, tournament_id: i32) -> Result<Option<Round>, sqlx::Error> {
         let round = sqlx::query_as(
             "SELECT * FROM rounds WHERE tournament_id = ? AND status = 'in_progress' 
-             ORDER BY round_number DESC LIMIT 1"
+             ORDER BY round_number DESC LIMIT 1",
         )
         .bind(tournament_id)
         .fetch_optional(&self.pool)
@@ -603,7 +638,7 @@ impl Db for SqliteDb {
     #[instrument(ret, skip(self))]
     async fn create_round(&self, data: CreateRound) -> Result<Round, sqlx::Error> {
         let result = sqlx::query(
-            "INSERT INTO rounds (tournament_id, round_number, status) VALUES (?, ?, 'upcoming')"
+            "INSERT INTO rounds (tournament_id, round_number, status) VALUES (?, ?, 'upcoming')",
         )
         .bind(data.tournament_id)
         .bind(data.round_number)
@@ -611,7 +646,7 @@ impl Db for SqliteDb {
         .await?;
 
         let round_id = result.last_insert_rowid() as i32;
-        
+
         let round = sqlx::query_as("SELECT * FROM rounds WHERE id = ?")
             .bind(round_id)
             .fetch_one(&self.pool)
@@ -638,10 +673,14 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_games_by_round(&self, tournament_id: i32, round_number: i32) -> Result<Vec<GameResult>, sqlx::Error> {
+    async fn get_games_by_round(
+        &self,
+        tournament_id: i32,
+        round_number: i32,
+    ) -> Result<Vec<GameResult>, sqlx::Error> {
         // Get games first
         let games = sqlx::query_as::<_, Game>(
-            "SELECT * FROM games WHERE tournament_id = ? AND round_number = ? ORDER BY id"
+            "SELECT * FROM games WHERE tournament_id = ? AND round_number = ? ORDER BY id",
         )
         .bind(tournament_id)
         .bind(round_number)
@@ -649,23 +688,19 @@ impl Db for SqliteDb {
         .await?;
 
         let mut game_results = Vec::new();
-        
+
         for game in games {
             // Get white player
-            let white_player = sqlx::query_as::<_, Player>(
-                "SELECT * FROM players WHERE id = ?"
-            )
-            .bind(game.white_player_id)
-            .fetch_one(&self.pool)
-            .await?;
+            let white_player = sqlx::query_as::<_, Player>("SELECT * FROM players WHERE id = ?")
+                .bind(game.white_player_id)
+                .fetch_one(&self.pool)
+                .await?;
 
             // Get black player
-            let black_player = sqlx::query_as::<_, Player>(
-                "SELECT * FROM players WHERE id = ?"
-            )
-            .bind(game.black_player_id)
-            .fetch_one(&self.pool)
-            .await?;
+            let black_player = sqlx::query_as::<_, Player>("SELECT * FROM players WHERE id = ?")
+                .bind(game.black_player_id)
+                .fetch_one(&self.pool)
+                .await?;
 
             game_results.push(GameResult {
                 game,
@@ -678,11 +713,14 @@ impl Db for SqliteDb {
     }
 
     // Player category operations
-    
+
     #[instrument(ret, skip(self))]
-    async fn get_tournament_categories(&self, tournament_id: i32) -> Result<Vec<PlayerCategory>, sqlx::Error> {
+    async fn get_tournament_categories(
+        &self,
+        tournament_id: i32,
+    ) -> Result<Vec<PlayerCategory>, sqlx::Error> {
         let categories = sqlx::query_as::<_, PlayerCategory>(
-            "SELECT * FROM player_categories WHERE tournament_id = ? ORDER BY created_at"
+            "SELECT * FROM player_categories WHERE tournament_id = ? ORDER BY created_at",
         )
         .bind(tournament_id)
         .fetch_all(&self.pool)
@@ -692,14 +730,17 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn create_player_category(&self, data: CreatePlayerCategory) -> Result<PlayerCategory, sqlx::Error> {
+    async fn create_player_category(
+        &self,
+        data: CreatePlayerCategory,
+    ) -> Result<PlayerCategory, sqlx::Error> {
         let result = sqlx::query(
             r#"
             INSERT INTO player_categories (
                 tournament_id, name, description, min_rating, max_rating, 
                 min_age, max_age, gender_restriction
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            "#
+            "#,
         )
         .bind(data.tournament_id)
         .bind(&data.name)
@@ -713,12 +754,11 @@ impl Db for SqliteDb {
         .await?;
 
         // Fetch the created category
-        let category = sqlx::query_as::<_, PlayerCategory>(
-            "SELECT * FROM player_categories WHERE id = ?"
-        )
-        .bind(result.last_insert_rowid())
-        .fetch_one(&self.pool)
-        .await?;
+        let category =
+            sqlx::query_as::<_, PlayerCategory>("SELECT * FROM player_categories WHERE id = ?")
+                .bind(result.last_insert_rowid())
+                .fetch_one(&self.pool)
+                .await?;
 
         Ok(category)
     }
@@ -741,7 +781,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn assign_player_to_category(&self, data: AssignPlayerToCategory) -> Result<PlayerCategoryAssignment, sqlx::Error> {
+    async fn assign_player_to_category(
+        &self,
+        data: AssignPlayerToCategory,
+    ) -> Result<PlayerCategoryAssignment, sqlx::Error> {
         let result = sqlx::query(
             "INSERT INTO player_category_assignments (player_id, category_id) VALUES (?, ?) ON CONFLICT(player_id, category_id) DO NOTHING"
         )
@@ -752,7 +795,7 @@ impl Db for SqliteDb {
 
         // Fetch the assignment
         let assignment = sqlx::query_as::<_, PlayerCategoryAssignment>(
-            "SELECT * FROM player_category_assignments WHERE player_id = ? AND category_id = ?"
+            "SELECT * FROM player_category_assignments WHERE player_id = ? AND category_id = ?",
         )
         .bind(data.player_id)
         .bind(data.category_id)
@@ -763,7 +806,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_player_category_assignments(&self, tournament_id: i32) -> Result<Vec<PlayerCategoryAssignment>, sqlx::Error> {
+    async fn get_player_category_assignments(
+        &self,
+        tournament_id: i32,
+    ) -> Result<Vec<PlayerCategoryAssignment>, sqlx::Error> {
         let assignments = sqlx::query_as::<_, PlayerCategoryAssignment>(
             r#"
             SELECT pca.* 
@@ -771,7 +817,7 @@ impl Db for SqliteDb {
             JOIN player_categories pc ON pca.category_id = pc.id
             WHERE pc.tournament_id = ?
             ORDER BY pca.assigned_at
-            "#
+            "#,
         )
         .bind(tournament_id)
         .fetch_all(&self.pool)
@@ -782,11 +828,14 @@ impl Db for SqliteDb {
 
     // Knockout tournament operations
     #[instrument(ret, skip(self))]
-    async fn create_knockout_bracket(&self, bracket: KnockoutBracket) -> Result<KnockoutBracket, sqlx::Error> {
+    async fn create_knockout_bracket(
+        &self,
+        bracket: KnockoutBracket,
+    ) -> Result<KnockoutBracket, sqlx::Error> {
         let result = sqlx::query_as(
             "INSERT INTO knockout_brackets (tournament_id, bracket_type, total_rounds)
              VALUES (?, ?, ?)
-             RETURNING *"
+             RETURNING *",
         )
         .bind(bracket.tournament_id)
         .bind(&bracket.bracket_type)
@@ -798,7 +847,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_knockout_bracket(&self, tournament_id: i32) -> Result<Option<KnockoutBracket>, sqlx::Error> {
+    async fn get_knockout_bracket(
+        &self,
+        tournament_id: i32,
+    ) -> Result<Option<KnockoutBracket>, sqlx::Error> {
         let result = sqlx::query_as("SELECT * FROM knockout_brackets WHERE tournament_id = ?")
             .bind(tournament_id)
             .fetch_optional(&self.pool)
@@ -808,7 +860,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_knockout_bracket_by_id(&self, bracket_id: i32) -> Result<Option<KnockoutBracket>, sqlx::Error> {
+    async fn get_knockout_bracket_by_id(
+        &self,
+        bracket_id: i32,
+    ) -> Result<Option<KnockoutBracket>, sqlx::Error> {
         let result = sqlx::query_as("SELECT * FROM knockout_brackets WHERE id = ?")
             .bind(bracket_id)
             .fetch_optional(&self.pool)
@@ -818,7 +873,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn create_bracket_position(&self, position: BracketPosition) -> Result<BracketPosition, sqlx::Error> {
+    async fn create_bracket_position(
+        &self,
+        position: BracketPosition,
+    ) -> Result<BracketPosition, sqlx::Error> {
         let result = sqlx::query_as(
             "INSERT INTO bracket_positions (bracket_id, round_number, position_number, player_id, advanced_from_position, status)
              VALUES (?, ?, ?, ?, ?, ?)
@@ -837,11 +895,14 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_bracket_positions(&self, bracket_id: i32) -> Result<Vec<BracketPosition>, sqlx::Error> {
+    async fn get_bracket_positions(
+        &self,
+        bracket_id: i32,
+    ) -> Result<Vec<BracketPosition>, sqlx::Error> {
         let positions = sqlx::query_as(
             "SELECT * FROM bracket_positions 
              WHERE bracket_id = ? 
-             ORDER BY round_number, position_number"
+             ORDER BY round_number, position_number",
         )
         .bind(bracket_id)
         .fetch_all(&self.pool)
@@ -851,11 +912,15 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_bracket_positions_by_round(&self, bracket_id: i32, round_number: i32) -> Result<Vec<BracketPosition>, sqlx::Error> {
+    async fn get_bracket_positions_by_round(
+        &self,
+        bracket_id: i32,
+        round_number: i32,
+    ) -> Result<Vec<BracketPosition>, sqlx::Error> {
         let positions = sqlx::query_as(
             "SELECT * FROM bracket_positions 
              WHERE bracket_id = ? AND round_number = ?
-             ORDER BY position_number"
+             ORDER BY position_number",
         )
         .bind(bracket_id)
         .bind(round_number)
@@ -866,11 +931,16 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn update_bracket_position(&self, position_id: i32, player_id: Option<i32>, status: String) -> Result<(), sqlx::Error> {
+    async fn update_bracket_position(
+        &self,
+        position_id: i32,
+        player_id: Option<i32>,
+        status: String,
+    ) -> Result<(), sqlx::Error> {
         sqlx::query(
             "UPDATE bracket_positions 
              SET player_id = ?, status = ?
-             WHERE id = ?"
+             WHERE id = ?",
         )
         .bind(player_id)
         .bind(&status)
@@ -884,9 +954,11 @@ impl Db for SqliteDb {
     // Time control operations
     #[instrument(ret, skip(self))]
     async fn get_time_controls(&self) -> Result<Vec<TimeControl>, sqlx::Error> {
-        let time_controls = sqlx::query_as("SELECT * FROM time_controls ORDER BY is_default DESC, time_control_type, name")
-            .fetch_all(&self.pool)
-            .await?;
+        let time_controls = sqlx::query_as(
+            "SELECT * FROM time_controls ORDER BY is_default DESC, time_control_type, name",
+        )
+        .fetch_all(&self.pool)
+        .await?;
 
         Ok(time_controls)
     }
@@ -902,7 +974,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn create_time_control(&self, time_control: TimeControl) -> Result<TimeControl, sqlx::Error> {
+    async fn create_time_control(
+        &self,
+        time_control: TimeControl,
+    ) -> Result<TimeControl, sqlx::Error> {
         let result = sqlx::query_as(
             "INSERT INTO time_controls (name, time_control_type, base_time_minutes, increment_seconds, moves_per_session, session_time_minutes, total_sessions, is_default, description)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -924,7 +999,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn update_time_control(&self, data: UpdateTimeControl) -> Result<TimeControl, sqlx::Error> {
+    async fn update_time_control(
+        &self,
+        data: UpdateTimeControl,
+    ) -> Result<TimeControl, sqlx::Error> {
         // Get current time control for field merging
         let _current = self.get_time_control(data.id).await?;
 
@@ -941,7 +1019,7 @@ impl Db for SqliteDb {
                  description = COALESCE(?, description),
                  updated_at = CURRENT_TIMESTAMP
              WHERE id = ?
-             RETURNING *"
+             RETURNING *",
         )
         .bind(data.name)
         .bind(data.time_control_type)
@@ -970,7 +1048,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_tournaments_using_time_control(&self, time_control_id: i32) -> Result<Vec<Tournament>, sqlx::Error> {
+    async fn get_tournaments_using_time_control(
+        &self,
+        time_control_id: i32,
+    ) -> Result<Vec<Tournament>, sqlx::Error> {
         let tournaments = sqlx::query_as("SELECT * FROM tournaments WHERE time_control_id = ?")
             .bind(time_control_id)
             .fetch_all(&self.pool)
@@ -980,7 +1061,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn unset_default_time_controls(&self, time_control_type: &str) -> Result<(), sqlx::Error> {
+    async fn unset_default_time_controls(
+        &self,
+        time_control_type: &str,
+    ) -> Result<(), sqlx::Error> {
         sqlx::query("UPDATE time_controls SET is_default = 0 WHERE time_control_type = ?")
             .bind(time_control_type)
             .execute(&self.pool)

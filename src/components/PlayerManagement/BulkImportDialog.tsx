@@ -35,7 +35,11 @@ import {
   Save,
 } from '@mui/icons-material';
 import { commands } from '../../dto/bindings';
-import type { BulkImportRequest, BulkImportResult, BulkImportPlayer } from '../../dto/bindings';
+import type {
+  BulkImportRequest,
+  BulkImportResult,
+  BulkImportPlayer,
+} from '../../dto/bindings';
 
 interface BulkImportDialogProps {
   open: boolean;
@@ -54,7 +58,8 @@ const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [csvData, setCsvData] = useState<BulkImportPlayer[]>([]);
-  const [validationResult, setValidationResult] = useState<BulkImportResult | null>(null);
+  const [validationResult, setValidationResult] =
+    useState<BulkImportResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,7 +75,7 @@ const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       try {
         const csv = e.target?.result as string;
         const players = parseCSV(csv);
@@ -86,7 +91,8 @@ const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
 
   const parseCSV = (csv: string): BulkImportPlayer[] => {
     const lines = csv.split('\n').filter(line => line.trim());
-    if (lines.length < 2) throw new Error('CSV must have header and at least one data row');
+    if (lines.length < 2)
+      throw new Error('CSV must have header and at least one data row');
 
     const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
     const players: BulkImportPlayer[] = [];
@@ -232,10 +238,14 @@ const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth={false} fullWidth sx={{ '& .MuiDialog-paper': { maxWidth: '1000px' } }}>
-      <DialogTitle>
-        {t('bulkImportPlayers')}
-      </DialogTitle>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth={false}
+      fullWidth
+      sx={{ '& .MuiDialog-paper': { maxWidth: '1000px' } }}
+    >
+      <DialogTitle>{t('bulkImportPlayers')}</DialogTitle>
       <DialogContent dividers>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -244,7 +254,7 @@ const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
         )}
 
         <Stepper activeStep={activeStep} sx={{ mb: 3 }}>
-          {steps.map((label) => (
+          {steps.map(label => (
             <Step key={label}>
               <StepLabel>{label}</StepLabel>
             </Step>
@@ -254,12 +264,11 @@ const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
         {/* Step 0: Upload File */}
         {activeStep === 0 && (
           <Box>
-            <Typography gutterBottom>
-              {t('uploadCSVInstructions')}
-            </Typography>
+            <Typography gutterBottom>{t('uploadCSVInstructions')}</Typography>
             <Alert severity="info" sx={{ mb: 2 }}>
               <Typography variant="body2">
-                {t('csvFormatExample')}: name, rating, country_code, title, email, phone
+                {t('csvFormatExample')}: name, rating, country_code, title,
+                email, phone
               </Typography>
             </Alert>
             <Box
@@ -276,7 +285,9 @@ const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
               }}
               onClick={() => fileInputRef.current?.click()}
             >
-              <CloudUpload sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
+              <CloudUpload
+                sx={{ fontSize: 48, color: 'primary.main', mb: 1 }}
+              />
               <Typography variant="h6" gutterBottom>
                 {t('clickToUploadCSV')}
               </Typography>
@@ -335,37 +346,39 @@ const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
         {/* Step 2: Review Results */}
         {activeStep === 2 && validationResult && (
           <Box>
-            <Typography gutterBottom>
-              {t('validationResults')}
-            </Typography>
-            
+            <Typography gutterBottom>{t('validationResults')}</Typography>
+
             {(() => {
               const summary = getValidationSummary();
-              return summary && (
-                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                  <Chip
-                    icon={<CheckCircle />}
-                    label={`${summary.valid} ${t('valid')}`}
-                    color="success"
-                    variant="outlined"
-                  />
-                  <Chip
-                    icon={<Error />}
-                    label={`${summary.errors} ${t('errors')}`}
-                    color="error"
-                    variant="outlined"
-                  />
-                  <Chip
-                    icon={<Warning />}
-                    label={`${summary.warnings} ${t('warnings')}`}
-                    color="warning"
-                    variant="outlined"
-                  />
-                </Box>
+              return (
+                summary && (
+                  <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                    <Chip
+                      icon={<CheckCircle />}
+                      label={`${summary.valid} ${t('valid')}`}
+                      color="success"
+                      variant="outlined"
+                    />
+                    <Chip
+                      icon={<Error />}
+                      label={`${summary.errors} ${t('errors')}`}
+                      color="error"
+                      variant="outlined"
+                    />
+                    <Chip
+                      icon={<Warning />}
+                      label={`${summary.warnings} ${t('warnings')}`}
+                      color="warning"
+                      variant="outlined"
+                    />
+                  </Box>
+                )
               );
             })()}
 
-            {validationResult.validations.some(v => v.errors.length > 0 || v.warnings.length > 0) && (
+            {validationResult.validations.some(
+              v => v.errors.length > 0 || v.warnings.length > 0
+            ) && (
               <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
                 <Table stickyHeader>
                   <TableHead>
@@ -379,37 +392,45 @@ const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
                     {validationResult.validations
                       .filter(v => v.errors.length > 0 || v.warnings.length > 0)
                       .map((validation, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{validation.player_data.name}</TableCell>
-                        <TableCell>
-                          <Chip
-                            size="small"
-                            color={validation.errors.length > 0 ? 'error' : 'warning'}
-                            label={validation.errors.length > 0 ? t('error') : t('warning')}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <List dense>
-                            {validation.errors.map((error, i) => (
-                              <ListItem key={i} sx={{ py: 0 }}>
-                                <ListItemIcon sx={{ minWidth: 24 }}>
-                                  <Error color="error" fontSize="small" />
-                                </ListItemIcon>
-                                <ListItemText primary={error} />
-                              </ListItem>
-                            ))}
-                            {validation.warnings.map((warning, i) => (
-                              <ListItem key={i} sx={{ py: 0 }}>
-                                <ListItemIcon sx={{ minWidth: 24 }}>
-                                  <Warning color="warning" fontSize="small" />
-                                </ListItemIcon>
-                                <ListItemText primary={warning} />
-                              </ListItem>
-                            ))}
-                          </List>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                        <TableRow key={index}>
+                          <TableCell>{validation.player_data.name}</TableCell>
+                          <TableCell>
+                            <Chip
+                              size="small"
+                              color={
+                                validation.errors.length > 0
+                                  ? 'error'
+                                  : 'warning'
+                              }
+                              label={
+                                validation.errors.length > 0
+                                  ? t('error')
+                                  : t('warning')
+                              }
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <List dense>
+                              {validation.errors.map((error, i) => (
+                                <ListItem key={i} sx={{ py: 0 }}>
+                                  <ListItemIcon sx={{ minWidth: 24 }}>
+                                    <Error color="error" fontSize="small" />
+                                  </ListItemIcon>
+                                  <ListItemText primary={error} />
+                                </ListItem>
+                              ))}
+                              {validation.warnings.map((warning, i) => (
+                                <ListItem key={i} sx={{ py: 0 }}>
+                                  <ListItemIcon sx={{ minWidth: 24 }}>
+                                    <Warning color="warning" fontSize="small" />
+                                  </ListItemIcon>
+                                  <ListItemText primary={warning} />
+                                </ListItem>
+                              ))}
+                            </List>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -425,7 +446,8 @@ const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
               {t('importCompleted')}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              {validationResult?.success_count} {t('playersImportedSuccessfully')}
+              {validationResult?.success_count}{' '}
+              {t('playersImportedSuccessfully')}
             </Typography>
           </Box>
         )}
@@ -450,16 +472,18 @@ const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
             {t('validateData')}
           </Button>
         )}
-        {activeStep === 2 && validationResult && validationResult.success_count > 0 && (
-          <Button
-            onClick={handleImport}
-            variant="contained"
-            disabled={loading}
-            startIcon={<Save />}
-          >
-            {t('importPlayers')} ({validationResult.success_count})
-          </Button>
-        )}
+        {activeStep === 2 &&
+          validationResult &&
+          validationResult.success_count > 0 && (
+            <Button
+              onClick={handleImport}
+              variant="contained"
+              disabled={loading}
+              startIcon={<Save />}
+            >
+              {t('importPlayers')} ({validationResult.success_count})
+            </Button>
+          )}
       </DialogActions>
     </Dialog>
   );

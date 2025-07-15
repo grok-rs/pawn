@@ -38,5 +38,3 @@ export const StyledDivider = styled(Divider)(({ theme }) => ({
   marginTop: theme.spacing(4),
   marginBottom: theme.spacing(1),
 }));
-
-

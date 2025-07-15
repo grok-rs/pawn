@@ -5,11 +5,11 @@ use crate::pawn::{
     common::types::CommandResult,
     domain::{
         dto::{
-            CreateRound, UpdateRoundStatus, GeneratePairingsRequest, UpdateTournamentPairingMethod,
-            EnhancedPairingRequest, EnhancedPairingResult, SwissPairingOptions, SwissPairingAnalysis,
-            RoundRobinOptions, RoundRobinAnalysis, PairingValidationResults
+            CreateRound, EnhancedPairingRequest, EnhancedPairingResult, GeneratePairingsRequest,
+            PairingValidationResults, RoundRobinAnalysis, RoundRobinOptions, SwissPairingAnalysis,
+            SwissPairingOptions, UpdateRoundStatus, UpdateTournamentPairingMethod,
         },
-        model::{Round, RoundDetails, Pairing, GameResult},
+        model::{GameResult, Pairing, Round, RoundDetails},
     },
     state::PawnState,
 };
@@ -22,7 +22,10 @@ pub async fn get_rounds_by_tournament(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<Vec<Round>> {
-    Ok(state.round_service.get_rounds_by_tournament(tournament_id).await?)
+    Ok(state
+        .round_service
+        .get_rounds_by_tournament(tournament_id)
+        .await?)
 }
 
 #[instrument(ret, skip(state))]
@@ -38,10 +41,7 @@ pub async fn get_current_round(
 #[instrument(ret, skip(state))]
 #[tauri::command]
 #[specta::specta]
-pub async fn create_round(
-    state: State<'_, PawnState>,
-    data: CreateRound,
-) -> CommandResult<Round> {
+pub async fn create_round(state: State<'_, PawnState>, data: CreateRound) -> CommandResult<Round> {
     Ok(state.round_service.create_round(data).await?)
 }
 
@@ -84,16 +84,16 @@ pub async fn create_pairings_as_games(
     round_number: i32,
     pairings: Vec<Pairing>,
 ) -> CommandResult<Vec<GameResult>> {
-    Ok(state.round_service.create_pairings_as_games(tournament_id, round_number, pairings).await?)
+    Ok(state
+        .round_service
+        .create_pairings_as_games(tournament_id, round_number, pairings)
+        .await?)
 }
 
 #[instrument(ret, skip(state))]
 #[tauri::command]
 #[specta::specta]
-pub async fn complete_round(
-    state: State<'_, PawnState>,
-    round_id: i32,
-) -> CommandResult<Round> {
+pub async fn complete_round(state: State<'_, PawnState>, round_id: i32) -> CommandResult<Round> {
     Ok(state.round_service.complete_round(round_id).await?)
 }
 
@@ -131,18 +131,18 @@ pub async fn generate_enhanced_pairings(
     request: EnhancedPairingRequest,
 ) -> CommandResult<EnhancedPairingResult> {
     // TODO: Implement enhanced pairing generation using the new engines
-    // This would integrate with the SwissPairingEngine, RoundRobinEngine, 
+    // This would integrate with the SwissPairingEngine, RoundRobinEngine,
     // ManualPairingController, and PairingOptimizer
-    
+
     // For now, fall back to basic pairing generation
     let basic_request = GeneratePairingsRequest {
         tournament_id: request.tournament_id,
         round_number: request.round_number,
         pairing_method: request.pairing_method,
     };
-    
+
     let pairings = state.round_service.generate_pairings(basic_request).await?;
-    
+
     // Create a basic enhanced result
     let validation_results = PairingValidationResults {
         is_valid: true,
@@ -150,7 +150,7 @@ pub async fn generate_enhanced_pairings(
         warnings: vec![],
         suggestions: vec![],
     };
-    
+
     Ok(EnhancedPairingResult {
         pairings,
         validation_results,
@@ -170,9 +170,9 @@ pub async fn analyze_swiss_pairings(
 ) -> CommandResult<SwissPairingAnalysis> {
     // TODO: Implement Swiss pairing analysis using SwissPairingEngine
     // This would analyze score groups, floats, color balance, and rating distribution
-    
+
     let _ = (state, tournament_id, round_number, options); // Suppress unused warnings
-    
+
     // Placeholder implementation
     Ok(SwissPairingAnalysis {
         score_groups: vec![],
@@ -208,9 +208,9 @@ pub async fn analyze_round_robin_pairings(
 ) -> CommandResult<RoundRobinAnalysis> {
     // TODO: Implement Round-Robin analysis using RoundRobinEngine
     // This would analyze Berger tables, color distribution, and progress
-    
+
     let _ = (state, tournament_id, round_number, options); // Suppress unused warnings
-    
+
     // Placeholder implementation
     Ok(RoundRobinAnalysis {
         total_rounds_needed: 0,
@@ -230,9 +230,9 @@ pub async fn validate_pairing_configuration(
 ) -> CommandResult<PairingValidationResults> {
     // TODO: Implement comprehensive pairing validation using ManualPairingController
     // This would check for conflicts, color balance, and tournament rules
-    
+
     let _ = (state, tournament_id, pairings); // Suppress unused warnings
-    
+
     // Placeholder implementation
     Ok(PairingValidationResults {
         is_valid: true,
@@ -251,9 +251,9 @@ pub async fn benchmark_pairing_performance(
 ) -> CommandResult<Vec<crate::pawn::domain::dto::PairingPerformanceMetrics>> {
     // TODO: Implement performance benchmarking using PairingOptimizer
     // This would test pairing generation speed with different player counts
-    
+
     let _ = (state, player_counts); // Suppress unused warnings
-    
+
     // Placeholder implementation
     Ok(vec![])
 }

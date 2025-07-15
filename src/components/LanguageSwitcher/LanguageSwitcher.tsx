@@ -28,7 +28,8 @@ const LanguageSwitcher: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
-  const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
+  const currentLanguage =
+    languages.find(lang => lang.code === i18n.language) || languages[0];
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -66,7 +67,7 @@ const LanguageSwitcher: React.FC = () => {
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        {languages.map((language) => (
+        {languages.map(language => (
           <MenuItem
             key={language.code}
             onClick={() => changeLanguage(language.code)}

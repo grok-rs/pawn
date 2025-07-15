@@ -65,7 +65,11 @@ const StepperNavigation = ({
           minWidth: 120,
         }}
       >
-        {isSubmitting ? t('creating') : isLastStep ? t('createTournament') : t('continue')}
+        {isSubmitting
+          ? t('creating')
+          : isLastStep
+            ? t('createTournament')
+            : t('continue')}
       </Button>
     </Stack>
   );

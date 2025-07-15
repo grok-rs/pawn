@@ -1,8 +1,8 @@
-use std::collections::{HashMap, HashSet};
 use crate::pawn::{
     common::error::PawnError,
-    domain::model::{Player, Pairing, GameResult},
+    domain::model::{GameResult, Pairing, Player},
 };
+use std::collections::{HashMap, HashSet};
 
 /// Manual pairing control system for tournament directors
 pub struct ManualPairingController;
@@ -19,12 +19,12 @@ pub struct PairingConstraint {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConstraintType {
-    ForceMatch,    // Force these two players to play each other
-    ForbidMatch,   // Prevent these two players from playing each other
-    ForceColor,    // Force a player to have a specific color
-    ForceBye,      // Force a player to get a bye
-    ForbidBye,     // Prevent a player from getting a bye
-    FixedBoard,    // Force pairing to a specific board number
+    ForceMatch,  // Force these two players to play each other
+    ForbidMatch, // Prevent these two players from playing each other
+    ForceColor,  // Force a player to have a specific color
+    ForceBye,    // Force a player to get a bye
+    ForbidBye,   // Prevent a player from getting a bye
+    FixedBoard,  // Force pairing to a specific board number
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -95,9 +95,9 @@ pub enum ValidationErrorType {
 
 #[derive(Debug)]
 pub enum ErrorSeverity {
-    Critical,   // Pairing cannot proceed
-    Major,      // Serious issue but pairing possible
-    Minor,      // Cosmetic issue
+    Critical, // Pairing cannot proceed
+    Major,    // Serious issue but pairing possible
+    Minor,    // Cosmetic issue
 }
 
 #[derive(Debug)]
@@ -155,17 +155,14 @@ impl ManualPairingController {
 
         // Step 1: Apply forced pairings
         for forced_pairing in &request.forced_pairings {
-            let pairing = self.create_forced_pairing(
-                forced_pairing,
-                players,
-                &mut board_counter,
-            )?;
-            
+            let pairing =
+                self.create_forced_pairing(forced_pairing, players, &mut board_counter)?;
+
             used_players.insert(pairing.white_player.id);
             if let Some(ref black_player) = pairing.black_player {
                 used_players.insert(black_player.id);
             }
-            
+
             final_pairings.push(pairing);
         }
 
@@ -176,7 +173,7 @@ impl ManualPairingController {
                 &request.constraints,
                 &used_players,
             )?;
-            
+
             final_pairings.extend(remaining_pairings);
         }
 
@@ -184,23 +181,21 @@ impl ManualPairingController {
         self.apply_color_constraints(&mut final_pairings, &request.color_constraints)?;
 
         // Step 4: Validate the final result
-        let validation = self.validate_pairings(
-            &final_pairings,
-            players,
-            game_history,
-            &request,
-        )?;
+        let validation =
+            self.validate_pairings(&final_pairings, players, game_history, &request)?;
 
         if !validation.is_valid {
-            let critical_errors: Vec<_> = validation.errors
+            let critical_errors: Vec<_> = validation
+                .errors
                 .iter()
                 .filter(|e| matches!(e.severity, ErrorSeverity::Critical))
                 .collect();
-                
+
             if !critical_errors.is_empty() {
                 return Err(PawnError::InvalidInput(format!(
                     "Critical pairing errors: {}",
-                    critical_errors.iter()
+                    critical_errors
+                        .iter()
                         .map(|e| e.message.as_str())
                         .collect::<Vec<_>>()
                         .join(", ")
@@ -227,17 +222,17 @@ impl ManualPairingController {
         let white_player = players
             .iter()
             .find(|p| p.id == forced.white_player_id)
-            .ok_or_else(|| PawnError::InvalidInput(format!(
-                "White player {} not found", forced.white_player_id
-            )))?;
+            .ok_or_else(|| {
+                PawnError::InvalidInput(format!(
+                    "White player {} not found",
+                    forced.white_player_id
+                ))
+            })?;
 
         let black_player = if let Some(black_id) = forced.black_player_id {
-            Some(players
-                .iter()
-                .find(|p| p.id == black_id)
-                .ok_or_else(|| PawnError::InvalidInput(format!(
-                    "Black player {} not found", black_id
-                )))?)
+            Some(players.iter().find(|p| p.id == black_id).ok_or_else(|| {
+                PawnError::InvalidInput(format!("Black player {} not found", black_id))
+            })?)
         } else {
             None
         };
@@ -264,8 +259,11 @@ impl ManualPairingController {
     ) -> Result<Vec<Pairing>, PawnError> {
         // Remove pairings involving already used players
         pairings.retain(|pairing| {
-            !used_players.contains(&pairing.white_player.id) &&
-            !pairing.black_player.as_ref().map_or(false, |bp| used_players.contains(&bp.id))
+            !used_players.contains(&pairing.white_player.id)
+                && !pairing
+                    .black_player
+                    .as_ref()
+                    .map_or(false, |bp| used_players.contains(&bp.id))
         });
 
         // Apply forbid constraints
@@ -289,8 +287,8 @@ impl ManualPairingController {
         let white_id = pairing.white_player.id;
         let black_id = pairing.black_player.as_ref().map(|p| p.id);
 
-        (white_id == player1_id && black_id == Some(player2_id)) ||
-        (white_id == player2_id && black_id == Some(player1_id))
+        (white_id == player1_id && black_id == Some(player2_id))
+            || (white_id == player2_id && black_id == Some(player1_id))
     }
 
     /// Apply color constraints to pairings
@@ -302,11 +300,17 @@ impl ManualPairingController {
         for constraint in color_constraints {
             for pairing in pairings.iter_mut() {
                 // Check if this pairing involves the constrained player
-                if pairing.white_player.id == constraint.player_id ||
-                   pairing.black_player.as_ref().map_or(false, |bp| bp.id == constraint.player_id) {
-                    
+                if pairing.white_player.id == constraint.player_id
+                    || pairing
+                        .black_player
+                        .as_ref()
+                        .map_or(false, |bp| bp.id == constraint.player_id)
+                {
                     // Apply color constraint if priority is high enough
-                    if matches!(constraint.priority, ConstraintPriority::High | ConstraintPriority::Critical) {
+                    if matches!(
+                        constraint.priority,
+                        ConstraintPriority::High | ConstraintPriority::Critical
+                    ) {
                         self.enforce_color_constraint(pairing, constraint)?;
                     }
                 }
@@ -333,7 +337,7 @@ impl ManualPairingController {
             let black_player = pairing.black_player.take().unwrap();
             let white_player = std::mem::replace(&mut pairing.white_player, black_player);
             pairing.black_player = Some(white_player);
-            
+
             tracing::debug!(
                 "Swapped colors for player {} due to color constraint",
                 constraint.player_id
@@ -373,7 +377,9 @@ impl ManualPairingController {
         // Generate suggestions for improvements
         self.generate_improvement_suggestions(pairings, &mut suggestions);
 
-        let is_valid = errors.iter().all(|e| !matches!(e.severity, ErrorSeverity::Critical));
+        let is_valid = errors
+            .iter()
+            .all(|e| !matches!(e.severity, ErrorSeverity::Critical));
 
         Ok(PairingValidationResult {
             is_valid,
@@ -384,24 +390,34 @@ impl ManualPairingController {
     }
 
     /// Validate that no player appears in multiple pairings
-    fn validate_no_duplicate_players(&self, pairings: &[Pairing], errors: &mut Vec<ValidationError>) {
+    fn validate_no_duplicate_players(
+        &self,
+        pairings: &[Pairing],
+        errors: &mut Vec<ValidationError>,
+    ) {
         let mut seen_players = HashSet::new();
-        
+
         for pairing in pairings {
             if !seen_players.insert(pairing.white_player.id) {
                 errors.push(ValidationError {
                     error_type: ValidationErrorType::PlayerPairedTwice,
-                    message: format!("Player {} appears in multiple pairings", pairing.white_player.name),
+                    message: format!(
+                        "Player {} appears in multiple pairings",
+                        pairing.white_player.name
+                    ),
                     affected_players: vec![pairing.white_player.id],
                     severity: ErrorSeverity::Critical,
                 });
             }
-            
+
             if let Some(ref black_player) = pairing.black_player {
                 if !seen_players.insert(black_player.id) {
                     errors.push(ValidationError {
                         error_type: ValidationErrorType::PlayerPairedTwice,
-                        message: format!("Player {} appears in multiple pairings", black_player.name),
+                        message: format!(
+                            "Player {} appears in multiple pairings",
+                            black_player.name
+                        ),
                         affected_players: vec![black_player.id],
                         severity: ErrorSeverity::Critical,
                     });
@@ -420,11 +436,11 @@ impl ManualPairingController {
     ) {
         // Build opponent history
         let mut opponent_map: HashMap<i32, HashSet<i32>> = HashMap::new();
-        
+
         for game in game_history {
             let white_id = game.white_player.id;
             let black_id = game.black_player.id;
-            
+
             if white_id > 0 && black_id > 0 {
                 opponent_map.entry(white_id).or_default().insert(black_id);
                 opponent_map.entry(black_id).or_default().insert(white_id);
@@ -435,15 +451,14 @@ impl ManualPairingController {
             if let Some(ref black_player) = pairing.black_player {
                 let white_id = pairing.white_player.id;
                 let black_id = black_player.id;
-                
+
                 if let Some(opponents) = opponent_map.get(&white_id) {
                     if opponents.contains(&black_id) {
                         warnings.push(ValidationWarning {
                             warning_type: WarningType::TeamConflict,
                             message: format!(
                                 "Rematch: {} vs {} have played before",
-                                pairing.white_player.name,
-                                black_player.name
+                                pairing.white_player.name, black_player.name
                             ),
                             affected_players: vec![white_id, black_id],
                         });
@@ -478,7 +493,7 @@ impl ManualPairingController {
     /// Validate board number assignments
     fn validate_board_assignments(&self, pairings: &[Pairing], errors: &mut Vec<ValidationError>) {
         let mut used_boards = HashSet::new();
-        
+
         for pairing in pairings {
             if !used_boards.insert(pairing.board_number) {
                 errors.push(ValidationError {
@@ -492,7 +507,11 @@ impl ManualPairingController {
     }
 
     /// Generate suggestions for improving pairings
-    fn generate_improvement_suggestions(&self, _pairings: &[Pairing], _suggestions: &mut Vec<ValidationSuggestion>) {
+    fn generate_improvement_suggestions(
+        &self,
+        _pairings: &[Pairing],
+        _suggestions: &mut Vec<ValidationSuggestion>,
+    ) {
         // TODO: Implement suggestion generation
         // Suggest color swaps, player swaps, etc. for better balance
     }
@@ -524,12 +543,18 @@ mod tests {
     fn create_test_pairing(white_id: i32, black_id: i32, board: i32) -> Pairing {
         Pairing {
             white_player: create_test_player(white_id, &format!("Player {}", white_id)),
-            black_player: Some(create_test_player(black_id, &format!("Player {}", black_id))),
+            black_player: Some(create_test_player(
+                black_id,
+                &format!("Player {}", black_id),
+            )),
             board_number: board,
         }
     }
 
-    fn create_manual_request(constraints: Vec<PairingConstraint>, colors: Vec<ColorConstraint>) -> ManualPairingRequest {
+    fn create_manual_request(
+        constraints: Vec<PairingConstraint>,
+        colors: Vec<ColorConstraint>,
+    ) -> ManualPairingRequest {
         ManualPairingRequest {
             tournament_id: 1,
             round_number: 1,
@@ -543,10 +568,7 @@ mod tests {
     #[test]
     fn test_empty_manual_override() {
         let controller = ManualPairingController::new();
-        let automatic_pairings = vec![
-            create_test_pairing(1, 2, 1),
-            create_test_pairing(3, 4, 2),
-        ];
+        let automatic_pairings = vec![create_test_pairing(1, 2, 1), create_test_pairing(3, 4, 2)];
         let players = vec![
             create_test_player(1, "Player 1"),
             create_test_player(2, "Player 2"),
@@ -555,12 +577,9 @@ mod tests {
         ];
         let request = create_manual_request(vec![], vec![]);
 
-        let result = controller.apply_manual_overrides(
-            automatic_pairings.clone(),
-            &players,
-            request,
-            &[],
-        ).unwrap();
+        let result = controller
+            .apply_manual_overrides(automatic_pairings.clone(), &players, request, &[])
+            .unwrap();
 
         // With no overrides, should return original pairings
         assert_eq!(result.len(), 2);
@@ -571,10 +590,7 @@ mod tests {
     #[test]
     fn test_force_match_constraint() {
         let controller = ManualPairingController::new();
-        let automatic_pairings = vec![
-            create_test_pairing(1, 2, 1),
-            create_test_pairing(3, 4, 2),
-        ];
+        let automatic_pairings = vec![create_test_pairing(1, 2, 1), create_test_pairing(3, 4, 2)];
         let players = vec![
             create_test_player(1, "Player 1"),
             create_test_player(2, "Player 2"),
@@ -593,29 +609,23 @@ mod tests {
         }];
         let request = create_manual_request(constraints, vec![]);
 
-        let result = controller.apply_manual_overrides(
-            automatic_pairings,
-            &players,
-            request,
-            &[],
-        ).unwrap();
+        let result = controller
+            .apply_manual_overrides(automatic_pairings, &players, request, &[])
+            .unwrap();
 
         // Should have forced pairing 1 vs 3
         assert_eq!(result.len(), 2);
-        let forced_pairing = result.iter().find(|p| 
-            (p.white_player.id == 1 && p.black_player.as_ref().unwrap().id == 3) ||
-            (p.white_player.id == 3 && p.black_player.as_ref().unwrap().id == 1)
-        );
+        let forced_pairing = result.iter().find(|p| {
+            (p.white_player.id == 1 && p.black_player.as_ref().unwrap().id == 3)
+                || (p.white_player.id == 3 && p.black_player.as_ref().unwrap().id == 1)
+        });
         assert!(forced_pairing.is_some());
     }
 
     #[test]
     fn test_forbid_match_constraint() {
         let controller = ManualPairingController::new();
-        let automatic_pairings = vec![
-            create_test_pairing(1, 2, 1),
-            create_test_pairing(3, 4, 2),
-        ];
+        let automatic_pairings = vec![create_test_pairing(1, 2, 1), create_test_pairing(3, 4, 2)];
         let players = vec![
             create_test_player(1, "Player 1"),
             create_test_player(2, "Player 2"),
@@ -634,27 +644,22 @@ mod tests {
         }];
         let request = create_manual_request(constraints, vec![]);
 
-        let result = controller.apply_manual_overrides(
-            automatic_pairings,
-            &players,
-            request,
-            &[],
-        ).unwrap();
+        let result = controller
+            .apply_manual_overrides(automatic_pairings, &players, request, &[])
+            .unwrap();
 
         // Should not have pairing 1 vs 2
-        let forbidden_pairing = result.iter().find(|p| 
-            (p.white_player.id == 1 && p.black_player.as_ref().unwrap().id == 2) ||
-            (p.white_player.id == 2 && p.black_player.as_ref().unwrap().id == 1)
-        );
+        let forbidden_pairing = result.iter().find(|p| {
+            (p.white_player.id == 1 && p.black_player.as_ref().unwrap().id == 2)
+                || (p.white_player.id == 2 && p.black_player.as_ref().unwrap().id == 1)
+        });
         assert!(forbidden_pairing.is_none());
     }
 
     #[test]
     fn test_color_constraint() {
         let controller = ManualPairingController::new();
-        let automatic_pairings = vec![
-            create_test_pairing(1, 2, 1),
-        ];
+        let automatic_pairings = vec![create_test_pairing(1, 2, 1)];
         let players = vec![
             create_test_player(1, "Player 1"),
             create_test_player(2, "Player 2"),
@@ -669,12 +674,9 @@ mod tests {
         }];
         let request = create_manual_request(vec![], color_constraints);
 
-        let result = controller.apply_manual_overrides(
-            automatic_pairings,
-            &players,
-            request,
-            &[],
-        ).unwrap();
+        let result = controller
+            .apply_manual_overrides(automatic_pairings, &players, request, &[])
+            .unwrap();
 
         // Player 2 should be white
         assert_eq!(result.len(), 1);
@@ -685,10 +687,7 @@ mod tests {
     #[test]
     fn test_force_bye_constraint() {
         let controller = ManualPairingController::new();
-        let automatic_pairings = vec![
-            create_test_pairing(1, 2, 1),
-            create_test_pairing(3, 4, 2),
-        ];
+        let automatic_pairings = vec![create_test_pairing(1, 2, 1), create_test_pairing(3, 4, 2)];
         let players = vec![
             create_test_player(1, "Player 1"),
             create_test_player(2, "Player 2"),
@@ -708,27 +707,21 @@ mod tests {
         }];
         let request = create_manual_request(constraints, vec![]);
 
-        let result = controller.apply_manual_overrides(
-            automatic_pairings,
-            &players,
-            request,
-            &[],
-        ).unwrap();
+        let result = controller
+            .apply_manual_overrides(automatic_pairings, &players, request, &[])
+            .unwrap();
 
         // Player 5 should not appear in any pairing
-        let player5_in_pairing = result.iter().any(|p| 
-            p.white_player.id == 5 || 
-            p.black_player.as_ref().map_or(false, |bp| bp.id == 5)
-        );
+        let player5_in_pairing = result.iter().any(|p| {
+            p.white_player.id == 5 || p.black_player.as_ref().map_or(false, |bp| bp.id == 5)
+        });
         assert!(!player5_in_pairing);
     }
 
     #[test]
     fn test_constraint_priority_conflict() {
         let controller = ManualPairingController::new();
-        let automatic_pairings = vec![
-            create_test_pairing(1, 2, 1),
-        ];
+        let automatic_pairings = vec![create_test_pairing(1, 2, 1)];
         let players = vec![
             create_test_player(1, "Player 1"),
             create_test_player(2, "Player 2"),
@@ -755,12 +748,9 @@ mod tests {
         ];
         let request = create_manual_request(constraints, vec![]);
 
-        let result = controller.apply_manual_overrides(
-            automatic_pairings,
-            &players,
-            request,
-            &[],
-        ).unwrap();
+        let result = controller
+            .apply_manual_overrides(automatic_pairings, &players, request, &[])
+            .unwrap();
 
         // High priority constraint should win (force match)
         assert_eq!(result.len(), 1);
@@ -768,11 +758,10 @@ mod tests {
         assert_eq!(result[0].black_player.as_ref().unwrap().id, 2);
     }
 
-
     #[test]
     fn test_validation_duplicate_players() {
         let controller = ManualPairingController::new();
-        
+
         // Create pairings with duplicate player
         let mut pairings = vec![
             create_test_pairing(1, 2, 1),
@@ -780,19 +769,24 @@ mod tests {
         ];
 
         let request = create_manual_request(vec![], vec![]);
-        let validation = controller.validate_pairings(&pairings, &[], &[], &request).unwrap();
+        let validation = controller
+            .validate_pairings(&pairings, &[], &[], &request)
+            .unwrap();
 
         assert!(!validation.is_valid);
         assert!(!validation.errors.is_empty());
-        assert!(validation.errors.iter().any(|e| 
-            matches!(e.error_type, ValidationErrorType::PlayerPairedTwice)
-        ));
+        assert!(
+            validation
+                .errors
+                .iter()
+                .any(|e| matches!(e.error_type, ValidationErrorType::PlayerPairedTwice))
+        );
     }
 
     #[test]
     fn test_validation_board_conflicts() {
         let controller = ManualPairingController::new();
-        
+
         // Create pairings with same board number
         let pairings = vec![
             create_test_pairing(1, 2, 1),
@@ -800,18 +794,23 @@ mod tests {
         ];
 
         let request = create_manual_request(vec![], vec![]);
-        let validation = controller.validate_pairings(&pairings, &[], &[], &request).unwrap();
+        let validation = controller
+            .validate_pairings(&pairings, &[], &[], &request)
+            .unwrap();
 
         assert!(!validation.is_valid);
-        assert!(validation.errors.iter().any(|e| 
-            matches!(e.error_type, ValidationErrorType::InvalidBoardAssignment)
-        ));
+        assert!(
+            validation
+                .errors
+                .iter()
+                .any(|e| matches!(e.error_type, ValidationErrorType::InvalidBoardAssignment))
+        );
     }
 
     #[test]
     fn test_validation_self_pairing() {
         let controller = ManualPairingController::new();
-        
+
         // Create invalid self-pairing
         let mut pairing = create_test_pairing(1, 2, 1);
         pairing.black_player = Some(create_test_player(1, "Player 1")); // Same as white
@@ -819,21 +818,23 @@ mod tests {
         let pairings = vec![pairing];
 
         let request = create_manual_request(vec![], vec![]);
-        let validation = controller.validate_pairings(&pairings, &[], &[], &request).unwrap();
+        let validation = controller
+            .validate_pairings(&pairings, &[], &[], &request)
+            .unwrap();
 
         assert!(!validation.is_valid);
-        assert!(validation.errors.iter().any(|e| 
-            matches!(e.error_type, ValidationErrorType::PlayerPairedTwice)
-        ));
+        assert!(
+            validation
+                .errors
+                .iter()
+                .any(|e| matches!(e.error_type, ValidationErrorType::PlayerPairedTwice))
+        );
     }
 
     #[test]
     fn test_constraint_application_order() {
         let controller = ManualPairingController::new();
-        let automatic_pairings = vec![
-            create_test_pairing(1, 2, 1),
-            create_test_pairing(3, 4, 2),
-        ];
+        let automatic_pairings = vec![create_test_pairing(1, 2, 1), create_test_pairing(3, 4, 2)];
         let players = vec![
             create_test_player(1, "Player 1"),
             create_test_player(2, "Player 2"),
@@ -862,37 +863,31 @@ mod tests {
         ];
         let request = create_manual_request(constraints, vec![]);
 
-        let result = controller.apply_manual_overrides(
-            automatic_pairings,
-            &players,
-            request,
-            &[],
-        ).unwrap();
+        let result = controller
+            .apply_manual_overrides(automatic_pairings, &players, request, &[])
+            .unwrap();
 
         // Both constraints should be applied
         assert_eq!(result.len(), 2);
-        
+
         // Check that forced pairings exist
-        let has_1_vs_3 = result.iter().any(|p| 
-            (p.white_player.id == 1 && p.black_player.as_ref().unwrap().id == 3) ||
-            (p.white_player.id == 3 && p.black_player.as_ref().unwrap().id == 1)
-        );
-        let has_2_vs_4 = result.iter().any(|p| 
-            (p.white_player.id == 2 && p.black_player.as_ref().unwrap().id == 4) ||
-            (p.white_player.id == 4 && p.black_player.as_ref().unwrap().id == 2)
-        );
-        
+        let has_1_vs_3 = result.iter().any(|p| {
+            (p.white_player.id == 1 && p.black_player.as_ref().unwrap().id == 3)
+                || (p.white_player.id == 3 && p.black_player.as_ref().unwrap().id == 1)
+        });
+        let has_2_vs_4 = result.iter().any(|p| {
+            (p.white_player.id == 2 && p.black_player.as_ref().unwrap().id == 4)
+                || (p.white_player.id == 4 && p.black_player.as_ref().unwrap().id == 2)
+        });
+
         assert!(has_1_vs_3);
         assert!(has_2_vs_4);
     }
 
-
     #[test]
     fn test_round_specific_constraints() {
         let controller = ManualPairingController::new();
-        let automatic_pairings = vec![
-            create_test_pairing(1, 2, 1),
-        ];
+        let automatic_pairings = vec![create_test_pairing(1, 2, 1)];
         let players = vec![
             create_test_player(1, "Player 1"),
             create_test_player(2, "Player 2"),
@@ -909,12 +904,9 @@ mod tests {
         }];
         let request = create_manual_request(constraints, vec![]);
 
-        let result = controller.apply_manual_overrides(
-            automatic_pairings.clone(),
-            &players,
-            request,
-            &[],
-        ).unwrap();
+        let result = controller
+            .apply_manual_overrides(automatic_pairings.clone(), &players, request, &[])
+            .unwrap();
 
         // Constraint shouldn't apply to round 1, so pairing should remain
         assert_eq!(result.len(), 1);
