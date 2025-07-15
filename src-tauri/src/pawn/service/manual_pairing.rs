@@ -231,7 +231,7 @@ impl ManualPairingController {
 
         let black_player = if let Some(black_id) = forced.black_player_id {
             Some(players.iter().find(|p| p.id == black_id).ok_or_else(|| {
-                PawnError::InvalidInput(format!("Black player {} not found", black_id))
+                PawnError::InvalidInput(format!("Black player {black_id} not found"))
             })?)
         } else {
             None
@@ -263,7 +263,7 @@ impl ManualPairingController {
                 && !pairing
                     .black_player
                     .as_ref()
-                    .map_or(false, |bp| used_players.contains(&bp.id))
+                    .is_some_and(|bp| used_players.contains(&bp.id))
         });
 
         // Apply forbid constraints
@@ -304,7 +304,7 @@ impl ManualPairingController {
                     || pairing
                         .black_player
                         .as_ref()
-                        .map_or(false, |bp| bp.id == constraint.player_id)
+                        .is_some_and(|bp| bp.id == constraint.player_id)
                 {
                     // Apply color constraint if priority is high enough
                     if matches!(
@@ -351,7 +351,7 @@ impl ManualPairingController {
     pub fn validate_pairings(
         &self,
         pairings: &[Pairing],
-        players: &[Player],
+        _players: &[Player],
         game_history: &[GameResult],
         request: &ManualPairingRequest,
     ) -> Result<PairingValidationResult, PawnError> {
@@ -431,7 +431,7 @@ impl ManualPairingController {
         &self,
         pairings: &[Pairing],
         game_history: &[GameResult],
-        errors: &mut Vec<ValidationError>,
+        _errors: &mut Vec<ValidationError>,
         warnings: &mut Vec<ValidationWarning>,
     ) {
         // Build opponent history
@@ -542,11 +542,8 @@ mod tests {
 
     fn create_test_pairing(white_id: i32, black_id: i32, board: i32) -> Pairing {
         Pairing {
-            white_player: create_test_player(white_id, &format!("Player {}", white_id)),
-            black_player: Some(create_test_player(
-                black_id,
-                &format!("Player {}", black_id),
-            )),
+            white_player: create_test_player(white_id, &format!("Player {white_id}")),
+            black_player: Some(create_test_player(black_id, &format!("Player {black_id}"))),
             board_number: board,
         }
     }
@@ -713,7 +710,7 @@ mod tests {
 
         // Player 5 should not appear in any pairing
         let player5_in_pairing = result.iter().any(|p| {
-            p.white_player.id == 5 || p.black_player.as_ref().map_or(false, |bp| bp.id == 5)
+            p.white_player.id == 5 || p.black_player.as_ref().is_some_and(|bp| bp.id == 5)
         });
         assert!(!player5_in_pairing);
     }
@@ -763,7 +760,7 @@ mod tests {
         let controller = ManualPairingController::new();
 
         // Create pairings with duplicate player
-        let mut pairings = vec![
+        let pairings = vec![
             create_test_pairing(1, 2, 1),
             create_test_pairing(1, 3, 2), // Player 1 appears twice
         ];

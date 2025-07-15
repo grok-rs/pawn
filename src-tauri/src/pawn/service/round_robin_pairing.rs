@@ -208,7 +208,7 @@ impl RoundRobinEngine {
         tournament_type: &RoundRobinType,
     ) -> Result<BergerTable, PawnError> {
         let n = players.len();
-        let (rounds, multiplier) = match tournament_type {
+        let (rounds, _multiplier) = match tournament_type {
             RoundRobinType::Single => (if n % 2 == 0 { n - 1 } else { n }, 1),
             RoundRobinType::Double => (if n % 2 == 0 { 2 * (n - 1) } else { 2 * n }, 2),
             RoundRobinType::Scheveningen => (n, 1), // Each team member plays each opponent once
@@ -271,7 +271,7 @@ impl RoundRobinEngine {
         pos1: usize,
         pos2: usize,
         round: usize,
-        n: usize,
+        _n: usize,
     ) -> (usize, usize) {
         // Classical Berger table color assignment
         // Player 1 (fixed position) alternates colors based on round
@@ -293,12 +293,10 @@ impl RoundRobinEngine {
                 } else {
                     (pos2, pos1)
                 }
+            } else if pos1 < pos2 {
+                (pos2, pos1)
             } else {
-                if pos1 < pos2 {
-                    (pos2, pos1)
-                } else {
-                    (pos1, pos2)
-                }
+                (pos1, pos2)
             }
         }
     }
@@ -614,7 +612,7 @@ mod tests {
 
         // Test 6 players (even number)
         let players: Vec<Player> = (1..=6)
-            .map(|i| create_test_player(i, &format!("Player {}", i)))
+            .map(|i| create_test_player(i, &format!("Player {i}")))
             .collect();
         let rr_players = engine.convert_to_round_robin_players(players);
         let berger_table = engine
@@ -626,7 +624,7 @@ mod tests {
 
         // Test 7 players (odd number)
         let players: Vec<Player> = (1..=7)
-            .map(|i| create_test_player(i, &format!("Player {}", i)))
+            .map(|i| create_test_player(i, &format!("Player {i}")))
             .collect();
         let rr_players = engine.convert_to_round_robin_players(players);
         let berger_table = engine
@@ -669,9 +667,7 @@ mod tests {
                 // Should not have seen this pairing before
                 assert!(
                     all_pairings.insert(pairing_key),
-                    "Repeated pairing: {} vs {}",
-                    white_id,
-                    black_id
+                    "Repeated pairing: {white_id} vs {black_id}"
                 );
             }
         }
@@ -839,7 +835,7 @@ mod tests {
 
         // Test with 10 players
         let players: Vec<Player> = (1..=10)
-            .map(|i| create_test_player(i, &format!("Player {}", i)))
+            .map(|i| create_test_player(i, &format!("Player {i}")))
             .collect();
 
         let result = engine

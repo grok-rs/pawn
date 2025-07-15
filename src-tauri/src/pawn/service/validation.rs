@@ -1,7 +1,7 @@
 use crate::pawn::common::error::PawnError;
 use crate::pawn::db::Db;
-use crate::pawn::domain::{dto::*, model::*};
-use tracing::{info, instrument, warn};
+use crate::pawn::domain::dto::*;
+use tracing::instrument;
 
 pub struct ResultValidationService;
 
@@ -95,8 +95,7 @@ impl ResultValidationService {
 
         if !valid_results.contains(&result) {
             validation.add_error(format!(
-                "Invalid result format: '{}'. Valid formats: {:?}",
-                result, valid_results
+                "Invalid result format: '{result}'. Valid formats: {valid_results:?}"
             ));
         }
 
@@ -120,8 +119,7 @@ impl ResultValidationService {
 
             if !expected_type.contains(&rt) {
                 validation.add_error(format!(
-                    "Result type '{}' is not compatible with result '{}'. Expected: {:?}",
-                    rt, result, expected_type
+                    "Result type '{rt}' is not compatible with result '{result}'. Expected: {expected_type:?}"
                 ));
             }
         }
@@ -143,16 +141,16 @@ impl ResultValidationService {
                 // Tournament exists, assume game validation will be added later
             }
             Err(_) => {
-                validation.add_error(format!("Tournament {} not found", tournament_id));
+                validation.add_error(format!("Tournament {tournament_id} not found"));
             }
         }
 
         Ok(validation)
     }
 
-    #[instrument(ret, skip(db))]
+    #[instrument(ret, skip(_db))]
     pub async fn validate_no_duplicate_result<T: Db>(
-        db: &T,
+        _db: &T,
         game_id: i32,
         new_result: &str,
     ) -> Result<ValidationResult, PawnError> {
@@ -182,7 +180,7 @@ impl ResultValidationService {
                 // Tournament exists, assume player validation will be added later
             }
             Err(_) => {
-                validation.add_error(format!("Tournament {} not found", tournament_id));
+                validation.add_error(format!("Tournament {tournament_id} not found"));
             }
         }
 
@@ -204,7 +202,7 @@ impl ResultValidationService {
                 // Tournament exists, assume round validation will be added later
             }
             Err(_) => {
-                validation.add_error(format!("Tournament {} not found", tournament_id));
+                validation.add_error(format!("Tournament {tournament_id} not found"));
             }
         }
 
@@ -226,15 +224,13 @@ impl ResultValidationService {
 
         if requires_approval && changed_by.is_none() {
             validation.add_error(format!(
-                "Result '{}' requires arbiter approval but no authority specified",
-                result
+                "Result '{result}' requires arbiter approval but no authority specified"
             ));
         }
 
         if requires_approval {
             validation.add_warning(format!(
-                "Result '{}' requires arbiter approval and will be marked as pending",
-                result
+                "Result '{result}' requires arbiter approval and will be marked as pending"
             ));
         }
 

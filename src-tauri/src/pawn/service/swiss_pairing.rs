@@ -772,28 +772,24 @@ impl SwissPairingEngine {
     /// Check if two players are from the same team/club
     fn are_teammates(&self, player1: &SwissPlayer, player2: &SwissPlayer) -> bool {
         // Check if players are from the same club
-        match (&player1.player.club, &player2.player.club) {
-            (Some(club1), Some(club2)) => {
-                // Same club
-                if club1 == club2 && !club1.is_empty() {
-                    return true;
-                }
+        if let (Some(club1), Some(club2)) = (&player1.player.club, &player2.player.club) {
+            // Same club
+            if club1 == club2 && !club1.is_empty() {
+                return true;
             }
-            _ => {}
         }
 
         // Check if players are from the same country/federation
-        match (&player1.player.country_code, &player2.player.country_code) {
-            (Some(country1), Some(country2)) => {
-                // Same country - only apply team avoidance for smaller tournaments
-                // or when specifically configured
-                if country1 == country2 && !country1.is_empty() {
-                    // For now, only apply country avoidance in smaller tournaments
-                    // This can be made configurable later
-                    return self.should_avoid_same_country();
-                }
+        if let (Some(country1), Some(country2)) =
+            (&player1.player.country_code, &player2.player.country_code)
+        {
+            // Same country - only apply team avoidance for smaller tournaments
+            // or when specifically configured
+            if country1 == country2 && !country1.is_empty() {
+                // For now, only apply country avoidance in smaller tournaments
+                // This can be made configurable later
+                return self.should_avoid_same_country();
             }
-            _ => {}
         }
 
         false

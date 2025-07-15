@@ -66,7 +66,7 @@ impl<D: Db> PlayerService<D> {
         }
 
         if let Some(rating) = data.rating {
-            if rating < 0 || rating > 4000 {
+            if !(0..=4000).contains(&rating) {
                 return Err(PawnError::ValidationError(
                     "Rating must be between 0 and 4000".to_string(),
                 ));
@@ -163,7 +163,7 @@ impl<D: Db> PlayerService<D> {
         }
 
         if let Some(rating) = data.rating {
-            if rating < 0 || rating > 4000 {
+            if !(0..=4000).contains(&rating) {
                 return Err(PawnError::ValidationError(
                     "Rating must be between 0 and 4000".to_string(),
                 ));
@@ -194,7 +194,7 @@ impl<D: Db> PlayerService<D> {
         }
 
         if let Some(rating) = player_data.rating {
-            if rating < 0 || rating > 4000 {
+            if !(0..=4000).contains(&rating) {
                 errors.push("Rating must be between 0 and 4000".to_string());
             }
         }
