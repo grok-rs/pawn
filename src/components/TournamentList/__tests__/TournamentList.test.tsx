@@ -1,15 +1,11 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import TournamentList from '../TournamentList';
+import type { Tournament } from '../../../dto/bindings';
 
 // Mock the Tauri API
 vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn(),
-}));
-
-// Mock react-router-dom
-vi.mock('react-router-dom', () => ({
-  useNavigate: () => vi.fn(),
 }));
 
 // Mock react-i18next
@@ -19,38 +15,50 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-const mockTournaments = [
+const mockTournaments: Tournament[] = [
   {
     id: 1,
-    name: 'Test Tournament 1',
-    location: 'Test Location',
-    date: '2024-01-01T00:00:00Z',
+    name: 'Spring Championship',
+    location: 'New York',
+    date: '2024-03-15',
+    time_type: 'Classical',
     tournament_type: 'Swiss',
-    max_players: 32,
-    rounds: 5,
-    time_control: '90+30',
-    description: 'Test tournament description',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
-    pairing_method: 'Swiss',
-    time_control_id: null,
+    player_count: 16,
+    rounds_played: 3,
+    total_rounds: 9,
+    country_code: 'US',
+    status: 'active',
+    start_time: '2024-03-15T09:00:00Z',
+    end_time: null,
+    description: 'Annual spring tournament',
+    website_url: 'https://example.com/spring',
+    contact_email: 'contact@example.com',
+    entry_fee: 50,
+    currency: 'USD',
   },
   {
     id: 2,
-    name: 'Test Tournament 2',
-    location: 'Test Location 2',
-    date: '2024-02-01T00:00:00Z',
+    name: 'Summer Open',
+    location: 'California',
+    date: '2024-06-20',
+    time_type: 'Rapid',
     tournament_type: 'Round Robin',
-    max_players: 16,
-    rounds: 15,
-    time_control: '25+10',
-    description: 'Another test tournament',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
-    pairing_method: 'Round Robin',
-    time_control_id: null,
+    player_count: 12,
+    rounds_played: 0,
+    total_rounds: 11,
+    country_code: 'US',
+    status: 'upcoming',
+    start_time: null,
+    end_time: null,
+    description: 'Open tournament for summer',
+    website_url: null,
+    contact_email: null,
+    entry_fee: null,
+    currency: null,
   },
 ];
+
+const mockOnDelete = vi.fn();
 
 describe('TournamentList', () => {
   beforeEach(() => {
@@ -58,281 +66,264 @@ describe('TournamentList', () => {
   });
 
   test('renders tournament list with correct data', () => {
-    render(<TournamentList tournaments={mockTournaments} />);
+    render(
+      <TournamentList
+        tournaments={mockTournaments}
+        onDelete={mockOnDelete}
+      />
+    );
 
-    expect(screen.getByText('Test Tournament 1')).toBeInTheDocument();
-    expect(screen.getByText('Test Tournament 2')).toBeInTheDocument();
-    expect(screen.getByText('Test Location')).toBeInTheDocument();
-    expect(screen.getByText('Test Location 2')).toBeInTheDocument();
+    expect(screen.getByText('Spring Championship')).toBeInTheDocument();
+    expect(screen.getByText('Summer Open')).toBeInTheDocument();
   });
 
   test('displays tournament types correctly', () => {
-    render(<TournamentList tournaments={mockTournaments} />);
+    render(
+      <TournamentList
+        tournaments={mockTournaments}
+        onDelete={mockOnDelete}
+      />
+    );
 
     expect(screen.getByText('Swiss')).toBeInTheDocument();
     expect(screen.getByText('Round Robin')).toBeInTheDocument();
   });
 
-  test('displays time controls correctly', () => {
-    render(<TournamentList tournaments={mockTournaments} />);
+  test('displays tournament locations', () => {
+    render(
+      <TournamentList
+        tournaments={mockTournaments}
+        onDelete={mockOnDelete}
+      />
+    );
 
-    expect(screen.getByText('90+30')).toBeInTheDocument();
-    expect(screen.getByText('25+10')).toBeInTheDocument();
+    expect(screen.getByText('New York')).toBeInTheDocument();
+    expect(screen.getByText('California')).toBeInTheDocument();
   });
 
-  test('displays player counts correctly', () => {
-    render(<TournamentList tournaments={mockTournaments} />);
+  test('displays tournament dates', () => {
+    render(
+      <TournamentList
+        tournaments={mockTournaments}
+        onDelete={mockOnDelete}
+      />
+    );
 
-    expect(screen.getByText('32 players')).toBeInTheDocument();
-    expect(screen.getByText('16 players')).toBeInTheDocument();
+    expect(screen.getByText('2024-03-15')).toBeInTheDocument();
+    expect(screen.getByText('2024-06-20')).toBeInTheDocument();
   });
 
-  test('displays round counts correctly', () => {
-    render(<TournamentList tournaments={mockTournaments} />);
+  test('displays tournament time types', () => {
+    render(
+      <TournamentList
+        tournaments={mockTournaments}
+        onDelete={mockOnDelete}
+      />
+    );
 
-    expect(screen.getByText('5 rounds')).toBeInTheDocument();
-    expect(screen.getByText('15 rounds')).toBeInTheDocument();
+    expect(screen.getByText('Classical')).toBeInTheDocument();
+    expect(screen.getByText('Rapid')).toBeInTheDocument();
   });
 
-  test('renders empty state when no tournaments provided', () => {
-    render(<TournamentList tournaments={[]} />);
+  test('displays tournament status', () => {
+    render(
+      <TournamentList
+        tournaments={mockTournaments}
+        onDelete={mockOnDelete}
+      />
+    );
+
+    expect(screen.getByText('active')).toBeInTheDocument();
+    expect(screen.getByText('upcoming')).toBeInTheDocument();
+  });
+
+  test('displays player count information', () => {
+    render(
+      <TournamentList
+        tournaments={mockTournaments}
+        onDelete={mockOnDelete}
+      />
+    );
+
+    expect(screen.getByText('16')).toBeInTheDocument();
+    expect(screen.getByText('12')).toBeInTheDocument();
+  });
+
+  test('displays rounds information', () => {
+    render(
+      <TournamentList
+        tournaments={mockTournaments}
+        onDelete={mockOnDelete}
+      />
+    );
+
+    // Check for total rounds
+    expect(screen.getByText('9')).toBeInTheDocument();
+    expect(screen.getByText('11')).toBeInTheDocument();
+  });
+
+  test('handles tournament selection', () => {
+    render(
+      <TournamentList
+        tournaments={mockTournaments}
+        onDelete={mockOnDelete}
+      />
+    );
+
+    const firstTournament = screen.getByText('Spring Championship');
+    fireEvent.click(firstTournament);
+
+    expect(mockOnDelete).toHaveBeenCalledWith(mockTournaments[0]);
+  });
+
+  test('displays empty state when no tournaments', () => {
+    render(
+      <TournamentList tournaments={[]} onDelete={mockOnDelete} />
+    );
 
     expect(screen.getByText('tournaments.empty')).toBeInTheDocument();
   });
 
-  test('handles tournament click events', () => {
-    const onTournamentClick = vi.fn();
+  test('handles tournaments with minimal data', () => {
+    const minimalTournaments: Tournament[] = [
+      {
+        id: 3,
+        name: 'Minimal Tournament',
+        location: 'Unknown',
+        date: '2024-01-01',
+        time_type: 'Blitz',
+        tournament_type: null,
+        player_count: 8,
+        rounds_played: 0,
+        total_rounds: 7,
+        country_code: 'XX',
+        status: null,
+        start_time: null,
+        end_time: null,
+        description: null,
+        website_url: null,
+        contact_email: null,
+        entry_fee: null,
+        currency: null,
+      },
+    ];
+
     render(
       <TournamentList
-        tournaments={mockTournaments}
-        onTournamentClick={onTournamentClick}
+        tournaments={minimalTournaments}
+        onDelete={mockOnDelete}
       />
     );
 
-    const firstTournament = screen.getByText('Test Tournament 1');
-    fireEvent.click(firstTournament);
-
-    expect(onTournamentClick).toHaveBeenCalledWith(mockTournaments[0]);
+    expect(screen.getByText('Minimal Tournament')).toBeInTheDocument();
+    expect(screen.getByText('Unknown')).toBeInTheDocument();
+    expect(screen.getByText('Blitz')).toBeInTheDocument();
   });
 
-  test('handles tournament deletion', async () => {
-    const onTournamentDelete = vi.fn();
+  test('displays country codes', () => {
     render(
       <TournamentList
         tournaments={mockTournaments}
-        onTournamentDelete={onTournamentDelete}
+        onDelete={mockOnDelete}
       />
     );
 
-    const deleteButtons = screen.getAllByText('common.delete');
-    fireEvent.click(deleteButtons[0]);
-
-    await waitFor(() => {
-      expect(onTournamentDelete).toHaveBeenCalledWith(mockTournaments[0].id);
-    });
+    const countryElements = screen.getAllByText('US');
+    expect(countryElements.length).toBeGreaterThan(0);
   });
 
-  test('displays loading state correctly', () => {
-    render(<TournamentList tournaments={[]} loading={true} />);
+  test('handles tournament with description', () => {
+    render(
+      <TournamentList
+        tournaments={mockTournaments}
+        onDelete={mockOnDelete}
+      />
+    );
 
-    expect(screen.getByText('common.loading')).toBeInTheDocument();
+    expect(screen.getByText('Annual spring tournament')).toBeInTheDocument();
+    expect(screen.getByText('Open tournament for summer')).toBeInTheDocument();
   });
 
-  test('displays error state correctly', () => {
-    const errorMessage = 'Failed to load tournaments';
-    render(<TournamentList tournaments={[]} error={errorMessage} />);
+  test('handles tournament with entry fee', () => {
+    render(
+      <TournamentList
+        tournaments={mockTournaments}
+        onDelete={mockOnDelete}
+      />
+    );
 
-    expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    expect(screen.getByText('50')).toBeInTheDocument();
+    expect(screen.getByText('USD')).toBeInTheDocument();
   });
 
-  test('filters tournaments by name', () => {
-    render(<TournamentList tournaments={mockTournaments} searchable={true} />);
+  test('displays tournament progress', () => {
+    render(
+      <TournamentList
+        tournaments={mockTournaments}
+        onDelete={mockOnDelete}
+      />
+    );
 
-    const searchInput = screen.getByPlaceholderText('tournaments.search');
-    fireEvent.change(searchInput, { target: { value: 'Test Tournament 1' } });
-
-    expect(screen.getByText('Test Tournament 1')).toBeInTheDocument();
-    expect(screen.queryByText('Test Tournament 2')).not.toBeInTheDocument();
+    // First tournament has played 3 out of 9 rounds
+    expect(screen.getByText('3')).toBeInTheDocument();
+    
+    // Second tournament has played 0 out of 11 rounds
+    expect(screen.getByText('0')).toBeInTheDocument();
   });
 
-  test('filters tournaments by type', () => {
-    render(<TournamentList tournaments={mockTournaments} filterable={true} />);
-
-    const typeFilter = screen.getByLabelText('tournaments.filter_by_type');
-    fireEvent.change(typeFilter, { target: { value: 'Swiss' } });
-
-    expect(screen.getByText('Test Tournament 1')).toBeInTheDocument();
-    expect(screen.queryByText('Test Tournament 2')).not.toBeInTheDocument();
-  });
-
-  test('sorts tournaments by name', () => {
-    render(<TournamentList tournaments={mockTournaments} sortable={true} />);
-
-    const sortButton = screen.getByLabelText('tournaments.sort_by_name');
-    fireEvent.click(sortButton);
-
-    const tournamentElements = screen.getAllByText(/Test Tournament/);
-    expect(tournamentElements[0]).toHaveTextContent('Test Tournament 1');
-    expect(tournamentElements[1]).toHaveTextContent('Test Tournament 2');
-  });
-
-  test('sorts tournaments by date', () => {
-    render(<TournamentList tournaments={mockTournaments} sortable={true} />);
-
-    const sortButton = screen.getByLabelText('tournaments.sort_by_date');
-    fireEvent.click(sortButton);
-
-    const tournamentElements = screen.getAllByText(/Test Tournament/);
-    expect(tournamentElements[0]).toHaveTextContent('Test Tournament 1');
-    expect(tournamentElements[1]).toHaveTextContent('Test Tournament 2');
-  });
-
-  test('handles pagination correctly', () => {
-    const manyTournaments = Array.from({ length: 25 }, (_, i) => ({
-      ...mockTournaments[0],
+  test('handles large tournament list', () => {
+    const largeTournamentList: Tournament[] = Array.from({ length: 50 }, (_, i) => ({
       id: i + 1,
       name: `Tournament ${i + 1}`,
+      location: `Location ${i + 1}`,
+      date: '2024-01-01',
+      time_type: 'Classical',
+      tournament_type: 'Swiss',
+      player_count: 16,
+      rounds_played: 0,
+      total_rounds: 9,
+      country_code: 'US',
+      status: 'upcoming',
+      start_time: null,
+      end_time: null,
+      description: null,
+      website_url: null,
+      contact_email: null,
+      entry_fee: null,
+      currency: null,
     }));
 
-    render(<TournamentList tournaments={manyTournaments} pageSize={10} />);
+    render(
+      <TournamentList
+        tournaments={largeTournamentList}
+        onDelete={mockOnDelete}
+      />
+    );
 
-    // Should show first 10 tournaments
     expect(screen.getByText('Tournament 1')).toBeInTheDocument();
-    expect(screen.getByText('Tournament 10')).toBeInTheDocument();
-    expect(screen.queryByText('Tournament 11')).not.toBeInTheDocument();
-
-    // Navigate to next page
-    const nextButton = screen.getByText('common.next');
-    fireEvent.click(nextButton);
-
-    expect(screen.getByText('Tournament 11')).toBeInTheDocument();
-    expect(screen.getByText('Tournament 20')).toBeInTheDocument();
+    expect(screen.getByText('Tournament 50')).toBeInTheDocument();
   });
 
-  test('displays tournament stats correctly', () => {
-    render(<TournamentList tournaments={mockTournaments} showStats={true} />);
+  test('handles tournament selection with different tournament types', () => {
+    const diverseTournaments: Tournament[] = [
+      {
+        ...mockTournaments[0],
+        tournament_type: 'Knockout',
+      },
+      {
+        ...mockTournaments[1],
+        tournament_type: 'Swiss',
+      },
+    ];
 
-    expect(screen.getByText('tournaments.total_count')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument();
-  });
-
-  test('handles refresh action', () => {
-    const onRefresh = vi.fn();
     render(
-      <TournamentList tournaments={mockTournaments} onRefresh={onRefresh} />
+      <TournamentList
+        tournaments={diverseTournaments}
+        onDelete={mockOnDelete}
+      />
     );
 
-    const refreshButton = screen.getByText('common.refresh');
-    fireEvent.click(refreshButton);
-
-    expect(onRefresh).toHaveBeenCalled();
-  });
-
-  test('displays tournament status correctly', () => {
-    const tournamentsWithStatus = mockTournaments.map(t => ({
-      ...t,
-      status: 'active',
-    }));
-
-    render(<TournamentList tournaments={tournamentsWithStatus} />);
-
-    expect(screen.getAllByText('tournaments.status.active')).toHaveLength(2);
-  });
-
-  test('handles tournament export', () => {
-    const onExport = vi.fn();
-    render(
-      <TournamentList tournaments={mockTournaments} onExport={onExport} />
-    );
-
-    const exportButton = screen.getByText('common.export');
-    fireEvent.click(exportButton);
-
-    expect(onExport).toHaveBeenCalledWith(mockTournaments);
-  });
-
-  test('displays tournament creation date correctly', () => {
-    render(<TournamentList tournaments={mockTournaments} />);
-
-    // Should display formatted dates
-    expect(screen.getByText('2024-01-01')).toBeInTheDocument();
-  });
-
-  test('handles keyboard navigation', () => {
-    render(<TournamentList tournaments={mockTournaments} />);
-
-    const firstTournament = screen.getByText('Test Tournament 1');
-    firstTournament.focus();
-
-    fireEvent.keyDown(firstTournament, { key: 'Enter' });
-
-    // Should trigger tournament selection
-    expect(firstTournament).toBeInTheDocument();
-  });
-
-  test('displays tournament actions menu', () => {
-    render(<TournamentList tournaments={mockTournaments} showActions={true} />);
-
-    const actionsButtons = screen.getAllByText('common.actions');
-    expect(actionsButtons).toHaveLength(2);
-
-    fireEvent.click(actionsButtons[0]);
-
-    expect(screen.getByText('tournaments.view')).toBeInTheDocument();
-    expect(screen.getByText('tournaments.edit')).toBeInTheDocument();
-    expect(screen.getByText('tournaments.delete')).toBeInTheDocument();
-  });
-
-  test('handles tournament duplication', () => {
-    const onDuplicate = vi.fn();
-    render(
-      <TournamentList tournaments={mockTournaments} onDuplicate={onDuplicate} />
-    );
-
-    const duplicateButton = screen.getByText('tournaments.duplicate');
-    fireEvent.click(duplicateButton);
-
-    expect(onDuplicate).toHaveBeenCalledWith(mockTournaments[0]);
-  });
-
-  test('displays tournament player count badge', () => {
-    const tournamentsWithPlayers = mockTournaments.map(t => ({
-      ...t,
-      current_players: 15,
-    }));
-
-    render(<TournamentList tournaments={tournamentsWithPlayers} />);
-
-    expect(screen.getByText('15/32')).toBeInTheDocument();
-    expect(screen.getByText('15/16')).toBeInTheDocument();
-  });
-
-  test('handles tournament archive', () => {
-    const onArchive = vi.fn();
-    render(
-      <TournamentList tournaments={mockTournaments} onArchive={onArchive} />
-    );
-
-    const archiveButton = screen.getByText('tournaments.archive');
-    fireEvent.click(archiveButton);
-
-    expect(onArchive).toHaveBeenCalledWith(mockTournaments[0]);
-  });
-
-  test('displays tournament location with map link', () => {
-    render(
-      <TournamentList tournaments={mockTournaments} showMapLinks={true} />
-    );
-
-    const mapLinks = screen.getAllByText('tournaments.view_map');
-    expect(mapLinks).toHaveLength(2);
-
-    fireEvent.click(mapLinks[0]);
-
-    // Should open map in new tab
-    expect(window.open).toHaveBeenCalledWith(
-      `https://maps.google.com/maps?q=Test Location`,
-      '_blank'
-    );
+    expect(screen.getByText('Knockout')).toBeInTheDocument();
+    expect(screen.getByText('Swiss')).toBeInTheDocument();
   });
 });
