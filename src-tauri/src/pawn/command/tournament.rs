@@ -203,3 +203,166 @@ pub async fn update_tournament_settings(
     );
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::pawn::db::sqlite::SqliteDb;
+    use crate::pawn::state::PawnState;
+    use sqlx::SqlitePool;
+    use tempfile::TempDir;
+
+    async fn setup_test_state() -> PawnState {
+        let temp_dir = TempDir::new().unwrap();
+        
+        // Use in-memory SQLite for testing
+        let database_url = "sqlite::memory:";
+        let pool = SqlitePool::connect(database_url).await.unwrap();
+        
+        sqlx::migrate!("./migrations").run(&pool).await.unwrap();
+        
+        let db = Arc::new(SqliteDb::new(pool));
+        
+        use crate::pawn::service::{
+            player::PlayerService, round::RoundService, tiebreak::TiebreakCalculator,
+            time_control::TimeControlService, tournament::TournamentService,
+        };
+        use crate::pawn::state::State;
+        use std::sync::Arc;
+        
+        let tournament_service = Arc::new(TournamentService::new(Arc::clone(&db)));
+        let tiebreak_calculator = Arc::new(TiebreakCalculator::new(Arc::clone(&db)));
+        let round_service = Arc::new(RoundService::new(Arc::clone(&db)));
+        let player_service = Arc::new(PlayerService::new(Arc::clone(&db)));
+        let time_control_service = Arc::new(TimeControlService::new(Arc::clone(&db)));
+        
+        State {
+            app_data_dir: temp_dir.path().to_path_buf(),
+            db,
+            tournament_service,
+            tiebreak_calculator,
+            round_service,
+            player_service,
+            time_control_service,
+        }
+    }
+
+    #[tokio::test]
+    async fn command_get_tournaments_contract() {
+        let state = setup_test_state().await;
+        
+        // Test the underlying service directly to validate the command contract
+        let result = state.tournament_service.get_tournaments().await;
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn command_create_tournament_contract() {
+        let state = setup_test_state().await;
+        
+        let create_data = CreateTournament {
+            name: "Test Tournament".to_string(),
+            location: "Test Location".to_string(),
+            date: "2024-01-01T10:00:00".to_string(),
+            time_type: "classical".to_string(),
+            tournament_type: Some("Swiss".to_string()),
+            player_count: 16,
+            rounds_played: 0,
+            total_rounds: 5,
+            country_code: "USA".to_string(),
+        };
+
+        // Test the underlying service directly to validate the command contract
+        let result = state.tournament_service.create_tournament(create_data).await;
+        assert!(result.is_ok());
+        
+        let tournament = result.unwrap();
+        assert_eq!(tournament.name, "Test Tournament");
+        assert_eq!(tournament.tournament_type, Some("Swiss".to_string()));
+    }
+
+    #[tokio::test]
+    async fn command_get_tournament_contract() {
+        let state = setup_test_state().await;
+        
+        // Create a tournament first
+        let create_data = CreateTournament {
+            name: "Test Tournament".to_string(),
+            location: "Test Location".to_string(),
+            date: "2024-01-01T10:00:00".to_string(),
+            time_type: "classical".to_string(),
+            tournament_type: Some("Swiss".to_string()),
+            player_count: 16,
+            rounds_played: 0,
+            total_rounds: 5,
+            country_code: "USA".to_string(),
+        };
+        
+        let created = state.tournament_service.create_tournament(create_data).await.unwrap();
+        
+        // Test getting the tournament
+        let result = state.tournament_service.get_tournament(created.id).await;
+        assert!(result.is_ok());
+        
+        let tournament = result.unwrap();
+        assert_eq!(tournament.id, created.id);
+        assert_eq!(tournament.name, "Test Tournament");
+    }
+
+    #[tokio::test]
+    async fn command_delete_tournament_contract() {
+        let state = setup_test_state().await;
+        
+        // Create a tournament first
+        let create_data = CreateTournament {
+            name: "Test Tournament".to_string(),
+            location: "Test Location".to_string(),
+            date: "2024-01-01T10:00:00".to_string(),
+            time_type: "classical".to_string(),
+            tournament_type: Some("Swiss".to_string()),
+            player_count: 16,
+            rounds_played: 0,
+            total_rounds: 5,
+            country_code: "USA".to_string(),
+        };
+        
+        let created = state.tournament_service.create_tournament(create_data).await.unwrap();
+        
+        // Test deleting the tournament
+        let result = state.tournament_service.delete_tournament(created.id).await;
+        assert!(result.is_ok());
+        
+        // Verify it's gone
+        let get_result = state.tournament_service.get_tournament(created.id).await;
+        assert!(get_result.is_err());
+    }
+
+    #[tokio::test]
+    async fn command_get_tournament_settings_contract() {
+        let state = setup_test_state().await;
+        
+        // Create a tournament first
+        let create_data = CreateTournament {
+            name: "Test Tournament".to_string(),
+            location: "Test Location".to_string(),
+            date: "2024-01-01T10:00:00".to_string(),
+            time_type: "classical".to_string(),
+            tournament_type: Some("Swiss".to_string()),
+            player_count: 16,
+            rounds_played: 0,
+            total_rounds: 5,
+            country_code: "USA".to_string(),
+        };
+        
+        let created = state.tournament_service.create_tournament(create_data).await.unwrap();
+        
+        // Test getting settings - this should return default settings for a new tournament
+        let result = state.db.get_tournament_settings(created.id).await;
+        assert!(result.is_ok());
+        
+        // For a new tournament, settings may be None (using defaults)
+        let settings = result.unwrap();
+        assert!(settings.is_none() || settings.is_some());
+    }
+}

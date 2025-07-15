@@ -2,6 +2,17 @@ import '@testing-library/jest-dom';
 import { beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { server } from './mocks/server';
 
+// Silence console outputs during tests
+const originalConsole = global.console;
+global.console = {
+  ...originalConsole,
+  log: vi.fn(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+} as any;
+
 // Establish API mocking before all tests
 beforeAll(() => server.listen());
 
@@ -61,4 +72,20 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   })),
+});
+
+// Mock React warnings during tests
+const originalError = console.error;
+beforeAll(() => {
+  console.error = (...args) => {
+    if (
+      typeof args[0] === 'string' &&
+      args[0].includes('Warning:') &&
+      (args[0].includes('act(...)') || args[0].includes('useEffect'))
+    ) {
+      // Suppress React warnings during tests
+      return;
+    }
+    originalError.call(console, ...args);
+  };
 });

@@ -45,6 +45,8 @@ export default defineConfig({
     // Test timeout for async operations
     testTimeout: 10000,
     hookTimeout: 10000,
+    // Silence console outputs during tests
+    silent: true,
   },
   resolve: {
     alias: {
