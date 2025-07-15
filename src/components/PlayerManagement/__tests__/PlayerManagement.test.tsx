@@ -78,8 +78,9 @@ describe('PlayerManagement', () => {
       />
     );
 
-    expect(screen.getByText('FM')).toBeInTheDocument();
-    expect(screen.getByText('IM')).toBeInTheDocument();
+    // Titles are displayed using translation keys, so we look for the translated title
+    expect(screen.getByText('title.FM')).toBeInTheDocument();
+    expect(screen.getByText('title.IM')).toBeInTheDocument();
   });
 
   test('displays player countries correctly', () => {
@@ -91,8 +92,9 @@ describe('PlayerManagement', () => {
       />
     );
 
-    expect(screen.getByText('US')).toBeInTheDocument();
-    expect(screen.getByText('CA')).toBeInTheDocument();
+    // Countries are displayed using translation keys
+    expect(screen.getByText('country.US')).toBeInTheDocument();
+    expect(screen.getByText('country.CA')).toBeInTheDocument();
   });
 
   test('displays empty state when no players', () => {
@@ -104,7 +106,7 @@ describe('PlayerManagement', () => {
       />
     );
 
-    expect(screen.getByText('players.empty')).toBeInTheDocument();
+    expect(screen.getByText('noPlayersRegistered')).toBeInTheDocument();
   });
 
   test('calls onPlayersUpdated when provided', () => {
@@ -149,6 +151,7 @@ describe('PlayerManagement', () => {
       />
     );
 
+    // Ratings are displayed in chips, so look for them
     expect(screen.getByText('1800')).toBeInTheDocument();
     expect(screen.getByText('2000')).toBeInTheDocument();
   });
@@ -175,8 +178,8 @@ describe('PlayerManagement', () => {
       />
     );
 
-    // Both players have active status
-    const activeElements = screen.getAllByText('active');
+    // Both players have active status - check for status translation key
+    const activeElements = screen.getAllByText('playerStatus.active');
     expect(activeElements.length).toBeGreaterThan(0);
   });
 
@@ -217,7 +220,7 @@ describe('PlayerManagement', () => {
     );
 
     // Should not crash with empty players array
-    expect(screen.getByText('players.empty')).toBeInTheDocument();
+    expect(screen.getByText('noPlayersRegistered')).toBeInTheDocument();
   });
 
   test('displays add player button', () => {
