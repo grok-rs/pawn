@@ -9,8 +9,15 @@ type Props<T extends FieldValues> = {
   value: FormStepperContextType<T>;
 };
 
-const FormStepperContextProvider = <T extends FieldValues>({ children, value }: Props<T>) => {
-  return <FormStepperContext.Provider value={value}>{children}</FormStepperContext.Provider>;
+const FormStepperContextProvider = <T extends FieldValues>({
+  children,
+  value,
+}: Props<T>) => {
+  return (
+    <FormStepperContext.Provider value={value}>
+      {children}
+    </FormStepperContext.Provider>
+  );
 };
 
 export default FormStepperContextProvider;

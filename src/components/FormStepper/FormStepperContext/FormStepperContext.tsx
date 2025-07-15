@@ -14,10 +14,12 @@ const defaultFormStepperContextValue = {
 // and provide correct type check & generics type usage for FormStepperContext
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const FormStepperContext = createContext<FormStepperContextType<any>>(
-  defaultFormStepperContextValue,
+  defaultFormStepperContextValue
 );
 
-export const useFormStepperContext = <T extends FieldValues>(): FormStepperContextType<T> => {
+export const useFormStepperContext = <
+  T extends FieldValues,
+>(): FormStepperContextType<T> => {
   const formStepperContext = useContext(FormStepperContext);
 
   if (!formStepperContext) {

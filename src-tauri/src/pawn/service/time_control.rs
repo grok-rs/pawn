@@ -1,10 +1,10 @@
 use crate::pawn::{
+    common::error::PawnError,
     db::Db,
     domain::{
-        model::{TimeControl, TimeControlType, TimeControlTemplate},
-        dto::{CreateTimeControl, UpdateTimeControl, TimeControlFilter, TimeControlValidation}
+        dto::{CreateTimeControl, TimeControlFilter, TimeControlValidation, UpdateTimeControl},
+        model::{TimeControl, TimeControlTemplate, TimeControlType},
     },
-    common::error::PawnError,
 };
 
 pub struct TimeControlService<D> {
@@ -17,30 +17,36 @@ impl<D: Db> TimeControlService<D> {
     }
 
     /// Get all time controls with optional filtering
-    pub async fn get_time_controls(&self, filter: Option<TimeControlFilter>) -> Result<Vec<TimeControl>, PawnError> {
+    pub async fn get_time_controls(
+        &self,
+        filter: Option<TimeControlFilter>,
+    ) -> Result<Vec<TimeControl>, PawnError> {
         // For now, get all time controls since we haven't implemented filtering in DB yet
         let time_controls = self.db.get_time_controls().await?;
-        
+
         if let Some(filter) = filter {
-            let filtered = time_controls.into_iter().filter(|tc| {
-                let mut matches = true;
-                
-                if let Some(tc_type) = &filter.time_control_type {
-                    matches = matches && tc.time_control_type == *tc_type;
-                }
-                
-                if let Some(is_default) = filter.is_default {
-                    matches = matches && tc.is_default == is_default;
-                }
-                
-                if let Some(is_real_time) = filter.is_real_time {
-                    let time_type = TimeControlType::from_str(&tc.time_control_type);
-                    matches = matches && time_type.is_real_time() == is_real_time;
-                }
-                
-                matches
-            }).collect();
-            
+            let filtered = time_controls
+                .into_iter()
+                .filter(|tc| {
+                    let mut matches = true;
+
+                    if let Some(tc_type) = &filter.time_control_type {
+                        matches = matches && tc.time_control_type == *tc_type;
+                    }
+
+                    if let Some(is_default) = filter.is_default {
+                        matches = matches && tc.is_default == is_default;
+                    }
+
+                    if let Some(is_real_time) = filter.is_real_time {
+                        let time_type = TimeControlType::from_str(&tc.time_control_type);
+                        matches = matches && time_type.is_real_time() == is_real_time;
+                    }
+
+                    matches
+                })
+                .collect();
+
             Ok(filtered)
         } else {
             Ok(time_controls)
@@ -59,11 +65,17 @@ impl<D: Db> TimeControlService<D> {
 
     /// Get a specific time control by ID
     pub async fn get_time_control(&self, id: i32) -> Result<TimeControl, PawnError> {
-        self.db.get_time_control(id).await.map_err(PawnError::Database)
+        self.db
+            .get_time_control(id)
+            .await
+            .map_err(PawnError::Database)
     }
 
     /// Create a new time control
-    pub async fn create_time_control(&self, data: CreateTimeControl) -> Result<TimeControl, PawnError> {
+    pub async fn create_time_control(
+        &self,
+        data: CreateTimeControl,
+    ) -> Result<TimeControl, PawnError> {
         // Validate the time control
         let validation = self.validate_time_control_data(&data)?;
         if !validation.is_valid {
@@ -84,18 +96,27 @@ impl<D: Db> TimeControlService<D> {
             created_at: chrono::Utc::now().to_rfc3339(),
         };
 
-        self.db.create_time_control(time_control).await.map_err(PawnError::Database)
+        self.db
+            .create_time_control(time_control)
+            .await
+            .map_err(PawnError::Database)
     }
 
     /// Update an existing time control
-    pub async fn update_time_control(&self, data: UpdateTimeControl) -> Result<TimeControl, PawnError> {
+    pub async fn update_time_control(
+        &self,
+        data: UpdateTimeControl,
+    ) -> Result<TimeControl, PawnError> {
         // Get current time control
         let current = self.get_time_control(data.id).await?;
-        
+
         // Create updated data for validation
         let validation_data = CreateTimeControl {
             name: data.name.clone().unwrap_or(current.name.clone()),
-            time_control_type: data.time_control_type.clone().unwrap_or(current.time_control_type.clone()),
+            time_control_type: data
+                .time_control_type
+                .clone()
+                .unwrap_or(current.time_control_type.clone()),
             base_time_minutes: data.base_time_minutes.or(current.base_time_minutes),
             increment_seconds: data.increment_seconds.or(current.increment_seconds),
             moves_per_session: data.moves_per_session.or(current.moves_per_session),
@@ -110,7 +131,10 @@ impl<D: Db> TimeControlService<D> {
             return Err(PawnError::InvalidInput(validation.errors.join(", ")));
         }
 
-        self.db.update_time_control(data).await.map_err(PawnError::Database)
+        self.db
+            .update_time_control(data)
+            .await
+            .map_err(PawnError::Database)
     }
 
     /// Delete a time control
@@ -124,16 +148,21 @@ impl<D: Db> TimeControlService<D> {
             )));
         }
 
-        self.db.delete_time_control(id).await.map_err(PawnError::Database)
+        self.db
+            .delete_time_control(id)
+            .await
+            .map_err(PawnError::Database)
     }
 
     /// Set a time control as default for its type
     pub async fn set_as_default(&self, id: i32) -> Result<TimeControl, PawnError> {
         let time_control = self.get_time_control(id).await?;
-        
+
         // Unset all other defaults for this type
-        self.db.unset_default_time_controls(&time_control.time_control_type).await?;
-        
+        self.db
+            .unset_default_time_controls(&time_control.time_control_type)
+            .await?;
+
         // Set this one as default
         let update_data = UpdateTimeControl {
             id,
@@ -147,31 +176,37 @@ impl<D: Db> TimeControlService<D> {
             description: None,
             is_default: Some(true),
         };
-        
+
         self.update_time_control(update_data).await
     }
 
     /// Get time control templates for common formats
     pub async fn get_time_control_templates(&self) -> Result<Vec<TimeControlTemplate>, PawnError> {
         let time_controls = self.get_time_controls(None).await?;
-        
-        let templates = time_controls.into_iter().map(|tc| TimeControlTemplate {
-            id: tc.id,
-            name: tc.name,
-            time_control_type: tc.time_control_type,
-            base_time_minutes: tc.base_time_minutes,
-            increment_seconds: tc.increment_seconds,
-            moves_per_session: tc.moves_per_session,
-            session_time_minutes: tc.session_time_minutes,
-            total_sessions: tc.total_sessions,
-            description: tc.description,
-        }).collect();
+
+        let templates = time_controls
+            .into_iter()
+            .map(|tc| TimeControlTemplate {
+                id: tc.id,
+                name: tc.name,
+                time_control_type: tc.time_control_type,
+                base_time_minutes: tc.base_time_minutes,
+                increment_seconds: tc.increment_seconds,
+                moves_per_session: tc.moves_per_session,
+                session_time_minutes: tc.session_time_minutes,
+                total_sessions: tc.total_sessions,
+                description: tc.description,
+            })
+            .collect();
 
         Ok(templates)
     }
 
     /// Validate time control data
-    pub fn validate_time_control_data(&self, data: &CreateTimeControl) -> Result<TimeControlValidation, PawnError> {
+    pub fn validate_time_control_data(
+        &self,
+        data: &CreateTimeControl,
+    ) -> Result<TimeControlValidation, PawnError> {
         let mut errors = Vec::new();
         let mut warnings = Vec::new();
 
@@ -186,7 +221,9 @@ impl<D: Db> TimeControlService<D> {
         match time_type {
             TimeControlType::Classical => {
                 if data.base_time_minutes.is_none() || data.base_time_minutes.unwrap_or(0) < 30 {
-                    errors.push("Classical games should have at least 30 minutes base time".to_string());
+                    errors.push(
+                        "Classical games should have at least 30 minutes base time".to_string(),
+                    );
                 }
                 if data.increment_seconds.is_none() {
                     warnings.push("Classical games typically use increments".to_string());
@@ -221,7 +258,9 @@ impl<D: Db> TimeControlService<D> {
             }
             TimeControlType::Correspondence => {
                 if data.base_time_minutes.is_some() {
-                    warnings.push("Correspondence games typically use days per move, not minutes".to_string());
+                    warnings.push(
+                        "Correspondence games typically use days per move, not minutes".to_string(),
+                    );
                 }
             }
             TimeControlType::Fischer | TimeControlType::Bronstein => {
@@ -229,7 +268,9 @@ impl<D: Db> TimeControlService<D> {
                     errors.push("Fischer/Bronstein time controls must have base time".to_string());
                 }
                 if data.increment_seconds.is_none() {
-                    errors.push("Fischer/Bronstein time controls must have increment/delay".to_string());
+                    errors.push(
+                        "Fischer/Bronstein time controls must have increment/delay".to_string(),
+                    );
                 }
             }
             TimeControlType::Custom => {
@@ -253,28 +294,30 @@ impl<D: Db> TimeControlService<D> {
     fn calculate_estimated_duration(&self, data: &CreateTimeControl) -> Option<i32> {
         let base_time = data.base_time_minutes?;
         let increment = data.increment_seconds.unwrap_or(0);
-        
+
         // Rough estimation: 40 moves per game on average
         let estimated_moves_per_player = 40;
         let increment_time_minutes = (estimated_moves_per_player * increment) / 60;
-        
+
         // Total time per player
         let time_per_player = base_time + increment_time_minutes;
-        
+
         // Total game time (both players)
         Some(time_per_player * 2)
     }
 
     /// Generate time control display string
     pub fn format_time_control(&self, time_control: &TimeControl) -> String {
-        let base = time_control.base_time_minutes
+        let base = time_control
+            .base_time_minutes
             .map(|t| format!("{}min", t))
             .unwrap_or_else(|| "No limit".to_string());
-            
-        let increment = time_control.increment_seconds
+
+        let increment = time_control
+            .increment_seconds
             .map(|i| format!("+{}s", i))
             .unwrap_or_default();
-            
+
         if increment.is_empty() {
             base
         } else {

@@ -1,10 +1,10 @@
-use std::collections::{HashMap, HashSet};
-use std::time::Instant;
 use crate::pawn::{
     common::error::PawnError,
-    domain::model::{Player, PlayerResult, Pairing, GameResult, Game},
+    domain::model::{Game, GameResult, Pairing, Player, PlayerResult},
     service::swiss_pairing::SwissPairingEngine,
 };
+use std::collections::{HashMap, HashSet};
+use std::time::Instant;
 
 /// Performance optimization module for large tournament pairing
 pub struct PairingOptimizer {
@@ -71,7 +71,7 @@ impl PairingOptimizer {
     ) -> Result<OptimizedPairingResult, PawnError> {
         let start_time = Instant::now();
         let config = config.unwrap_or_default();
-        
+
         tracing::info!(
             "Starting optimized pairing generation for {} players, round {}",
             players.len(),
@@ -83,7 +83,8 @@ impl PairingOptimizer {
         let mut warnings = Vec::new();
 
         // Choose algorithm based on tournament size
-        let (pairings, algorithm_used) = if players.len() <= config.max_players_for_basic_algorithm {
+        let (pairings, algorithm_used) = if players.len() <= config.max_players_for_basic_algorithm
+        {
             // Use standard algorithm for smaller tournaments
             let pairing_start = Instant::now();
             let result = self.swiss_engine.generate_dutch_system_pairings(
@@ -93,7 +94,7 @@ impl PairingOptimizer {
                 round_number,
             )?;
             let pairing_duration = pairing_start.elapsed();
-            
+
             tracing::debug!("Basic algorithm completed in {:?}", pairing_duration);
             (result.pairings, "Dutch System (Basic)".to_string())
         } else {
@@ -111,7 +112,7 @@ impl PairingOptimizer {
         };
 
         let total_duration = start_time.elapsed();
-        
+
         // Validate pairings
         let validation_start = Instant::now();
         self.validate_large_tournament_pairings(&pairings, &players)?;
@@ -154,7 +155,10 @@ impl PairingOptimizer {
         cache_misses: &mut usize,
         warnings: &mut Vec<String>,
     ) -> Result<(Vec<Pairing>, String), PawnError> {
-        tracing::info!("Using large tournament optimization for {} players", players.len());
+        tracing::info!(
+            "Using large tournament optimization for {} players",
+            players.len()
+        );
 
         // Step 1: Pre-process and index data for fast access
         let start_preprocessing = Instant::now();
@@ -165,7 +169,7 @@ impl PairingOptimizer {
             config.cache_opponent_history,
         )?;
         let preprocessing_time = start_preprocessing.elapsed();
-        
+
         tracing::debug!("Preprocessing completed in {:?}", preprocessing_time);
 
         // Step 2: Divide players into manageable batches
@@ -182,7 +186,7 @@ impl PairingOptimizer {
 
         for (batch_idx, batch) in batches.iter().enumerate() {
             let batch_start = Instant::now();
-            
+
             let batch_pairings = self.process_score_batch(
                 batch,
                 &indexed_data,
@@ -192,7 +196,7 @@ impl PairingOptimizer {
                 cache_hits,
                 cache_misses,
             )?;
-            
+
             let batch_time = batch_start.elapsed();
             tracing::debug!(
                 "Batch {} processed: {} players -> {} pairings in {:?}",
@@ -216,7 +220,10 @@ impl PairingOptimizer {
         // Step 4: Handle any remaining unpaired players
         let remaining_players = self.handle_remaining_players(&indexed_data, &all_pairings)?;
         if !remaining_players.is_empty() {
-            warnings.push(format!("{} players remained unpaired", remaining_players.len()));
+            warnings.push(format!(
+                "{} players remained unpaired",
+                remaining_players.len()
+            ));
         }
 
         Ok((all_pairings, "Large Tournament Optimized".to_string()))
@@ -244,9 +251,12 @@ impl PairingOptimizer {
         for player in players {
             let points = results_map.get(&player.id).map(|r| r.points).unwrap_or(0.0);
             player_points.insert(player.id, points as f64);
-            
+
             let score_key = format!("{:.1}", points);
-            players_by_score.entry(score_key).or_default().push(player.clone());
+            players_by_score
+                .entry(score_key)
+                .or_default()
+                .push(player.clone());
         }
 
         // Build opponent cache if enabled
@@ -254,7 +264,7 @@ impl PairingOptimizer {
             for game in game_history {
                 let white_id = game.white_player.id;
                 let black_id = game.black_player.id;
-                
+
                 if white_id > 0 && black_id > 0 {
                     opponent_cache.entry(white_id).or_default().insert(black_id);
                     opponent_cache.entry(black_id).or_default().insert(white_id);
@@ -284,14 +294,16 @@ impl PairingOptimizer {
         sorted_scores.sort_by(|a, b| {
             let score_a: f64 = a.parse().unwrap_or(0.0);
             let score_b: f64 = b.parse().unwrap_or(0.0);
-            score_b.partial_cmp(&score_a).unwrap_or(std::cmp::Ordering::Equal)
+            score_b
+                .partial_cmp(&score_a)
+                .unwrap_or(std::cmp::Ordering::Equal)
         });
 
         for score_key in sorted_scores {
             if let Some(players) = players_by_score.get(score_key) {
                 for player in players {
                     current_batch.push(player.clone());
-                    
+
                     if current_batch.len() >= batch_size {
                         batches.push(current_batch);
                         current_batch = Vec::new();
@@ -349,7 +361,7 @@ impl PairingOptimizer {
                 }
 
                 let player2 = &sorted_batch[j];
-                
+
                 // Quick check using cache
                 if config.cache_opponent_history {
                     if let Some(opponents) = indexed_data.opponent_cache.get(&player1.id) {
@@ -364,8 +376,9 @@ impl PairingOptimizer {
                 }
 
                 // Calculate pairing score
-                let pairing_score = self.calculate_fast_pairing_score(player1, player2, indexed_data);
-                
+                let pairing_score =
+                    self.calculate_fast_pairing_score(player1, player2, indexed_data);
+
                 if pairing_score > best_score {
                     best_score = pairing_score;
                     best_opponent_idx = Some(j);
@@ -380,7 +393,7 @@ impl PairingOptimizer {
             // Create pairing
             if let Some(j) = best_opponent_idx {
                 let player2 = &sorted_batch[j];
-                
+
                 // Simple color assignment (can be enhanced)
                 let (white_player, black_player) = if round_number % 2 == 0 {
                     (player1.clone(), player2.clone())
@@ -415,7 +428,8 @@ impl PairingOptimizer {
         let mut score = 100.0;
 
         // Rating difference penalty (simplified)
-        let rating_diff = (player1.rating.unwrap_or(1200) - player2.rating.unwrap_or(1200)).abs() as f64;
+        let rating_diff =
+            (player1.rating.unwrap_or(1200) - player2.rating.unwrap_or(1200)).abs() as f64;
         score -= rating_diff / 100.0;
 
         // Points difference penalty
@@ -445,18 +459,20 @@ impl PairingOptimizer {
     ) -> Result<(), PawnError> {
         // Basic validation optimized for speed
         let mut seen_players = HashSet::new();
-        
+
         for pairing in pairings {
             if !seen_players.insert(pairing.white_player.id) {
                 return Err(PawnError::InvalidInput(format!(
-                    "Player {} paired multiple times", pairing.white_player.name
+                    "Player {} paired multiple times",
+                    pairing.white_player.name
                 )));
             }
-            
+
             if let Some(ref black_player) = pairing.black_player {
                 if !seen_players.insert(black_player.id) {
                     return Err(PawnError::InvalidInput(format!(
-                        "Player {} paired multiple times", black_player.name
+                        "Player {} paired multiple times",
+                        black_player.name
                     )));
                 }
             }
@@ -464,10 +480,11 @@ impl PairingOptimizer {
 
         // Check that all players are accounted for (allowing for byes)
         let total_paired = seen_players.len();
-        if total_paired < players.len() - 1 { // Allow for 1 bye
+        if total_paired < players.len() - 1 {
+            // Allow for 1 bye
             tracing::warn!(
-                "Only {} of {} players were paired", 
-                total_paired, 
+                "Only {} of {} players were paired",
+                total_paired,
                 players.len()
             );
         }
@@ -476,12 +493,15 @@ impl PairingOptimizer {
     }
 
     /// Get performance benchmarks for the system
-    pub fn benchmark_performance(&self, player_counts: Vec<usize>) -> Result<Vec<BenchmarkResult>, PawnError> {
+    pub fn benchmark_performance(
+        &self,
+        player_counts: Vec<usize>,
+    ) -> Result<Vec<BenchmarkResult>, PawnError> {
         let mut results = Vec::new();
 
         for &count in &player_counts {
             tracing::info!("Benchmarking with {} players", count);
-            
+
             // Generate mock data
             let players = self.generate_mock_players(count);
             let player_results = self.generate_mock_results(&players);
@@ -492,7 +512,7 @@ impl PairingOptimizer {
                 players,
                 player_results,
                 game_history,
-                4, // Round 4
+                4,    // Round 4
                 None, // Default config
             )?;
             let duration = start_time.elapsed();
@@ -539,9 +559,13 @@ impl PairingOptimizer {
                 let points = (i % 7) as f32 / 2.0; // Points from 0 to 3
                 let games_played = 3; // Assume 3 games played
                 let wins = (points * 2.0) as i32; // Convert points to wins
-                let draws = if points * 2.0 - wins as f32 > 0.0 { 1 } else { 0 };
+                let draws = if points * 2.0 - wins as f32 > 0.0 {
+                    1
+                } else {
+                    0
+                };
                 let losses = games_played - wins - draws;
-                
+
                 PlayerResult {
                     player: player.clone(),
                     points,
@@ -558,7 +582,7 @@ impl PairingOptimizer {
     fn generate_mock_history(&self, players: &[Player], rounds: usize) -> Vec<GameResult> {
         let mut history = Vec::new();
         let mut game_id = 1;
-        
+
         for round in 1..=rounds {
             for chunk in players.chunks(2) {
                 if chunk.len() == 2 {
@@ -576,18 +600,18 @@ impl PairingOptimizer {
                         approved_by: None,
                         created_at: "2023-01-01".to_string(),
                     };
-                    
+
                     history.push(GameResult {
                         game,
                         white_player: chunk[0].clone(),
                         black_player: chunk[1].clone(),
                     });
-                    
+
                     game_id += 1;
                 }
             }
         }
-        
+
         history
     }
 }
@@ -669,15 +693,20 @@ mod tests {
             create_test_player(4, "Player 4", Some(1300)),
         ];
 
-        let results: Vec<PlayerResult> = players.iter().map(|p| create_test_result(p.clone(), 0.5)).collect();
+        let results: Vec<PlayerResult> = players
+            .iter()
+            .map(|p| create_test_result(p.clone(), 0.5))
+            .collect();
 
-        let result = optimizer.generate_optimized_pairings(
-            players,
-            results,
-            vec![],
-            2,
-            Some(OptimizationConfig::default()),
-        ).unwrap();
+        let result = optimizer
+            .generate_optimized_pairings(
+                players,
+                results,
+                vec![],
+                2,
+                Some(OptimizationConfig::default()),
+            )
+            .unwrap();
 
         // Should generate pairings for 4 players
         assert_eq!(result.pairings.len(), 2);
@@ -689,24 +718,23 @@ mod tests {
     #[test]
     fn test_large_tournament_optimization() {
         let optimizer = PairingOptimizer::new();
-        
+
         // Create 150 players (above default threshold of 100)
         let players: Vec<Player> = (1..=150)
             .map(|i| create_test_player(i, &format!("Player {}", i), Some(1500 + (i % 500))))
             .collect();
 
-        let results: Vec<PlayerResult> = players.iter().map(|p| create_test_result(p.clone(), 0.5)).collect();
+        let results: Vec<PlayerResult> = players
+            .iter()
+            .map(|p| create_test_result(p.clone(), 0.5))
+            .collect();
 
         let mut config = OptimizationConfig::default();
         config.max_players_for_basic_algorithm = 100; // Force optimized algorithm
 
-        let result = optimizer.generate_optimized_pairings(
-            players,
-            results,
-            vec![],
-            2,
-            Some(config),
-        ).unwrap();
+        let result = optimizer
+            .generate_optimized_pairings(players, results, vec![], 2, Some(config))
+            .unwrap();
 
         // Should generate pairings for 150 players
         assert_eq!(result.pairings.len(), 75);
@@ -723,15 +751,20 @@ mod tests {
             create_test_player(2, "Player 2", Some(1400)),
         ];
 
-        let results = players.iter().map(|p| create_test_result(p.clone(), 1.0)).collect();
+        let results = players
+            .iter()
+            .map(|p| create_test_result(p.clone(), 1.0))
+            .collect();
 
-        let result = optimizer.generate_optimized_pairings(
-            players,
-            results,
-            vec![],
-            2,
-            Some(OptimizationConfig::default()),
-        ).unwrap();
+        let result = optimizer
+            .generate_optimized_pairings(
+                players,
+                results,
+                vec![],
+                2,
+                Some(OptimizationConfig::default()),
+            )
+            .unwrap();
 
         let metrics = result.metrics;
         assert!(metrics.total_duration_ms > 0);
@@ -752,40 +785,37 @@ mod tests {
             create_test_player(4, "Player 4", Some(1300)),
         ];
 
-        let results: Vec<PlayerResult> = players.iter().map(|p| create_test_result(p.clone(), 0.5)).collect();
+        let results: Vec<PlayerResult> = players
+            .iter()
+            .map(|p| create_test_result(p.clone(), 0.5))
+            .collect();
 
         // Create some game history
-        let history = vec![
-            GameResult {
-                game: Game {
-                    id: 1,
-                    tournament_id: 1,
-                    round_number: 1,
-                    white_player_id: 1,
-                    black_player_id: 2,
-                    result: "1-0".to_string(),
-                    result_type: None,
-                    result_reason: None,
-                    arbiter_notes: None,
-                    last_updated: None,
-                    approved_by: None,
-                    created_at: "2024-01-01T00:00:00Z".to_string(),
-                },
-                white_player: players[0].clone(),
-                black_player: players[1].clone(),
+        let history = vec![GameResult {
+            game: Game {
+                id: 1,
+                tournament_id: 1,
+                round_number: 1,
+                white_player_id: 1,
+                black_player_id: 2,
+                result: "1-0".to_string(),
+                result_type: None,
+                result_reason: None,
+                arbiter_notes: None,
+                last_updated: None,
+                approved_by: None,
+                created_at: "2024-01-01T00:00:00Z".to_string(),
             },
-        ];
+            white_player: players[0].clone(),
+            black_player: players[1].clone(),
+        }];
 
         let mut config = OptimizationConfig::default();
         config.cache_opponent_history = true;
 
-        let result = optimizer.generate_optimized_pairings(
-            players,
-            results,
-            history,
-            2,
-            Some(config),
-        ).unwrap();
+        let result = optimizer
+            .generate_optimized_pairings(players, results, history, 2, Some(config))
+            .unwrap();
 
         // Metrics should track cache usage
         assert!(result.metrics.cache_hits + result.metrics.cache_misses > 0);
@@ -794,12 +824,14 @@ mod tests {
     #[test]
     fn test_benchmark_performance() {
         let optimizer = PairingOptimizer::new();
-        
+
         let player_counts = vec![10, 20, 50];
-        let results = optimizer.benchmark_performance(player_counts.clone()).unwrap();
+        let results = optimizer
+            .benchmark_performance(player_counts.clone())
+            .unwrap();
 
         assert_eq!(results.len(), player_counts.len());
-        
+
         for (i, result) in results.iter().enumerate() {
             assert_eq!(result.player_count, player_counts[i]);
             assert!(result.duration_ms > 0);
@@ -814,28 +846,26 @@ mod tests {
         assert!(results[2].duration_ms >= 0);
     }
 
-
     #[test]
     fn test_batch_processing() {
         let optimizer = PairingOptimizer::new();
-        
+
         // Create enough players to trigger batch processing
         let players: Vec<Player> = (1..=30)
             .map(|i| create_test_player(i, &format!("Player {}", i), Some(1500)))
             .collect();
 
-        let results: Vec<PlayerResult> = players.iter().map(|p| create_test_result(p.clone(), 0.5)).collect();
+        let results: Vec<PlayerResult> = players
+            .iter()
+            .map(|p| create_test_result(p.clone(), 0.5))
+            .collect();
 
         let mut config = OptimizationConfig::default();
         config.batch_size_for_large_tournaments = 10; // Small batch size for testing
 
-        let result = optimizer.generate_optimized_pairings(
-            players,
-            results,
-            vec![],
-            2,
-            Some(config),
-        ).unwrap();
+        let result = optimizer
+            .generate_optimized_pairings(players, results, vec![], 2, Some(config))
+            .unwrap();
 
         // Should still generate all pairings despite batching
         assert_eq!(result.pairings.len(), 15);
@@ -850,18 +880,16 @@ mod tests {
             create_test_player(2, "Player 2", Some(1400)),
         ];
 
-        let results: Vec<PlayerResult> = players.iter().map(|p| create_test_result(p.clone(), 0.5)).collect();
+        let results: Vec<PlayerResult> = players
+            .iter()
+            .map(|p| create_test_result(p.clone(), 0.5))
+            .collect();
 
         let mut config = OptimizationConfig::default();
         config.timeout_seconds = 1; // Very short timeout
 
-        let result = optimizer.generate_optimized_pairings(
-            players,
-            results,
-            vec![],
-            2,
-            Some(config),
-        );
+        let result =
+            optimizer.generate_optimized_pairings(players, results, vec![], 2, Some(config));
 
         // Should complete within timeout for small tournament
         assert!(result.is_ok());
@@ -877,30 +905,31 @@ mod tests {
             create_test_player(4, "Player 4", Some(1300)),
         ];
 
-        let results: Vec<PlayerResult> = players.iter().map(|p| create_test_result(p.clone(), 0.5)).collect();
+        let results: Vec<PlayerResult> = players
+            .iter()
+            .map(|p| create_test_result(p.clone(), 0.5))
+            .collect();
 
         // Test with parallel processing enabled
         let mut config = OptimizationConfig::default();
         config.use_parallel_processing = true;
 
-        let result1 = optimizer.generate_optimized_pairings(
-            players.clone(),
-            results.clone(),
-            vec![],
-            2,
-            Some(config.clone()),
-        ).unwrap();
+        let result1 = optimizer
+            .generate_optimized_pairings(
+                players.clone(),
+                results.clone(),
+                vec![],
+                2,
+                Some(config.clone()),
+            )
+            .unwrap();
 
         // Test with parallel processing disabled
         config.use_parallel_processing = false;
 
-        let result2 = optimizer.generate_optimized_pairings(
-            players,
-            results,
-            vec![],
-            2,
-            Some(config),
-        ).unwrap();
+        let result2 = optimizer
+            .generate_optimized_pairings(players, results, vec![], 2, Some(config))
+            .unwrap();
 
         // Both should produce valid pairings
         assert_eq!(result1.pairings.len(), 2);
@@ -917,18 +946,17 @@ mod tests {
             create_test_player(4, "Player 4", Some(1300)),
         ];
 
-        let results: Vec<PlayerResult> = players.iter().map(|p| create_test_result(p.clone(), 0.5)).collect();
+        let results: Vec<PlayerResult> = players
+            .iter()
+            .map(|p| create_test_result(p.clone(), 0.5))
+            .collect();
 
         let mut config = OptimizationConfig::default();
         config.use_heuristic_pruning = true;
 
-        let result = optimizer.generate_optimized_pairings(
-            players,
-            results,
-            vec![],
-            2,
-            Some(config),
-        ).unwrap();
+        let result = optimizer
+            .generate_optimized_pairings(players, results, vec![], 2, Some(config))
+            .unwrap();
 
         // Should generate pairings with heuristic pruning
         assert_eq!(result.pairings.len(), 2);
@@ -938,14 +966,16 @@ mod tests {
     #[test]
     fn test_empty_tournament() {
         let optimizer = PairingOptimizer::new();
-        
-        let result = optimizer.generate_optimized_pairings(
-            vec![],
-            vec![],
-            vec![],
-            1,
-            Some(OptimizationConfig::default()),
-        ).unwrap();
+
+        let result = optimizer
+            .generate_optimized_pairings(
+                vec![],
+                vec![],
+                vec![],
+                1,
+                Some(OptimizationConfig::default()),
+            )
+            .unwrap();
 
         assert!(result.pairings.is_empty());
         assert_eq!(result.metrics.players_processed, 0);
@@ -958,13 +988,15 @@ mod tests {
         let player = create_test_player(1, "Player 1", Some(1500));
         let result_data = create_test_result(player.clone(), 0.0);
 
-        let result = optimizer.generate_optimized_pairings(
-            vec![player],
-            vec![result_data],
-            vec![],
-            1,
-            Some(OptimizationConfig::default()),
-        ).unwrap();
+        let result = optimizer
+            .generate_optimized_pairings(
+                vec![player],
+                vec![result_data],
+                vec![],
+                1,
+                Some(OptimizationConfig::default()),
+            )
+            .unwrap();
 
         // Single player should result in bye (no pairings)
         assert!(result.pairings.is_empty());
@@ -975,11 +1007,11 @@ mod tests {
     #[test]
     fn test_mock_data_generation() {
         let optimizer = PairingOptimizer::new();
-        
+
         // Test player generation
         let players = optimizer.generate_mock_players(10);
         assert_eq!(players.len(), 10);
-        
+
         for player in &players {
             assert!(player.rating.is_some());
             assert!(player.rating.unwrap() >= 1000);
@@ -989,7 +1021,7 @@ mod tests {
         // Test result generation
         let results = optimizer.generate_mock_results(&players);
         assert_eq!(results.len(), 10);
-        
+
         for result in &results {
             assert!(result.points >= 0.0);
             assert!(result.points <= 5.0); // Reasonable max for mock data
@@ -1003,26 +1035,32 @@ mod tests {
     #[test]
     fn test_optimization_warnings() {
         let optimizer = PairingOptimizer::new();
-        
+
         // Create a scenario that might generate warnings
-        let players: Vec<Player> = (1..=201) // Odd number for potential bye warnings
-            .map(|i| create_test_player(i, &format!("Player {}", i), Some(1500)))
+        let players: Vec<Player> =
+            (1..=201) // Odd number for potential bye warnings
+                .map(|i| create_test_player(i, &format!("Player {}", i), Some(1500)))
+                .collect();
+
+        let results: Vec<PlayerResult> = players
+            .iter()
+            .map(|p| create_test_result(p.clone(), 0.5))
             .collect();
 
-        let results: Vec<PlayerResult> = players.iter().map(|p| create_test_result(p.clone(), 0.5)).collect();
-
-        let result = optimizer.generate_optimized_pairings(
-            players,
-            results,
-            vec![],
-            2,
-            Some(OptimizationConfig::default()),
-        ).unwrap();
+        let result = optimizer
+            .generate_optimized_pairings(
+                players,
+                results,
+                vec![],
+                2,
+                Some(OptimizationConfig::default()),
+            )
+            .unwrap();
 
         // Should have 100 pairings (200 players) with 1 bye
         assert_eq!(result.pairings.len(), 100);
         assert_eq!(result.metrics.players_processed, 201);
-        
+
         // Warnings might be generated for odd number of players
         // (This depends on implementation details)
     }

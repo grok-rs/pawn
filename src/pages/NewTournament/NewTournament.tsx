@@ -7,7 +7,7 @@ import {
   useTheme,
   Card,
   CardContent,
-} from "@mui/material";
+} from '@mui/material';
 import {
   NavigateNext,
   EmojiEvents,
@@ -15,17 +15,17 @@ import {
   Info,
   Settings,
   ContentCopy,
-} from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import Grid from "@mui/material/Grid2";
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import Grid from '@mui/material/Grid2';
 
-import BaseLayout from "../../components/BaseLayout";
-import ImportTournamentButton from "../../components/ImportTournamentButton";
-import NewTournamentSetup from "../../components/NewTournamentForm/NewTournamentSetup";
-import TournamentConfigurationExport from "../../components/TournamentConfigurationExport";
-import TournamentTemplates from "../../components/TournamentTemplates";
-import { APP_ROUTES } from "../../constants/appRoutes";
+import BaseLayout from '../../components/BaseLayout';
+import ImportTournamentButton from '../../components/ImportTournamentButton';
+import NewTournamentSetup from '../../components/NewTournamentForm/NewTournamentSetup';
+import TournamentConfigurationExport from '../../components/TournamentConfigurationExport';
+import TournamentTemplates from '../../components/TournamentTemplates';
+import { APP_ROUTES } from '../../constants/appRoutes';
 
 const NewTournamentPage = () => {
   const theme = useTheme();
@@ -48,20 +48,20 @@ const NewTournamentPage = () => {
             sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
           >
             <EmojiEvents fontSize="small" />
-            {t("tournaments")}
+            {t('tournaments')}
           </Link>
           <Typography color="text.primary" fontWeight={500}>
-            {t("newTournament")}
+            {t('newTournament')}
           </Typography>
         </Breadcrumbs>
 
         {/* Page Header */}
         <Box sx={{ mb: 4 }}>
           <Typography variant="h4" fontWeight={700} gutterBottom>
-            {t("createNewTournament")}
+            {t('createNewTournament')}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            {t("setupNewChessTournament")}
+            {t('setupNewChessTournament')}
           </Typography>
         </Box>
 
@@ -84,14 +84,20 @@ const NewTournamentPage = () => {
             {/* Import Option */}
             <Card sx={{ mb: 3 }}>
               <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <Box
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
+                >
                   <FileUpload color="primary" />
                   <Typography variant="h6" fontWeight={600}>
-                    {t("importTournament")}
+                    {t('importTournament')}
                   </Typography>
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {t("importTournamentDescription")}
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 2 }}
+                >
+                  {t('importTournamentDescription')}
                 </Typography>
                 <ImportTournamentButton />
               </CardContent>
@@ -100,14 +106,20 @@ const NewTournamentPage = () => {
             {/* Configuration Import/Export */}
             <Card sx={{ mb: 3 }}>
               <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <Box
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
+                >
                   <Settings color="primary" />
                   <Typography variant="h6" fontWeight={600}>
-                    {t("tournament.configuration.title")}
+                    {t('tournament.configuration.title')}
                   </Typography>
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {t("tournament.configuration.description")}
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 2 }}
+                >
+                  {t('tournament.configuration.description')}
                 </Typography>
                 <TournamentConfigurationExport />
               </CardContent>
@@ -116,18 +128,24 @@ const NewTournamentPage = () => {
             {/* Tournament Templates */}
             <Card sx={{ mb: 3 }}>
               <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <Box
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
+                >
                   <ContentCopy color="primary" />
                   <Typography variant="h6" fontWeight={600}>
-                    {t("tournament.templates.title")}
+                    {t('tournament.templates.title')}
                   </Typography>
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {t("tournament.templates.quickStart")}
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 2 }}
+                >
+                  {t('tournament.templates.quickStart')}
                 </Typography>
-                <TournamentTemplates 
+                <TournamentTemplates
                   showSelection={true}
-                  onSelectTemplate={(template) => {
+                  onSelectTemplate={template => {
                     // In a real implementation, this would populate the form with template data
                     console.log('Selected template:', template);
                   }}
@@ -138,24 +156,26 @@ const NewTournamentPage = () => {
             {/* Quick Tips */}
             <Card>
               <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <Box
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
+                >
                   <Info color="primary" />
                   <Typography variant="h6" fontWeight={600}>
-                    {t("quickTips")}
+                    {t('quickTips')}
                   </Typography>
                 </Box>
                 <Box component="ul" sx={{ pl: 2, pr: 0, m: 0 }}>
                   <Typography component="li" variant="body2" sx={{ mb: 1 }}>
-                    {t("quickTips.swiss")}
+                    {t('quickTips.swiss')}
                   </Typography>
                   <Typography component="li" variant="body2" sx={{ mb: 1 }}>
-                    {t("quickTips.roundRobin")}
+                    {t('quickTips.roundRobin')}
                   </Typography>
                   <Typography component="li" variant="body2" sx={{ mb: 1 }}>
-                    {t("quickTips.timeControls")}
+                    {t('quickTips.timeControls')}
                   </Typography>
                   <Typography component="li" variant="body2">
-                    {t("quickTips.editLater")}
+                    {t('quickTips.editLater')}
                   </Typography>
                 </Box>
               </CardContent>

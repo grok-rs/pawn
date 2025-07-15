@@ -21,9 +21,7 @@ const EmptyState = ({ icon, title, subtitle, action }: EmptyStateProps) => {
         backgroundColor: 'background.paper',
       }}
     >
-      <Box sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }}>
-        {icon}
-      </Box>
+      <Box sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }}>{icon}</Box>
       <Typography variant="h6" gutterBottom>
         {title}
       </Typography>

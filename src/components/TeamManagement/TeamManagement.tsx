@@ -81,9 +81,9 @@ const TEAM_COLORS = [
   '#fbc02d', // Yellow
 ];
 
-const TeamManagement: React.FC<TeamManagementProps> = ({ 
-  tournamentId, 
-  onTeamsChange 
+const TeamManagement: React.FC<TeamManagementProps> = ({
+  tournamentId,
+  onTeamsChange,
 }) => {
   const { t } = useTranslation();
   const [teams, setTeams] = useState<Team[]>([]);
@@ -134,12 +134,54 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
     ]);
 
     setTeamMemberships([
-      { id: 1, team_id: 1, player_id: 1, board_number: 1, is_captain: true, created_at: new Date().toISOString() },
-      { id: 2, team_id: 1, player_id: 3, board_number: 2, is_captain: false, created_at: new Date().toISOString() },
-      { id: 3, team_id: 1, player_id: 5, board_number: 3, is_captain: false, created_at: new Date().toISOString() },
-      { id: 4, team_id: 2, player_id: 2, board_number: 1, is_captain: true, created_at: new Date().toISOString() },
-      { id: 5, team_id: 2, player_id: 4, board_number: 2, is_captain: false, created_at: new Date().toISOString() },
-      { id: 6, team_id: 2, player_id: 6, board_number: 3, is_captain: false, created_at: new Date().toISOString() },
+      {
+        id: 1,
+        team_id: 1,
+        player_id: 1,
+        board_number: 1,
+        is_captain: true,
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: 2,
+        team_id: 1,
+        player_id: 3,
+        board_number: 2,
+        is_captain: false,
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: 3,
+        team_id: 1,
+        player_id: 5,
+        board_number: 3,
+        is_captain: false,
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: 4,
+        team_id: 2,
+        player_id: 2,
+        board_number: 1,
+        is_captain: true,
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: 5,
+        team_id: 2,
+        player_id: 4,
+        board_number: 2,
+        is_captain: false,
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: 6,
+        team_id: 2,
+        player_id: 6,
+        board_number: 3,
+        is_captain: false,
+        created_at: new Date().toISOString(),
+      },
     ]);
   }, [tournamentId]);
 
@@ -179,7 +221,9 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
     // In real implementation, this would be an API call
     const updatedTeams = teams.filter(team => team.id !== teamId);
     setTeams(updatedTeams);
-    setTeamMemberships(teamMemberships.filter(membership => membership.team_id !== teamId));
+    setTeamMemberships(
+      teamMemberships.filter(membership => membership.team_id !== teamId)
+    );
 
     if (onTeamsChange) {
       onTeamsChange(updatedTeams);
@@ -191,7 +235,9 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
 
     // Check if player is already in the team
     const existingMembership = teamMemberships.find(
-      membership => membership.team_id === selectedTeam.id && membership.player_id === selectedPlayer
+      membership =>
+        membership.team_id === selectedTeam.id &&
+        membership.player_id === selectedPlayer
     );
 
     if (existingMembership) {
@@ -216,22 +262,31 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
 
   const handleRemovePlayer = (membershipId: number) => {
     // In real implementation, this would be an API call
-    setTeamMemberships(teamMemberships.filter(membership => membership.id !== membershipId));
+    setTeamMemberships(
+      teamMemberships.filter(membership => membership.id !== membershipId)
+    );
   };
 
   const getAvailablePlayers = () => {
     if (!selectedTeam) return [];
-    
+
     const teamPlayerIds = teamMemberships
       .filter(membership => membership.team_id === selectedTeam.id)
       .map(membership => membership.player_id);
-    
+
     return players.filter(player => !teamPlayerIds.includes(player.id));
   };
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3,
+        }}
+      >
         <Typography variant="h5" fontWeight={700}>
           {t('tournament.teams.management')}
         </Typography>
@@ -245,16 +300,21 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
       </Box>
 
       {teams.length === 0 ? (
-        <Alert severity="info">
-          {t('tournament.teams.noTeamsMessage')}
-        </Alert>
+        <Alert severity="info">{t('tournament.teams.noTeamsMessage')}</Alert>
       ) : (
         <Grid container spacing={3}>
-          {teams.map((team) => (
+          {teams.map(team => (
             <Grid item xs={12} md={6} key={team.id}>
               <Card>
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      mb: 2,
+                    }}
+                  >
                     <Avatar sx={{ bgcolor: team.color }}>
                       <People />
                     </Avatar>
@@ -271,17 +331,28 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
                   </Box>
 
                   <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight={600}
+                      sx={{ mb: 1 }}
+                    >
                       {t('tournament.teams.members')}
                     </Typography>
                     <List dense>
-                      {getTeamMembers(team.id).map((membership) => (
+                      {getTeamMembers(team.id).map(membership => (
                         <ListItem key={membership.id} sx={{ px: 0 }}>
                           <ListItemText
                             primary={
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1,
+                                }}
+                              >
                                 <Typography variant="body2">
-                                  {t('tournament.teams.board')} {membership.board_number}:
+                                  {t('tournament.teams.board')}{' '}
+                                  {membership.board_number}:
                                 </Typography>
                                 <Typography variant="body2" fontWeight={600}>
                                   {membership.player?.name}
@@ -301,7 +372,8 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
                             secondary={
                               membership.player?.rating && (
                                 <Typography variant="caption">
-                                  {t('player.rating')}: {membership.player.rating}
+                                  {t('player.rating')}:{' '}
+                                  {membership.player.rating}
                                 </Typography>
                               )
                             }
@@ -368,14 +440,14 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
             fullWidth
             label={t('tournament.teams.teamName')}
             value={newTeamName}
-            onChange={(e) => setNewTeamName(e.target.value)}
+            onChange={e => setNewTeamName(e.target.value)}
             sx={{ mb: 2, mt: 1 }}
           />
           <TextField
             fullWidth
             label={t('tournament.teams.description')}
             value={newTeamDescription}
-            onChange={(e) => setNewTeamDescription(e.target.value)}
+            onChange={e => setNewTeamDescription(e.target.value)}
             multiline
             rows={3}
             sx={{ mb: 2 }}
@@ -384,7 +456,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
             <InputLabel>{t('tournament.teams.teamColor')}</InputLabel>
             <Select
               value={newTeamColor}
-              onChange={(e) => setNewTeamColor(e.target.value)}
+              onChange={e => setNewTeamColor(e.target.value)}
               label={t('tournament.teams.teamColor')}
             >
               {TEAM_COLORS.map((color, index) => (
@@ -427,17 +499,19 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
         fullWidth
       >
         <DialogTitle>
-          {t('tournament.teams.addPlayerToTeam', { teamName: selectedTeam?.name })}
+          {t('tournament.teams.addPlayerToTeam', {
+            teamName: selectedTeam?.name,
+          })}
         </DialogTitle>
         <DialogContent>
           <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
             <InputLabel>{t('tournament.teams.selectPlayer')}</InputLabel>
             <Select
               value={selectedPlayer || ''}
-              onChange={(e) => setSelectedPlayer(Number(e.target.value))}
+              onChange={e => setSelectedPlayer(Number(e.target.value))}
               label={t('tournament.teams.selectPlayer')}
             >
-              {getAvailablePlayers().map((player) => (
+              {getAvailablePlayers().map(player => (
                 <MenuItem key={player.id} value={player.id}>
                   <Box>
                     <Typography>
@@ -459,7 +533,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
             type="number"
             label={t('tournament.teams.boardNumber')}
             value={boardNumber}
-            onChange={(e) => setBoardNumber(Number(e.target.value))}
+            onChange={e => setBoardNumber(Number(e.target.value))}
             inputProps={{ min: 1, max: 10 }}
           />
         </DialogContent>

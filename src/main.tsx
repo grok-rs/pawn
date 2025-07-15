@@ -1,24 +1,24 @@
-import "@mui/material/styles/styled";
-import "./assets/main.css";
-import "./styles/animations.css";
-import "@fontsource/roboto";
-import "./i18n";
+import '@mui/material/styles/styled';
+import './assets/main.css';
+import './styles/animations.css';
+import '@fontsource/roboto';
+import './i18n';
 
-import { ThemeProvider } from "@mui/material";
-import { LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import { BrowserRouter } from "react-router-dom";
+import { ThemeProvider } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { I18nextProvider } from 'react-i18next';
+import { BrowserRouter } from 'react-router-dom';
 
-import App from "./App";
-import { muiTheme } from "./constants/muiTheme";
-import i18n from "./i18n";
+import App from './App';
+import { muiTheme } from './constants/muiTheme';
+import i18n from './i18n';
 
-const container = document.getElementById("root");
+const container = document.getElementById('root');
 
-if (!container) throw new Error("Failed to find the root element");
+if (!container) throw new Error('Failed to find the root element');
 
 const root = createRoot(container);
 
@@ -33,5 +33,5 @@ root.render(
         </I18nextProvider>
       </BrowserRouter>
     </ThemeProvider>
-  </StrictMode>,
+  </StrictMode>
 );

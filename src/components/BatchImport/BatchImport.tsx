@@ -63,7 +63,6 @@ interface ParsedImportRow {
   status: 'pending' | 'valid' | 'invalid' | 'imported';
 }
 
-
 const SAMPLE_CSV = `Game ID,White Player,Black Player,Result,Result Type,Reason,Notes
 1,Smith J.,Johnson A.,1-0,,Normal game,
 2,Brown P.,Davis R.,0-1F,white_forfeit,Player did not show,
@@ -78,13 +77,14 @@ export const BatchImport: React.FC<BatchImportProps> = ({
   const [importData, setImportData] = useState<ParsedImportRow[]>([]);
   const [isValidating, setIsValidating] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [validationResults, setValidationResults] = useState<BatchValidationResult | null>(null);
+  const [validationResults, setValidationResults] =
+    useState<BatchValidationResult | null>(null);
   const [showSampleDialog, setShowSampleDialog] = useState(false);
   const [importFormat, setImportFormat] = useState<'csv' | 'manual'>('csv');
   const [manualEntry, setManualEntry] = useState<ImportData>({
     result: '*',
   });
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const parseCSV = useCallback((csvText: string): ImportData[] => {
@@ -98,9 +98,11 @@ export const BatchImport: React.FC<BatchImportProps> = ({
 
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map(v => v.trim());
-      
+
       if (values.length !== header.length) {
-        console.warn(`Row ${i + 1} has ${values.length} columns, expected ${header.length}`);
+        console.warn(
+          `Row ${i + 1} has ${values.length} columns, expected ${header.length}`
+        );
         continue;
       }
 
@@ -120,31 +122,34 @@ export const BatchImport: React.FC<BatchImportProps> = ({
     return data;
   }, []);
 
-  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleFileUpload = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
 
-    try {
-      const text = await file.text();
-      const parsed = parseCSV(text);
-      
-      const rows: ParsedImportRow[] = parsed.map((data, index) => ({
-        index: index + 1,
-        data,
-        status: 'pending',
-      }));
+      try {
+        const text = await file.text();
+        const parsed = parseCSV(text);
 
-      setImportData(rows);
-    } catch (error) {
-      console.error('Failed to parse CSV:', error);
-      alert('Failed to parse CSV file. Please check the format.');
-    }
+        const rows: ParsedImportRow[] = parsed.map((data, index) => ({
+          index: index + 1,
+          data,
+          status: 'pending',
+        }));
 
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }, [parseCSV]);
+        setImportData(rows);
+      } catch (error) {
+        console.error('Failed to parse CSV:', error);
+        alert('Failed to parse CSV file. Please check the format.');
+      }
+
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    },
+    [parseCSV]
+  );
 
   const addManualEntry = useCallback(() => {
     if (!manualEntry.result) return;
@@ -177,26 +182,32 @@ export const BatchImport: React.FC<BatchImportProps> = ({
         changed_by: 'batch_import',
       }));
 
-      const results = await invoke<BatchValidationResult>('plugin:pawn|batch_update_results', {
-        data: {
-          tournament_id: tournamentId,
-          updates,
-          validate_only: true,
-        },
-      });
+      const results = await invoke<BatchValidationResult>(
+        'plugin:pawn|batch_update_results',
+        {
+          data: {
+            tournament_id: tournamentId,
+            updates,
+            validate_only: true,
+          },
+        }
+      );
 
       setValidationResults(results);
 
       // Update individual row validations
-      setImportData(prev => prev.map((row, index) => {
-        const validationResult = results.results.find(([i]) => i === index)?.[1];
-        return {
-          ...row,
-          validation: validationResult,
-          status: validationResult?.is_valid ? 'valid' : 'invalid',
-        };
-      }));
-
+      setImportData(prev =>
+        prev.map((row, index) => {
+          const validationResult = results.results.find(
+            ([i]) => i === index
+          )?.[1];
+          return {
+            ...row,
+            validation: validationResult,
+            status: validationResult?.is_valid ? 'valid' : 'invalid',
+          };
+        })
+      );
     } catch (error) {
       console.error('Validation failed:', error);
     } finally {
@@ -223,19 +234,24 @@ export const BatchImport: React.FC<BatchImportProps> = ({
           changed_by: 'batch_import',
         }));
 
-      const results = await invoke<BatchValidationResult>('plugin:pawn|batch_update_results', {
-        data: {
-          tournament_id: tournamentId,
-          updates,
-          validate_only: false,
-        },
-      });
+      const results = await invoke<BatchValidationResult>(
+        'plugin:pawn|batch_update_results',
+        {
+          data: {
+            tournament_id: tournamentId,
+            updates,
+            validate_only: false,
+          },
+        }
+      );
 
       if (results.overall_valid) {
-        setImportData(prev => prev.map(row => ({
-          ...row,
-          status: row.status === 'valid' ? 'imported' : row.status,
-        })));
+        setImportData(prev =>
+          prev.map(row => ({
+            ...row,
+            status: row.status === 'valid' ? 'imported' : row.status,
+          }))
+        );
 
         if (onImportCompleted) {
           onImportCompleted();
@@ -243,7 +259,6 @@ export const BatchImport: React.FC<BatchImportProps> = ({
       } else {
         alert('Import failed. Please check the results.');
       }
-
     } catch (error) {
       console.error('Import failed:', error);
       alert('Import failed. Please try again.');
@@ -253,8 +268,12 @@ export const BatchImport: React.FC<BatchImportProps> = ({
   }, [validationResults, importData, tournamentId, onImportCompleted]);
 
   const validCount = importData.filter(row => row.status === 'valid').length;
-  const invalidCount = importData.filter(row => row.status === 'invalid').length;
-  const importedCount = importData.filter(row => row.status === 'imported').length;
+  const invalidCount = importData.filter(
+    row => row.status === 'invalid'
+  ).length;
+  const importedCount = importData.filter(
+    row => row.status === 'imported'
+  ).length;
 
   return (
     <Box>
@@ -268,7 +287,9 @@ export const BatchImport: React.FC<BatchImportProps> = ({
             <InputLabel>Import Method</InputLabel>
             <Select
               value={importFormat}
-              onChange={(e) => setImportFormat(e.target.value as 'csv' | 'manual')}
+              onChange={e =>
+                setImportFormat(e.target.value as 'csv' | 'manual')
+              }
               label="Import Method"
             >
               <MenuItem value="csv">CSV Upload</MenuItem>
@@ -296,10 +317,7 @@ export const BatchImport: React.FC<BatchImportProps> = ({
               </Button>
             </Grid>
             <Grid>
-              <Button
-                variant="text"
-                onClick={() => setShowSampleDialog(true)}
-              >
+              <Button variant="text" onClick={() => setShowSampleDialog(true)}>
                 View Sample CSV
               </Button>
             </Grid>
@@ -319,7 +337,12 @@ export const BatchImport: React.FC<BatchImportProps> = ({
                   label="Game ID"
                   type="number"
                   value={manualEntry.gameId || ''}
-                  onChange={(e) => setManualEntry(prev => ({ ...prev, gameId: parseInt(e.target.value) || undefined }))}
+                  onChange={e =>
+                    setManualEntry(prev => ({
+                      ...prev,
+                      gameId: parseInt(e.target.value) || undefined,
+                    }))
+                  }
                   size="small"
                 />
               </Grid>
@@ -328,7 +351,12 @@ export const BatchImport: React.FC<BatchImportProps> = ({
                   <InputLabel>Result</InputLabel>
                   <Select
                     value={manualEntry.result}
-                    onChange={(e) => setManualEntry(prev => ({ ...prev, result: e.target.value }))}
+                    onChange={e =>
+                      setManualEntry(prev => ({
+                        ...prev,
+                        result: e.target.value,
+                      }))
+                    }
                     label="Result"
                   >
                     <MenuItem value="1-0">1-0</MenuItem>
@@ -345,7 +373,12 @@ export const BatchImport: React.FC<BatchImportProps> = ({
                 <TextField
                   label="Result Type"
                   value={manualEntry.resultType || ''}
-                  onChange={(e) => setManualEntry(prev => ({ ...prev, resultType: e.target.value }))}
+                  onChange={e =>
+                    setManualEntry(prev => ({
+                      ...prev,
+                      resultType: e.target.value,
+                    }))
+                  }
                   size="small"
                 />
               </Grid>
@@ -353,7 +386,12 @@ export const BatchImport: React.FC<BatchImportProps> = ({
                 <TextField
                   label="Reason"
                   value={manualEntry.resultReason || ''}
-                  onChange={(e) => setManualEntry(prev => ({ ...prev, resultReason: e.target.value }))}
+                  onChange={e =>
+                    setManualEntry(prev => ({
+                      ...prev,
+                      resultReason: e.target.value,
+                    }))
+                  }
                   size="small"
                   fullWidth
                 />
@@ -378,10 +416,28 @@ export const BatchImport: React.FC<BatchImportProps> = ({
             <Typography variant="subtitle1">
               Import Preview ({importData.length} entries)
             </Typography>
-            
-            {validCount > 0 && <Chip label={`${validCount} valid`} color="success" size="small" />}
-            {invalidCount > 0 && <Chip label={`${invalidCount} invalid`} color="error" size="small" />}
-            {importedCount > 0 && <Chip label={`${importedCount} imported`} color="info" size="small" />}
+
+            {validCount > 0 && (
+              <Chip
+                label={`${validCount} valid`}
+                color="success"
+                size="small"
+              />
+            )}
+            {invalidCount > 0 && (
+              <Chip
+                label={`${invalidCount} invalid`}
+                color="error"
+                size="small"
+              />
+            )}
+            {importedCount > 0 && (
+              <Chip
+                label={`${importedCount} imported`}
+                color="info"
+                size="small"
+              />
+            )}
 
             <Button
               variant="outlined"
@@ -394,7 +450,11 @@ export const BatchImport: React.FC<BatchImportProps> = ({
             <Button
               variant="contained"
               onClick={executeImport}
-              disabled={!validationResults?.overall_valid || isImporting || validCount === 0}
+              disabled={
+                !validationResults?.overall_valid ||
+                isImporting ||
+                validCount === 0
+              }
               startIcon={<CloudUploadIcon />}
             >
               {isImporting ? 'Importing...' : `Import ${validCount} Results`}
@@ -429,29 +489,39 @@ export const BatchImport: React.FC<BatchImportProps> = ({
                       <Chip
                         label={row.status}
                         color={
-                          row.status === 'valid' ? 'success' :
-                          row.status === 'invalid' ? 'error' :
-                          row.status === 'imported' ? 'info' : 'default'
+                          row.status === 'valid'
+                            ? 'success'
+                            : row.status === 'invalid'
+                              ? 'error'
+                              : row.status === 'imported'
+                                ? 'info'
+                                : 'default'
                         }
                         size="small"
                         icon={
-                          row.status === 'valid' ? <CheckIcon /> :
-                          row.status === 'invalid' ? <ErrorIcon /> :
-                          row.status === 'imported' ? <CheckIcon /> : undefined
+                          row.status === 'valid' ? (
+                            <CheckIcon />
+                          ) : row.status === 'invalid' ? (
+                            <ErrorIcon />
+                          ) : row.status === 'imported' ? (
+                            <CheckIcon />
+                          ) : undefined
                         }
                       />
                     </TableCell>
                     <TableCell>
-                      {row.validation?.errors && row.validation.errors.length > 0 && (
-                        <Typography variant="caption" color="error">
-                          {row.validation.errors.join(', ')}
-                        </Typography>
-                      )}
-                      {row.validation?.warnings && row.validation.warnings.length > 0 && (
-                        <Typography variant="caption" color="warning.main">
-                          {row.validation.warnings.join(', ')}
-                        </Typography>
-                      )}
+                      {row.validation?.errors &&
+                        row.validation.errors.length > 0 && (
+                          <Typography variant="caption" color="error">
+                            {row.validation.errors.join(', ')}
+                          </Typography>
+                        )}
+                      {row.validation?.warnings &&
+                        row.validation.warnings.length > 0 && (
+                          <Typography variant="caption" color="warning.main">
+                            {row.validation.warnings.join(', ')}
+                          </Typography>
+                        )}
                     </TableCell>
                     <TableCell>
                       <Button
@@ -472,29 +542,36 @@ export const BatchImport: React.FC<BatchImportProps> = ({
 
       {importData.length === 0 && (
         <Alert severity="info">
-          {importFormat === 'csv' 
-            ? 'Upload a CSV file to start importing game results.' 
+          {importFormat === 'csv'
+            ? 'Upload a CSV file to start importing game results.'
             : 'Add manual entries to start importing game results.'}
         </Alert>
       )}
 
       {onClose && (
         <Box mt={3} display="flex" justifyContent="flex-end" gap={2}>
-          <Button onClick={onClose}>
-            Close
-          </Button>
+          <Button onClick={onClose}>Close</Button>
         </Box>
       )}
 
       {/* Sample CSV Dialog */}
-      <Dialog open={showSampleDialog} onClose={() => setShowSampleDialog(false)} maxWidth={false} fullWidth>
+      <Dialog
+        open={showSampleDialog}
+        onClose={() => setShowSampleDialog(false)}
+        maxWidth={false}
+        fullWidth
+      >
         <DialogTitle>Sample CSV Format</DialogTitle>
         <DialogContent>
           <Typography variant="body2" paragraph>
             Your CSV file should have the following format:
           </Typography>
           <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
-            <Typography variant="body2" component="pre" style={{ whiteSpace: 'pre-wrap' }}>
+            <Typography
+              variant="body2"
+              component="pre"
+              style={{ whiteSpace: 'pre-wrap' }}
+            >
               {SAMPLE_CSV}
             </Typography>
           </Paper>
@@ -502,8 +579,13 @@ export const BatchImport: React.FC<BatchImportProps> = ({
             <strong>Notes:</strong>
             <ul>
               <li>Game ID is required if you want to update existing games</li>
-              <li>Result Type can be: white_forfeit, black_forfeit, white_default, black_default, timeout, adjourned, double_forfeit, cancelled</li>
-              <li>Reason and Notes are optional fields for additional context</li>
+              <li>
+                Result Type can be: white_forfeit, black_forfeit, white_default,
+                black_default, timeout, adjourned, double_forfeit, cancelled
+              </li>
+              <li>
+                Reason and Notes are optional fields for additional context
+              </li>
             </ul>
           </Typography>
         </DialogContent>

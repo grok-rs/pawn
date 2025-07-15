@@ -4,8 +4,11 @@ use sqlx::sqlite::SqlitePoolOptions;
 use tracing::info;
 
 use super::{
-    db::sqlite::SqliteDb, 
-    service::{tournament::TournamentService, tiebreak::TiebreakCalculator, round::RoundService, player::PlayerService, time_control::TimeControlService}
+    db::sqlite::SqliteDb,
+    service::{
+        player::PlayerService, round::RoundService, tiebreak::TiebreakCalculator,
+        time_control::TimeControlService, tournament::TournamentService,
+    },
 };
 
 pub struct State<D> {

@@ -32,13 +32,13 @@ pub struct Player {
     pub name: String,
     pub rating: Option<i32>,
     pub country_code: Option<String>,
-    pub title: Option<String>,        // Chess titles: GM, IM, FM, etc.
-    pub birth_date: Option<String>,   // For age-based categories
-    pub gender: Option<String>,       // M, F, O
-    pub email: Option<String>,        // Contact information
-    pub phone: Option<String>,        // Contact information
-    pub club: Option<String>,         // Club/federation affiliation
-    pub status: String,               // Registration status
+    pub title: Option<String>,      // Chess titles: GM, IM, FM, etc.
+    pub birth_date: Option<String>, // For age-based categories
+    pub gender: Option<String>,     // M, F, O
+    pub email: Option<String>,      // Contact information
+    pub phone: Option<String>,      // Contact information
+    pub club: Option<String>,       // Club/federation affiliation
+    pub status: String,             // Registration status
     pub created_at: String,
     pub updated_at: Option<String>,
 }
@@ -164,21 +164,20 @@ pub struct EnhancedGameResult {
     pub requires_approval: bool,
 }
 
-
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum GameResultType {
-    WhiteWins,      // 1-0
-    BlackWins,      // 0-1
-    Draw,           // 1/2-1/2
-    Ongoing,        // *
-    WhiteForfeit,   // 0-1 (White forfeits)
-    BlackForfeit,   // 1-0 (Black forfeits)
-    WhiteDefault,   // 0-1 (White defaults)
-    BlackDefault,   // 1-0 (Black defaults)
-    Adjourned,      // Game postponed
-    Timeout,        // Time forfeit
-    DoubleForfeit,  // Both players forfeit (0-0)
-    Cancelled,      // Game cancelled
+    WhiteWins,     // 1-0
+    BlackWins,     // 0-1
+    Draw,          // 1/2-1/2
+    Ongoing,       // *
+    WhiteForfeit,  // 0-1 (White forfeits)
+    BlackForfeit,  // 1-0 (Black forfeits)
+    WhiteDefault,  // 0-1 (White defaults)
+    BlackDefault,  // 1-0 (Black defaults)
+    Adjourned,     // Game postponed
+    Timeout,       // Time forfeit
+    DoubleForfeit, // Both players forfeit (0-0)
+    Cancelled,     // Game cancelled
 }
 
 impl GameResultType {
@@ -219,11 +218,17 @@ impl GameResultType {
 
     pub fn get_points(&self) -> (f32, f32) {
         match self {
-            GameResultType::WhiteWins | GameResultType::BlackForfeit | GameResultType::BlackDefault => (1.0, 0.0),
-            GameResultType::BlackWins | GameResultType::WhiteForfeit | GameResultType::WhiteDefault => (0.0, 1.0),
+            GameResultType::WhiteWins
+            | GameResultType::BlackForfeit
+            | GameResultType::BlackDefault => (1.0, 0.0),
+            GameResultType::BlackWins
+            | GameResultType::WhiteForfeit
+            | GameResultType::WhiteDefault => (0.0, 1.0),
             GameResultType::Draw => (0.5, 0.5),
             GameResultType::DoubleForfeit | GameResultType::Cancelled => (0.0, 0.0),
-            GameResultType::Ongoing | GameResultType::Adjourned | GameResultType::Timeout => (0.0, 0.0),
+            GameResultType::Ongoing | GameResultType::Adjourned | GameResultType::Timeout => {
+                (0.0, 0.0)
+            }
         }
     }
 
@@ -232,10 +237,14 @@ impl GameResultType {
     }
 
     pub fn requires_arbiter_approval(&self) -> bool {
-        matches!(self, 
-            GameResultType::WhiteForfeit | GameResultType::BlackForfeit |
-            GameResultType::WhiteDefault | GameResultType::BlackDefault |
-            GameResultType::DoubleForfeit | GameResultType::Cancelled
+        matches!(
+            self,
+            GameResultType::WhiteForfeit
+                | GameResultType::BlackForfeit
+                | GameResultType::WhiteDefault
+                | GameResultType::BlackDefault
+                | GameResultType::DoubleForfeit
+                | GameResultType::Cancelled
         )
     }
 }
@@ -329,7 +338,7 @@ impl PairingMethod {
 pub struct RatingHistory {
     pub id: i32,
     pub player_id: i32,
-    pub rating_type: String,    // fide, national, club, rapid, blitz
+    pub rating_type: String, // fide, national, club, rapid, blitz
     pub rating: i32,
     pub is_provisional: bool,
     pub effective_date: String,
@@ -377,14 +386,14 @@ pub enum RatingType {
 
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum ChessTitle {
-    GM,    // Grandmaster
-    IM,    // International Master
-    FM,    // FIDE Master
-    CM,    // Candidate Master
-    WGM,   // Woman Grandmaster
-    WIM,   // Woman International Master
-    WFM,   // Woman FIDE Master
-    WCM,   // Woman Candidate Master
+    GM,  // Grandmaster
+    IM,  // International Master
+    FM,  // FIDE Master
+    CM,  // Candidate Master
+    WGM, // Woman Grandmaster
+    WIM, // Woman International Master
+    WFM, // Woman FIDE Master
+    WCM, // Woman Candidate Master
     None,
 }
 
@@ -471,8 +480,8 @@ pub enum TimeControlType {
     Blitz,
     Bullet,
     Correspondence,
-    Fischer,      // Time added per move
-    Bronstein,    // Delay before time starts running
+    Fischer,   // Time added per move
+    Bronstein, // Delay before time starts running
     Custom,
 }
 
@@ -481,11 +490,11 @@ pub struct TimeControl {
     pub id: i32,
     pub name: String,
     pub time_control_type: String,
-    pub base_time_minutes: Option<i32>,        // Base time in minutes
-    pub increment_seconds: Option<i32>,        // Increment/delay in seconds
-    pub moves_per_session: Option<i32>,        // For classical time controls
-    pub session_time_minutes: Option<i32>,     // Time for each session
-    pub total_sessions: Option<i32>,           // Number of sessions
+    pub base_time_minutes: Option<i32>,    // Base time in minutes
+    pub increment_seconds: Option<i32>,    // Increment/delay in seconds
+    pub moves_per_session: Option<i32>,    // For classical time controls
+    pub session_time_minutes: Option<i32>, // Time for each session
+    pub total_sessions: Option<i32>,       // Number of sessions
     pub is_default: bool,
     pub description: Option<String>,
     pub created_at: String,
@@ -534,26 +543,26 @@ impl TimeControlType {
 
     pub fn get_default_time_minutes(&self) -> Option<i32> {
         match self {
-            TimeControlType::Classical => Some(90),   // 90 minutes
-            TimeControlType::Rapid => Some(15),       // 15 minutes
-            TimeControlType::Blitz => Some(5),        // 5 minutes
-            TimeControlType::Bullet => Some(1),       // 1 minute
-            TimeControlType::Correspondence => None,   // Days/weeks
-            TimeControlType::Fischer => Some(15),     // 15 minutes base
-            TimeControlType::Bronstein => Some(15),   // 15 minutes base
+            TimeControlType::Classical => Some(90),  // 90 minutes
+            TimeControlType::Rapid => Some(15),      // 15 minutes
+            TimeControlType::Blitz => Some(5),       // 5 minutes
+            TimeControlType::Bullet => Some(1),      // 1 minute
+            TimeControlType::Correspondence => None, // Days/weeks
+            TimeControlType::Fischer => Some(15),    // 15 minutes base
+            TimeControlType::Bronstein => Some(15),  // 15 minutes base
             TimeControlType::Custom => None,
         }
     }
 
     pub fn get_default_increment_seconds(&self) -> Option<i32> {
         match self {
-            TimeControlType::Classical => Some(30),   // 30 second increment
-            TimeControlType::Rapid => Some(10),       // 10 second increment
-            TimeControlType::Blitz => Some(3),        // 3 second increment
-            TimeControlType::Bullet => Some(1),       // 1 second increment
+            TimeControlType::Classical => Some(30), // 30 second increment
+            TimeControlType::Rapid => Some(10),     // 10 second increment
+            TimeControlType::Blitz => Some(3),      // 3 second increment
+            TimeControlType::Bullet => Some(1),     // 1 second increment
             TimeControlType::Correspondence => None,
-            TimeControlType::Fischer => Some(10),     // 10 seconds per move
-            TimeControlType::Bronstein => Some(10),   // 10 second delay
+            TimeControlType::Fischer => Some(10), // 10 seconds per move
+            TimeControlType::Bronstein => Some(10), // 10 second delay
             TimeControlType::Custom => None,
         }
     }
@@ -573,7 +582,7 @@ impl TimeControlType {
 pub struct KnockoutBracket {
     pub id: i32,
     pub tournament_id: i32,
-    pub bracket_type: String,    // "main", "consolation", "third_place"
+    pub bracket_type: String, // "main", "consolation", "third_place"
     pub total_rounds: i32,
     pub created_at: String,
 }
@@ -586,7 +595,7 @@ pub struct BracketPosition {
     pub position_number: i32,
     pub player_id: Option<i32>,
     pub advanced_from_position: Option<i32>,
-    pub status: String,          // "waiting", "ready", "bye", "eliminated"
+    pub status: String, // "waiting", "ready", "bye", "eliminated"
     pub created_at: String,
 }
 
@@ -599,11 +608,11 @@ pub enum BracketType {
 
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum BracketPositionStatus {
-    Waiting,     // Waiting for opponent or previous match
-    Ready,       // Ready to play
-    Bye,         // Received a bye
-    Eliminated,  // Player eliminated
-    Advanced,    // Player advanced to next round
+    Waiting,    // Waiting for opponent or previous match
+    Ready,      // Ready to play
+    Bye,        // Received a bye
+    Eliminated, // Player eliminated
+    Advanced,   // Player advanced to next round
 }
 
 impl BracketType {
@@ -709,7 +718,7 @@ pub struct TournamentTemplate {
     pub name: String,
     pub description: Option<String>,
     pub tournament_type: String, // swiss, roundrobin, knockout, etc.
-    pub time_type: String, // classical, rapid, blitz
+    pub time_type: String,       // classical, rapid, blitz
     pub default_rounds: i32,
     pub time_control_template_id: Option<i32>,
     pub tiebreak_order: String, // JSON array of tiebreak types
@@ -717,7 +726,7 @@ pub struct TournamentTemplate {
     pub draw_offers_allowed: bool,
     pub mobile_phone_policy: String,
     pub late_entry_allowed: bool,
-    pub is_public: bool, // Whether template is available to all users
+    pub is_public: bool,            // Whether template is available to all users
     pub created_by: Option<String>, // User who created the template
     pub created_at: String,
     pub updated_at: Option<String>,

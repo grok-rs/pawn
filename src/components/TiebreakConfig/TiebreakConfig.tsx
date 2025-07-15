@@ -59,21 +59,35 @@ const TiebreakConfig: React.FC<TiebreakConfigProps> = ({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const allTiebreakTypes: TiebreakType[] = [
-    'buchholz_full', 'buchholz_cut_1', 'buchholz_cut_2', 'buchholz_median',
-    'sonneborn_berger', 'progressive_score', 'cumulative_score', 'direct_encounter',
-    'average_rating_of_opponents', 'tournament_performance_rating', 'number_of_wins',
-    'number_of_games_with_black', 'number_of_wins_with_black', 'koya_system',
-    'aroc_cut_1', 'aroc_cut_2', 'match_points', 'game_points', 'board_points'
+    'buchholz_full',
+    'buchholz_cut_1',
+    'buchholz_cut_2',
+    'buchholz_median',
+    'sonneborn_berger',
+    'progressive_score',
+    'cumulative_score',
+    'direct_encounter',
+    'average_rating_of_opponents',
+    'tournament_performance_rating',
+    'number_of_wins',
+    'number_of_games_with_black',
+    'number_of_wins_with_black',
+    'koya_system',
+    'aroc_cut_1',
+    'aroc_cut_2',
+    'match_points',
+    'game_points',
+    'board_points',
   ];
-  
+
   const availableTiebreaks = allTiebreakTypes.filter(
-    (tb) => !tiebreaks.includes(tb)
+    tb => !tiebreaks.includes(tb)
   );
-  
+
   const getTiebreakName = (tiebreak: TiebreakType): string => {
     return t(`tiebreaks.${tiebreak}.name`);
   };
-  
+
   const getTiebreakDescription = (tiebreak: TiebreakType): string => {
     return t(`tiebreaks.${tiebreak}.description`);
   };
@@ -102,14 +116,20 @@ const TiebreakConfig: React.FC<TiebreakConfigProps> = ({
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
     const newTiebreaks = [...tiebreaks];
-    [newTiebreaks[index - 1], newTiebreaks[index]] = [newTiebreaks[index], newTiebreaks[index - 1]];
+    [newTiebreaks[index - 1], newTiebreaks[index]] = [
+      newTiebreaks[index],
+      newTiebreaks[index - 1],
+    ];
     onChange(newTiebreaks);
   };
 
   const handleMoveDown = (index: number) => {
     if (index === tiebreaks.length - 1) return;
     const newTiebreaks = [...tiebreaks];
-    [newTiebreaks[index], newTiebreaks[index + 1]] = [newTiebreaks[index + 1], newTiebreaks[index]];
+    [newTiebreaks[index], newTiebreaks[index + 1]] = [
+      newTiebreaks[index + 1],
+      newTiebreaks[index],
+    ];
     onChange(newTiebreaks);
   };
 
@@ -132,24 +152,27 @@ const TiebreakConfig: React.FC<TiebreakConfigProps> = ({
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2,
+        }}
+      >
         <Typography variant="h6">{t('tiebreakOrder')}</Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <FormControlLabel
             control={
               <Switch
                 checked={useFideDefaults}
-                onChange={(e) => onFideDefaultsChange?.(e.target.checked)}
+                onChange={e => onFideDefaultsChange?.(e.target.checked)}
                 size="small"
               />
             }
             label={t('useFideDefaults')}
           />
-          <Button
-            startIcon={<RestartAlt />}
-            size="small"
-            onClick={handleReset}
-          >
+          <Button startIcon={<RestartAlt />} size="small" onClick={handleReset}>
             {t('resetToDefaults')}
           </Button>
         </Box>
@@ -237,7 +260,7 @@ const TiebreakConfig: React.FC<TiebreakConfigProps> = ({
         <DialogTitle>{t('selectTiebreak')}</DialogTitle>
         <DialogContent>
           <List>
-            {availableTiebreaks.map((tiebreak) => (
+            {availableTiebreaks.map(tiebreak => (
               <ListItemButton
                 key={tiebreak}
                 onClick={() => handleAdd(tiebreak)}

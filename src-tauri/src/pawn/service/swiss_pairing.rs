@@ -1,8 +1,8 @@
-use std::collections::{HashMap, HashSet, BTreeMap};
 use crate::pawn::{
     common::error::PawnError,
-    domain::model::{Player, PlayerResult, Pairing, GameResult},
+    domain::model::{GameResult, Pairing, Player, PlayerResult},
 };
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 /// FIDE-compliant Swiss pairing implementation
 /// Based on FIDE Handbook C.04 Swiss Pairing Rules
@@ -28,16 +28,16 @@ pub enum Color {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ColorPreference {
-    Absolute(Color),   // Must have this color (3+ consecutive same color)
-    Strong(Color),     // Strong preference (2 consecutive same color)
-    Mild(Color),       // Mild preference (color balance)
-    None,              // No preference
+    Absolute(Color), // Must have this color (3+ consecutive same color)
+    Strong(Color),   // Strong preference (2 consecutive same color)
+    Mild(Color),     // Mild preference (color balance)
+    None,            // No preference
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum FloatDirection {
-    Up,    // Floated up to higher score group
-    Down,  // Floated down to lower score group
+    Up,   // Floated up to higher score group
+    Down, // Floated down to lower score group
 }
 
 #[derive(Debug, Clone)]
@@ -67,7 +67,11 @@ impl SwissPairingEngine {
         game_history: Vec<GameResult>,
         round_number: i32,
     ) -> Result<PairingResult, PawnError> {
-        tracing::info!("Starting Dutch System pairing for {} players, round {}", players.len(), round_number);
+        tracing::info!(
+            "Starting Dutch System pairing for {} players, round {}",
+            players.len(),
+            round_number
+        );
 
         if players.is_empty() {
             return Ok(PairingResult {
@@ -80,12 +84,12 @@ impl SwissPairingEngine {
 
         // Convert to Swiss players with enhanced data
         let mut swiss_players = self.build_swiss_players(players, player_results, game_history)?;
-        
+
         // Apply accelerated pairing adjustments for early rounds
         if round_number <= 2 && swiss_players.len() >= 16 {
             self.apply_accelerated_pairings(&mut swiss_players, round_number);
         }
-        
+
         // Form score groups
         let score_groups = self.form_score_groups(swiss_players);
         tracing::debug!("Formed {} score groups", score_groups.len());
@@ -104,7 +108,8 @@ impl SwissPairingEngine {
 
         // Process players in score order (highest to lowest)
         remaining_players.sort_by(|a, b| {
-            b.points.partial_cmp(&a.points)
+            b.points
+                .partial_cmp(&a.points)
                 .unwrap_or(std::cmp::Ordering::Equal)
                 .then_with(|| b.rating.cmp(&a.rating))
         });
@@ -114,12 +119,12 @@ impl SwissPairingEngine {
 
         // Enhanced Dutch System algorithm with proper float management
         let pairings_result = self.process_score_groups_with_floats(
-            &remaining_players, 
-            &mut paired_ids, 
+            &remaining_players,
+            &mut paired_ids,
             &mut board_number,
-            round_number
+            round_number,
         )?;
-        
+
         pairings.extend(pairings_result.pairings);
         byes.extend(pairings_result.byes);
         float_count += pairings_result.float_count;
@@ -192,7 +197,10 @@ impl SwissPairingEngine {
         let mut groups_map: BTreeMap<OrderedFloat, Vec<SwissPlayer>> = BTreeMap::new();
 
         for player in players {
-            groups_map.entry(OrderedFloat(player.points)).or_default().push(player);
+            groups_map
+                .entry(OrderedFloat(player.points))
+                .or_default()
+                .push(player);
         }
 
         groups_map
@@ -216,15 +224,21 @@ impl SwissPairingEngine {
         }
 
         let recent_colors = &color_history[color_history.len().saturating_sub(3)..];
-        
+
         // Check for 3+ consecutive same colors (absolute preference)
-        if recent_colors.len() >= 3 && recent_colors.windows(3).any(|w| w.iter().all(|&c| c == w[0])) {
+        if recent_colors.len() >= 3
+            && recent_colors
+                .windows(3)
+                .any(|w| w.iter().all(|&c| c == w[0]))
+        {
             let same_color = recent_colors[recent_colors.len() - 1];
             return ColorPreference::Absolute(opposite_color(same_color));
         }
 
         // Check for 2 consecutive same colors (strong preference)
-        if recent_colors.len() >= 2 && recent_colors[recent_colors.len() - 2] == recent_colors[recent_colors.len() - 1] {
+        if recent_colors.len() >= 2
+            && recent_colors[recent_colors.len() - 2] == recent_colors[recent_colors.len() - 1]
+        {
             let same_color = recent_colors[recent_colors.len() - 1];
             return ColorPreference::Strong(opposite_color(same_color));
         }
@@ -254,13 +268,17 @@ impl SwissPairingEngine {
         let mut byes = Vec::new();
         let mut float_count = 0;
         let max_floats_allowed = self.calculate_max_floats(all_players.len(), round_number);
-        
+
         let score_groups = self.form_score_groups_from_slice(all_players, paired_ids);
-        
+
         for (group_index, mut score_group) in score_groups.into_iter().enumerate() {
-            tracing::debug!("Processing score group {} with {} points, {} players", 
-                           group_index, score_group.points, score_group.players.len());
-            
+            tracing::debug!(
+                "Processing score group {} with {} points, {} players",
+                group_index,
+                score_group.points,
+                score_group.players.len()
+            );
+
             // Handle odd group size with float management
             if score_group.players.len() % 2 == 1 {
                 let float_handled = self.handle_odd_group_with_floats(
@@ -270,17 +288,17 @@ impl SwissPairingEngine {
                     &mut float_count,
                     max_floats_allowed,
                     group_index,
-                    &mut byes
+                    &mut byes,
                 )?;
-                
+
                 if !float_handled {
                     tracing::debug!("No float possible, group remains odd");
                 }
             }
-            
+
             // Pair players within the group
             let group_pairings = self.pair_score_group(&mut score_group.players, board_number)?;
-            
+
             // Mark players as paired
             for pairing in &group_pairings {
                 paired_ids.insert(pairing.white_player.id);
@@ -288,10 +306,10 @@ impl SwissPairingEngine {
                     paired_ids.insert(black_player.id);
                 }
             }
-            
+
             pairings.extend(group_pairings);
         }
-        
+
         Ok(PairingResult {
             pairings,
             byes,
@@ -305,7 +323,7 @@ impl SwissPairingEngine {
         // FIDE rules: Generally allow up to 1/4 of players to float per round
         // Fewer floats allowed in later rounds
         let base_max = (total_players as f64 * 0.25) as usize;
-        
+
         if round_number <= 2 {
             base_max
         } else if round_number <= 5 {
@@ -325,7 +343,10 @@ impl SwissPairingEngine {
 
         for player in players {
             if !paired_ids.contains(&player.player.id) {
-                groups_map.entry(OrderedFloat(player.points)).or_default().push(player.clone());
+                groups_map
+                    .entry(OrderedFloat(player.points))
+                    .or_default()
+                    .push(player.clone());
             }
         }
 
@@ -357,35 +378,42 @@ impl SwissPairingEngine {
         // Try to get a downfloater if float limit allows
         if *float_count < max_floats_allowed {
             if let Some(floater) = self.find_suitable_downfloater(
-                all_players, 
-                score_group.points, 
+                all_players,
+                score_group.points,
                 paired_ids,
-                group_index
+                group_index,
             ) {
                 score_group.players.push(floater);
                 *float_count += 1;
-                tracing::debug!("Added downfloater to group {}, total floats: {}", 
-                               group_index, *float_count);
+                tracing::debug!(
+                    "Added downfloater to group {}, total floats: {}",
+                    group_index,
+                    *float_count
+                );
                 return Ok(true);
             }
         }
-        
+
         // Try to send an upfloater to the group above
         if group_index > 0 && *float_count < max_floats_allowed {
             // This would require coordination with previous groups
             // For now, we'll assign a bye
         }
-        
+
         // Assign bye to the most appropriate player
         if let Some(bye_player) = self.select_bye_player(&score_group.players) {
             let bye_player_id = bye_player.player.id;
             let bye_player_name = bye_player.player.name.clone();
             byes.push(bye_player.clone());
             score_group.players.retain(|p| p.player.id != bye_player_id);
-            tracing::debug!("Assigned bye to: {} in group {}", bye_player_name, group_index);
+            tracing::debug!(
+                "Assigned bye to: {} in group {}",
+                bye_player_name,
+                group_index
+            );
             return Ok(true);
         }
-        
+
         Ok(false)
     }
 
@@ -403,25 +431,27 @@ impl SwissPairingEngine {
             .map(|p| p.points)
             .filter(|&points| points < current_points)
             .collect();
-        
+
         // Remove duplicates manually
         lower_scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
         lower_scores.dedup_by(|a, b| (*a - *b).abs() < f64::EPSILON);
-        
+
         if lower_scores.is_empty() {
             return None;
         }
-        
+
         // Get the highest score below current group
-        let target_score = lower_scores.iter().max_by(|a, b| a.partial_cmp(b).unwrap())?;
-        
+        let target_score = lower_scores
+            .iter()
+            .max_by(|a, b| a.partial_cmp(b).unwrap())?;
+
         // Find best candidate from that score group
         all_players
             .iter()
             .filter(|p| {
-                p.points == *target_score && 
-                !paired_ids.contains(&p.player.id) &&
-                self.can_float_up(p, current_group_index)
+                p.points == *target_score
+                    && !paired_ids.contains(&p.player.id)
+                    && self.can_float_up(p, current_group_index)
             })
             .max_by_key(|p| p.rating) // Prefer highest-rated for upfloat
             .cloned()
@@ -437,14 +467,14 @@ impl SwissPairingEngine {
     /// Apply accelerated pairing system for first 2 rounds
     fn apply_accelerated_pairings(&self, swiss_players: &mut [SwissPlayer], round_number: i32) {
         tracing::info!("Applying accelerated pairings for round {}", round_number);
-        
+
         let total_players = swiss_players.len();
-        
+
         // Sort players by rating (descending) to determine top half
         swiss_players.sort_by(|a, b| b.rating.cmp(&a.rating));
-        
+
         let top_half_size = total_players / 2;
-        
+
         // Add virtual points to top half of players
         for (index, player) in swiss_players.iter_mut().enumerate() {
             if index < top_half_size {
@@ -477,9 +507,9 @@ impl SwissPairingEngine {
                     }
                     _ => 0.0, // No virtual points for round 3+
                 };
-                
+
                 player.points += virtual_points;
-                
+
                 if virtual_points > 0.0 {
                     tracing::debug!(
                         "Applied {} virtual points to {} (rating: {}, current points: {})",
@@ -491,7 +521,7 @@ impl SwissPairingEngine {
                 }
             }
         }
-        
+
         tracing::info!(
             "Accelerated pairing applied: {} players in top half received virtual points",
             top_half_size
@@ -504,42 +534,38 @@ impl SwissPairingEngine {
         // 1. Prefer players who haven't had a bye
         // 2. Among those, prefer lowest-rated
         // 3. Avoid giving byes to top performers
-        
-        let bye_candidates: Vec<&SwissPlayer> = players
-            .iter()
-            .filter(|p| p.is_bye_eligible)
-            .collect();
-            
+
+        let bye_candidates: Vec<&SwissPlayer> =
+            players.iter().filter(|p| p.is_bye_eligible).collect();
+
         if bye_candidates.is_empty() {
             return None;
         }
-        
+
         // First preference: players who haven't had a bye and are in lower half by rating
         let never_bye_low_rated = bye_candidates
             .iter()
             .filter(|p| self.has_never_had_bye(p))
             .min_by_key(|p| p.rating);
-            
+
         if let Some(player) = never_bye_low_rated {
             return Some(player);
         }
-        
+
         // Second preference: any player who hasn't had a bye
         let never_bye = bye_candidates
             .iter()
             .filter(|p| self.has_never_had_bye(p))
             .min_by_key(|p| p.rating);
-            
+
         if let Some(player) = never_bye {
             return Some(player);
         }
-        
+
         // Last resort: lowest-rated player regardless of bye history
-        bye_candidates
-            .into_iter()
-            .min_by_key(|p| p.rating)
+        bye_candidates.into_iter().min_by_key(|p| p.rating)
     }
-    
+
     /// Check if a player has never had a bye (simplified for now)
     fn has_never_had_bye(&self, _player: &SwissPlayer) -> bool {
         // TODO: Implement bye history tracking
@@ -554,8 +580,12 @@ impl SwissPairingEngine {
         late_entries: Vec<Player>,
         current_round: i32,
     ) -> Result<(), PawnError> {
-        tracing::info!("Integrating {} late entries into round {}", late_entries.len(), current_round);
-        
+        tracing::info!(
+            "Integrating {} late entries into round {}",
+            late_entries.len(),
+            current_round
+        );
+
         for late_player in late_entries {
             let mut swiss_player = SwissPlayer {
                 player: late_player.clone(),
@@ -567,39 +597,40 @@ impl SwissPairingEngine {
                 is_bye_eligible: true,
                 float_history: Vec::new(),
             };
-            
+
             // Assign compensatory points based on late entry round
             let compensatory_points = self.calculate_late_entry_points(current_round);
             swiss_player.points = compensatory_points;
-            
+
             existing_players.push(swiss_player);
-            
+
             tracing::debug!(
-                "Late entry {} added with {} compensatory points", 
-                late_player.name, 
+                "Late entry {} added with {} compensatory points",
+                late_player.name,
                 compensatory_points
             );
         }
-        
+
         // Re-sort players by points and rating after adding late entries
         existing_players.sort_by(|a, b| {
-            b.points.partial_cmp(&a.points)
+            b.points
+                .partial_cmp(&a.points)
                 .unwrap_or(std::cmp::Ordering::Equal)
                 .then_with(|| b.rating.cmp(&a.rating))
         });
-        
+
         Ok(())
     }
-    
+
     /// Calculate points for late entry players based on round
     fn calculate_late_entry_points(&self, entry_round: i32) -> f64 {
         // FIDE recommendations for late entries
         match entry_round {
-            1 => 0.0,  // Entered from start
-            2 => 0.0,  // Entered round 2, no compensation
-            3 => 0.5,  // Entered round 3, get half point
-            4 => 1.0,  // Entered round 4, get 1 point
-            5 => 1.5,  // Entered round 5, get 1.5 points
+            1 => 0.0, // Entered from start
+            2 => 0.0, // Entered round 2, no compensation
+            3 => 0.5, // Entered round 3, get half point
+            4 => 1.0, // Entered round 4, get 1 point
+            5 => 1.5, // Entered round 5, get 1.5 points
             _ => {
                 // For very late entries, calculate based on average score
                 (entry_round - 1) as f64 * 0.5
@@ -637,7 +668,7 @@ impl SwissPairingEngine {
 
                 // Calculate pairing quality score
                 let pairing_score = self.calculate_pairing_score(&players[i], &players[j]);
-                
+
                 if pairing_score > best_score {
                     best_score = pairing_score;
                     best_opponent_idx = Some(j);
@@ -658,7 +689,11 @@ impl SwissPairingEngine {
                 });
 
                 *board_number += 1;
-                tracing::debug!("Paired: {} (W) vs {} (B)", white_player.player.name, black_player.player.name);
+                tracing::debug!(
+                    "Paired: {} (W) vs {} (B)",
+                    white_player.player.name,
+                    black_player.player.name
+                );
             }
         }
 
@@ -682,7 +717,7 @@ impl SwissPairingEngine {
         if player1.opponents.contains(&player2.player.id) {
             score -= 10000.0; // Severely penalize rematches
         }
-        
+
         // 3.5. Team/club avoidance (high priority penalty)
         if self.are_teammates(player1, player2) {
             score -= 5000.0; // High penalty for same club/federation
@@ -733,7 +768,7 @@ impl SwissPairingEngine {
             0.0
         }
     }
-    
+
     /// Check if two players are from the same team/club
     fn are_teammates(&self, player1: &SwissPlayer, player2: &SwissPlayer) -> bool {
         // Check if players are from the same club
@@ -746,7 +781,7 @@ impl SwissPairingEngine {
             }
             _ => {}
         }
-        
+
         // Check if players are from the same country/federation
         match (&player1.player.country_code, &player2.player.country_code) {
             (Some(country1), Some(country2)) => {
@@ -760,17 +795,17 @@ impl SwissPairingEngine {
             }
             _ => {}
         }
-        
+
         false
     }
-    
+
     /// Determine if same-country players should be avoided
     fn should_avoid_same_country(&self) -> bool {
         // TODO: Make this configurable based on tournament settings
         // For now, return false to only enforce club-level team avoidance
         false
     }
-    
+
     /// Apply special handling for top group pairings
     fn apply_top_group_handling(
         &self,
@@ -780,20 +815,23 @@ impl SwissPairingEngine {
         if score_groups.is_empty() {
             return Ok(());
         }
-        
+
         let top_group = &mut score_groups[0];
-        
+
         // Top group special rules (FIDE C.04.2)
         if top_group.players.len() >= 4 && round_number > 3 {
-            tracing::debug!("Applying top group special handling for {} players", top_group.players.len());
-            
+            tracing::debug!(
+                "Applying top group special handling for {} players",
+                top_group.players.len()
+            );
+
             // Ensure variety in top group pairings
             self.ensure_top_group_variety(&mut top_group.players, round_number)?;
         }
-        
+
         Ok(())
     }
-    
+
     /// Ensure variety in top group pairings to avoid repetitive matchups
     fn ensure_top_group_variety(
         &self,
@@ -805,17 +843,17 @@ impl SwissPairingEngine {
             // Sort by number of previous games against other top players
             // This is a simplified implementation - full version would track
             // games against other top-rated players specifically
-            
+
             tracing::debug!(
                 "Applying top group variety rules for round {} with {} top players",
                 round_number,
                 top_players.len()
             );
-            
+
             // The actual pairing algorithm will handle this through the scoring system
             // by giving bonuses to pairings that create more variety
         }
-        
+
         Ok(())
     }
 
@@ -826,19 +864,31 @@ impl SwissPairingEngine {
                 if c1 != c2 { 1.0 } else { -1.0 } // Both can't have absolute preference for same color
             }
             (ColorPreference::Strong(c1), ColorPreference::Strong(c2)) => {
-                if c1 != c2 { 0.8 } else { -0.5 }
+                if c1 != c2 {
+                    0.8
+                } else {
+                    -0.5
+                }
             }
             (ColorPreference::Absolute(_), _) | (_, ColorPreference::Absolute(_)) => 0.9,
             (ColorPreference::Strong(_), _) | (_, ColorPreference::Strong(_)) => 0.6,
             (ColorPreference::Mild(c1), ColorPreference::Mild(c2)) => {
-                if c1 != c2 { 0.3 } else { -0.1 }
+                if c1 != c2 {
+                    0.3
+                } else {
+                    -0.1
+                }
             }
             _ => 0.0,
         }
     }
 
     /// Assign colors to two players based on their preferences
-    fn assign_colors<'a>(&self, player1: &'a SwissPlayer, player2: &'a SwissPlayer) -> (&'a SwissPlayer, &'a SwissPlayer) {
+    fn assign_colors<'a>(
+        &self,
+        player1: &'a SwissPlayer,
+        player2: &'a SwissPlayer,
+    ) -> (&'a SwissPlayer, &'a SwissPlayer) {
         match (&player1.color_preference, &player2.color_preference) {
             (ColorPreference::Absolute(Color::White), _) => (player1, player2),
             (ColorPreference::Absolute(Color::Black), _) => (player2, player1),
@@ -886,14 +936,16 @@ impl Eq for OrderedFloat {}
 
 impl Ord for OrderedFloat {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.0.partial_cmp(&other.0).unwrap_or(std::cmp::Ordering::Equal)
+        self.0
+            .partial_cmp(&other.0)
+            .unwrap_or(std::cmp::Ordering::Equal)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::pawn::domain::model::{Player, PlayerResult, Game};
+    use crate::pawn::domain::model::{Game, Player, PlayerResult};
 
     fn create_test_player(id: i32, name: &str, rating: Option<i32>) -> Player {
         Player {
@@ -953,12 +1005,9 @@ mod tests {
     #[test]
     fn test_empty_tournament() {
         let engine = SwissPairingEngine::new();
-        let result = engine.generate_dutch_system_pairings(
-            vec![],
-            vec![],
-            vec![],
-            1,
-        ).unwrap();
+        let result = engine
+            .generate_dutch_system_pairings(vec![], vec![], vec![], 1)
+            .unwrap();
 
         assert!(result.pairings.is_empty());
         assert!(result.byes.is_empty());
@@ -971,12 +1020,9 @@ mod tests {
         let player = create_test_player(1, "Player 1", Some(1500));
         let result_data = create_test_result(player.clone(), 0.0);
 
-        let result = engine.generate_dutch_system_pairings(
-            vec![player.clone()],
-            vec![result_data],
-            vec![],
-            1,
-        ).unwrap();
+        let result = engine
+            .generate_dutch_system_pairings(vec![player.clone()], vec![result_data], vec![], 1)
+            .unwrap();
 
         assert!(result.pairings.is_empty());
         assert_eq!(result.byes.len(), 1);
@@ -988,20 +1034,22 @@ mod tests {
         let engine = SwissPairingEngine::new();
         let player1 = create_test_player(1, "Player 1", Some(1600));
         let player2 = create_test_player(2, "Player 2", Some(1400));
-        
+
         let result1 = create_test_result(player1.clone(), 0.5);
         let result2 = create_test_result(player2.clone(), 0.5);
 
-        let result = engine.generate_dutch_system_pairings(
-            vec![player1.clone(), player2.clone()],
-            vec![result1, result2],
-            vec![],
-            2,
-        ).unwrap();
+        let result = engine
+            .generate_dutch_system_pairings(
+                vec![player1.clone(), player2.clone()],
+                vec![result1, result2],
+                vec![],
+                2,
+            )
+            .unwrap();
 
         assert_eq!(result.pairings.len(), 1);
         assert!(result.byes.is_empty());
-        
+
         let pairing = &result.pairings[0];
         assert_eq!(pairing.white_player.id, player1.id); // Higher rated gets white
         assert_eq!(pairing.black_player.as_ref().unwrap().id, player2.id);
@@ -1017,15 +1065,15 @@ mod tests {
             create_test_player(3, "Player 3", Some(1500)),
             create_test_player(4, "Player 4", Some(1400)),
         ];
-        
-        let results = players.iter().map(|p| create_test_result(p.clone(), 1.0)).collect();
 
-        let result = engine.generate_dutch_system_pairings(
-            players.clone(),
-            results,
-            vec![],
-            2,
-        ).unwrap();
+        let results = players
+            .iter()
+            .map(|p| create_test_result(p.clone(), 1.0))
+            .collect();
+
+        let result = engine
+            .generate_dutch_system_pairings(players.clone(), results, vec![], 2)
+            .unwrap();
 
         assert_eq!(result.pairings.len(), 2);
         assert!(result.byes.is_empty());
@@ -1038,7 +1086,7 @@ mod tests {
         let player2 = create_test_player(2, "Player 2", Some(1500));
         let player3 = create_test_player(3, "Player 3", Some(1500));
         let player4 = create_test_player(4, "Player 4", Some(1500));
-        
+
         // Create game history where players 1 and 2 already played
         let game = create_test_game(1, 1, 2, 1);
         let game_result = create_game_result(game, player1.clone(), player2.clone());
@@ -1050,16 +1098,23 @@ mod tests {
             create_test_result(player4.clone(), 0.5),
         ];
 
-        let result = engine.generate_dutch_system_pairings(
-            vec![player1.clone(), player2.clone(), player3.clone(), player4.clone()],
-            results,
-            vec![game_result],
-            2,
-        ).unwrap();
+        let result = engine
+            .generate_dutch_system_pairings(
+                vec![
+                    player1.clone(),
+                    player2.clone(),
+                    player3.clone(),
+                    player4.clone(),
+                ],
+                results,
+                vec![game_result],
+                2,
+            )
+            .unwrap();
 
         // Should create 2 pairings, avoiding the rematch
         assert_eq!(result.pairings.len(), 2);
-        
+
         // Verify players 1 and 2 are not paired together
         for pairing in &result.pairings {
             let white_id = pairing.white_player.id;
@@ -1071,17 +1126,17 @@ mod tests {
     #[test]
     fn test_color_preference_calculation() {
         let engine = SwissPairingEngine::new();
-        
+
         // Test absolute preference (3 consecutive whites)
         let color_history = vec![Color::White, Color::White, Color::White];
         let preference = engine.calculate_color_preference(&color_history);
         assert_eq!(preference, ColorPreference::Absolute(Color::Black));
-        
+
         // Test strong preference (2 consecutive blacks)
         let color_history = vec![Color::White, Color::Black, Color::Black];
         let preference = engine.calculate_color_preference(&color_history);
         assert_eq!(preference, ColorPreference::Strong(Color::White));
-        
+
         // Test mild preference (color imbalance)
         let color_history = vec![Color::White, Color::White, Color::Black];
         let preference = engine.calculate_color_preference(&color_history);
@@ -1090,9 +1145,11 @@ mod tests {
         let color_history_clear = vec![Color::White, Color::White, Color::White, Color::Black];
         let preference_clear = engine.calculate_color_preference(&color_history_clear);
         // This should definitely show a mild preference for black
-        assert!(matches!(preference_clear, ColorPreference::Mild(Color::Black)) || 
-                matches!(preference_clear, ColorPreference::None));
-        
+        assert!(
+            matches!(preference_clear, ColorPreference::Mild(Color::Black))
+                || matches!(preference_clear, ColorPreference::None)
+        );
+
         // Test no preference (balanced)
         let color_history = vec![Color::White, Color::Black];
         let preference = engine.calculate_color_preference(&color_history);
@@ -1110,7 +1167,7 @@ mod tests {
             create_test_player(5, "Loser 1", Some(1200)),
             create_test_player(6, "Loser 2", Some(1100)),
         ];
-        
+
         let results = vec![
             create_test_result(players[0].clone(), 1.0), // Winners
             create_test_result(players[1].clone(), 1.0),
@@ -1120,11 +1177,9 @@ mod tests {
             create_test_result(players[5].clone(), 0.0),
         ];
 
-        let swiss_players = engine.build_swiss_players(
-            players,
-            results,
-            vec![],
-        ).unwrap();
+        let swiss_players = engine
+            .build_swiss_players(players, results, vec![])
+            .unwrap();
 
         let score_groups = engine.form_score_groups(swiss_players);
 
@@ -1149,26 +1204,27 @@ mod tests {
             create_test_player(5, "Low", Some(1200)),
             create_test_player(6, "Very Low", Some(1000)),
         ];
-        
-        let results = players.iter().map(|p| create_test_result(p.clone(), 0.0)).collect();
-        
-        let mut swiss_players = engine.build_swiss_players(
-            players,
-            results,
-            vec![],
-        ).unwrap();
+
+        let results = players
+            .iter()
+            .map(|p| create_test_result(p.clone(), 0.0))
+            .collect();
+
+        let mut swiss_players = engine
+            .build_swiss_players(players, results, vec![])
+            .unwrap();
 
         let original_points: Vec<f64> = swiss_players.iter().map(|p| p.points).collect();
-        
+
         // Apply accelerated pairings for round 1
         engine.apply_accelerated_pairings(&mut swiss_players, 1);
-        
+
         // Top half should have received virtual points
         let top_half_size = swiss_players.len() / 2;
         for i in 0..top_half_size {
             assert!(swiss_players[i].points > original_points[i]);
         }
-        
+
         // Bottom half should have same points
         for i in top_half_size..swiss_players.len() {
             assert_eq!(swiss_players[i].points, original_points[i]);
@@ -1188,7 +1244,7 @@ mod tests {
             is_bye_eligible: true,
             float_history: vec![],
         };
-        
+
         let player2 = SwissPlayer {
             player: create_test_player(2, "Player 2", Some(1500)),
             points: 1.0,
@@ -1201,7 +1257,7 @@ mod tests {
         };
 
         let (white, black) = engine.assign_colors(&player1, &player2);
-        
+
         // Player2 should get white (prefers white), Player1 should get black (prefers black)
         assert_eq!(white.player.id, 2);
         assert_eq!(black.player.id, 1);
@@ -1210,27 +1266,25 @@ mod tests {
     #[test]
     fn test_late_entry_integration() {
         let engine = SwissPairingEngine::new();
-        let mut existing_players = vec![
-            SwissPlayer {
-                player: create_test_player(1, "Existing 1", Some(1600)),
-                points: 1.5,
-                rating: 1600,
-                color_history: vec![Color::White, Color::Black],
-                opponents: HashSet::new(),
-                color_preference: ColorPreference::None,
-                is_bye_eligible: true,
-                float_history: vec![],
-            },
-        ];
+        let mut existing_players = vec![SwissPlayer {
+            player: create_test_player(1, "Existing 1", Some(1600)),
+            points: 1.5,
+            rating: 1600,
+            color_history: vec![Color::White, Color::Black],
+            opponents: HashSet::new(),
+            color_preference: ColorPreference::None,
+            is_bye_eligible: true,
+            float_history: vec![],
+        }];
 
-        let late_entries = vec![
-            create_test_player(2, "Late Entry", Some(1500)),
-        ];
+        let late_entries = vec![create_test_player(2, "Late Entry", Some(1500))];
 
-        engine.integrate_late_entries(&mut existing_players, late_entries, 3).unwrap();
+        engine
+            .integrate_late_entries(&mut existing_players, late_entries, 3)
+            .unwrap();
 
         assert_eq!(existing_players.len(), 2);
-        
+
         // Late entry should have compensatory points for round 3
         let late_player = existing_players.iter().find(|p| p.player.id == 2).unwrap();
         assert_eq!(late_player.points, 0.5); // Round 3 entry gets 0.5 points
@@ -1239,7 +1293,7 @@ mod tests {
     #[test]
     fn test_pairing_score_calculation() {
         let engine = SwissPairingEngine::new();
-        
+
         let player1 = SwissPlayer {
             player: create_test_player(1, "Player 1", Some(1500)),
             points: 1.0,
@@ -1250,7 +1304,7 @@ mod tests {
             is_bye_eligible: true,
             float_history: vec![],
         };
-        
+
         let player2 = SwissPlayer {
             player: create_test_player(2, "Player 2", Some(1500)),
             points: 1.0,
@@ -1261,9 +1315,9 @@ mod tests {
             is_bye_eligible: true,
             float_history: vec![],
         };
-        
+
         let score = engine.calculate_pairing_score(&player1, &player2);
-        
+
         // Should be a good pairing due to complementary color preferences
         assert!(score > 900.0); // Base score 1000 minus small penalties plus color bonus
     }
@@ -1271,7 +1325,7 @@ mod tests {
     #[test]
     fn test_team_avoidance() {
         let engine = SwissPairingEngine::new();
-        
+
         let mut player1 = SwissPlayer {
             player: create_test_player(1, "Player 1", Some(1500)),
             points: 1.0,
@@ -1283,7 +1337,7 @@ mod tests {
             float_history: vec![],
         };
         player1.player.club = Some("Chess Club A".to_string());
-        
+
         let mut player2 = SwissPlayer {
             player: create_test_player(2, "Player 2", Some(1500)),
             points: 1.0,
@@ -1298,7 +1352,7 @@ mod tests {
 
         // Players from same club should be considered teammates
         assert!(engine.are_teammates(&player1, &player2));
-        
+
         // Pairing score should be heavily penalized
         let score = engine.calculate_pairing_score(&player1, &player2);
         assert!(score < 0.0); // Should be negative due to teammate penalty
@@ -1307,7 +1361,7 @@ mod tests {
     #[test]
     fn test_bye_player_selection() {
         let engine = SwissPairingEngine::new();
-        
+
         let players = vec![
             SwissPlayer {
                 player: create_test_player(1, "High Rated", Some(1800)),
@@ -1332,7 +1386,7 @@ mod tests {
         ];
 
         let bye_player = engine.select_bye_player(&players).unwrap();
-        
+
         // Should select the lower-rated player for bye
         assert_eq!(bye_player.player.id, 2);
         assert_eq!(bye_player.rating, 1200);
@@ -1341,7 +1395,7 @@ mod tests {
     #[test]
     fn test_full_tournament_round() {
         let engine = SwissPairingEngine::new();
-        
+
         // 8 players with mixed scores from round 1
         let players = vec![
             create_test_player(1, "Winner 1", Some(1800)),
@@ -1353,7 +1407,7 @@ mod tests {
             create_test_player(7, "Loser 1", Some(1500)),
             create_test_player(8, "Loser 2", Some(1450)),
         ];
-        
+
         let results = vec![
             create_test_result(players[0].clone(), 1.0), // Winners
             create_test_result(players[1].clone(), 1.0),
@@ -1365,22 +1419,19 @@ mod tests {
             create_test_result(players[7].clone(), 0.0),
         ];
 
-        let result = engine.generate_dutch_system_pairings(
-            players,
-            results,
-            vec![],
-            2,
-        ).unwrap();
+        let result = engine
+            .generate_dutch_system_pairings(players, results, vec![], 2)
+            .unwrap();
 
         // Should generate 4 pairings with no byes
         assert_eq!(result.pairings.len(), 4);
         assert!(result.byes.is_empty());
-        
+
         // Verify all board numbers are assigned correctly
         for (index, pairing) in result.pairings.iter().enumerate() {
             assert_eq!(pairing.board_number, (index + 1) as i32);
         }
-        
+
         // Verify no duplicate pairings
         let mut player_ids = HashSet::new();
         for pairing in &result.pairings {

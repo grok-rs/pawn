@@ -1,8 +1,8 @@
-import { APP_ROUTES } from "../../constants/appRoutes";
-import { PAGE_TITLES } from "../../constants/pageTitles";
-import { Tab } from "./types";
+import { APP_ROUTES } from '../../constants/appRoutes';
+import { PAGE_TITLES } from '../../constants/pageTitles';
+import { Tab } from './types';
 
-const assignIds = (tabs: Omit<Tab, "id">[], parentId: string = ""): Tab[] => {
+const assignIds = (tabs: Omit<Tab, 'id'>[], parentId: string = ''): Tab[] => {
   return tabs.map((tab, index) => {
     const id = parentId ? `${parentId}.${index + 1}` : `${index + 1}`;
 

@@ -10,11 +10,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import dayjs from 'dayjs';
 import { Controller, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import {
-  EmojiEvents,
-  LocationOn,
-  CalendarToday,
-} from '@mui/icons-material';
+import { EmojiEvents, LocationOn, CalendarToday } from '@mui/icons-material';
 
 import CountryAutocomplete from '../CountryAutocomplete';
 import CustomFormHelperText from '../FormHelperText/FormHelperText';
@@ -46,13 +42,13 @@ const GeneralInfoStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <EmojiEvents color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                {t("form.sections.tournamentIdentity")}
+                {t('form.sections.tournamentIdentity')}
               </Typography>
             </Box>
             <TextField
               fullWidth
-              label={t("tournamentName")}
-              placeholder={t("form.placeholders.tournamentName")}
+              label={t('tournamentName')}
+              placeholder={t('form.placeholders.tournamentName')}
               {...register('name')}
               error={Boolean(errors.name)}
               helperText={<CustomFormHelperText errorMessage={errors.name} />}
@@ -78,18 +74,20 @@ const GeneralInfoStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <LocationOn color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                {t("form.sections.locationDetails")}
+                {t('form.sections.locationDetails')}
               </Typography>
             </Box>
             <StyledGrid container spacing={2}>
               <StyledGrid size={{ mobile: 12, laptop: 6 }}>
                 <TextField
                   fullWidth
-                  label={t("city")}
-                  placeholder={t("form.placeholders.enterCityName")}
+                  label={t('city')}
+                  placeholder={t('form.placeholders.enterCityName')}
                   {...register('city')}
                   error={Boolean(errors.city)}
-                  helperText={<CustomFormHelperText errorMessage={errors.city} />}
+                  helperText={
+                    <CustomFormHelperText errorMessage={errors.city} />
+                  }
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -103,9 +101,11 @@ const GeneralInfoStep = () => {
                 <CountryAutocomplete
                   control={control}
                   name="country"
-                  label={t("country")}
+                  label={t('country')}
                   error={Boolean(errors.country)}
-                  helperText={<CustomFormHelperText errorMessage={errors.country} />}
+                  helperText={
+                    <CustomFormHelperText errorMessage={errors.country} />
+                  }
                 />
               </StyledGrid>
             </StyledGrid>
@@ -118,7 +118,7 @@ const GeneralInfoStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <CalendarToday color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                {t("form.sections.tournamentSchedule")}
+                {t('form.sections.tournamentSchedule')}
               </Typography>
             </Box>
             <StyledGrid container spacing={2}>
@@ -129,8 +129,8 @@ const GeneralInfoStep = () => {
                   render={({ field }) => (
                     <DatePicker
                       {...field}
-                      label={t("start_date")}
-                      onChange={(date) => field.onChange(date)}
+                      label={t('start_date')}
+                      onChange={date => field.onChange(date)}
                       value={dayjs(field.value)}
                       slotProps={{
                         textField: {
@@ -155,8 +155,8 @@ const GeneralInfoStep = () => {
                   render={({ field }) => (
                     <DatePicker
                       {...field}
-                      label={t("end_date")}
-                      onChange={(date) => field.onChange(date)}
+                      label={t('end_date')}
+                      onChange={date => field.onChange(date)}
                       value={dayjs(field.value)}
                       slotProps={{
                         textField: {

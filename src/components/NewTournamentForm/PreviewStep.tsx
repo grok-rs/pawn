@@ -7,8 +7,10 @@ import TournamentPreview from '../TournamentPreview';
 
 const PreviewStep: React.FC = () => {
   const { getValues } = useFormContext<TournamentFormValues>();
-  const [timeControlTemplates, setTimeControlTemplates] = useState<TimeControlTemplate[]>([]);
-  
+  const [timeControlTemplates, setTimeControlTemplates] = useState<
+    TimeControlTemplate[]
+  >([]);
+
   const formData = getValues();
 
   useEffect(() => {
@@ -25,8 +27,8 @@ const PreviewStep: React.FC = () => {
   }, []);
 
   return (
-    <TournamentPreview 
-      formData={formData} 
+    <TournamentPreview
+      formData={formData}
       timeControlTemplates={timeControlTemplates}
     />
   );

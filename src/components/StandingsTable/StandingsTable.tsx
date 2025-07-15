@@ -63,20 +63,22 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
   const [denseMode, setDenseMode] = useState(false);
   const [showTiebreaks, setShowTiebreaks] = useState(true);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [columnVisibility, setColumnVisibility] = useState<GridColumnVisibilityModel>({});
+  const [columnVisibility, setColumnVisibility] =
+    useState<GridColumnVisibilityModel>({});
 
   const filteredStandings = useMemo(() => {
     if (!searchQuery) return standings;
-    
+
     const query = searchQuery.toLowerCase();
-    return standings.filter((standing) =>
-      standing.player.name.toLowerCase().includes(query) ||
-      standing.player.country_code?.toLowerCase().includes(query) ||
-      standing.player.rating?.toString().includes(query)
+    return standings.filter(
+      standing =>
+        standing.player.name.toLowerCase().includes(query) ||
+        standing.player.country_code?.toLowerCase().includes(query) ||
+        standing.player.rating?.toString().includes(query)
     );
   }, [standings, searchQuery]);
 
-  const rows: GridRowsProp = filteredStandings.map((standing) => ({
+  const rows: GridRowsProp = filteredStandings.map(standing => ({
     id: standing.player.id,
     ...standing,
   }));
@@ -91,9 +93,15 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
       renderCell: (params: GridRenderCellParams) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           {params.value}
-          {params.value === 1 && <EmojiEvents sx={{ color: 'gold', fontSize: 20 }} />}
-          {params.value === 2 && <EmojiEvents sx={{ color: 'silver', fontSize: 18 }} />}
-          {params.value === 3 && <EmojiEvents sx={{ color: '#CD7F32', fontSize: 16 }} />}
+          {params.value === 1 && (
+            <EmojiEvents sx={{ color: 'gold', fontSize: 20 }} />
+          )}
+          {params.value === 2 && (
+            <EmojiEvents sx={{ color: 'silver', fontSize: 18 }} />
+          )}
+          {params.value === 3 && (
+            <EmojiEvents sx={{ color: '#CD7F32', fontSize: 16 }} />
+          )}
         </Box>
       ),
     },
@@ -117,12 +125,15 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
             {params.row.player.name}
           </Typography>
           {params.row.player.country_code && (
-            <Chip 
-              label={t(`country.${params.row.player.country_code}`, params.row.player.country_code)} 
-              size="small" 
+            <Chip
+              label={t(
+                `country.${params.row.player.country_code}`,
+                params.row.player.country_code
+              )}
+              size="small"
               variant="outlined"
-              sx={{ 
-                height: 20, 
+              sx={{
+                height: 20,
                 fontSize: '0.75rem',
                 color: 'text.secondary',
                 borderColor: 'text.secondary',
@@ -142,7 +153,13 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
         <Box>
           {params.row.player.rating || t('unrated')}
           {params.row.rating_change && (
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               {params.row.rating_change > 0 ? (
                 <TrendingUp sx={{ color: 'success.main', fontSize: 16 }} />
               ) : params.row.rating_change < 0 ? (
@@ -150,11 +167,18 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
               ) : (
                 <Remove sx={{ color: 'text.secondary', fontSize: 16 }} />
               )}
-              <Typography variant="caption" color={
-                params.row.rating_change > 0 ? 'success.main' :
-                params.row.rating_change < 0 ? 'error.main' : 'text.secondary'
-              }>
-                {params.row.rating_change > 0 ? '+' : ''}{params.row.rating_change}
+              <Typography
+                variant="caption"
+                color={
+                  params.row.rating_change > 0
+                    ? 'success.main'
+                    : params.row.rating_change < 0
+                      ? 'error.main'
+                      : 'text.secondary'
+                }
+              >
+                {params.row.rating_change > 0 ? '+' : ''}
+                {params.row.rating_change}
               </Typography>
             </Box>
           )}
@@ -188,10 +212,10 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams) => (
-        <Chip 
-          label={params.value} 
-          size="small" 
-          color="success" 
+        <Chip
+          label={params.value}
+          size="small"
+          color="success"
           variant="outlined"
         />
       ),
@@ -203,10 +227,10 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams) => (
-        <Chip 
-          label={params.value} 
-          size="small" 
-          color="warning" 
+        <Chip
+          label={params.value}
+          size="small"
+          color="warning"
           variant="outlined"
         />
       ),
@@ -218,10 +242,10 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams) => (
-        <Chip 
-          label={params.value} 
-          size="small" 
-          color="error" 
+        <Chip
+          label={params.value}
+          size="small"
+          color="error"
           variant="outlined"
         />
       ),
@@ -232,39 +256,41 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
       width: 100,
       align: 'center',
       headerAlign: 'center',
-      renderCell: (params: GridRenderCellParams) => (
+      renderCell: (params: GridRenderCellParams) =>
         params.value ? (
           <Tooltip title={t('tiebreaks.tournament_performance_rating.name')}>
             <Typography variant="body2" fontWeight={500}>
               {params.value}
             </Typography>
           </Tooltip>
-        ) : '-'
-      ),
+        ) : (
+          '-'
+        ),
     },
   ];
 
   // Add tiebreak columns dynamically
-  const tiebreakColumns: GridColDef[] = showTiebreaks && standings[0]?.tiebreak_scores
-    ? standings[0].tiebreak_scores.map((_, index) => {
-        const tiebreakType = standings[0].tiebreak_scores[index].tiebreak_type;
-        return {
-          field: `tiebreak_${index}`,
-          headerName: t(`tiebreaks.short.${tiebreakType}`),
-          width: 100,
-          align: 'center',
-          headerAlign: 'center',
-          valueGetter: (_value: any, row: any) => row.tiebreak_scores[index]?.display_value || '-',
-          renderCell: (params: GridRenderCellParams) => (
-            <Tooltip title={t(`tiebreaks.${tiebreakType}.name`)}>
-              <Typography variant="body2">
-                {params.value}
-              </Typography>
-            </Tooltip>
-          ),
-        };
-      })
-    : [];
+  const tiebreakColumns: GridColDef[] =
+    showTiebreaks && standings[0]?.tiebreak_scores
+      ? standings[0].tiebreak_scores.map((_, index) => {
+          const tiebreakType =
+            standings[0].tiebreak_scores[index].tiebreak_type;
+          return {
+            field: `tiebreak_${index}`,
+            headerName: t(`tiebreaks.short.${tiebreakType}`),
+            width: 100,
+            align: 'center',
+            headerAlign: 'center',
+            valueGetter: (_value: any, row: any) =>
+              row.tiebreak_scores[index]?.display_value || '-',
+            renderCell: (params: GridRenderCellParams) => (
+              <Tooltip title={t(`tiebreaks.${tiebreakType}.name`)}>
+                <Typography variant="body2">{params.value}</Typography>
+              </Tooltip>
+            ),
+          };
+        })
+      : [];
 
   const columns = [...baseColumns, ...tiebreakColumns];
 
@@ -285,7 +311,7 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
             size="small"
             placeholder={t('search')}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -295,20 +321,20 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
             }}
             sx={{ flexGrow: 1, maxWidth: 300 }}
           />
-          
+
           <Box sx={{ flexGrow: 1 }} />
-          
+
           <FormControlLabel
             control={
               <Switch
                 checked={showTiebreaks}
-                onChange={(e) => setShowTiebreaks(e.target.checked)}
+                onChange={e => setShowTiebreaks(e.target.checked)}
                 size="small"
               />
             }
             label={t('showTiebreaks')}
           />
-          
+
           <ButtonGroup size="small" variant="outlined">
             <Tooltip title={t('denseView')}>
               <Button
@@ -319,7 +345,7 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
               </Button>
             </Tooltip>
           </ButtonGroup>
-          
+
           <Button
             variant="outlined"
             size="small"
@@ -340,7 +366,7 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
           loading={loading}
           disableRowSelectionOnClick
           columnVisibilityModel={columnVisibility}
-          onColumnVisibilityModelChange={(model) => setColumnVisibility(model)}
+          onColumnVisibilityModelChange={model => setColumnVisibility(model)}
           slots={{
             toolbar: GridToolbar,
           }}
@@ -369,10 +395,12 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
         onClose={handleCloseMenu}
       >
         {onExportCsv && (
-          <MenuItem onClick={() => {
-            handleCloseMenu();
-            onExportCsv();
-          }}>
+          <MenuItem
+            onClick={() => {
+              handleCloseMenu();
+              onExportCsv();
+            }}
+          >
             <ListItemIcon>
               <Download fontSize="small" />
             </ListItemIcon>
@@ -380,10 +408,12 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
           </MenuItem>
         )}
         {onExportPdf && (
-          <MenuItem onClick={() => {
-            handleCloseMenu();
-            onExportPdf();
-          }}>
+          <MenuItem
+            onClick={() => {
+              handleCloseMenu();
+              onExportPdf();
+            }}
+          >
             <ListItemIcon>
               <Download fontSize="small" />
             </ListItemIcon>
@@ -392,10 +422,12 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
         )}
         <Divider />
         {onPrint && (
-          <MenuItem onClick={() => {
-            handleCloseMenu();
-            onPrint();
-          }}>
+          <MenuItem
+            onClick={() => {
+              handleCloseMenu();
+              onPrint();
+            }}
+          >
             <ListItemIcon>
               <Print fontSize="small" />
             </ListItemIcon>

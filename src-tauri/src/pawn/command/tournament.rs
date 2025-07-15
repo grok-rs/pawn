@@ -5,8 +5,8 @@ use crate::pawn::{
     common::types::CommandResult,
     db::Db,
     domain::{
-        dto::{CreateTournament, CreatePlayer, CreateGame, UpdateTournamentSettings},
-        model::{Tournament, Player, Game, TournamentDetails, PlayerResult, GameResult},
+        dto::{CreateGame, CreatePlayer, CreateTournament, UpdateTournamentSettings},
+        model::{Game, GameResult, Player, PlayerResult, Tournament, TournamentDetails},
         tiebreak::{StandingsCalculationResult, TournamentTiebreakConfig},
     },
     state::PawnState,
@@ -50,10 +50,7 @@ pub async fn get_tournament_details(
 #[instrument(ret, skip(state))]
 #[tauri::command]
 #[specta::specta]
-pub async fn delete_tournament(
-    state: State<'_, PawnState>,
-    id: i32,
-) -> CommandResult<()> {
+pub async fn delete_tournament(state: State<'_, PawnState>, id: i32) -> CommandResult<()> {
     Ok(state.tournament_service.delete_tournament(id).await?)
 }
 
@@ -65,7 +62,10 @@ pub async fn get_players_by_tournament(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<Vec<Player>> {
-    Ok(state.tournament_service.get_players_by_tournament(tournament_id).await?)
+    Ok(state
+        .tournament_service
+        .get_players_by_tournament(tournament_id)
+        .await?)
 }
 
 #[instrument(ret, skip(state))]
@@ -86,16 +86,16 @@ pub async fn get_games_by_tournament(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<Vec<Game>> {
-    Ok(state.tournament_service.get_games_by_tournament(tournament_id).await?)
+    Ok(state
+        .tournament_service
+        .get_games_by_tournament(tournament_id)
+        .await?)
 }
 
 #[instrument(ret, skip(state))]
 #[tauri::command]
 #[specta::specta]
-pub async fn create_game(
-    state: State<'_, PawnState>,
-    data: CreateGame,
-) -> CommandResult<Game> {
+pub async fn create_game(state: State<'_, PawnState>, data: CreateGame) -> CommandResult<Game> {
     Ok(state.tournament_service.create_game(data).await?)
 }
 
@@ -107,7 +107,10 @@ pub async fn get_player_results(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<Vec<PlayerResult>> {
-    Ok(state.tournament_service.get_player_results(tournament_id).await?)
+    Ok(state
+        .tournament_service
+        .get_player_results(tournament_id)
+        .await?)
 }
 
 #[instrument(ret, skip(state))]
@@ -117,7 +120,10 @@ pub async fn get_game_results(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<Vec<GameResult>> {
-    Ok(state.tournament_service.get_game_results(tournament_id).await?)
+    Ok(state
+        .tournament_service
+        .get_game_results(tournament_id)
+        .await?)
 }
 
 // Utility for development
@@ -128,15 +134,16 @@ pub async fn populate_mock_data(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<()> {
-    Ok(state.tournament_service.populate_mock_data(tournament_id).await?)
+    Ok(state
+        .tournament_service
+        .populate_mock_data(tournament_id)
+        .await?)
 }
 
 #[instrument(ret, skip(state))]
 #[tauri::command]
 #[specta::specta]
-pub async fn populate_mock_tournaments(
-    state: State<'_, PawnState>,
-) -> CommandResult<()> {
+pub async fn populate_mock_tournaments(state: State<'_, PawnState>) -> CommandResult<()> {
     Ok(state.tournament_service.populate_mock_tournaments().await?)
 }
 
@@ -157,8 +164,11 @@ pub async fn get_tournament_standings(
             config
         }
     };
-    
-    Ok(state.tiebreak_calculator.calculate_standings(tournament_id, &config).await?)
+
+    Ok(state
+        .tiebreak_calculator
+        .calculate_standings(tournament_id, &config)
+        .await?)
 }
 
 // Tournament settings
@@ -187,6 +197,9 @@ pub async fn update_tournament_settings(
     settings: UpdateTournamentSettings,
 ) -> CommandResult<()> {
     state.db.upsert_tournament_settings(&settings).await?;
-    tracing::info!("Tournament settings updated successfully for tournament {}", settings.tournament_id);
+    tracing::info!(
+        "Tournament settings updated successfully for tournament {}",
+        settings.tournament_id
+    );
     Ok(())
 }

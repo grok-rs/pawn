@@ -1,9 +1,9 @@
-use tauri::State;
 use crate::pawn::{
+    common::error::PawnError,
     domain::{dto::*, model::*},
     state::PawnState,
-    common::error::PawnError,
 };
+use tauri::State;
 
 #[tauri::command]
 #[specta::specta]
@@ -51,10 +51,7 @@ pub async fn update_time_control(
 
 #[tauri::command]
 #[specta::specta]
-pub async fn delete_time_control(
-    state: State<'_, PawnState>,
-    id: i32,
-) -> Result<(), PawnError> {
+pub async fn delete_time_control(state: State<'_, PawnState>, id: i32) -> Result<(), PawnError> {
     state.time_control_service.delete_time_control(id).await
 }
 
@@ -63,7 +60,10 @@ pub async fn delete_time_control(
 pub async fn get_time_control_templates(
     state: State<'_, PawnState>,
 ) -> Result<Vec<TimeControlTemplate>, PawnError> {
-    state.time_control_service.get_time_control_templates().await
+    state
+        .time_control_service
+        .get_time_control_templates()
+        .await
 }
 
 #[tauri::command]

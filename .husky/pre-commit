@@ -1,0 +1,45 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run pre-commit quality gates
+echo "🔍 Running pre-commit quality gates..."
+
+# Frontend checks
+echo "📱 Running frontend checks..."
+npx lint-staged
+
+# Backend checks
+echo "🦀 Running backend checks..."
+cd src-tauri
+
+# Rust formatting check
+echo "  ✨ Checking Rust formatting..."
+cargo fmt --check || {
+  echo "❌ Rust code is not formatted. Run 'cargo fmt' to fix."
+  exit 1
+}
+
+# Rust linting
+echo "  🔍 Running Rust linting..."
+cargo clippy -- -D warnings || {
+  echo "❌ Rust linting failed. Fix clippy warnings."
+  exit 1
+}
+
+# Rust type checking
+echo "  🔧 Running Rust type checking..."
+cargo check || {
+  echo "❌ Rust type checking failed."
+  exit 1
+}
+
+# Rust tests
+echo "  🧪 Running Rust tests..."
+cargo test || {
+  echo "❌ Rust tests failed."
+  exit 1
+}
+
+cd ..
+
+echo "✅ All pre-commit checks passed!"

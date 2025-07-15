@@ -1,8 +1,8 @@
-use std::collections::HashMap;
 use crate::pawn::{
     common::error::PawnError,
-    domain::model::{Player, Pairing},
+    domain::model::{Pairing, Player},
 };
+use std::collections::HashMap;
 
 /// Advanced Round-Robin pairing system with Berger tables
 pub struct RoundRobinEngine;
@@ -10,7 +10,7 @@ pub struct RoundRobinEngine;
 #[derive(Debug, Clone)]
 pub struct RoundRobinPlayer {
     pub player: Player,
-    pub position: usize,  // Position in the tournament table
+    pub position: usize,    // Position in the tournament table
     pub color_balance: i32, // Track color balance (positive = more whites)
 }
 
@@ -19,14 +19,14 @@ pub struct BergerTable {
     pub total_players: usize,
     pub total_rounds: usize,
     pub pairings_matrix: Vec<Vec<Option<(usize, usize)>>>, // [round][pairing] = (white_pos, black_pos)
-    pub color_assignments: HashMap<(usize, usize), bool>, // (player1, player2) -> player1_is_white
+    pub color_assignments: HashMap<(usize, usize), bool>,  // (player1, player2) -> player1_is_white
 }
 
 #[derive(Debug)]
 pub enum RoundRobinType {
-    Single,        // Each player plays each other once
-    Double,        // Each player plays each other twice
-    Scheveningen,  // Two teams play against each other
+    Single,       // Each player plays each other once
+    Double,       // Each player plays each other twice
+    Scheveningen, // Two teams play against each other
 }
 
 #[derive(Debug)]
@@ -69,10 +69,10 @@ impl RoundRobinEngine {
 
         let rr_players = self.prepare_round_robin_players(players);
         let berger_table = self.generate_berger_table(&rr_players, &tournament_type)?;
-        
+
         let pairings = self.extract_round_pairings(&berger_table, &rr_players, round_number)?;
         let bye_player = self.determine_bye_player(&rr_players, round_number);
-        
+
         let round_info = RoundInfo {
             round_number,
             total_rounds: berger_table.total_rounds as i32,
@@ -102,7 +102,7 @@ impl RoundRobinEngine {
         );
 
         let mut rr_players = self.prepare_round_robin_players(players);
-        
+
         if prefer_color_balance {
             self.optimize_color_assignments(&mut rr_players, round_number)?;
         }
@@ -110,7 +110,7 @@ impl RoundRobinEngine {
         let tournament_type = RoundRobinType::Single;
         let berger_table = self.generate_berger_table(&rr_players, &tournament_type)?;
         let pairings = self.extract_round_pairings(&berger_table, &rr_players, round_number)?;
-        
+
         let round_info = RoundInfo {
             round_number,
             total_rounds: berger_table.total_rounds as i32,
@@ -140,11 +140,15 @@ impl RoundRobinEngine {
         );
 
         if team_a.is_empty() || team_b.is_empty() {
-            return Err(PawnError::InvalidInput("Both teams must have players".to_string()));
+            return Err(PawnError::InvalidInput(
+                "Both teams must have players".to_string(),
+            ));
         }
 
         if team_a.len() != team_b.len() {
-            return Err(PawnError::InvalidInput("Teams must have equal number of players".to_string()));
+            return Err(PawnError::InvalidInput(
+                "Teams must have equal number of players".to_string(),
+            ));
         }
 
         let pairings = self.generate_scheveningen_round(&team_a, &team_b, round_number)?;
@@ -183,7 +187,10 @@ impl RoundRobinEngine {
 
         // Sort by rating (descending) for proper seeding
         rr_players.sort_by(|a, b| {
-            b.player.rating.unwrap_or(0).cmp(&a.player.rating.unwrap_or(0))
+            b.player
+                .rating
+                .unwrap_or(0)
+                .cmp(&a.player.rating.unwrap_or(0))
         });
 
         // Reassign positions after sorting
@@ -216,28 +223,37 @@ impl RoundRobinEngine {
 
         // Handle odd number of players by adding a "bye" position
         let working_n = if n % 2 == 0 { n } else { n + 1 };
-        
+
         // Generate classical round-robin using rotation method
         for round in 0..rounds {
             let mut round_pairings = Vec::new();
-            
+
             for i in 0..working_n / 2 {
-                let pos1 = if i == 0 { 0 } else { (round + i - 1) % (working_n - 1) + 1 };
+                let pos1 = if i == 0 {
+                    0
+                } else {
+                    (round + i - 1) % (working_n - 1) + 1
+                };
                 let pos2 = (working_n - 1 + round - i) % (working_n - 1) + 1;
                 let pos2 = if pos2 == pos1 { 0 } else { pos2 };
 
                 // Skip bye pairings (when one position >= n)
                 if pos1 < n && pos2 < n {
                     // Determine colors using advanced algorithm
-                    let (white_pos, black_pos) = self.determine_berger_colors(pos1, pos2, round, working_n);
+                    let (white_pos, black_pos) =
+                        self.determine_berger_colors(pos1, pos2, round, working_n);
                     round_pairings.push((white_pos, black_pos));
-                    
+
                     // Store color assignment for tracking
-                    berger_table.color_assignments.insert((pos1, pos2), pos1 == white_pos);
-                    berger_table.color_assignments.insert((pos2, pos1), pos2 == white_pos);
+                    berger_table
+                        .color_assignments
+                        .insert((pos1, pos2), pos1 == white_pos);
+                    berger_table
+                        .color_assignments
+                        .insert((pos2, pos1), pos2 == white_pos);
                 }
             }
-            
+
             berger_table.pairings_matrix[round] = round_pairings.into_iter().map(Some).collect();
         }
 
@@ -250,11 +266,17 @@ impl RoundRobinEngine {
     }
 
     /// Determine colors for Berger table with balanced distribution
-    fn determine_berger_colors(&self, pos1: usize, pos2: usize, round: usize, n: usize) -> (usize, usize) {
+    fn determine_berger_colors(
+        &self,
+        pos1: usize,
+        pos2: usize,
+        round: usize,
+        n: usize,
+    ) -> (usize, usize) {
         // Classical Berger table color assignment
         // Player 1 (fixed position) alternates colors based on round
         // Other positions follow a pattern to ensure color balance
-        
+
         if pos1 == 0 {
             // Fixed player alternates colors
             if round % 2 == 0 {
@@ -266,36 +288,51 @@ impl RoundRobinEngine {
             // Other pairings follow position-based pattern
             let board_number = if pos1 < pos2 { pos1 } else { pos2 };
             if (round + board_number) % 2 == 0 {
-                if pos1 < pos2 { (pos1, pos2) } else { (pos2, pos1) }
+                if pos1 < pos2 {
+                    (pos1, pos2)
+                } else {
+                    (pos2, pos1)
+                }
             } else {
-                if pos1 < pos2 { (pos2, pos1) } else { (pos1, pos2) }
+                if pos1 < pos2 {
+                    (pos2, pos1)
+                } else {
+                    (pos1, pos2)
+                }
             }
         }
     }
 
     /// Generate color assignments for double round-robin
-    fn generate_double_round_robin_colors(&self, berger_table: &mut BergerTable) -> Result<(), PawnError> {
+    fn generate_double_round_robin_colors(
+        &self,
+        berger_table: &mut BergerTable,
+    ) -> Result<(), PawnError> {
         let single_rounds = berger_table.total_rounds / 2;
-        
+
         // Second cycle: copy first cycle with reversed colors
         for round in 0..single_rounds {
             let first_cycle_pairings = berger_table.pairings_matrix[round].clone();
             let mut second_cycle_pairings = Vec::new();
-            
+
             for pairing in first_cycle_pairings {
                 if let Some((white_pos, black_pos)) = pairing {
                     // Reverse colors for second cycle
                     second_cycle_pairings.push(Some((black_pos, white_pos)));
-                    
+
                     // Update color assignments
-                    berger_table.color_assignments.insert((white_pos, black_pos), false);
-                    berger_table.color_assignments.insert((black_pos, white_pos), true);
+                    berger_table
+                        .color_assignments
+                        .insert((white_pos, black_pos), false);
+                    berger_table
+                        .color_assignments
+                        .insert((black_pos, white_pos), true);
                 }
             }
-            
+
             berger_table.pairings_matrix[single_rounds + round] = second_cycle_pairings;
         }
-        
+
         Ok(())
     }
 
@@ -307,18 +344,17 @@ impl RoundRobinEngine {
         round_number: i32,
     ) -> Result<Vec<Pairing>, PawnError> {
         let round_index = (round_number - 1) as usize;
-        
+
         if round_index >= berger_table.pairings_matrix.len() {
             return Err(PawnError::InvalidInput(format!(
                 "Round {} exceeds tournament length of {} rounds",
-                round_number,
-                berger_table.total_rounds
+                round_number, berger_table.total_rounds
             )));
         }
 
         let mut pairings = Vec::new();
         let round_pairings = &berger_table.pairings_matrix[round_index];
-        
+
         for (board_number, pairing_opt) in round_pairings.iter().enumerate() {
             if let Some((white_pos, black_pos)) = pairing_opt {
                 if *white_pos < players.len() && *black_pos < players.len() {
@@ -341,7 +377,11 @@ impl RoundRobinEngine {
     }
 
     /// Determine bye player for odd number of players
-    fn determine_bye_player(&self, players: &[RoundRobinPlayer], round_number: i32) -> Option<Player> {
+    fn determine_bye_player(
+        &self,
+        players: &[RoundRobinPlayer],
+        round_number: i32,
+    ) -> Option<Player> {
         if players.len() % 2 == 0 {
             return None;
         }
@@ -361,11 +401,11 @@ impl RoundRobinEngine {
     ) -> Result<Vec<Pairing>, PawnError> {
         let mut pairings = Vec::new();
         let team_size = team_a.len();
-        
+
         for board in 0..team_size {
             // Calculate opponent for this round using rotation
             let opponent_index = (board + (round_number - 1) as usize) % team_size;
-            
+
             // Determine colors: alternate by round and board
             let team_a_white = if round_number % 2 == 1 {
                 board % 2 == 0 // Odd rounds: Team A white on even boards
@@ -404,14 +444,14 @@ impl RoundRobinEngine {
         // Advanced color balance optimization
         // This could involve sophisticated algorithms to minimize color imbalances
         // For now, we'll use the standard Berger table which already provides good balance
-        
+
         tracing::debug!("Optimizing color assignments for {} players", players.len());
-        
+
         // Reset color balance counters
         for player in players.iter_mut() {
             player.color_balance = 0;
         }
-        
+
         Ok(())
     }
 
@@ -419,13 +459,13 @@ impl RoundRobinEngine {
     fn check_color_balance(&self, berger_table: &BergerTable) -> bool {
         // Analyze color distribution across all rounds
         let mut color_counts: HashMap<usize, (i32, i32)> = HashMap::new(); // (whites, blacks)
-        
+
         for round_pairings in &berger_table.pairings_matrix {
             for pairing_opt in round_pairings {
                 if let Some((white_pos, black_pos)) = pairing_opt {
                     let white_entry = color_counts.entry(*white_pos).or_insert((0, 0));
                     white_entry.0 += 1;
-                    
+
                     let black_entry = color_counts.entry(*black_pos).or_insert((0, 0));
                     black_entry.1 += 1;
                 }
@@ -433,7 +473,9 @@ impl RoundRobinEngine {
         }
 
         // Check if color balance is within acceptable limits (difference <= 1)
-        color_counts.values().all(|(whites, blacks)| (whites - blacks).abs() <= 1)
+        color_counts
+            .values()
+            .all(|(whites, blacks)| (whites - blacks).abs() <= 1)
     }
 }
 
@@ -463,11 +505,7 @@ mod tests {
     #[test]
     fn test_empty_tournament() {
         let engine = RoundRobinEngine::new();
-        let result = engine.generate_berger_pairings(
-            vec![],
-            1,
-            RoundRobinType::Single,
-        );
+        let result = engine.generate_berger_pairings(vec![], 1, RoundRobinType::Single);
 
         // Empty tournament should return an error
         assert!(result.is_err());
@@ -478,11 +516,9 @@ mod tests {
         let engine = RoundRobinEngine::new();
         let player = create_test_player(1, "Player 1");
 
-        let result = engine.generate_berger_pairings(
-            vec![player.clone()],
-            1,
-            RoundRobinType::Single,
-        ).unwrap();
+        let result = engine
+            .generate_berger_pairings(vec![player.clone()], 1, RoundRobinType::Single)
+            .unwrap();
 
         assert!(result.pairings.is_empty());
         assert_eq!(result.bye_player.unwrap().id, player.id);
@@ -496,11 +532,9 @@ mod tests {
             create_test_player(2, "Player 2"),
         ];
 
-        let result = engine.generate_berger_pairings(
-            players.clone(),
-            1,
-            RoundRobinType::Single,
-        ).unwrap();
+        let result = engine
+            .generate_berger_pairings(players.clone(), 1, RoundRobinType::Single)
+            .unwrap();
 
         assert_eq!(result.pairings.len(), 1);
         assert!(result.bye_player.is_none());
@@ -522,11 +556,9 @@ mod tests {
 
         // Test multiple rounds
         for round in 1..=3 {
-            let result = engine.generate_berger_pairings(
-                players.clone(),
-                round,
-                RoundRobinType::Single,
-            ).unwrap();
+            let result = engine
+                .generate_berger_pairings(players.clone(), round, RoundRobinType::Single)
+                .unwrap();
 
             assert_eq!(result.pairings.len(), 2); // 4 players = 2 pairings per round
             assert!(result.bye_player.is_none());
@@ -550,11 +582,9 @@ mod tests {
             create_test_player(5, "Player 5"),
         ];
 
-        let result = engine.generate_berger_pairings(
-            players.clone(),
-            1,
-            RoundRobinType::Single,
-        ).unwrap();
+        let result = engine
+            .generate_berger_pairings(players.clone(), 1, RoundRobinType::Single)
+            .unwrap();
 
         assert_eq!(result.pairings.len(), 2); // 4 pairings with 1 bye
         assert!(result.bye_player.is_some());
@@ -563,12 +593,10 @@ mod tests {
         // Test different rounds to ensure bye rotates
         let mut bye_players = Vec::new();
         for round in 1..=5 {
-            let round_result = engine.generate_berger_pairings(
-                players.clone(),
-                round,
-                RoundRobinType::Single,
-            ).unwrap();
-            
+            let round_result = engine
+                .generate_berger_pairings(players.clone(), round, RoundRobinType::Single)
+                .unwrap();
+
             if let Some(bye_player) = round_result.bye_player {
                 bye_players.push(bye_player.id);
             }
@@ -589,7 +617,9 @@ mod tests {
             .map(|i| create_test_player(i, &format!("Player {}", i)))
             .collect();
         let rr_players = engine.convert_to_round_robin_players(players);
-        let berger_table = engine.generate_berger_table(&rr_players, &RoundRobinType::Single).unwrap();
+        let berger_table = engine
+            .generate_berger_table(&rr_players, &RoundRobinType::Single)
+            .unwrap();
         assert_eq!(berger_table.total_players, 6);
         assert_eq!(berger_table.total_rounds, 5); // n-1 rounds
         assert_eq!(berger_table.pairings_matrix.len(), 5);
@@ -599,7 +629,9 @@ mod tests {
             .map(|i| create_test_player(i, &format!("Player {}", i)))
             .collect();
         let rr_players = engine.convert_to_round_robin_players(players);
-        let berger_table = engine.generate_berger_table(&rr_players, &RoundRobinType::Single).unwrap();
+        let berger_table = engine
+            .generate_berger_table(&rr_players, &RoundRobinType::Single)
+            .unwrap();
         assert_eq!(berger_table.total_players, 7);
         assert_eq!(berger_table.total_rounds, 7); // n rounds for odd n
         assert_eq!(berger_table.pairings_matrix.len(), 7);
@@ -619,16 +651,14 @@ mod tests {
 
         // Generate all rounds and collect pairings
         for round in 1..=3 {
-            let result = engine.generate_berger_pairings(
-                players.clone(),
-                round,
-                RoundRobinType::Single,
-            ).unwrap();
+            let result = engine
+                .generate_berger_pairings(players.clone(), round, RoundRobinType::Single)
+                .unwrap();
 
             for pairing in result.pairings {
                 let white_id = pairing.white_player.id;
                 let black_id = pairing.black_player.unwrap().id;
-                
+
                 // Create a normalized pairing key (smaller id first)
                 let pairing_key = if white_id < black_id {
                     (white_id, black_id)
@@ -637,8 +667,12 @@ mod tests {
                 };
 
                 // Should not have seen this pairing before
-                assert!(all_pairings.insert(pairing_key), 
-                    "Repeated pairing: {} vs {}", white_id, black_id);
+                assert!(
+                    all_pairings.insert(pairing_key),
+                    "Repeated pairing: {} vs {}",
+                    white_id,
+                    black_id
+                );
             }
         }
 
@@ -656,11 +690,9 @@ mod tests {
             create_test_player(4, "Player 4"),
         ];
 
-        let result = engine.generate_berger_pairings(
-            players.clone(),
-            1,
-            RoundRobinType::Double,
-        ).unwrap();
+        let result = engine
+            .generate_berger_pairings(players.clone(), 1, RoundRobinType::Double)
+            .unwrap();
 
         // Double round-robin should have 2*(n-1) rounds
         assert_eq!(result.round_info.total_rounds, 6); // 2 * (4-1) = 6
@@ -670,52 +702,50 @@ mod tests {
     #[test]
     fn test_scheveningen_tournament() {
         let engine = RoundRobinEngine::new();
-        
+
         // Two teams of 3 players each
         let team_a = vec![
             create_test_player(1, "Team A Player 1"),
             create_test_player(2, "Team A Player 2"),
             create_test_player(3, "Team A Player 3"),
         ];
-        
+
         let team_b = vec![
             create_test_player(4, "Team B Player 1"),
             create_test_player(5, "Team B Player 2"),
             create_test_player(6, "Team B Player 3"),
         ];
 
-        let result = engine.generate_scheveningen_round(
-            &team_a,
-            &team_b,
-            1,
-        ).unwrap();
+        let result = engine
+            .generate_scheveningen_round(&team_a, &team_b, 1)
+            .unwrap();
 
         assert_eq!(result.len(), 3); // 3 pairings (team size)
-        
+
         // Verify each pairing has one player from each team
         for pairing in &result {
             let white_id = pairing.white_player.id;
             let black_id = pairing.black_player.as_ref().unwrap().id;
-            
+
             let white_in_team_a = team_a.iter().any(|p| p.id == white_id);
             let black_in_team_a = team_a.iter().any(|p| p.id == black_id);
-            
+
             // One should be from team A, one from team B
             assert_ne!(white_in_team_a, black_in_team_a);
         }
 
         // Test multiple rounds to verify color alternation
-        let result_round_2 = engine.generate_scheveningen_round(
-            &team_a,
-            &team_b,
-            2,
-        ).unwrap();
+        let result_round_2 = engine
+            .generate_scheveningen_round(&team_a, &team_b, 2)
+            .unwrap();
 
         // Colors should be different in round 2
-        let round1_colors: Vec<bool> = result.iter()
+        let round1_colors: Vec<bool> = result
+            .iter()
             .map(|p| team_a.iter().any(|ta| ta.id == p.white_player.id))
             .collect();
-        let round2_colors: Vec<bool> = result_round_2.iter()
+        let round2_colors: Vec<bool> = result_round_2
+            .iter()
             .map(|p| team_a.iter().any(|ta| ta.id == p.white_player.id))
             .collect();
 
@@ -726,15 +756,15 @@ mod tests {
     #[test]
     fn test_color_balance_calculation() {
         let engine = RoundRobinEngine::new();
-        
+
         // Create a simple Berger table for testing
         let mut berger_table = BergerTable {
             total_players: 4,
             total_rounds: 3,
             pairings_matrix: vec![
-                vec![Some((0, 1)), Some((2, 3))],  // Round 1
-                vec![Some((0, 2)), Some((1, 3))],  // Round 2  
-                vec![Some((0, 3)), Some((1, 2))],  // Round 3
+                vec![Some((0, 1)), Some((2, 3))], // Round 1
+                vec![Some((0, 2)), Some((1, 3))], // Round 2
+                vec![Some((0, 3)), Some((1, 2))], // Round 3
             ],
             color_assignments: HashMap::new(),
         };
@@ -746,9 +776,9 @@ mod tests {
 
         // Create an imbalanced table
         berger_table.pairings_matrix = vec![
-            vec![Some((0, 1)), Some((0, 2))],  // Player 0 gets white twice
-            vec![Some((0, 3)), Some((1, 2))],  // Player 0 gets white again
-            vec![Some((1, 3)), Some((2, 3))],  // Player 0 not playing
+            vec![Some((0, 1)), Some((0, 2))], // Player 0 gets white twice
+            vec![Some((0, 3)), Some((1, 2))], // Player 0 gets white again
+            vec![Some((1, 3)), Some((2, 3))], // Player 0 not playing
         ];
 
         // This should fail balance check due to player 0 having too many whites
@@ -790,17 +820,15 @@ mod tests {
             create_test_player(5, "Player 5"),
         ];
 
-        let result = engine.generate_berger_pairings(
-            players,
-            3,
-            RoundRobinType::Single,
-        ).unwrap();
+        let result = engine
+            .generate_berger_pairings(players, 3, RoundRobinType::Single)
+            .unwrap();
 
         assert_eq!(result.round_info.round_number, 3);
         assert_eq!(result.round_info.total_rounds, 5); // 5 players = 5 rounds
-        
+
         match result.round_info.tournament_type {
-            RoundRobinType::Single => {}, // Expected
+            RoundRobinType::Single => {} // Expected
             _ => panic!("Wrong tournament type"),
         }
     }
@@ -808,17 +836,15 @@ mod tests {
     #[test]
     fn test_large_tournament() {
         let engine = RoundRobinEngine::new();
-        
+
         // Test with 10 players
         let players: Vec<Player> = (1..=10)
             .map(|i| create_test_player(i, &format!("Player {}", i)))
             .collect();
 
-        let result = engine.generate_berger_pairings(
-            players.clone(),
-            1,
-            RoundRobinType::Single,
-        ).unwrap();
+        let result = engine
+            .generate_berger_pairings(players.clone(), 1, RoundRobinType::Single)
+            .unwrap();
 
         // 10 players = 5 pairings per round, 9 total rounds
         assert_eq!(result.pairings.len(), 5);
@@ -826,11 +852,9 @@ mod tests {
         assert!(result.bye_player.is_none()); // Even number, no bye
 
         // Test round in the middle
-        let mid_result = engine.generate_berger_pairings(
-            players.clone(),
-            5,
-            RoundRobinType::Single,
-        ).unwrap();
+        let mid_result = engine
+            .generate_berger_pairings(players.clone(), 5, RoundRobinType::Single)
+            .unwrap();
 
         assert_eq!(mid_result.pairings.len(), 5);
         assert_eq!(mid_result.round_info.round_number, 5);

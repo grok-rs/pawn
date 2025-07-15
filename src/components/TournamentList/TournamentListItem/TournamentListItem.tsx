@@ -22,15 +22,15 @@ import {
   MenuItem,
 } from '@mui/material';
 import { useState, useEffect } from 'react';
-import { 
-  isOngoingTournament, 
-  isDraftTournament, 
+import {
+  isOngoingTournament,
+  isDraftTournament,
   isFinishedTournament,
   isOngoingTournamentActual,
   isDraftTournamentActual,
   isFinishedTournamentActual,
   getTournamentProgressActual,
-  calculateActualRoundsPlayed
+  calculateActualRoundsPlayed,
 } from '../../../utils';
 import { commands } from '../../../dto/bindings';
 import type { Round } from '../../../dto/bindings';
@@ -40,19 +40,26 @@ type TournamentListItemProps = {
   onDelete?: (id: number) => void;
 };
 
-const TournamentListItem = ({ tournament, onDelete }: TournamentListItemProps) => {
+const TournamentListItem = ({
+  tournament,
+  onDelete,
+}: TournamentListItemProps) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [actualPlayerCount, setActualPlayerCount] = useState<number | null>(null);
+  const [actualPlayerCount, setActualPlayerCount] = useState<number | null>(
+    null
+  );
   const [rounds, setRounds] = useState<Round[]>([]);
 
   useEffect(() => {
     const fetchActualData = async () => {
       try {
         // Fetch actual player count
-        const players = await commands.getPlayersByTournamentEnhanced(tournament.id);
+        const players = await commands.getPlayersByTournamentEnhanced(
+          tournament.id
+        );
         setActualPlayerCount(players.length);
 
         // Fetch rounds for status calculation
@@ -138,7 +145,14 @@ const TournamentListItem = ({ tournament, onDelete }: TournamentListItemProps) =
       onClick={handleViewTournament}
     >
       <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            mb: 2,
+          }}
+        >
           <Box sx={{ flex: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <EmojiEvents sx={{ color: theme.palette.primary.main }} />
@@ -147,7 +161,14 @@ const TournamentListItem = ({ tournament, onDelete }: TournamentListItemProps) =
               </Typography>
               {getStatusChip()}
             </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, color: 'text.secondary' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 3,
+                color: 'text.secondary',
+              }}
+            >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <CalendarToday fontSize="small" />
                 <Typography variant="body2">
@@ -156,9 +177,7 @@ const TournamentListItem = ({ tournament, onDelete }: TournamentListItemProps) =
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <LocationOn fontSize="small" />
-                <Typography variant="body2">
-                  {tournament.location}
-                </Typography>
+                <Typography variant="body2">{tournament.location}</Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <People fontSize="small" />
@@ -166,8 +185,13 @@ const TournamentListItem = ({ tournament, onDelete }: TournamentListItemProps) =
                   {actualPlayerCount !== null ? (
                     actualPlayerCount !== tournament.player_count ? (
                       <>
-                        {actualPlayerCount} / {tournament.player_count} {t('players').toLowerCase()}
-                        <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
+                        {actualPlayerCount} / {tournament.player_count}{' '}
+                        {t('players').toLowerCase()}
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ ml: 0.5 }}
+                        >
                           ({t('actualPlayers').toLowerCase()})
                         </Typography>
                       </>
@@ -182,30 +206,34 @@ const TournamentListItem = ({ tournament, onDelete }: TournamentListItemProps) =
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Timer fontSize="small" />
                 <Typography variant="body2">
-                  {tournament.time_type ? t(`timeControls.${tournament.time_type}`) : '-'}
+                  {tournament.time_type
+                    ? t(`timeControls.${tournament.time_type}`)
+                    : '-'}
                 </Typography>
               </Box>
             </Box>
           </Box>
-          <IconButton
-            size="small"
-            onClick={handleMenuClick}
-            sx={{ ml: 1 }}
-          >
+          <IconButton size="small" onClick={handleMenuClick} sx={{ ml: 1 }}>
             <MoreVert />
           </IconButton>
         </Box>
 
-        {(useActualData ? isOngoingTournamentActual(tournament, rounds) : isOngoingTournament(tournament)) && (
+        {(useActualData
+          ? isOngoingTournamentActual(tournament, rounds)
+          : isOngoingTournament(tournament)) && (
           <Box sx={{ mt: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+            <Box
+              sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}
+            >
               <Typography variant="body2" color="text.secondary">
                 {t('progress') || 'Progress'}
               </Typography>
               <Typography variant="body2" fontWeight={600}>
-                {t('round')} {useActualData ? 
-                  calculateActualRoundsPlayed(rounds) : tournament.rounds_played
-                } / {tournament.total_rounds}
+                {t('round')}{' '}
+                {useActualData
+                  ? calculateActualRoundsPlayed(rounds)
+                  : tournament.rounds_played}{' '}
+                / {tournament.total_rounds}
               </Typography>
             </Box>
             <LinearProgress
@@ -230,23 +258,24 @@ const TournamentListItem = ({ tournament, onDelete }: TournamentListItemProps) =
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={() => { 
-          handleMenuClose(); 
-          handleViewTournament(); 
-        }}>
+        <MenuItem
+          onClick={() => {
+            handleMenuClose();
+            handleViewTournament();
+          }}
+        >
           {t('viewDetails')}
         </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
-          {t('editTournament')}
-        </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
-          {t('exportData')}
-        </MenuItem>
-        <MenuItem onClick={(event) => { 
-          event.stopPropagation();
-          handleMenuClose(); 
-          onDelete?.(tournament.id); 
-        }} sx={{ color: 'error.main' }}>
+        <MenuItem onClick={handleMenuClose}>{t('editTournament')}</MenuItem>
+        <MenuItem onClick={handleMenuClose}>{t('exportData')}</MenuItem>
+        <MenuItem
+          onClick={event => {
+            event.stopPropagation();
+            handleMenuClose();
+            onDelete?.(tournament.id);
+          }}
+          sx={{ color: 'error.main' }}
+        >
           {t('deleteTournament')}
         </MenuItem>
       </Menu>

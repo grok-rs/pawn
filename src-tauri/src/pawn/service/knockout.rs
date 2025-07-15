@@ -1,8 +1,7 @@
-use crate::pawn::domain::model::{
-    BracketType, BracketPosition, BracketPositionStatus, KnockoutBracket, 
-    Player, Pairing
-};
 use crate::pawn::common::error::PawnError;
+use crate::pawn::domain::model::{
+    BracketPosition, BracketPositionStatus, BracketType, KnockoutBracket, Pairing, Player,
+};
 use std::collections::HashMap;
 
 pub struct KnockoutService;
@@ -35,7 +34,9 @@ impl KnockoutService {
     ) -> Result<KnockoutBracket, PawnError> {
         let player_count = players.len() as i32;
         if player_count < 2 {
-            return Err(PawnError::InvalidInput("At least 2 players required for knockout tournament".to_string()));
+            return Err(PawnError::InvalidInput(
+                "At least 2 players required for knockout tournament".to_string(),
+            ));
         }
 
         let total_rounds = Self::calculate_rounds(player_count);
@@ -61,7 +62,7 @@ impl KnockoutService {
 
         // Seed players into first round positions
         let seeded_players = Self::seed_players(players);
-        
+
         for i in 0..bracket_size {
             let position = BracketPosition {
                 id: 0, // Will be set by database
@@ -141,7 +142,9 @@ impl KnockoutService {
     ) -> Vec<Pairing> {
         let round_positions: Vec<&BracketPosition> = positions
             .iter()
-            .filter(|p| p.round_number == round_number && p.status == BracketPositionStatus::Ready.to_str())
+            .filter(|p| {
+                p.round_number == round_number && p.status == BracketPositionStatus::Ready.to_str()
+            })
             .collect();
 
         let mut pairings = Vec::new();
@@ -153,7 +156,8 @@ impl KnockoutService {
                 let black_pos = chunk[1];
 
                 // Only create pairing if both positions have players
-                if let (Some(white_id), Some(black_id)) = (white_pos.player_id, black_pos.player_id) {
+                if let (Some(white_id), Some(black_id)) = (white_pos.player_id, black_pos.player_id)
+                {
                     // Note: This is a simplified pairing - in real implementation,
                     // we'd need to load the actual Player objects from the database
                     pairings.push(Pairing {
@@ -242,7 +246,9 @@ impl KnockoutService {
                 round_number: next_round,
                 position_number: (i + 1) as i32,
                 player_id: Some(*winner_id),
-                advanced_from_position: Some((round_number - 1) * positions_per_round + i as i32 + 1),
+                advanced_from_position: Some(
+                    (round_number - 1) * positions_per_round + i as i32 + 1,
+                ),
                 status: BracketPositionStatus::Ready.to_str().to_string(),
                 created_at: chrono::Utc::now().to_rfc3339(),
             };
@@ -272,9 +278,12 @@ impl KnockoutService {
     pub fn validate_bracket(positions: &[BracketPosition]) -> Result<(), PawnError> {
         // Check that all rounds have proper number of positions
         let mut rounds: HashMap<i32, Vec<&BracketPosition>> = HashMap::new();
-        
+
         for position in positions {
-            rounds.entry(position.round_number).or_default().push(position);
+            rounds
+                .entry(position.round_number)
+                .or_default()
+                .push(position);
         }
 
         for (round_num, round_positions) in rounds.iter() {
@@ -290,16 +299,16 @@ impl KnockoutService {
                 count
             } else {
                 // Subsequent rounds should have half the positions of previous round
-                let prev_count = rounds.get(&(round_num - 1))
-                    .map(|v| v.len())
-                    .unwrap_or(0);
+                let prev_count = rounds.get(&(round_num - 1)).map(|v| v.len()).unwrap_or(0);
                 prev_count / 2
             };
 
             if round_positions.len() != expected_count {
                 return Err(PawnError::InvalidInput(format!(
                     "Round {} has {} positions, expected {}",
-                    round_num, round_positions.len(), expected_count
+                    round_num,
+                    round_positions.len(),
+                    expected_count
                 )));
             }
         }

@@ -28,7 +28,7 @@
   "tournament.configuration.pairingSystem": "Система жеребкування",
   "tournament.pairingSystems.swiss": "Швейцарська",
   "tournament.pairingSystems.roundRobin": "Кожен з кожним",
-  
+
   "dashboard": "Панель керування",
   "tournaments": "Турніри",
   "players": "Гравці",
@@ -38,13 +38,13 @@
   "user": "Користувач",
   "allTournaments": "Всі турніри",
   "importTournament": "Імпорт турніру",
-  
+
   "totalTournaments": "Всього турнірів",
   "ongoing": "Поточні",
   "notStarted": "Не розпочаті",
   "finished": "Завершені",
   "all": "Всі",
-  
+
   "tournamentName": "Назва турніру",
   "mainArbiter": "Головний суддя",
   "enterArbiterName": "Введіть ім'я судді",
@@ -54,7 +54,7 @@
   "mainTime": "Основний час",
   "incrementPerMove": "Додавання на хід",
   "searchTournaments": "Пошук турнірів...",
-  
+
   "rank": "Місце",
   "player": "Гравець",
   "rating": "Рейтинг",
@@ -69,19 +69,19 @@
   "result": "Результат",
   "date": "Дата",
   "registered": "Зареєстровано",
-  
+
   "whiteWins": "Перемога білих",
   "blackWins": "Перемога чорних",
   "draw": "Нічия",
   "unrated": "Без рейтингу",
-  
+
   "tournamentIdNotProvided": "ID турніру не вказано",
   "failedToLoadTournamentDetails": "Не вдалося завантажити деталі турніру",
   "failedToPopulateMockData": "Не вдалося додати тестові дані",
   "failedToCreateGames": "Не вдалося створити ігри",
   "tournamentNotFound": "Турнір не знайдено",
   "noDataAvailable": "Дані відсутні",
-  
+
   "standings": "Турнірна таблиця",
   "gamesTab": "Партії",
   "resultsTab": "Результати",
@@ -89,9 +89,9 @@
   "noGamesMessage": "Немає доступних ігор",
   "createRoundsFirstMessage": "Спочатку створіть тури та сформуйте пари для введення результатів ігор",
   "goToRoundsTab": "Перейти до турів",
-  
+
   "getStartedByCreatingTournament": "Почніть зі створення вашого першого турніру",
-  
+
   "back": "Назад",
   "createTournament": "Створити турнір",
   "creating": "Створення...",
@@ -100,12 +100,12 @@
   "confirmDeleteTitle": "Підтвердження видалення турніру",
   "confirmDeleteMessage": "Ви впевнені, що хочете видалити турнір",
   "delete": "Видалити",
-  
+
   "generalInfo": "Загальна інформація",
   "configuration": "Налаштування",
   "review": "Огляд",
   "progress": "Прогрес",
-  
+
   "createNewTournament": "Створити новий турнір",
   "setupNewChessTournament": "Налаштуйте новий шаховий турнір з власними правилами та конфігураціями",
   "importTournamentDescription": "Маєте файл існуючого турніру? Імпортуйте його безпосередньо, щоб заощадити час.",
@@ -114,14 +114,14 @@
   "quickTips.roundRobin": "Кругова система гарантує, що кожен зіграє один з одним один раз",
   "quickTips.timeControls": "Стандартні контролі часу: Рапід (15+10), Бліц (3+2), Класика (90+30)",
   "quickTips.editLater": "Ви можете редагувати деталі турніру пізніше на сторінці турніру",
-  
+
   "form.steps.generalInformation": "Загальна інформація",
   "form.steps.tournamentSettings": "Налаштування турніру",
   "form.steps.generalInfo.title": "Деталі турніру",
   "form.steps.generalInfo.description": "Введіть основну інформацію про ваш турнір",
   "form.steps.configuration.title": "Конфігурація",
   "form.steps.configuration.description": "Налаштуйте правила та контроль часу для вашого турніру",
-  
+
   "form.sections.tournamentIdentity": "Ідентифікація турніру",
   "form.sections.locationDetails": "Деталі розташування",
   "form.sections.tournamentSchedule": "Розклад турніру",
@@ -129,26 +129,26 @@
   "form.sections.tournamentFormat": "Формат турніру",
   "form.sections.timeControlSettings": "Налаштування контролю часу",
   "form.sections.tournamentStructure": "Структура турніру",
-  
+
   "form.placeholders.tournamentName": "наприклад, Весняний шаховий чемпіонат 2024",
   "form.placeholders.enterCityName": "Введіть назву міста",
   "form.placeholders.enterArbiterName": "Введіть ім'я арбітра",
-  
+
   "tournament.types.rapid.timeRange": "15-60 хв",
   "tournament.types.classical.timeRange": "60+ хв",
   "tournament.types.blitz.timeRange": "3-15 хв",
-  
+
   "tournament.pairingSystems.swiss.description": "Найкраще для великих турнірів",
   "tournament.pairingSystems.roundRobin.description": "Кожен грає з кожним",
-  
+
   "tournament.timeUnits.seconds.label": "Секунди",
   "tournament.timeUnits.minutes.label": "Хвилини",
   "tournament.timeUnits.hours.label": "Години",
   "tournament.timeUnits.days.label": "Дні",
-  
+
   "form.helpers.swissRounds": "Рекомендовано: 7-9 турів для швейцарської системи",
   "form.helpers.roundRobinRounds": "Кругова система: кожен гравець грає з кожним один раз",
-  
+
   "viewDetails": "Переглянути деталі",
   "editTournament": "Редагувати турнір",
   "exportData": "Експортувати дані",
@@ -661,7 +661,7 @@
   "tournament.lateEntry.prohibited.description": "Пізня реєстрація не приймається",
 
   "tournament.timeUnits.seconds.label": "Секунди",
-  "tournament.timeUnits.minutes.label": "Хвилини", 
+  "tournament.timeUnits.minutes.label": "Хвилини",
   "tournament.timeUnits.hours.label": "Години",
   "tournament.timeUnits.days.label": "Дні",
   "tournament.timeUnits.minutes.short": "хв",
@@ -694,7 +694,7 @@
   "tournament.templates.edit": "Редагувати шаблон",
   "tournament.templates.noTemplatesMessage": "Шаблони недоступні. Створіть перший шаблон для початку.",
   "tournament.templates.public": "Публічний шаблон",
-  "tournament.templates.private": "Приватний шаблон", 
+  "tournament.templates.private": "Приватний шаблон",
   "tournament.templates.rounds": "Тури",
   "tournament.templates.createdBy": "Створено",
   "tournament.templates.useTemplate": "Використати шаблон",

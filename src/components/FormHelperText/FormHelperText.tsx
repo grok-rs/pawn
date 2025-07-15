@@ -1,5 +1,5 @@
-import { FormHelperText } from "@mui/material";
-import { FieldError, FieldErrorsImpl, Merge } from "react-hook-form";
+import { FormHelperText } from '@mui/material';
+import { FieldError, FieldErrorsImpl, Merge } from 'react-hook-form';
 
 type CustomFormHelperTextProps = {
   errorMessage?: string | FieldError | Merge<FieldError, FieldErrorsImpl>;
@@ -7,7 +7,7 @@ type CustomFormHelperTextProps = {
 
 const CustomFormHelperText = ({ errorMessage }: CustomFormHelperTextProps) => {
   const message =
-    typeof errorMessage === "string"
+    typeof errorMessage === 'string'
       ? errorMessage
       : (errorMessage as FieldError)?.message;
 

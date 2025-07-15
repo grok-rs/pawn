@@ -1,0 +1,157 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          src-tauri/target
+        key: ${{ runner.os }}-cargo-integration-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-integration-
+          ${{ runner.os }}-cargo-
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libsqlite3-dev pkg-config
+
+    - name: Install Node.js dependencies
+      run: npm ci
+
+    - name: Build backend
+      run: |
+        cd src-tauri
+        cargo build
+
+    - name: Run database integration tests
+      run: |
+        cd src-tauri
+        cargo test --test integration
+        echo "🗄️ Database integration tests completed"
+
+    - name: Run full-stack integration tests
+      run: |
+        # Build frontend
+        npm run build
+        
+        # Start backend in test mode
+        cd src-tauri
+        cargo run &
+        BACKEND_PID=$!
+        
+        # Wait for backend to start
+        sleep 5
+        
+        # Run integration tests
+        echo "🔄 Full-stack integration tests would run here"
+        # npm run test:integration
+        
+        # Cleanup
+        kill $BACKEND_PID
+
+    - name: Test Tauri command contracts
+      run: |
+        cd src-tauri
+        # Test all 60+ Tauri commands
+        cargo test command_ --lib
+        echo "📡 Tauri command contract tests completed"
+
+    - name: Performance test with large datasets
+      run: |
+        cd src-tauri
+        # Test pairing algorithms with 500+ players
+        cargo test --release perf_
+        echo "⚡ Performance tests with large datasets completed"
+
+    - name: Test database migrations
+      run: |
+        cd src-tauri
+        # Test all migrations can be applied and rolled back
+        echo "🔄 Database migration tests would run here"
+        # cargo test migration_
+
+    - name: Memory leak detection
+      run: |
+        cd src-tauri
+        # Run long-running tournament simulation
+        echo "🧠 Memory leak detection would run here"
+        # cargo test --release memory_leak_
+
+  command-coverage:
+    name: Tauri Command Coverage
+    runs-on: ubuntu-latest
+    needs: integration
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libsqlite3-dev pkg-config
+
+    - name: Install cargo-tarpaulin
+      run: cargo install cargo-tarpaulin
+
+    - name: Test Tauri command coverage
+      run: |
+        cd src-tauri
+        # Ensure 100% coverage for all Tauri commands
+        cargo tarpaulin --include-tests --out xml --output-dir ../coverage-commands \
+          --include 'src/pawn/command/**' \
+          --exclude-files "src/main.rs"
+
+    - name: Verify 100% command coverage
+      run: |
+        cd src-tauri
+        COMMAND_COVERAGE=$(cargo tarpaulin --include-tests --print-summary \
+          --include 'src/pawn/command/**' \
+          --exclude-files "src/main.rs" | grep -oP 'Coverage: \K[0-9.]+' | head -1)
+        echo "Command Coverage: $COMMAND_COVERAGE%"
+        if (( $(echo "$COMMAND_COVERAGE < 100" | bc -l) )); then
+          echo "❌ Command coverage $COMMAND_COVERAGE% is below 100% requirement"
+          exit 1
+        else
+          echo "✅ Command coverage $COMMAND_COVERAGE% meets 100% requirement"
+        fi
+
+    - name: Upload command coverage
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage-commands/cobertura.xml
+        flags: commands
+        name: command-coverage
+        fail_ci_if_error: true

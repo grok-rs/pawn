@@ -54,7 +54,7 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
   const handleSwapColors = (index: number) => {
     const newPairings = [...editedPairings];
     const pairing = newPairings[index];
-    
+
     if (pairing.black_player) {
       // Swap white and black players
       const temp = pairing.white_player;
@@ -107,10 +107,10 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
 
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Avatar 
-          sx={{ 
-            width: 32, 
-            height: 32, 
+        <Avatar
+          sx={{
+            width: 32,
+            height: 32,
             bgcolor: isWhite ? 'grey.100' : 'grey.800',
             color: isWhite ? 'grey.800' : 'grey.100',
             border: '2px solid',
@@ -133,16 +133,22 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
+    <Dialog
+      open={open}
+      onClose={onClose}
       fullWidth
       PaperProps={{
-        sx: { height: '80vh', maxWidth: 'lg', margin: 'auto' }
+        sx: { height: '80vh', maxWidth: 'lg', margin: 'auto' },
       }}
     >
       <DialogTitle>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <Typography variant="h6" fontWeight={600}>
             Round {roundNumber} Pairings
           </Typography>
@@ -187,7 +193,10 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
                   <TableCell sx={{ fontWeight: 600, minWidth: 200 }}>
                     {t('pairings.blackPlayer')}
                   </TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600, width: 120 }}>
+                  <TableCell
+                    align="center"
+                    sx={{ fontWeight: 600, width: 120 }}
+                  >
                     {t('pairings.actions')}
                   </TableCell>
                 </TableRow>
@@ -238,20 +247,21 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
           <Box sx={{ mt: 3 }}>
             <Divider sx={{ mb: 2 }} />
             <Typography variant="body2" color="text.secondary">
-              <strong>{t('pairings.summary')}</strong> {t('pairings.gamesWillBeCreated').replace('{games}', getTotalGames().toString())}
-              {getTotalByes() > 0 && `, ${t('pairings.playersWillReceiveByes').replace('{players}', getTotalByes().toString())}`}.
-              {t('pairings.swapColorsHelp')}
+              <strong>{t('pairings.summary')}</strong>{' '}
+              {t('pairings.gamesWillBeCreated').replace(
+                '{games}',
+                getTotalGames().toString()
+              )}
+              {getTotalByes() > 0 &&
+                `, ${t('pairings.playersWillReceiveByes').replace('{players}', getTotalByes().toString())}`}
+              .{t('pairings.swapColorsHelp')}
             </Typography>
           </Box>
         )}
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button 
-          onClick={onClose}
-          disabled={loading}
-          startIcon={<Cancel />}
-        >
+        <Button onClick={onClose} disabled={loading} startIcon={<Cancel />}>
           {t('cancel')}
         </Button>
         <Button
@@ -260,7 +270,9 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
           disabled={loading || editedPairings.length === 0}
           startIcon={<CheckCircle />}
         >
-          {loading ? t('pairings.creatingGames') : t('pairings.confirmPairings')}
+          {loading
+            ? t('pairings.creatingGames')
+            : t('pairings.confirmPairings')}
         </Button>
       </DialogActions>
     </Dialog>

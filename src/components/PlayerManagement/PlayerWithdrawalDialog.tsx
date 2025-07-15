@@ -46,11 +46,14 @@ interface PlayerWithdrawalDialogProps {
 }
 
 const withdrawalSchema = yup.object({
-  action: yup.string().required('Please select an action').oneOf(['withdraw', 'bye', 'reactivate']),
+  action: yup
+    .string()
+    .required('Please select an action')
+    .oneOf(['withdraw', 'bye', 'reactivate']),
   reason: yup.string().when('action', {
     is: 'withdraw',
-    then: (schema) => schema.required('Reason is required for withdrawal'),
-    otherwise: (schema) => schema.nullable(),
+    then: schema => schema.required('Reason is required for withdrawal'),
+    otherwise: schema => schema.nullable(),
   }),
   notes: yup.string().nullable(),
 });
@@ -165,8 +168,11 @@ const PlayerWithdrawalDialog: React.FC<PlayerWithdrawalDialogProps> = ({
     }
   };
 
-  const actionInfo = selectedAction ? getActionDescription(selectedAction) : null;
-  const canReactivate = player && ['withdrawn', 'bye_requested'].includes(player.status);
+  const actionInfo = selectedAction
+    ? getActionDescription(selectedAction)
+    : null;
+  const canReactivate =
+    player && ['withdrawn', 'bye_requested'].includes(player.status);
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -203,8 +209,13 @@ const PlayerWithdrawalDialog: React.FC<PlayerWithdrawalDialogProps> = ({
                     </Typography>
                   )}
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  {t('currentStatus')}: {t(`playerStatus.${player.status}`, player.status)}
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 1 }}
+                >
+                  {t('currentStatus')}:{' '}
+                  {t(`playerStatus.${player.status}`, player.status)}
                 </Typography>
               </CardContent>
             </Card>
@@ -218,32 +229,50 @@ const PlayerWithdrawalDialog: React.FC<PlayerWithdrawalDialogProps> = ({
                   control={control}
                   render={({ field }) => (
                     <RadioGroup {...field}>
-                      <FormControlLabel 
-                        value="withdraw" 
-                        control={<Radio />} 
+                      <FormControlLabel
+                        value="withdraw"
+                        control={<Radio />}
                         label={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                            }}
+                          >
                             <ExitToApp fontSize="small" color="error" />
                             {t('withdrawFromTournament')}
                           </Box>
                         }
                       />
-                      <FormControlLabel 
-                        value="bye" 
-                        control={<Radio />} 
+                      <FormControlLabel
+                        value="bye"
+                        control={<Radio />}
                         label={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                            }}
+                          >
                             <Pause fontSize="small" color="warning" />
                             {t('requestByeNextRound')}
                           </Box>
                         }
                       />
                       {canReactivate && (
-                        <FormControlLabel 
-                          value="reactivate" 
-                          control={<Radio />} 
+                        <FormControlLabel
+                          value="reactivate"
+                          control={<Radio />}
                           label={
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                              }}
+                            >
                               <Person fontSize="small" color="success" />
                               {t('reactivatePlayer')}
                             </Box>
@@ -263,7 +292,9 @@ const PlayerWithdrawalDialog: React.FC<PlayerWithdrawalDialogProps> = ({
               {/* Action Info */}
               {actionInfo && (
                 <Alert severity={actionInfo.color} sx={{ mb: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                  <Box
+                    sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}
+                  >
                     {actionInfo.icon}
                     <Box>
                       <Typography variant="subtitle2" gutterBottom>
@@ -272,7 +303,11 @@ const PlayerWithdrawalDialog: React.FC<PlayerWithdrawalDialogProps> = ({
                       <Typography variant="body2" gutterBottom>
                         {actionInfo.description}
                       </Typography>
-                      <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                      <Typography
+                        variant="caption"
+                        display="block"
+                        sx={{ mt: 1 }}
+                      >
                         {t('consequences')}:
                       </Typography>
                       <List dense sx={{ mt: 0 }}>

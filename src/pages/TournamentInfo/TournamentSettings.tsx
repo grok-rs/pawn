@@ -14,7 +14,10 @@ import { Settings as SettingsIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { commands } from '../../dto/bindings';
 import { TiebreakConfig } from '../../components/TiebreakConfig';
-import type { TournamentTiebreakConfig, TiebreakType } from '../../dto/bindings';
+import type {
+  TournamentTiebreakConfig,
+  TiebreakType,
+} from '../../dto/bindings';
 
 interface TournamentSettingsProps {
   open: boolean;
@@ -33,7 +36,9 @@ const TournamentSettings: React.FC<TournamentSettingsProps> = ({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [settings, setSettings] = useState<TournamentTiebreakConfig | null>(null);
+  const [settings, setSettings] = useState<TournamentTiebreakConfig | null>(
+    null
+  );
   const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
@@ -102,7 +107,9 @@ const TournamentSettings: React.FC<TournamentSettingsProps> = ({
 
   const handleClose = () => {
     if (isDirty) {
-      if (confirm('You have unsaved changes. Are you sure you want to close?')) {
+      if (
+        confirm('You have unsaved changes. Are you sure you want to close?')
+      ) {
         onClose();
       }
     } else {

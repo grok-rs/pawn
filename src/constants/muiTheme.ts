@@ -1,4 +1,4 @@
-import createTheme from "@mui/material/styles/createTheme";
+import createTheme from '@mui/material/styles/createTheme';
 
 export const muiTheme = createTheme({
   palette: {
@@ -242,7 +242,7 @@ export const muiTheme = createTheme({
   },
 });
 
-declare module "@mui/system" {
+declare module '@mui/system' {
   interface BreakpointOverrides {
     // Your custom breakpoints
     laptop: true;

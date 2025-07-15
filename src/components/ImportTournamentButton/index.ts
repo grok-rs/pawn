@@ -1,1 +1,1 @@
-export { default } from "./ImportTournamentButton";
+export { default } from './ImportTournamentButton';

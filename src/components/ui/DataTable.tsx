@@ -51,7 +51,9 @@ function DataTable<T extends Record<string, any>>({
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -66,7 +68,7 @@ function DataTable<T extends Record<string, any>>({
         <Table>
           <TableHead>
             <TableRow>
-              {columns.map((column) => (
+              {columns.map(column => (
                 <TableCell key={column.id as string}>
                   <Skeleton width="60%" />
                 </TableCell>
@@ -76,7 +78,7 @@ function DataTable<T extends Record<string, any>>({
           <TableBody>
             {[...Array(5)].map((_, index) => (
               <TableRow key={index}>
-                {columns.map((column) => (
+                {columns.map(column => (
                   <TableCell key={column.id as string}>
                     <Skeleton />
                   </TableCell>
@@ -94,7 +96,7 @@ function DataTable<T extends Record<string, any>>({
       <Table stickyHeader={stickyHeader}>
         <TableHead>
           <TableRow>
-            {columns.map((column) => (
+            {columns.map(column => (
               <TableCell
                 key={column.id as string}
                 align={column.align || 'left'}
@@ -133,14 +135,19 @@ function DataTable<T extends Record<string, any>>({
                   },
                 }}
               >
-                {columns.map((column) => {
+                {columns.map(column => {
                   const columnId = String(column.id);
                   const value = columnId.includes('.')
-                    ? columnId.split('.').reduce((obj, key) => obj?.[key], row as any)
+                    ? columnId
+                        .split('.')
+                        .reduce((obj, key) => obj?.[key], row as any)
                     : row[column.id as keyof T];
 
                   return (
-                    <TableCell key={column.id as string} align={column.align || 'left'}>
+                    <TableCell
+                      key={column.id as string}
+                      align={column.align || 'left'}
+                    >
                       {column.format ? column.format(value, row) : value}
                     </TableCell>
                   );
