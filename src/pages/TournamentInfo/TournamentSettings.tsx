@@ -91,6 +91,17 @@ const TournamentSettings: React.FC<TournamentSettingsProps> = ({
         tournament_id: tournamentId,
         tiebreak_order: settings.tiebreaks,
         use_fide_defaults: settings.use_fide_defaults,
+        forfeit_time_minutes: null,
+        draw_offers_allowed: null,
+        mobile_phone_policy: null,
+        default_color_allocation: null,
+        late_entry_allowed: null,
+        bye_assignment_rule: null,
+        arbiter_notes: null,
+        tournament_category: null,
+        organizer_name: null,
+        organizer_email: null,
+        prize_structure: null,
       });
       setIsDirty(false);
       if (onSettingsUpdated) {

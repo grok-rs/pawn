@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Paper,
+  // Paper,
   Typography,
   Button,
   Card,
@@ -26,17 +26,17 @@ import {
   IconButton,
   Tooltip,
   Alert,
-  Divider,
+  // Divider,
 } from '@mui/material';
 import {
   Add,
   Edit,
   Delete,
-  Save,
+  // Save,
   Visibility,
   Public,
   Lock,
-  ContentCopy,
+  // ContentCopy,
   Timer,
   EmojiEvents,
   Close,
@@ -284,7 +284,10 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
       ) : (
         <Grid container spacing={3}>
           {templates.map(template => (
-            <Grid item xs={12} md={6} lg={4} key={template.id}>
+            <Grid
+              size={{ mobile: 12, tablet: 6, desktop: 4 }}
+              key={template.id}
+            >
               <Card
                 sx={{
                   height: '100%',
@@ -404,7 +407,7 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
           setEditDialogOpen(false);
           resetForm();
         }}
-        maxWidth="md"
+        maxWidth={false}
         fullWidth
       >
         <DialogTitle>
@@ -414,7 +417,7 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
+            <Grid size={{ mobile: 12 }}>
               <TextField
                 fullWidth
                 label={t('tournament.templates.name')}
@@ -424,7 +427,7 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                 }
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ mobile: 12 }}>
               <TextField
                 fullWidth
                 multiline

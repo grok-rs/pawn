@@ -160,10 +160,10 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
         tournament_id: tournamentId,
         name: data.name,
         description: data.description || null,
-        min_rating: data.min_rating,
-        max_rating: data.max_rating,
-        min_age: data.min_age,
-        max_age: data.max_age,
+        min_rating: data.min_rating ?? null,
+        max_rating: data.max_rating ?? null,
+        min_age: data.min_age ?? null,
+        max_age: data.max_age ?? null,
         gender_restriction:
           data.gender_restriction && data.gender_restriction !== ''
             ? data.gender_restriction

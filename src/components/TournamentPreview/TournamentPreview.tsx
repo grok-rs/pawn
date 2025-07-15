@@ -3,7 +3,7 @@ import {
   Box,
   Paper,
   Typography,
-  Grid,
+  Grid2 as Grid,
   Chip,
   Divider,
   List,
@@ -21,7 +21,7 @@ import {
   Timer,
   ViewModule,
   Numbers,
-  CompareArrows,
+  // CompareArrows,
   Settings,
   Check,
 } from '@mui/icons-material';
@@ -33,7 +33,7 @@ interface TournamentPreviewProps {
   timeControlTemplates?: Array<{
     id: number;
     name: string;
-    description?: string;
+    description?: string | null;
   }>;
 }
 
@@ -103,7 +103,7 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
 
       <Grid container spacing={3}>
         {/* Basic Information */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ mobile: 12, tablet: 6 }}>
           <Card>
             <CardContent>
               <Box
@@ -159,7 +159,7 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
         </Grid>
 
         {/* Tournament Format */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ mobile: 12, tablet: 6 }}>
           <Card>
             <CardContent>
               <Box
@@ -229,7 +229,7 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
         </Grid>
 
         {/* Advanced Rules */}
-        <Grid item xs={12}>
+        <Grid size={{ mobile: 12 }}>
           <Card>
             <CardContent>
               <Box
@@ -241,7 +241,7 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
                 </Typography>
               </Box>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ mobile: 12, tablet: 6, desktop: 3 }}>
                   <Paper sx={{ p: 2, textAlign: 'center' }}>
                     <Typography variant="caption" color="text.secondary">
                       {t('tournament.configuration.forfeitTime')}
@@ -252,7 +252,7 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
                     </Typography>
                   </Paper>
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ mobile: 12, tablet: 6, desktop: 3 }}>
                   <Paper sx={{ p: 2, textAlign: 'center' }}>
                     <Typography variant="caption" color="text.secondary">
                       {t('tournament.configuration.drawOffersPolicy')}
@@ -262,7 +262,7 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
                     </Typography>
                   </Paper>
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ mobile: 12, tablet: 6, desktop: 3 }}>
                   <Paper sx={{ p: 2, textAlign: 'center' }}>
                     <Typography variant="caption" color="text.secondary">
                       {t('tournament.configuration.mobilePhonePolicy')}
@@ -272,7 +272,7 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
                     </Typography>
                   </Paper>
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ mobile: 12, tablet: 6, desktop: 3 }}>
                   <Paper sx={{ p: 2, textAlign: 'center' }}>
                     <Typography variant="caption" color="text.secondary">
                       {t('tournament.configuration.lateEntryPolicy')}
@@ -291,7 +291,7 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
                   <Divider sx={{ my: 2 }} />
                   <Grid container spacing={2}>
                     {formData.organizerName && (
-                      <Grid item xs={12} sm={6}>
+                      <Grid size={{ mobile: 12, tablet: 6 }}>
                         <Typography variant="caption" color="text.secondary">
                           {t('tournament.configuration.organizerName')}
                         </Typography>
@@ -301,7 +301,7 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
                       </Grid>
                     )}
                     {formData.organizerEmail && (
-                      <Grid item xs={12} sm={6}>
+                      <Grid size={{ mobile: 12, tablet: 6 }}>
                         <Typography variant="caption" color="text.secondary">
                           {t('tournament.configuration.organizerEmail')}
                         </Typography>
@@ -311,7 +311,7 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
                       </Grid>
                     )}
                     {formData.arbiterNotes && (
-                      <Grid item xs={12}>
+                      <Grid size={{ mobile: 12 }}>
                         <Typography variant="caption" color="text.secondary">
                           {t('tournament.configuration.arbiterNotes')}
                         </Typography>
@@ -328,7 +328,7 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
         </Grid>
 
         {/* Summary */}
-        <Grid item xs={12}>
+        <Grid size={{ mobile: 12 }}>
           <Paper sx={{ p: 3, bgcolor: 'primary.50' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Check color="primary" />

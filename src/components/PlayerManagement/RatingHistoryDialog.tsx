@@ -149,7 +149,7 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
         is_provisional: data.is_provisional || false,
         effective_date: dayjs.isDayjs(data.effective_date)
           ? data.effective_date.format('YYYY-MM-DD')
-          : dayjs(data.effective_date).format('YYYY-MM-DD'),
+          : dayjs(data.effective_date as string | Date).format('YYYY-MM-DD'),
       };
 
       await commands.addPlayerRatingHistory(ratingData);
@@ -244,7 +244,7 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
   const currentRatings = getCurrentRatings();
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth={false} fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <History />

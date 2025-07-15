@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Paper,
+  // Paper,
   Typography,
   Button,
   Card,
   CardContent,
   CardActions,
-  Grid,
+  Grid2 as Grid,
   Chip,
   Dialog,
   DialogTitle,
@@ -33,8 +33,8 @@ import {
   People,
   Person,
   Star,
-  DragHandle,
-  Close,
+  // DragHandle,
+  // Close,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 
@@ -90,7 +90,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
   const [players, setPlayers] = useState<Player[]>([]);
   const [teamMemberships, setTeamMemberships] = useState<TeamMembership[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [_editDialogOpen, _setEditDialogOpen] = useState(false);
   const [playerDialogOpen, setPlayerDialogOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [newTeamName, setNewTeamName] = useState('');
@@ -98,7 +98,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
   const [newTeamColor, setNewTeamColor] = useState(TEAM_COLORS[0]);
   const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
   const [boardNumber, setBoardNumber] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [_loading, _setLoading] = useState(false);
 
   // Mock data for demonstration
   useEffect(() => {
@@ -304,7 +304,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
       ) : (
         <Grid container spacing={3}>
           {teams.map(team => (
-            <Grid item xs={12} md={6} key={team.id}>
+            <Grid size={{ mobile: 12, tablet: 6 }} key={team.id}>
               <Card>
                 <CardContent>
                   <Box
@@ -407,7 +407,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
                     startIcon={<Edit />}
                     onClick={() => {
                       setSelectedTeam(team);
-                      setEditDialogOpen(true);
+                      _setEditDialogOpen(true);
                     }}
                   >
                     {t('common.edit')}
@@ -431,7 +431,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
       <Dialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
-        maxWidth="sm"
+        maxWidth={false}
         fullWidth
       >
         <DialogTitle>{t('tournament.teams.createTeam')}</DialogTitle>
@@ -495,7 +495,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
       <Dialog
         open={playerDialogOpen}
         onClose={() => setPlayerDialogOpen(false)}
-        maxWidth="sm"
+        maxWidth={false}
         fullWidth
       >
         <DialogTitle>

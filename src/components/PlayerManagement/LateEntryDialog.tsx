@@ -182,7 +182,7 @@ const LateEntryDialog: React.FC<LateEntryDialogProps> = ({
   };
 
   const getMissedRounds = () => {
-    return rounds.filter(r => r.round_number < startFromRound);
+    return rounds.filter(r => r.round_number < (startFromRound || 1));
   };
 
   const calculatePenalty = () => {
