@@ -8,15 +8,15 @@ import tsParser from '@typescript-eslint/parser';
 export default [
   {
     ignores: [
-      'dist', 
-      'node_modules', 
-      'src-tauri', 
-      '*.config.*', 
+      'dist',
+      'node_modules',
+      'src-tauri',
+      '*.config.*',
       'src/dto/bindings.ts',
       'coverage',
       '.husky',
       'playwright-report',
-      'test-results'
+      'test-results',
     ],
   },
   // Configuration files (Playwright, Vite, etc.)
@@ -39,7 +39,10 @@ export default [
     rules: {
       ...js.configs.recommended.rules,
       ...tseslint.configs.recommended.rules,
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_' },
+      ],
       'no-undef': 'off', // TypeScript handles this
     },
   },
@@ -76,7 +79,10 @@ export default [
     rules: {
       ...js.configs.recommended.rules,
       ...tseslint.configs.recommended.rules,
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/no-explicit-any': 'off', // Allow any in tests
       'no-console': 'off', // Allow console in tests
       'no-undef': 'off', // TypeScript handles this
@@ -85,7 +91,7 @@ export default [
   // Main source files
   {
     files: ['src/**/*.{ts,tsx}'],
-    excludes: ['src/test/**/*', 'src/**/*.{test,spec}.{ts,tsx}'],
+    ignores: ['src/test/**/*', 'src/**/*.{test,spec}.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: {
@@ -117,23 +123,23 @@ export default [
       ],
       // TypeScript rules
       '@typescript-eslint/no-unused-vars': [
-        'error', 
-        { 
+        'error',
+        {
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
           ignoreRestSiblings: true,
-        }
+        },
       ],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
-      
-      // General rules  
+
+      // General rules
       'prefer-const': 'error',
       'no-var': 'error',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'no-undef': 'off', // TypeScript handles this
-      
+
       // Relaxed rules for existing codebase
       'react-hooks/exhaustive-deps': 'warn',
     },
