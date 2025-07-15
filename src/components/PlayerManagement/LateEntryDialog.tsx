@@ -16,7 +16,6 @@ import {
   Alert,
   Card,
   CardContent,
-  Chip,
   FormControlLabel,
   Checkbox,
   Divider,
@@ -36,7 +35,6 @@ import {
 import { commands } from '../../dto/bindings';
 import type {
   CreatePlayer,
-  Player,
   Round,
   TournamentDetails,
 } from '../../dto/bindings';
