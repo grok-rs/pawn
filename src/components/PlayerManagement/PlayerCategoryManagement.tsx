@@ -39,14 +39,14 @@ import {
   Groups,
   Flag,
 } from '@mui/icons-material';
-import { commands } from '../../dto/bindings';
+import { commands } from '@dto/bindings';
 import type {
   PlayerCategory,
   CreatePlayerCategory,
   Player,
   PlayerCategoryAssignment,
   AssignPlayerToCategory,
-} from '../../dto/bindings';
+} from '@dto/bindings';
 
 interface PlayerCategoryManagementProps {
   tournamentId: number;

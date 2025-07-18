@@ -52,12 +52,8 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import { commands } from '../../dto/bindings';
-import type {
-  Player,
-  RatingHistory,
-  CreateRatingHistory,
-} from '../../dto/bindings';
+import { commands } from '@dto/bindings';
+import type { Player, RatingHistory, CreateRatingHistory } from '@dto/bindings';
 
 interface RatingHistoryDialogProps {
   open: boolean;

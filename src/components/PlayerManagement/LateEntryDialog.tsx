@@ -32,12 +32,8 @@ import {
   Schedule,
   EmojiEvents,
 } from '@mui/icons-material';
-import { commands } from '../../dto/bindings';
-import type {
-  CreatePlayer,
-  Round,
-  TournamentDetails,
-} from '../../dto/bindings';
+import { commands } from '@dto/bindings';
+import type { CreatePlayer, Round, TournamentDetails } from '@dto/bindings';
 
 interface LateEntryDialogProps {
   open: boolean;

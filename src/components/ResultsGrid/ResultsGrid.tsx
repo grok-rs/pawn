@@ -44,15 +44,14 @@ import {
   Clear as ClearIcon,
   Upload as UploadIcon,
 } from '@mui/icons-material';
-import { invoke } from '@tauri-apps/api/core';
-
+import { commands } from '@dto/bindings';
 import type {
   GameResult,
   UpdateGameResult,
   GameResultValidation,
   BatchValidationResult,
   GameResultAudit,
-} from '../../dto/bindings';
+} from '@dto/bindings';
 
 import { MobileResultEntry } from './MobileResultEntry';
 import { CsvImportDialog } from './CsvImportDialog';
@@ -209,18 +208,13 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
   const validateResult = useCallback(
     async (gameId: number, result: string, resultType?: string) => {
       try {
-        const validation = await invoke<GameResultValidation>(
-          'plugin:pawn|validate_game_result',
-          {
-            data: {
-              game_id: gameId,
-              result,
-              result_type: resultType,
-              tournament_id: tournamentId,
-              changed_by: 'current_user', // This should come from user context
-            },
-          }
-        );
+        const validation = await commands.validateGameResult({
+          game_id: gameId,
+          result,
+          result_type: resultType,
+          tournament_id: tournamentId,
+          changed_by: 'current_user', // This should come from user context
+        });
 
         updateResultEntry(gameId, { validation });
         return validation;
@@ -279,16 +273,11 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
         changed_by: 'current_user', // This should come from user context
       }));
 
-      const results = await invoke<BatchValidationResult>(
-        'plugin:pawn|batch_update_results',
-        {
-          data: {
-            tournament_id: tournamentId,
-            updates,
-            validate_only: true,
-          },
-        }
-      );
+      const results = await commands.batchUpdateResults({
+        tournament_id: tournamentId,
+        updates,
+        validate_only: true,
+      });
 
       setValidationResults(results);
 
@@ -321,16 +310,11 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
         changed_by: 'current_user', // This should come from user context
       }));
 
-      const results = await invoke<BatchValidationResult>(
-        'plugin:pawn|batch_update_results',
-        {
-          data: {
-            tournament_id: tournamentId,
-            updates,
-            validate_only: false,
-          },
-        }
-      );
+      const results = await commands.batchUpdateResults({
+        tournament_id: tournamentId,
+        updates,
+        validate_only: false,
+      });
 
       if (results.overall_valid) {
         // Mark all entries as saved
@@ -580,12 +564,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
 
   const handleShowAuditTrail = useCallback(async (gameId: number) => {
     try {
-      const trail = await invoke<GameResultAudit[]>(
-        'plugin:pawn|get_game_audit_trail',
-        {
-          gameId,
-        }
-      );
+      const trail = await commands.getGameAuditTrail(gameId);
       setAuditTrail(trail);
       setSelectedAuditGame(gameId);
       setIsAuditDialogOpen(true);

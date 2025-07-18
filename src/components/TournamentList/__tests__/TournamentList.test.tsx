@@ -7,7 +7,7 @@ import {
 } from '@testing-library/react';
 import { vi } from 'vitest';
 import TournamentList from '../TournamentList';
-import type { Tournament } from '../../../dto/bindings';
+import type { Tournament } from '@dto/bindings';
 
 // Mock the Tauri API
 vi.mock('@tauri-apps/api/core', () => ({

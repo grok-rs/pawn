@@ -1,4 +1,4 @@
-import type { Tournament, Round } from './dto/bindings';
+import type { Tournament, Round } from '@dto/bindings';
 
 export const isFinishedTournament = (tournament: Tournament): boolean => {
   return tournament.rounds_played === tournament.total_rounds;

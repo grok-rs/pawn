@@ -34,7 +34,7 @@ import {
   StarsOutlined,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import type { TiebreakBreakdown } from '../../dto/bindings';
+import type { TiebreakBreakdown } from '@dto/bindings';
 
 interface TiebreakBreakdownDialogProps {
   open: boolean;

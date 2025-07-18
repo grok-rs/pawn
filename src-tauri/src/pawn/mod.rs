@@ -1,9 +1,5 @@
 use std::fs;
 
-#[cfg(debug_assertions)]
-use specta_typescript::formatter::prettier;
-#[cfg(debug_assertions)]
-use specta_typescript::{BigIntExportBehavior, Typescript};
 use state::PawnState;
 use tauri::{Runtime, plugin::TauriPlugin};
 
@@ -177,19 +173,24 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::settings::set_language_setting,
             command::settings::get_theme_setting,
             command::settings::set_theme_setting,
+            command::settings::get_settings_overview,
+            command::settings::get_settings_templates,
+            command::settings::create_settings_backup,
+            command::settings::restore_settings_backup,
+            command::settings::get_settings_backups,
+            command::settings::reset_settings,
+            command::settings::validate_setting,
+            command::settings::export_settings,
+            command::settings::import_settings,
+            command::settings::apply_settings_template,
+            command::settings::get_settings_requiring_restart,
+            command::settings::get_settings_backup_history,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Throw);
 
-    #[cfg(debug_assertions)]
-    builder
-        .export(
-            Typescript::new()
-                .header("// @ts-nocheck")
-                .bigint(BigIntExportBehavior::Number)
-                .formatter(prettier),
-            "../src/dto/bindings.ts",
-        )
-        .expect("Failed to export typescript bindings");
+    // Note: TypeScript bindings are now generated using the separate 
+    // generate_bindings binary instead of during plugin initialization
+    // This ensures bindings are available before frontend compilation
 
     Builder::new(APP_PLUGIN_NAME)
         .invoke_handler(builder.invoke_handler())

@@ -37,7 +37,7 @@ import {
   // Close,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import { commands } from '../../dto/bindings';
+import { commands } from '@dto/bindings';
 
 // Types from bindings - these will be auto-generated once bindings are updated
 interface Team {

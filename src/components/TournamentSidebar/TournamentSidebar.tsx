@@ -10,7 +10,7 @@ import {
   isOngoingTournament,
 } from '../../utils';
 import TournamentStatusButton from './TournamentStatusButton';
-import { Tournament } from '../../dto/bindings';
+import { Tournament } from '@dto/bindings';
 
 type TournamentStatus = 'NotStarted' | 'InProgress' | 'Finished';
 

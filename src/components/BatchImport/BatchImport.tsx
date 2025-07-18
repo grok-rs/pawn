@@ -32,13 +32,12 @@ import {
   Check as CheckIcon,
   Error as ErrorIcon,
 } from '@mui/icons-material';
-import { invoke } from '@tauri-apps/api/core';
-
+import { commands } from '@dto/bindings';
 import type {
   UpdateGameResult,
   BatchValidationResult,
   GameResultValidation,
-} from '../../dto/bindings';
+} from '@dto/bindings';
 
 interface BatchImportProps {
   tournamentId: number;
@@ -182,16 +181,11 @@ export const BatchImport: React.FC<BatchImportProps> = ({
         changed_by: 'batch_import',
       }));
 
-      const results = await invoke<BatchValidationResult>(
-        'plugin:pawn|batch_update_results',
-        {
-          data: {
-            tournament_id: tournamentId,
-            updates,
-            validate_only: true,
-          },
-        }
-      );
+      const results = await commands.batchUpdateResults({
+        tournament_id: tournamentId,
+        updates,
+        validate_only: true,
+      });
 
       setValidationResults(results);
 
@@ -234,16 +228,11 @@ export const BatchImport: React.FC<BatchImportProps> = ({
           changed_by: 'batch_import',
         }));
 
-      const results = await invoke<BatchValidationResult>(
-        'plugin:pawn|batch_update_results',
-        {
-          data: {
-            tournament_id: tournamentId,
-            updates,
-            validate_only: false,
-          },
-        }
-      );
+      const results = await commands.batchUpdateResults({
+        tournament_id: tournamentId,
+        updates,
+        validate_only: false,
+      });
 
       if (results.overall_valid) {
         setImportData(prev =>

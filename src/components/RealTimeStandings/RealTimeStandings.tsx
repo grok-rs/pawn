@@ -28,7 +28,7 @@ import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import StandingsTable from '../StandingsTable';
 import { useRealTimeStandings } from '../../hooks/useRealTimeStandings';
-import type { TiebreakBreakdown } from '../../dto/bindings';
+import type { TiebreakBreakdown } from '@dto/bindings';
 
 interface RealTimeStandingsProps {
   tournamentId: number;

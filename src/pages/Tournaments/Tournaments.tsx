@@ -41,8 +41,8 @@ import {
 } from '../../utils';
 import { APP_ROUTES } from '../../constants/appRoutes';
 
-import type { Tournament } from '../../dto/bindings';
-import { commands } from '../../dto/bindings';
+import type { Tournament } from '@dto/bindings';
+import { commands } from '@dto/bindings';
 
 const TournamentsPage = () => {
   const theme = useTheme();

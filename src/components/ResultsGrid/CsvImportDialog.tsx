@@ -35,9 +35,8 @@ import {
   CheckCircle as SuccessIcon,
   Error as ErrorIcon,
 } from '@mui/icons-material';
-import { invoke } from '@tauri-apps/api/core';
-
-import type { CsvResultImport, CsvImportResult } from '../../dto/bindings';
+import { commands } from '@dto/bindings';
+import type { CsvResultImport, CsvImportResult } from '@dto/bindings';
 
 interface CsvImportDialogProps {
   open: boolean;
@@ -91,17 +90,12 @@ export const CsvImportDialog: React.FC<CsvImportDialogProps> = ({
 
     setIsLoading(true);
     try {
-      const result = await invoke<CsvImportResult>(
-        'plugin:pawn|import_results_csv',
-        {
-          data: {
-            tournament_id: tournamentId,
-            csv_content: csvContent,
-            validate_only: true,
-            changed_by: 'current_user',
-          } as CsvResultImport,
-        }
-      );
+      const result = await commands.importResultsCsv({
+        tournament_id: tournamentId,
+        csv_content: csvContent,
+        validate_only: true,
+        changed_by: 'current_user',
+      });
 
       setValidationResult(result);
       if (result.success || result.valid_rows > 0) {
@@ -134,17 +128,12 @@ export const CsvImportDialog: React.FC<CsvImportDialogProps> = ({
 
     setIsLoading(true);
     try {
-      const result = await invoke<CsvImportResult>(
-        'plugin:pawn|import_results_csv',
-        {
-          data: {
-            tournament_id: tournamentId,
-            csv_content: csvContent,
-            validate_only: false,
-            changed_by: 'current_user',
-          } as CsvResultImport,
-        }
-      );
+      const result = await commands.importResultsCsv({
+        tournament_id: tournamentId,
+        csv_content: csvContent,
+        validate_only: false,
+        changed_by: 'current_user',
+      });
 
       setImportResult(result);
 

@@ -4,6 +4,15 @@ version = "0.1.0"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2024"
+default-run = "pawn"
+
+[[bin]]
+name = "pawn"
+path = "src/main.rs"
+
+[[bin]]
+name = "generate_bindings"
+path = "src/bin/generate_bindings.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

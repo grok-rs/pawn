@@ -51,7 +51,7 @@ import {
   RestartAlt,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import { commands } from '../../dto/bindings';
+import { commands } from '@dto/bindings';
 
 // Team tournament configuration interfaces
 interface TeamTournamentConfig {

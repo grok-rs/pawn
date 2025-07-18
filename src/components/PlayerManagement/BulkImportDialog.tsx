@@ -34,12 +34,12 @@ import {
   Visibility,
   Save,
 } from '@mui/icons-material';
-import { commands } from '../../dto/bindings';
+import { commands } from '@dto/bindings';
 import type {
   BulkImportRequest,
   BulkImportResult,
   BulkImportPlayer,
-} from '../../dto/bindings';
+} from '@dto/bindings';
 
 interface BulkImportDialogProps {
   open: boolean;

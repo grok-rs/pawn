@@ -8,7 +8,7 @@ use super::{
     service::{
         export::ExportService, norm_calculation::NormCalculationService, player::PlayerService, 
         realtime_standings::RealTimeStandingsService, round::RoundService, 
-        round_robin_analysis::RoundRobinAnalysisService, swiss_analysis::SwissAnalysisService, 
+        round_robin_analysis::RoundRobinAnalysisService, settings::SettingsService, swiss_analysis::SwissAnalysisService, 
         team::TeamService, tiebreak::TiebreakCalculator, time_control::TimeControlService, tournament::TournamentService,
     },
 };
@@ -28,6 +28,7 @@ pub struct State<D> {
     pub export_service: Arc<ExportService<D>>,
     pub norm_calculation_service: Arc<NormCalculationService<D>>,
     pub team_service: Arc<TeamService<D>>,
+    pub settings_service: Arc<SettingsService>,
 }
 
 pub type PawnState = State<SqliteDb>;
@@ -57,7 +58,7 @@ impl PawnState {
             .await
             .expect("Migration failed");
 
-        let sqlite = Arc::new(SqliteDb::new(pool));
+        let sqlite = Arc::new(SqliteDb::new(pool.clone()));
 
         let tournament_service = Arc::new(TournamentService::new(Arc::clone(&sqlite)));
         let tiebreak_calculator = Arc::new(TiebreakCalculator::new(Arc::clone(&sqlite)));
@@ -77,6 +78,9 @@ impl PawnState {
         
         // Create team service
         let team_service = Arc::new(TeamService::new(Arc::clone(&sqlite)));
+        
+        // Create settings service with pool reference
+        let settings_service = Arc::new(SettingsService::new(Arc::new(pool)));
 
         Self {
             app_data_dir,
@@ -92,6 +96,7 @@ impl PawnState {
             export_service,
             norm_calculation_service,
             team_service,
+            settings_service,
         }
     }
 }

@@ -1024,3 +1024,20 @@ pub struct SettingsAuditSummary {
     pub changed_at: String,
     pub changed_by: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct ApplySettingsTemplateRequest {
+    pub template_id: i32,
+    pub user_id: Option<String>,
+    pub override_existing: bool,
+    pub categories: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct SettingsTemplateResult {
+    pub success: bool,
+    pub applied_count: i32,
+    pub skipped_count: i32,
+    pub errors: Vec<String>,
+    pub warnings: Vec<String>,
+}

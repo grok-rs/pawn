@@ -30,7 +30,7 @@ import {
   RestartAlt,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import type { TiebreakType } from '../../dto/bindings';
+import type { TiebreakType } from '@dto/bindings';
 
 interface TiebreakConfigProps {
   tiebreaks: TiebreakType[];
