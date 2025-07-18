@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-update-team"
+description = "Allows updating team information"
+commands.allow = ["update_team"]
+
+[[permission]]
+identifier = "deny-update-team"
+description = "Denies the update-team command"
+commands.deny = ["update_team"]

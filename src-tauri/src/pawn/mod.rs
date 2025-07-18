@@ -135,6 +135,38 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::norm_calculation::get_prize_distribution_templates,
             command::norm_calculation::validate_prize_distribution,
             command::norm_calculation::export_norms_report,
+            // Team Management Commands
+            command::team::create_team,
+            command::team::get_team_by_id,
+            command::team::get_teams_by_tournament,
+            command::team::update_team,
+            command::team::delete_team,
+            command::team::search_teams,
+            command::team::add_player_to_team,
+            command::team::remove_player_from_team,
+            command::team::get_team_memberships,
+            command::team::get_all_team_memberships,
+            command::team::create_team_match,
+            command::team::update_team_match,
+            command::team::get_team_match_by_id,
+            command::team::get_team_matches,
+            command::team::create_team_lineup,
+            command::team::get_team_lineups,
+            command::team::create_team_tournament_settings,
+            command::team::update_team_tournament_settings,
+            command::team::get_team_tournament_settings,
+            command::team::get_team_statistics,
+            command::team::get_team_standings,
+            command::team::validate_team_lineup,
+            command::team::validate_team_board_order,
+            // Enhanced Team Pairing Commands
+            command::team::generate_team_pairings,
+            command::team::get_team_pairing_config_default,
+            command::team::validate_team_pairing_config,
+            // Team Scoring Commands
+            command::team::calculate_team_standings,
+            command::team::get_team_scoring_config_default,
+            command::team::validate_team_scoring_config,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Throw);
 

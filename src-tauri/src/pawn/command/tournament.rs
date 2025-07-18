@@ -304,26 +304,40 @@ mod tests {
         let db = Arc::new(SqliteDb::new(pool));
         
         use crate::pawn::service::{
-            player::PlayerService, round::RoundService, tiebreak::TiebreakCalculator,
-            time_control::TimeControlService, tournament::TournamentService,
+            export::ExportService, norm_calculation::NormCalculationService, player::PlayerService, 
+            realtime_standings::RealTimeStandingsService, round::RoundService, 
+            round_robin_analysis::RoundRobinAnalysisService, swiss_analysis::SwissAnalysisService, 
+            team::TeamService, tiebreak::TiebreakCalculator, time_control::TimeControlService, tournament::TournamentService,
         };
         use crate::pawn::state::State;
         use std::sync::Arc;
         
         let tournament_service = Arc::new(TournamentService::new(Arc::clone(&db)));
         let tiebreak_calculator = Arc::new(TiebreakCalculator::new(Arc::clone(&db)));
+        let realtime_standings_service = Arc::new(RealTimeStandingsService::new(Arc::clone(&db), Arc::clone(&tiebreak_calculator)));
         let round_service = Arc::new(RoundService::new(Arc::clone(&db)));
         let player_service = Arc::new(PlayerService::new(Arc::clone(&db)));
         let time_control_service = Arc::new(TimeControlService::new(Arc::clone(&db)));
+        let swiss_analysis_service = Arc::new(SwissAnalysisService::new(Arc::clone(&db)));
+        let round_robin_analysis_service = Arc::new(RoundRobinAnalysisService::new(Arc::clone(&db)));
+        let export_service = Arc::new(ExportService::new(Arc::clone(&db), Arc::clone(&tiebreak_calculator), temp_dir.path().join("exports")));
+        let norm_calculation_service = Arc::new(NormCalculationService::new(Arc::clone(&db), Arc::clone(&tiebreak_calculator)));
+        let team_service = Arc::new(TeamService::new(Arc::clone(&db)));
         
         State {
             app_data_dir: temp_dir.path().to_path_buf(),
             db,
             tournament_service,
             tiebreak_calculator,
+            realtime_standings_service,
             round_service,
             player_service,
             time_control_service,
+            swiss_analysis_service,
+            round_robin_analysis_service,
+            export_service,
+            norm_calculation_service,
+            team_service,
         }
     }
 

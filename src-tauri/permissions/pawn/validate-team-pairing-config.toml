@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-validate-team-pairing-config"
+description = "Allows validating team pairing configuration"
+commands.allow = ["validate_team_pairing_config"]
+
+[[permission]]
+identifier = "deny-validate-team-pairing-config"
+description = "Denies the validate-team-pairing-config command"
+commands.deny = ["validate_team_pairing_config"]

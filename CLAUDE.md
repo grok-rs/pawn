@@ -4,7 +4,7 @@ This file provides comprehensive guidance to Claude Code (claude.ai/code) when w
 
 ## 🎯 Application Overview
 
-**Pawn** is a professional-grade chess tournament management system built with Tauri, featuring a comprehensive **Enhanced Player Registration and Management System** alongside advanced tournament administration capabilities.
+**Pawn** is a professional-grade chess tournament management system built with Tauri, featuring a comprehensive **Enhanced Player Registration and Management System** and **Team Tournament Support** alongside advanced tournament administration capabilities.
 
 ## 🧪 Test-Driven Development Guidelines
 
@@ -98,6 +98,9 @@ This file provides comprehensive guidance to Claude Code (claude.ai/code) when w
 - **Pages**: `src/pages/` (Tournaments, NewTournament, TournamentInfo)
 - **Components**: `src/components/` with index.ts barrel exports
   - `PlayerManagement/` - Complete player management system
+  - `TeamManagement/` - Team tournament management interface
+  - `TeamStandings/` - Real-time team standings display
+  - `TeamTournamentConfig/` - Advanced team tournament configuration
   - `TournamentList/`, `BaseLayout/`, etc.
 - **Routing**: React Router in `src/App.tsx` with tournament-focused navigation
 - **State**: Local component state (no Redux dependency for simplicity)
@@ -110,12 +113,16 @@ src-tauri/src/pawn/
 ├── command/              # 60+ Tauri command handlers
 │   ├── tournament.rs     # Tournament operations (12 commands)
 │   ├── player.rs         # Enhanced player management (15+ commands)
+│   ├── team.rs           # Team tournament management (18+ commands)
 │   ├── round.rs          # Round management (8 commands)
 │   ├── game_result.rs    # Game result operations (6 commands)
 │   ├── knockout.rs       # Knockout tournament operations (10 commands)
 │   └── time_control.rs   # Time control management (8 commands)
 ├── service/              # Business logic layer
 │   ├── player.rs         # PlayerService - CRUD, search, bulk import
+│   ├── team.rs           # TeamService - team CRUD operations
+│   ├── team_pairing.rs   # TeamPairingService - team pairing algorithms
+│   ├── team_scoring.rs   # TeamScoringService - team scoring & tiebreaks
 │   ├── tournament.rs     # TournamentService - tournament lifecycle
 │   ├── round.rs          # RoundService - pairing and round management
 │   ├── tiebreak.rs       # TiebreakCalculator - standings calculation
@@ -171,14 +178,27 @@ player_categories (
 )
 
 -- Plus: tournaments, games, rounds, game_result_audit, tournament_settings
+
+-- Team tournament system (Migration 11)
+teams (
+  id, tournament_id, name, captain, description, color,
+  club_affiliation, contact_email, contact_phone, max_board_count,
+  status, created_at, updated_at
+)
+
+team_memberships (
+  id, team_id, player_id, board_number, is_captain, is_reserve,
+  rating_at_assignment, notes, status, created_at, updated_at
+)
+
+team_matches (
+  id, tournament_id, round_number, team1_id, team2_id,
+  team1_score, team2_score, result_status, created_at, updated_at
+)
+
 -- Knockout tournaments (Migrations 9-10)
 knockout_brackets (
   id, tournament_id, bracket_type, total_rounds, created_at
-)
-
-bracket_positions (
-  id, bracket_id, round_number, position_number, player_id, 
-  advanced_from_position, status, created_at
 )
 
 -- Advanced time controls (Migration 10)
@@ -200,14 +220,22 @@ time_controls (
 - **Status Management**: Player withdrawals, bye requests, late entries
 - **Player Management**: Integrated player management system within tournament workflows
 
-**Knockout Tournament System** (Latest):
+**Team Tournament System** (Latest):
+- **Team Management**: Complete team creation with captains, colors, and member assignments
+- **Team Pairing**: Advanced algorithms for Swiss, Round-robin, and Scheveningen formats
+- **Team Scoring**: Multiple scoring systems (Match Points, Board Points, Olympic) with comprehensive tiebreaks
+- **Team Standings**: Real-time calculations with 9 different tiebreak criteria
+- **Professional UI**: TeamManagement, TeamStandings, and TeamTournamentConfig components
+- **Database Integration**: Complete team tournament schema with migrations
+
+**Knockout Tournament System**:
 - **Bracket Generation**: Automatic seeding algorithms for single/double elimination
 - **Winner Advancement**: Systematic progression through tournament rounds
 - **Tournament Completion**: Winner determination and completion detection
 - **Flexible Configuration**: Support for various bracket sizes and formats
 - **Professional Integration**: Seamless integration with existing tournament workflow
 
-**Advanced Time Control System** (Latest):
+**Advanced Time Control System**:
 - **FIDE-Compliant Templates**: 8 pre-populated official time control configurations
 - **7 Time Control Types**: Classical, Rapid, Blitz, Bullet, Fischer, Bronstein, Correspondence
 - **Validation & Estimation**: Game duration calculation and FIDE compliance checking
@@ -244,6 +272,37 @@ commands.updatePlayerStatus(playerId: number, status: string): Promise<Player>
 commands.withdrawPlayer(playerId: number): Promise<Player>
 commands.requestPlayerBye(playerId: number): Promise<Player>
 commands.getPlayerStatistics(tournamentId: number): Promise<PlayerStatistics>
+```
+
+### Team Tournament Management Commands (18)
+```typescript
+// Core Team Operations
+commands.createTeam(data: CreateTeam): Promise<Team>
+commands.getTeamById(teamId: number): Promise<Team>
+commands.getTeamsByTournament(tournamentId: number): Promise<Team[]>
+commands.updateTeam(data: UpdateTeam): Promise<Team>
+commands.deleteTeam(teamId: number): Promise<null>
+
+// Team Search & Statistics
+commands.searchTeams(filters: TeamSearchFilters): Promise<Team[]>
+commands.getTeamStatistics(tournamentId: number): Promise<TeamStatistics>
+commands.getTeamStandings(tournamentId: number): Promise<TeamStanding[]>
+
+// Team Membership Management
+commands.addPlayerToTeam(data: AddPlayerToTeam): Promise<TeamMembership>
+commands.removePlayerFromTeam(membershipId: number): Promise<null>
+commands.getTeamMemberships(teamId: number): Promise<TeamMembership[]>
+commands.getAllTeamMemberships(tournamentId: number): Promise<TeamMembership[]>
+
+// Team Scoring & Configuration
+commands.calculateTeamStandings(tournamentId: number, config: TeamScoringConfig): Promise<TeamStandingsResult>
+commands.getTeamScoringConfigDefault(): Promise<TeamScoringConfig>
+commands.validateTeamScoringConfig(config: TeamScoringConfig): Promise<boolean>
+
+// Team Match Management
+commands.createTeamMatch(data: CreateTeamMatch): Promise<TeamMatch>
+commands.updateTeamMatch(data: UpdateTeamMatch): Promise<TeamMatch>
+commands.getTeamMatches(tournamentId: number): Promise<TeamMatch[]>
 ```
 
 ### Tournament Operations (12 commands)

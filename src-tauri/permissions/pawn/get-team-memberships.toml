@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-team-memberships"
+description = "Allows retrieving team membership information"
+commands.allow = ["get_team_memberships"]
+
+[[permission]]
+identifier = "deny-get-team-memberships"
+description = "Denies the get-team-memberships command"
+commands.deny = ["get_team_memberships"]

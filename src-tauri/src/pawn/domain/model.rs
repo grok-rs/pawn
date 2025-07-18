@@ -23,6 +23,10 @@ pub struct Tournament {
     pub contact_email: Option<String>,
     pub entry_fee: Option<f64>,
     pub currency: Option<String>,
+    // Team tournament fields
+    pub is_team_tournament: Option<bool>,
+    pub team_size: Option<i32>,
+    pub max_teams: Option<i32>,
 }
 
 #[derive(Debug, Serialize, serde::Deserialize, FromRow, SpectaType, Clone)]
@@ -767,7 +771,7 @@ impl BracketPositionStatus {
 }
 
 // Scheveningen (Team-based) Tournament Models
-#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+#[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct Team {
     pub id: i32,
     pub tournament_id: i32,
@@ -775,7 +779,13 @@ pub struct Team {
     pub captain: Option<String>,
     pub description: Option<String>,
     pub color: Option<String>, // Team color for UI
+    pub club_affiliation: Option<String>,
+    pub contact_email: Option<String>,
+    pub contact_phone: Option<String>,
+    pub max_board_count: i32,
+    pub status: String,
     pub created_at: String,
+    pub updated_at: Option<String>,
 }
 
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
@@ -785,6 +795,10 @@ pub struct TeamMembership {
     pub player_id: i32,
     pub board_number: i32, // Board position within the team (1, 2, 3, etc.)
     pub is_captain: bool,
+    pub is_reserve: bool,
+    pub rating_at_assignment: Option<i32>,
+    pub status: String,
+    pub assigned_at: String,
     pub created_at: String,
 }
 
@@ -845,4 +859,78 @@ pub struct TournamentTemplate {
 pub struct TournamentTemplateWithTimeControl {
     pub template: TournamentTemplate,
     pub time_control: Option<TimeControl>,
+}
+
+// Extended Team Tournament Models for comprehensive team management
+
+#[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
+pub struct TeamMatch {
+    pub id: i32,
+    pub tournament_id: i32,
+    pub round_number: i32,
+    pub team_a_id: i32,
+    pub team_b_id: i32,
+    pub venue: Option<String>,
+    pub scheduled_time: Option<String>,
+    pub status: String, // "scheduled", "in_progress", "completed", "postponed", "cancelled"
+    pub team_a_match_points: f64,
+    pub team_b_match_points: f64,
+    pub team_a_board_points: f64,
+    pub team_b_board_points: f64,
+    pub arbiter_name: Option<String>,
+    pub arbiter_notes: Option<String>,
+    pub result_approved: bool,
+    pub approved_by: Option<String>,
+    pub approved_at: Option<String>,
+    pub created_at: String,
+    pub updated_at: Option<String>,
+}
+
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct TeamLineup {
+    pub id: i32,
+    pub team_id: i32,
+    pub round_number: i32,
+    pub board_number: i32,
+    pub player_id: i32,
+    pub is_substitute: bool,
+    pub substituted_player_id: Option<i32>,
+    pub submission_deadline: Option<String>,
+    pub submitted_at: String,
+    pub submitted_by: Option<String>,
+    pub notes: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct TeamTournamentSettings {
+    pub id: i32,
+    pub tournament_id: i32,
+    pub team_size: i32,
+    pub max_teams: Option<i32>,
+    pub match_scoring_system: String, // "match_points", "board_points", "olympic_points", "custom"
+    pub match_points_win: i32,
+    pub match_points_draw: i32,
+    pub match_points_loss: i32,
+    pub board_weight_system: String, // "equal", "progressive", "custom"
+    pub require_board_order: bool,
+    pub allow_late_entries: bool,
+    pub team_pairing_method: String, // "swiss", "round_robin", "knockout", "scheveningen"
+    pub color_allocation: String, // "balanced", "alternating", "random"
+    pub created_at: String,
+    pub updated_at: Option<String>,
+}
+
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct TeamBoardRules {
+    pub id: i32,
+    pub tournament_id: i32,
+    pub rule_type: String, // "strict_rating", "flexible_rating", "fixed_assignment", "captain_choice"
+    pub rating_tolerance: i32,
+    pub allow_substitutions: bool,
+    pub substitution_deadline_minutes: i32,
+    pub max_substitutions_per_round: i32,
+    pub require_captain_approval: bool,
+    pub board_order_validation: bool,
+    pub created_at: String,
 }

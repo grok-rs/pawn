@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-update-team-match"
+description = "Allows updating team match information"
+commands.allow = ["update_team_match"]
+
+[[permission]]
+identifier = "deny-update-team-match"
+description = "Denies the update-team-match command"
+commands.deny = ["update_team_match"]

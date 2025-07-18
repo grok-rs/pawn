@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-delete-team"
+description = "Allows deleting teams from tournaments"
+commands.allow = ["delete_team"]
+
+[[permission]]
+identifier = "deny-delete-team"
+description = "Denies the delete-team command"
+commands.deny = ["delete_team"]

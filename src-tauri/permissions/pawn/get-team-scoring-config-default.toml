@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-team-scoring-config-default"
+description = "Allows getting default team scoring configuration"
+commands.allow = ["get_team_scoring_config_default"]
+
+[[permission]]
+identifier = "deny-get-team-scoring-config-default"
+description = "Denies the get_team_scoring_config_default command"
+commands.deny = ["get_team_scoring_config_default"]

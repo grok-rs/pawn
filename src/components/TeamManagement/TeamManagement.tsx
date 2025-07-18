@@ -37,8 +37,9 @@ import {
   // Close,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { commands } from '../../dto/bindings';
 
-// Mock types for demonstration - these would come from actual bindings
+// Types from bindings - these will be auto-generated once bindings are updated
 interface Team {
   id: number;
   tournament_id: number;
@@ -46,23 +47,78 @@ interface Team {
   captain?: string;
   description?: string;
   color?: string;
+  club_affiliation?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  max_board_count: number;
+  status: string;
   created_at: string;
+  updated_at: string;
 }
 
 interface Player {
   id: number;
+  tournament_id: number;
   name: string;
   rating?: number;
   title?: string;
+  country_code?: string;
+  birth_date?: string;
+  gender?: string;
+  email?: string;
+  phone?: string;
+  club?: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface TeamMembership {
   id: number;
   team_id: number;
   player_id: number;
-  board_number: number;
+  board_number?: number;
   is_captain: boolean;
+  is_reserve: boolean;
+  rating_at_assignment?: number;
+  notes?: string;
+  status: string;
   created_at: string;
+  updated_at: string;
+}
+
+interface CreateTeamData {
+  tournament_id: number;
+  name: string;
+  captain?: string;
+  description?: string;
+  color?: string;
+  club_affiliation?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  max_board_count: number;
+}
+
+interface AddPlayerToTeamData {
+  team_id: number;
+  player_id: number;
+  board_number?: number;
+  is_captain: boolean;
+  is_reserve: boolean;
+  rating_at_assignment?: number;
+  notes?: string;
+}
+
+interface TeamStatistics {
+  total_teams: number;
+  active_teams: number;
+  withdrawn_teams: number;
+  disqualified_teams: number;
+  total_players: number;
+  matches_played: number;
+  matches_completed: number;
+  matches_scheduled: number;
+  average_team_rating: number;
 }
 
 interface TeamManagementProps {
@@ -96,93 +152,40 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamDescription, setNewTeamDescription] = useState('');
   const [newTeamColor, setNewTeamColor] = useState(TEAM_COLORS[0]);
+  const [newTeamCaptain, setNewTeamCaptain] = useState('');
+  const [newTeamMaxBoards, setNewTeamMaxBoards] = useState(4);
   const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
   const [boardNumber, setBoardNumber] = useState(1);
-  const [_loading, _setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data for demonstration
+  // Load teams, players, and memberships from API
   useEffect(() => {
-    // In real implementation, these would be API calls to fetch data
-    setTeams([
-      {
-        id: 1,
-        tournament_id: tournamentId,
-        name: 'Team Alpha',
-        captain: 'Alice Smith',
-        description: 'Strong team with experienced players',
-        color: '#1976d2',
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 2,
-        tournament_id: tournamentId,
-        name: 'Team Beta',
-        captain: 'Bob Johnson',
-        description: 'Young and ambitious team',
-        color: '#d32f2f',
-        created_at: new Date().toISOString(),
-      },
-    ]);
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    setPlayers([
-      { id: 1, name: 'Alice Smith', rating: 2100, title: 'IM' },
-      { id: 2, name: 'Bob Johnson', rating: 1950, title: 'FM' },
-      { id: 3, name: 'Charlie Brown', rating: 1800 },
-      { id: 4, name: 'Diana Prince', rating: 2000, title: 'WFM' },
-      { id: 5, name: 'Edward King', rating: 1750 },
-      { id: 6, name: 'Fiona Davis', rating: 1900 },
-    ]);
+        // Load players from API
+        const playersData = await commands.getPlayersByTournament(tournamentId);
+        setPlayers(playersData as Player[]);
 
-    setTeamMemberships([
-      {
-        id: 1,
-        team_id: 1,
-        player_id: 1,
-        board_number: 1,
-        is_captain: true,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 2,
-        team_id: 1,
-        player_id: 3,
-        board_number: 2,
-        is_captain: false,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 3,
-        team_id: 1,
-        player_id: 5,
-        board_number: 3,
-        is_captain: false,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 4,
-        team_id: 2,
-        player_id: 2,
-        board_number: 1,
-        is_captain: true,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 5,
-        team_id: 2,
-        player_id: 4,
-        board_number: 2,
-        is_captain: false,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 6,
-        team_id: 2,
-        player_id: 6,
-        board_number: 3,
-        is_captain: false,
-        created_at: new Date().toISOString(),
-      },
-    ]);
+        // TODO: Load teams and memberships once bindings are regenerated
+        // const teamsData = await commands.getTeamsByTournament(tournamentId);
+        // setTeams(teamsData);
+
+        // For now, use mock data for teams until bindings are ready
+        setTeams([]);
+        setTeamMemberships([]);
+      } catch (err) {
+        console.error('Error loading team data:', err);
+        setError('Failed to load team data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, [tournamentId]);
 
   const getTeamMembers = (teamId: number) => {
@@ -195,25 +198,52 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
       });
   };
 
-  const handleCreateTeam = () => {
-    // In real implementation, this would be an API call
-    const newTeam: Team = {
-      id: teams.length + 1,
-      tournament_id: tournamentId,
-      name: newTeamName,
-      description: newTeamDescription,
-      color: newTeamColor,
-      created_at: new Date().toISOString(),
-    };
+  const handleCreateTeam = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-    setTeams([...teams, newTeam]);
-    setCreateDialogOpen(false);
-    setNewTeamName('');
-    setNewTeamDescription('');
-    setNewTeamColor(TEAM_COLORS[0]);
+      // TODO: Use real API call once bindings are regenerated
+      // const teamData: CreateTeamData = {
+      //   tournament_id: tournamentId,
+      //   name: newTeamName,
+      //   captain: newTeamCaptain || undefined,
+      //   description: newTeamDescription || undefined,
+      //   color: newTeamColor,
+      //   max_board_count: newTeamMaxBoards,
+      // };
+      // const newTeam = await commands.createTeam(teamData);
 
-    if (onTeamsChange) {
-      onTeamsChange([...teams, newTeam]);
+      // For now, simulate the API call
+      const newTeam: Team = {
+        id: teams.length + 1,
+        tournament_id: tournamentId,
+        name: newTeamName,
+        captain: newTeamCaptain || undefined,
+        description: newTeamDescription || undefined,
+        color: newTeamColor,
+        max_board_count: newTeamMaxBoards,
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      setTeams([...teams, newTeam]);
+      setCreateDialogOpen(false);
+      setNewTeamName('');
+      setNewTeamDescription('');
+      setNewTeamColor(TEAM_COLORS[0]);
+      setNewTeamCaptain('');
+      setNewTeamMaxBoards(4);
+
+      if (onTeamsChange) {
+        onTeamsChange([...teams, newTeam]);
+      }
+    } catch (err) {
+      console.error('Error creating team:', err);
+      setError('Failed to create team');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -299,7 +329,19 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
         </Button>
       </Box>
 
-      {teams.length === 0 ? (
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {loading && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Loading team data...
+        </Alert>
+      )}
+
+      {teams.length === 0 && !loading ? (
         <Alert severity="info">{t('tournament.teams.noTeamsMessage')}</Alert>
       ) : (
         <Grid container spacing={3}>
@@ -452,6 +494,22 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
             rows={3}
             sx={{ mb: 2 }}
           />
+          <TextField
+            fullWidth
+            label={t('tournament.teams.captain')}
+            value={newTeamCaptain}
+            onChange={e => setNewTeamCaptain(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            type="number"
+            label={t('tournament.teams.maxBoardCount')}
+            value={newTeamMaxBoards}
+            onChange={e => setNewTeamMaxBoards(Number(e.target.value))}
+            inputProps={{ min: 1, max: 10 }}
+            sx={{ mb: 2 }}
+          />
           <FormControl fullWidth>
             <InputLabel>{t('tournament.teams.teamColor')}</InputLabel>
             <Select
@@ -483,10 +541,10 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
           </Button>
           <Button
             onClick={handleCreateTeam}
-            disabled={!newTeamName.trim()}
+            disabled={!newTeamName.trim() || loading}
             variant="contained"
           >
-            {t('common.create')}
+            {loading ? 'Creating...' : t('common.create')}
           </Button>
         </DialogActions>
       </Dialog>

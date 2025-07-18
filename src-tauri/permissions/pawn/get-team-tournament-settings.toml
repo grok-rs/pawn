@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-team-tournament-settings"
+description = "Allows retrieving team tournament settings"
+commands.allow = ["get_team_tournament_settings"]
+
+[[permission]]
+identifier = "deny-get-team-tournament-settings"
+description = "Denies the get-team-tournament-settings command"
+commands.deny = ["get_team_tournament_settings"]

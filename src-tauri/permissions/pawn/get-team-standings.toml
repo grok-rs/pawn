@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-team-standings"
+description = "Allows retrieving team standings and rankings"
+commands.allow = ["get_team_standings"]
+
+[[permission]]
+identifier = "deny-get-team-standings"
+description = "Denies the get-team-standings command"
+commands.deny = ["get_team_standings"]

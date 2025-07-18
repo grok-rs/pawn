@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-create-team-tournament-settings"
+description = "Allows creating team tournament settings"
+commands.allow = ["create_team_tournament_settings"]
+
+[[permission]]
+identifier = "deny-create-team-tournament-settings"
+description = "Denies the create-team-tournament-settings command"
+commands.deny = ["create_team_tournament_settings"]

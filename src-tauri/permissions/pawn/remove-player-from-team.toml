@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-remove-player-from-team"
+description = "Allows removing players from team memberships"
+commands.allow = ["remove_player_from_team"]
+
+[[permission]]
+identifier = "deny-remove-player-from-team"
+description = "Denies the remove-player-from-team command"
+commands.deny = ["remove_player_from_team"]

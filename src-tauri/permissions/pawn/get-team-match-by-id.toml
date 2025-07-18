@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-team-match-by-id"
+description = "Allows retrieving team match information by ID"
+commands.allow = ["get_team_match_by_id"]
+
+[[permission]]
+identifier = "deny-get-team-match-by-id"
+description = "Denies the get-team-match-by-id command"
+commands.deny = ["get_team_match_by_id"]

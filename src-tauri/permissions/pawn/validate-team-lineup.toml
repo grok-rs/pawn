@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-validate-team-lineup"
+description = "Allows validating team lineup configurations"
+commands.allow = ["validate_team_lineup"]
+
+[[permission]]
+identifier = "deny-validate-team-lineup"
+description = "Denies the validate-team-lineup command"
+commands.deny = ["validate_team_lineup"]

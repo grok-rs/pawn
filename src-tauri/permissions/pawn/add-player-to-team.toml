@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-add-player-to-team"
+description = "Allows adding players to team memberships"
+commands.allow = ["add_player_to_team"]
+
+[[permission]]
+identifier = "deny-add-player-to-team"
+description = "Denies the add-player-to-team command"
+commands.deny = ["add_player_to_team"]

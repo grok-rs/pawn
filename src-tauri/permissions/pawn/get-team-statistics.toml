@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-team-statistics"
+description = "Allows retrieving team statistics and analytics"
+commands.allow = ["get_team_statistics"]
+
+[[permission]]
+identifier = "deny-get-team-statistics"
+description = "Denies the get-team-statistics command"
+commands.deny = ["get_team_statistics"]

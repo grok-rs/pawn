@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-team-matches"
+description = "Allows retrieving team matches for a tournament"
+commands.allow = ["get_team_matches"]
+
+[[permission]]
+identifier = "deny-get-team-matches"
+description = "Denies the get-team-matches command"
+commands.deny = ["get_team_matches"]

@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-update-team-tournament-settings"
+description = "Allows updating team tournament settings"
+commands.allow = ["update_team_tournament_settings"]
+
+[[permission]]
+identifier = "deny-update-team-tournament-settings"
+description = "Denies the update-team-tournament-settings command"
+commands.deny = ["update_team_tournament_settings"]

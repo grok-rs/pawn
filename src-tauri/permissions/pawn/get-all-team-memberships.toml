@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-all-team-memberships"
+description = "Allows retrieving all team memberships for a tournament"
+commands.allow = ["get_all_team_memberships"]
+
+[[permission]]
+identifier = "deny-get-all-team-memberships"
+description = "Denies the get-all-team-memberships command"
+commands.deny = ["get_all_team_memberships"]

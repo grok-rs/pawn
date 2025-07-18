@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-create-team-match"
+description = "Allows creating team matches"
+commands.allow = ["create_team_match"]
+
+[[permission]]
+identifier = "deny-create-team-match"
+description = "Denies the create-team-match command"
+commands.deny = ["create_team_match"]

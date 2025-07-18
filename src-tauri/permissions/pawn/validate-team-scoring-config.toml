@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-validate-team-scoring-config"
+description = "Allows validating team scoring configuration"
+commands.allow = ["validate_team_scoring_config"]
+
+[[permission]]
+identifier = "deny-validate-team-scoring-config"
+description = "Denies the validate_team_scoring_config command"
+commands.deny = ["validate_team_scoring_config"]

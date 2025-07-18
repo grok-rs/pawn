@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-create-team-lineup"
+description = "Allows creating team lineups for rounds"
+commands.allow = ["create_team_lineup"]
+
+[[permission]]
+identifier = "deny-create-team-lineup"
+description = "Denies the create-team-lineup command"
+commands.deny = ["create_team_lineup"]

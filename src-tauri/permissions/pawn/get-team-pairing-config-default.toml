@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-team-pairing-config-default"
+description = "Allows retrieving default team pairing configuration"
+commands.allow = ["get_team_pairing_config_default"]
+
+[[permission]]
+identifier = "deny-get-team-pairing-config-default"
+description = "Denies the get-team-pairing-config-default command"
+commands.deny = ["get_team_pairing_config_default"]

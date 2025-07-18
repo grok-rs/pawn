@@ -9,7 +9,7 @@ use super::{
         export::ExportService, norm_calculation::NormCalculationService, player::PlayerService, 
         realtime_standings::RealTimeStandingsService, round::RoundService, 
         round_robin_analysis::RoundRobinAnalysisService, swiss_analysis::SwissAnalysisService, 
-        tiebreak::TiebreakCalculator, time_control::TimeControlService, tournament::TournamentService,
+        team::TeamService, tiebreak::TiebreakCalculator, time_control::TimeControlService, tournament::TournamentService,
     },
 };
 
@@ -27,6 +27,7 @@ pub struct State<D> {
     pub round_robin_analysis_service: Arc<RoundRobinAnalysisService<D>>,
     pub export_service: Arc<ExportService<D>>,
     pub norm_calculation_service: Arc<NormCalculationService<D>>,
+    pub team_service: Arc<TeamService<D>>,
 }
 
 pub type PawnState = State<SqliteDb>;
@@ -73,6 +74,9 @@ impl PawnState {
         
         // Create norm calculation service
         let norm_calculation_service = Arc::new(NormCalculationService::new(Arc::clone(&sqlite), Arc::clone(&tiebreak_calculator)));
+        
+        // Create team service
+        let team_service = Arc::new(TeamService::new(Arc::clone(&sqlite)));
 
         Self {
             app_data_dir,
@@ -87,6 +91,7 @@ impl PawnState {
             round_robin_analysis_service,
             export_service,
             norm_calculation_service,
+            team_service,
         }
     }
 }

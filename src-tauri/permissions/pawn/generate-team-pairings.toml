@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-generate-team-pairings"
+description = "Allows generating team pairings using various algorithms"
+commands.allow = ["generate_team_pairings"]
+
+[[permission]]
+identifier = "deny-generate-team-pairings"
+description = "Denies the generate-team-pairings command"
+commands.deny = ["generate_team_pairings"]

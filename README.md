@@ -11,7 +11,8 @@ A comprehensive desktop application for professional chess tournament administra
 ## Features
 
 ### 🏆 Professional Tournament Management
-- **Multiple Tournament Types**: Swiss system and Round-robin tournaments with advanced pairing algorithms
+- **Multiple Tournament Types**: Swiss system, Round-robin, and **Team tournaments** with advanced pairing algorithms
+- **Team Tournament Support**: Complete team-based competition management with Swiss, Round-robin, and Scheveningen formats
 - **Flexible Configuration**: Customizable time controls, rounds, tiebreak systems, and tournament rules
 - **Real-time Updates**: Live standings calculations with FIDE-standard tiebreak methods
 - **Tournament Workflow**: Complete lifecycle management from planning to completion
@@ -24,6 +25,14 @@ A comprehensive desktop application for professional chess tournament administra
 - **Advanced Search**: Multi-criteria filtering by rating range, title, country, gender, status
 - **Bulk Operations**: CSV import with comprehensive validation and error handling
 - **Status Management**: Player withdrawals, bye requests, late entries with audit trails
+
+### 🎯 Team Tournament System
+- **Team Management**: Create and manage teams with captains, colors, and descriptions
+- **Team Composition**: Flexible team sizes with board assignments and reserve players
+- **Multiple Scoring Systems**: Match Points, Board Points, Olympic System, and custom scoring
+- **Advanced Pairing**: Team-specific pairing algorithms with conflict avoidance
+- **Team Standings**: Real-time team rankings with comprehensive tiebreak criteria
+- **Professional Configuration**: Detailed tournament setup with captain privileges and substitution rules
 
 ### 📊 Advanced Game & Results Management
 - **Comprehensive Result Recording**: Enhanced interface for all game outcomes and special cases
@@ -148,6 +157,9 @@ pawn/
 ├── src/                          # React Frontend
 │   ├── components/               # Reusable UI components
 │   │   ├── EnhancedPlayerDemo/  # Player management demo
+│   │   ├── TeamManagement/      # Team tournament components
+│   │   ├── TeamStandings/       # Team standings display
+│   │   ├── TeamTournamentConfig/ # Team tournament configuration
 │   │   ├── TournamentList/      # Tournament components
 │   │   └── BaseLayout/          # App layout
 │   ├── pages/                   # Main page components
@@ -155,13 +167,17 @@ pawn/
 │   └── locales/                 # Internationalization
 ├── src-tauri/                   # Rust Backend
 │   ├── src/pawn/               # Core business logic
-│   │   ├── command/            # 40+ Tauri command handlers
+│   │   ├── command/            # 60+ Tauri command handlers
 │   │   │   ├── tournament.rs   # Tournament operations
 │   │   │   ├── player.rs       # Enhanced player management
+│   │   │   ├── team.rs         # Team tournament management
 │   │   │   ├── round.rs        # Round management  
 │   │   │   └── game_result.rs  # Game result operations
 │   │   ├── service/            # Business logic layer
 │   │   │   ├── player.rs       # PlayerService with CRUD
+│   │   │   ├── team.rs         # Team management service
+│   │   │   ├── team_pairing.rs # Team pairing algorithms
+│   │   │   ├── team_scoring.rs # Team scoring and tiebreaks
 │   │   │   ├── tournament.rs   # Tournament management
 │   │   │   └── round.rs        # Round and pairing logic
 │   │   ├── domain/             # Data models and DTOs
@@ -227,6 +243,14 @@ cd src-tauri && sqlx migrate run --database-url sqlite:pawn.sqlite
 - **Rating Systems**: Support for FIDE, national, club, rapid, blitz ratings
 - **Player Categories**: Flexible tournament section management
 
+#### Team Tournament System
+- **18+ Team Commands**: Complete team tournament management API
+- **Team Creation**: Team setup with captains, colors, and member management
+- **Advanced Pairing**: Team-specific Swiss system and Round-robin algorithms
+- **Multiple Scoring**: Match Points, Board Points, Olympic System with custom configurations
+- **Professional UI**: Comprehensive team management, standings, and configuration interfaces
+- **Real-time Updates**: Live team standings with detailed tiebreak calculations
+
 #### Demo System
 - **Interactive Demo**: Live demonstration of enhanced player features
 - **Sample Data**: Auto-generated tournaments and players for testing
@@ -241,18 +265,21 @@ For detailed technical documentation, see [ENHANCED_PLAYER_MANAGEMENT.md](./ENHA
 - **Multi-language**: Tournament administration in multiple languages
 - **Categories**: Automatic section assignment based on rating/age/gender
 - **Professional Workflow**: Complete tournament lifecycle management
+- **Team Events**: Olympic-style team competitions with proper scoring
 
 ### Club Championships  
 - **Member Management**: Contact information and club affiliation tracking
 - **Local Ratings**: Club-specific rating systems alongside official ratings
 - **Communication**: Email and phone contact management
 - **Historical Data**: Rating progression and tournament history
+- **Team Leagues**: Inter-club team competitions with flexible formats
 
 ### Youth Tournaments
 - **Age Categories**: Automatic age-based section assignment
 - **Parent Information**: Contact details for underage participants
 - **Educational Features**: Rating calculation explanations
 - **Safety Features**: Proper data handling for minors
+- **School Teams**: Educational team tournaments with proper supervision
 
 ## Contributing
 
@@ -283,6 +310,12 @@ We welcome contributions to Pawn! Please follow these guidelines:
 - ✅ Player categorization and advanced search
 - ✅ Bulk import with validation
 - ✅ Interactive demo system
+- ✅ **Team Tournament Support** (NEW!)
+- ✅ Team management with captains and colors
+- ✅ Advanced team pairing algorithms
+- ✅ Multiple team scoring systems
+- ✅ Team standings and statistics
+- ✅ Professional team tournament UI
 
 ### In Progress 🚧
 - 📊 Advanced tournament statistics and analytics
@@ -293,9 +326,9 @@ We welcome contributions to Pawn! Please follow these guidelines:
 - 📱 Mobile companion app for tournament directors
 - ☁️ Optional cloud backup and sync
 - 🌐 Integration with chess servers (lichess, chess.com)
-- 👥 Team tournament support
 - 🎯 Advanced pairing algorithms
 - 📈 Player performance analytics
+- 🏆 Team tournament reporting and scorecards
 
 ## Documentation
 

@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-team-lineups"
+description = "Allows retrieving team lineups for a specific round"
+commands.allow = ["get_team_lineups"]
+
+[[permission]]
+identifier = "deny-get-team-lineups"
+description = "Denies the get-team-lineups command"
+commands.deny = ["get_team_lineups"]

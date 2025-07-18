@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-calculate-team-standings"
+description = "Allows calculating team standings with comprehensive scoring systems"
+commands.allow = ["calculate_team_standings"]
+
+[[permission]]
+identifier = "deny-calculate-team-standings"
+description = "Denies the calculate_team_standings command"
+commands.deny = ["calculate_team_standings"]

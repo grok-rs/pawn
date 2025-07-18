@@ -159,4 +159,35 @@ pub trait Db: Send + Sync {
     ) -> Result<Vec<Tournament>, sqlx::Error>;
     async fn unset_default_time_controls(&self, time_control_type: &str)
     -> Result<(), sqlx::Error>;
+
+    // Team management operations
+    async fn create_team(&self, data: super::domain::dto::CreateTeam) -> Result<super::domain::model::Team, sqlx::Error>;
+    async fn update_team(&self, data: super::domain::dto::UpdateTeam) -> Result<super::domain::model::Team, sqlx::Error>;
+    async fn delete_team(&self, team_id: i32) -> Result<(), sqlx::Error>;
+    async fn get_team_by_id(&self, team_id: i32) -> Result<super::domain::model::Team, sqlx::Error>;
+    async fn get_teams_by_tournament(&self, tournament_id: i32) -> Result<Vec<super::domain::model::Team>, sqlx::Error>;
+    async fn search_teams(&self, filters: super::domain::dto::TeamSearchFilters) -> Result<Vec<super::domain::model::Team>, sqlx::Error>;
+    async fn get_tournament_by_id(&self, tournament_id: i32) -> Result<Tournament, sqlx::Error>;
+
+    // Team membership operations
+    async fn add_player_to_team(&self, data: super::domain::dto::AddPlayerToTeam) -> Result<super::domain::model::TeamMembership, sqlx::Error>;
+    async fn remove_player_from_team(&self, data: super::domain::dto::RemovePlayerFromTeam) -> Result<(), sqlx::Error>;
+    async fn get_team_memberships(&self, team_id: i32) -> Result<Vec<super::domain::model::TeamMembership>, sqlx::Error>;
+    async fn get_all_team_memberships(&self, tournament_id: i32) -> Result<Vec<super::domain::model::TeamMembership>, sqlx::Error>;
+    async fn get_player_by_id(&self, player_id: i32) -> Result<Player, sqlx::Error>;
+
+    // Team match operations
+    async fn create_team_match(&self, data: super::domain::dto::CreateTeamMatch) -> Result<super::domain::model::TeamMatch, sqlx::Error>;
+    async fn update_team_match(&self, data: super::domain::dto::UpdateTeamMatch) -> Result<super::domain::model::TeamMatch, sqlx::Error>;
+    async fn get_team_match_by_id(&self, match_id: i32) -> Result<super::domain::model::TeamMatch, sqlx::Error>;
+    async fn get_team_matches(&self, tournament_id: i32, round_number: Option<i32>) -> Result<Vec<super::domain::model::TeamMatch>, sqlx::Error>;
+
+    // Team lineup operations
+    async fn create_team_lineup(&self, data: super::domain::dto::CreateTeamLineup) -> Result<super::domain::model::TeamLineup, sqlx::Error>;
+    async fn get_team_lineups(&self, team_id: i32, round_number: i32) -> Result<Vec<super::domain::model::TeamLineup>, sqlx::Error>;
+
+    // Team tournament settings operations
+    async fn create_team_tournament_settings(&self, data: super::domain::dto::CreateTeamTournamentSettings) -> Result<super::domain::model::TeamTournamentSettings, sqlx::Error>;
+    async fn update_team_tournament_settings(&self, data: super::domain::dto::UpdateTeamTournamentSettings) -> Result<super::domain::model::TeamTournamentSettings, sqlx::Error>;
+    async fn get_team_tournament_settings(&self, tournament_id: i32) -> Result<super::domain::model::TeamTournamentSettings, sqlx::Error>;
 }

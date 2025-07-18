@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-search-teams"
+description = "Allows searching teams with various filters"
+commands.allow = ["search_teams"]
+
+[[permission]]
+identifier = "deny-search-teams"
+description = "Denies the search-teams command"
+commands.deny = ["search_teams"]
