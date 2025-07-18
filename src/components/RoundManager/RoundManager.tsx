@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Box,
@@ -62,7 +62,7 @@ const RoundManager: React.FC<RoundManagerProps> = ({
   );
   const [standingsLoading, setStandingsLoading] = useState(false);
 
-  const fetchStandings = async () => {
+  const fetchStandings = useCallback(async () => {
     try {
       setStandingsLoading(true);
       const standingsData = await commands.getTournamentStandings(tournamentId);
@@ -73,9 +73,9 @@ const RoundManager: React.FC<RoundManagerProps> = ({
     } finally {
       setStandingsLoading(false);
     }
-  };
+  }, [tournamentId]);
 
-  const fetchRounds = async () => {
+  const fetchRounds = useCallback(async () => {
     try {
       setLoading(true);
       const [roundsData, currentRoundData] = await Promise.all([
@@ -94,7 +94,7 @@ const RoundManager: React.FC<RoundManagerProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [tournamentId, t, fetchStandings]);
 
   const handleCreateRound = async () => {
     try {
@@ -125,9 +125,11 @@ const RoundManager: React.FC<RoundManagerProps> = ({
       setActionLoading(true);
       setError(null); // Clear any previous errors
 
-      console.log(
-        `Generating pairings for tournament ${tournamentId}, round ${roundNumber}, method: ${pairingMethod}`
-      );
+      // Find the round and update its status to 'pairing'
+      const roundToUpdate = rounds.find(r => r.round_number === roundNumber);
+      if (roundToUpdate) {
+        await handleUpdateRoundStatus(roundToUpdate.id, 'pairing');
+      }
 
       const pairings = await commands.generatePairings({
         tournament_id: tournamentId,
@@ -135,17 +137,30 @@ const RoundManager: React.FC<RoundManagerProps> = ({
         pairing_method: pairingMethod,
       });
 
-      console.log(`Generated ${pairings.length} pairings:`, pairings);
-
       if (pairings.length === 0) {
         setError(t('rounds.noPairingsGenerated'));
+        // Reset status back to planned on error
+        if (roundToUpdate) {
+          await handleUpdateRoundStatus(roundToUpdate.id, 'planned');
+        }
         return;
+      }
+
+      // Update status to 'published' after successful pairing generation
+      if (roundToUpdate) {
+        await handleUpdateRoundStatus(roundToUpdate.id, 'published');
       }
 
       setGeneratedPairings(pairings);
       setShowPairings(true);
     } catch (err) {
       console.error('Failed to generate pairings:', err);
+
+      // Reset status back to planned on error
+      const roundToUpdate = rounds.find(r => r.round_number === roundNumber);
+      if (roundToUpdate) {
+        await handleUpdateRoundStatus(roundToUpdate.id, 'planned');
+      }
 
       // Extract more detailed error information
       let errorMessage = t('failedToGeneratePairings');
@@ -198,6 +213,26 @@ const RoundManager: React.FC<RoundManagerProps> = ({
     }
   };
 
+  const handleUpdateRoundStatus = async (
+    roundId: number,
+    newStatus: string
+  ) => {
+    try {
+      setActionLoading(true);
+      await commands.updateRoundStatus({
+        round_id: roundId,
+        status: newStatus,
+      });
+      await fetchRounds();
+      onRoundUpdate?.();
+    } catch (err) {
+      console.error('Failed to update round status:', err);
+      setError(t('failedToUpdateRoundStatus'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleCompleteRound = async (roundId: number) => {
     try {
       setActionLoading(true);
@@ -228,11 +263,20 @@ const RoundManager: React.FC<RoundManagerProps> = ({
 
   const getRoundStatusIcon = (status: string) => {
     switch (status) {
-      case 'upcoming':
+      case 'planned':
+      case 'upcoming': // Backward compatibility
         return <RadioButtonUnchecked color="action" />;
+      case 'pairing':
+        return <Schedule color="info" />;
+      case 'published':
+        return <PlayArrow color="primary" />;
       case 'in_progress':
         return <Schedule color="warning" />;
+      case 'finishing':
+        return <Schedule color="warning" />;
       case 'completed':
+        return <CheckCircle color="success" />;
+      case 'verified':
         return <CheckCircle color="success" />;
       default:
         return <RadioButtonUnchecked />;
@@ -241,28 +285,60 @@ const RoundManager: React.FC<RoundManagerProps> = ({
 
   const getRoundStatusColor = (
     status: string
-  ): 'default' | 'warning' | 'success' => {
+  ): 'default' | 'warning' | 'success' | 'info' | 'primary' => {
     switch (status) {
-      case 'upcoming':
+      case 'planned':
+      case 'upcoming': // Backward compatibility
         return 'default';
+      case 'pairing':
+        return 'info';
+      case 'published':
+        return 'primary';
       case 'in_progress':
+      case 'finishing':
         return 'warning';
       case 'completed':
+      case 'verified':
         return 'success';
       default:
         return 'default';
     }
   };
 
+  const getStatusLabel = (status: string): string => {
+    switch (status) {
+      case 'planned':
+        return t('rounds.status.planned');
+      case 'upcoming': // Backward compatibility
+        return t('rounds.status.planned');
+      case 'pairing':
+        return t('rounds.status.pairing');
+      case 'published':
+        return t('rounds.status.published');
+      case 'in_progress':
+        return t('rounds.status.inProgress');
+      case 'finishing':
+        return t('rounds.status.finishing');
+      case 'completed':
+        return t('rounds.status.completed');
+      case 'verified':
+        return t('rounds.status.verified');
+      default:
+        return t('rounds.status.unknown');
+    }
+  };
+
   const getProgressPercentage = () => {
     if (rounds.length === 0) return 0;
-    const completedRounds = rounds.filter(r => r.status === 'completed').length;
+    const completedRounds = rounds.filter(
+      r => r.status === 'completed' || r.status === 'verified'
+    ).length;
     return (completedRounds / rounds.length) * 100;
   };
 
   useEffect(() => {
     fetchRounds();
-  }, [tournamentId]);
+  }, [tournamentId, fetchRounds]);
 
   if (loading) {
     return (
@@ -334,8 +410,12 @@ const RoundManager: React.FC<RoundManagerProps> = ({
                 {t('rounds.roundsCompleted')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {rounds.filter(r => r.status === 'completed').length} /{' '}
-                {rounds.length}
+                {
+                  rounds.filter(
+                    r => r.status === 'completed' || r.status === 'verified'
+                  ).length
+                }{' '}
+                / {rounds.length}
               </Typography>
             </Box>
             <LinearProgress
@@ -352,7 +432,7 @@ const RoundManager: React.FC<RoundManagerProps> = ({
               </Typography>
               <Chip
                 icon={getRoundStatusIcon(currentRound.status)}
-                label={`${t('round')} ${currentRound.round_number} - ${t(`rounds.status.${currentRound.status === 'in_progress' ? 'inProgress' : currentRound.status}`)}`}
+                label={`${t('round')} ${currentRound.round_number} - ${getStatusLabel(currentRound.status)}`}
                 color={getRoundStatusColor(currentRound.status)}
                 variant="outlined"
               />
@@ -387,9 +467,7 @@ const RoundManager: React.FC<RoundManagerProps> = ({
                   </Typography>
                   <Chip
                     icon={getRoundStatusIcon(round.status)}
-                    label={t(
-                      `rounds.status.${round.status === 'in_progress' ? 'inProgress' : round.status}`
-                    )}
+                    label={getStatusLabel(round.status)}
                     color={getRoundStatusColor(round.status)}
                     size="small"
                   />
@@ -414,7 +492,8 @@ const RoundManager: React.FC<RoundManagerProps> = ({
                 <Divider sx={{ my: 2 }} />
 
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  {round.status === 'upcoming' && (
+                  {(round.status === 'planned' ||
+                    round.status === 'upcoming') && (
                     <Button
                       size="small"
                       startIcon={<PlayArrow />}
@@ -425,7 +504,28 @@ const RoundManager: React.FC<RoundManagerProps> = ({
                     </Button>
                   )}
 
-                  {round.status === 'in_progress' && (
+                  {round.status === 'pairing' && (
+                    <Button size="small" variant="outlined" disabled={true}>
+                      {t('rounds.generatingPairings')}...
+                    </Button>
+                  )}
+
+                  {round.status === 'published' && (
+                    <Button
+                      size="small"
+                      startIcon={<PlayArrow />}
+                      color="primary"
+                      onClick={() =>
+                        handleUpdateRoundStatus(round.id, 'in_progress')
+                      }
+                      disabled={actionLoading}
+                    >
+                      {t('rounds.startRound')}
+                    </Button>
+                  )}
+
+                  {(round.status === 'in_progress' ||
+                    round.status === 'finishing') && (
                     <Button
                       size="small"
                       startIcon={<Stop />}
@@ -437,7 +537,21 @@ const RoundManager: React.FC<RoundManagerProps> = ({
                     </Button>
                   )}
 
-                  {round.status === 'completed' &&
+                  {round.status === 'completed' && (
+                    <Button
+                      size="small"
+                      startIcon={<CheckCircle />}
+                      color="success"
+                      onClick={() =>
+                        handleUpdateRoundStatus(round.id, 'verified')
+                      }
+                      disabled={actionLoading}
+                    >
+                      {t('rounds.verifyRound')}
+                    </Button>
+                  )}
+
+                  {round.status === 'verified' &&
                     currentRound?.id === round.id && (
                       <Button
                         size="small"
