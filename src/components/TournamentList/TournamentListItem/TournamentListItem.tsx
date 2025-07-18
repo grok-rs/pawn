@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Tournament } from '../../../dto/bindings';
+import { Tournament } from '@dto/bindings';
 import {
   CalendarToday,
   LocationOn,
@@ -33,8 +33,8 @@ import {
   getTournamentProgressActual,
   calculateActualRoundsPlayed,
 } from '../../../utils';
-import { commands } from '../../../dto/bindings';
-import type { Round } from '../../../dto/bindings';
+import { commands } from '@dto/bindings';
+import type { Round } from '@dto/bindings';
 
 type TournamentListItemProps = {
   tournament: Tournament;

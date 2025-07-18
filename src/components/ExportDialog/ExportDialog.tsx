@@ -16,12 +16,8 @@ import {
   Box,
   CircularProgress,
 } from '@mui/material';
-import { commands } from '../../dto/bindings';
-import type {
-  ExportRequest,
-  ExportFormat,
-  ExportType,
-} from '../../dto/bindings';
+import { commands } from '@dto/bindings';
+import type { ExportRequest, ExportFormat, ExportType } from '@dto/bindings';
 
 interface ExportDialogProps {
   open: boolean;

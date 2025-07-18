@@ -18,11 +18,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import {
-  commands,
-  GeneratePairingNumbersRequest,
-  Player,
-} from '../../dto/bindings';
+import { commands, GeneratePairingNumbersRequest, Player } from '@dto/bindings';
 
 interface PairingNumbersManagementProps {
   open: boolean;

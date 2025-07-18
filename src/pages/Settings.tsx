@@ -31,7 +31,7 @@ import {
 import {
   Settings as SettingsIcon,
   Palette as PaletteIcon,
-  Tournament as TournamentIcon,
+  EmojiEvents as TournamentIcon,
   Speed as SpeedIcon,
   Security as SecurityIcon,
   Storage as StorageIcon,
@@ -43,21 +43,14 @@ import {
   Info as InfoIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import { invoke } from '@tauri-apps/api/tauri';
+import { commands } from '@dto/bindings';
 import {
   SettingsOverview,
   SettingsTemplate,
   SettingsBackupHistory,
-  CreateUserPreference,
-  SettingsValidationResult,
-  SettingsImportResult,
-  SettingsExportRequest,
-  SettingsImportRequest,
-  SettingsResetRequest,
-  SettingsResetResult,
-  CreateSettingsBackup,
-  RestoreSettingsBackup,
-} from '../dto/bindings';
+} from '@dto/bindings';
+
+// All types are now imported from generated bindings
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -132,9 +125,10 @@ const Settings: React.FC = () => {
 
   const loadSettings = async () => {
     try {
-      const effectiveSettings = await invoke('get_effective_settings', {
+      const effectiveSettings = await commands.getEffectiveSettings(
         userId,
-      });
+        null
+      );
       setSettings(effectiveSettings as Record<string, string>);
     } catch (err) {
       console.error('Failed to load settings:', err);
@@ -144,8 +138,8 @@ const Settings: React.FC = () => {
 
   const loadOverview = async () => {
     try {
-      const overview = await invoke('get_settings_overview', { userId });
-      setSettingsOverview(overview as SettingsOverview);
+      const overview = await commands.getSettingsOverview(userId);
+      setSettingsOverview(overview);
     } catch (err) {
       console.error('Failed to load overview:', err);
     }
@@ -153,8 +147,8 @@ const Settings: React.FC = () => {
 
   const loadTemplates = async () => {
     try {
-      const templateList = await invoke('get_settings_templates', {});
-      setTemplates(templateList as SettingsTemplate[]);
+      const templateList = await commands.getSettingsTemplates(null);
+      setTemplates(templateList);
     } catch (err) {
       console.error('Failed to load templates:', err);
     }
@@ -162,8 +156,8 @@ const Settings: React.FC = () => {
 
   const loadBackups = async () => {
     try {
-      const backupList = await invoke('get_settings_backups', { userId });
-      setBackups(backupList as SettingsBackupHistory[]);
+      const backupList = await commands.getSettingsBackups(userId);
+      setBackups(backupList);
     } catch (err) {
       console.error('Failed to load backups:', err);
     }
@@ -171,9 +165,8 @@ const Settings: React.FC = () => {
 
   const loadPendingRestart = async () => {
     try {
-      const restartSettings = await invoke('get_settings_requiring_restart', {
-        userId,
-      });
+      const restartSettings =
+        await commands.getSettingsRequiringRestart(userId);
       setPendingRestart(restartSettings as string[]);
     } catch (err) {
       console.error('Failed to load pending restart settings:', err);
@@ -196,14 +189,13 @@ const Settings: React.FC = () => {
       setSettings(newSettings);
 
       // Validate setting
-      const validationResult = (await invoke('validate_setting', {
-        request: {
-          category,
-          setting_key: key,
-          setting_value: value,
-          setting_type: 'string', // TODO: Get from schema
-        },
-      })) as SettingsValidationResult;
+      const validationResult = await commands.validateSetting({
+        category,
+        setting_key: key,
+        setting_value: value,
+        setting_type: 'string', // TODO: Get from schema
+        validation_schema: null,
+      });
 
       if (!validationResult.is_valid) {
         setError(`Invalid value: ${validationResult.errors.join(', ')}`);
@@ -211,13 +203,11 @@ const Settings: React.FC = () => {
       }
 
       // Save preference
-      await invoke('create_user_preference', {
-        data: {
-          user_id: userId,
-          category,
-          setting_key: key,
-          setting_value: value,
-        } as CreateUserPreference,
+      await commands.createUserPreference({
+        user_id: userId,
+        category,
+        setting_key: key,
+        setting_value: value,
       });
 
       setSuccess('Setting updated successfully');
@@ -232,7 +222,7 @@ const Settings: React.FC = () => {
 
   const handleLanguageChange = async (language: string) => {
     try {
-      await invoke('set_language_setting', { userId, language });
+      await commands.setLanguageSetting(userId, language);
       i18n.changeLanguage(language);
       setSuccess('Language updated successfully');
     } catch (err) {
@@ -243,7 +233,7 @@ const Settings: React.FC = () => {
 
   const handleThemeChange = async (theme: string) => {
     try {
-      await invoke('set_theme_setting', { userId, theme });
+      await commands.setThemeSetting(userId, theme);
       setSuccess('Theme updated successfully');
     } catch (err) {
       console.error('Failed to update theme:', err);
@@ -254,12 +244,11 @@ const Settings: React.FC = () => {
   const handleApplyTemplate = async (template: SettingsTemplate) => {
     try {
       setSaving(true);
-      await invoke('apply_settings_template', {
-        data: {
-          template_id: template.id,
-          user_id: userId,
-          override_existing: true,
-        },
+      await commands.applySettingsTemplate({
+        template_id: template.id,
+        user_id: userId,
+        override_existing: true,
+        categories: null,
       });
 
       await loadSettings();
@@ -276,13 +265,12 @@ const Settings: React.FC = () => {
   const handleCreateBackup = async () => {
     try {
       setSaving(true);
-      await invoke('create_settings_backup', {
-        data: {
-          backup_name:
-            backupName || `Manual backup ${new Date().toLocaleString()}`,
-          backup_type: 'manual',
-          user_id: userId,
-        } as CreateSettingsBackup,
+      await commands.createSettingsBackup({
+        backup_name:
+          backupName || `Manual backup ${new Date().toLocaleString()}`,
+        backup_type: 'manual',
+        user_id: userId,
+        categories: null,
       });
 
       await loadBackups();
@@ -300,12 +288,11 @@ const Settings: React.FC = () => {
   const handleRestoreBackup = async (backup: SettingsBackupHistory) => {
     try {
       setSaving(true);
-      await invoke('restore_settings_backup', {
-        data: {
-          backup_id: backup.id,
-          user_id: userId,
-          create_backup_before_restore: true,
-        } as RestoreSettingsBackup,
+      await commands.restoreSettingsBackup({
+        backup_id: backup.id,
+        user_id: userId,
+        categories: null,
+        create_backup_before_restore: true,
       });
 
       await loadSettings();
@@ -324,11 +311,12 @@ const Settings: React.FC = () => {
 
   const handleExportSettings = async () => {
     try {
-      const exportData = await invoke('export_settings', {
-        request: {
-          format: exportFormat,
-          user_id: userId,
-        } as SettingsExportRequest,
+      const exportData = await commands.exportSettings({
+        format: exportFormat,
+        categories: null,
+        user_id: userId,
+        include_defaults: null,
+        include_system_settings: null,
       });
 
       // Create download link
@@ -355,15 +343,14 @@ const Settings: React.FC = () => {
   const handleImportSettings = async () => {
     try {
       setSaving(true);
-      const result = (await invoke('import_settings', {
-        request: {
-          format: importFormat,
-          data: importData,
-          user_id: userId,
-          override_existing: true,
-          create_backup_before_import: true,
-        } as SettingsImportRequest,
-      })) as SettingsImportResult;
+      const result = await commands.importSettings({
+        format: importFormat,
+        data: importData,
+        user_id: userId,
+        validate_only: false,
+        override_existing: true,
+        create_backup_before_import: true,
+      });
 
       if (result.success) {
         await loadSettings();
@@ -389,13 +376,12 @@ const Settings: React.FC = () => {
   const handleResetSettings = async (category?: string) => {
     try {
       setSaving(true);
-      const result = (await invoke('reset_settings', {
-        request: {
-          category,
-          user_id: userId,
-          create_backup: true,
-        } as SettingsResetRequest,
-      })) as SettingsResetResult;
+      const result = await commands.resetSettings({
+        category,
+        setting_key: null,
+        user_id: userId,
+        create_backup: true,
+      });
 
       if (result.success) {
         await loadSettings();

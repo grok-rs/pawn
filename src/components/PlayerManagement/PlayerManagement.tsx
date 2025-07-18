@@ -39,8 +39,8 @@ import {
   Schedule,
   History,
 } from '@mui/icons-material';
-import { commands } from '../../dto/bindings';
-import type { Player } from '../../dto/bindings';
+import { commands } from '@dto/bindings';
+import type { Player } from '@dto/bindings';
 import AddPlayerForm from './AddPlayerForm';
 import BulkImportDialog from './BulkImportDialog';
 import PlayerCategoryManagement from './PlayerCategoryManagement';

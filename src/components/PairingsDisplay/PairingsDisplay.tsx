@@ -29,7 +29,7 @@ import {
   Cancel,
   CheckCircle,
 } from '@mui/icons-material';
-import type { Pairing, Player } from '../../dto/bindings';
+import type { Pairing, Player } from '@dto/bindings';
 
 interface PairingsDisplayProps {
   open: boolean;

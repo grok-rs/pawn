@@ -33,7 +33,7 @@ import {
   SeedingAnalysis,
   BatchUpdatePlayerSeeding,
   UpdatePlayerSeeding,
-} from '../../dto/bindings';
+} from '@dto/bindings';
 
 const SeedingStep = () => {
   // For now, we don't have access to tournamentId in the form stepper

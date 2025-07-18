@@ -52,12 +52,12 @@ import {
   PlayCircleOutline,
   Assignment,
 } from '@mui/icons-material';
-import { commands } from '../../dto/bindings';
+import { commands } from '@dto/bindings';
 import type {
   TournamentDetails,
   StandingsCalculationResult,
   Player,
-} from '../../dto/bindings';
+} from '@dto/bindings';
 import BaseLayout from '../../components/BaseLayout';
 import { StandingsTable } from '../../components/StandingsTable';
 import RoundManager from '../../components/RoundManager';

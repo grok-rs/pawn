@@ -8,7 +8,7 @@ import { NEW_TOURNAMENT_FORM_STEPS } from './constants';
 import StepperNavigation from './StepperNavigation/StepperNavigation';
 import { StyledBox, StyledDivider } from './styled';
 import { DEFAULT_TOURNAMENT_FORM_VALUES } from './validation';
-import { commands, CreateTournament, Tournament } from '../../dto/bindings';
+import { commands, CreateTournament, Tournament } from '@dto/bindings';
 import { TournamentFormValues } from './types';
 
 const NewTournamentSetup = () => {

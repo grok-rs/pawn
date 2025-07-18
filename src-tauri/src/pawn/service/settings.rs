@@ -2,15 +2,18 @@ use crate::pawn::domain::dto::*;
 use crate::pawn::domain::model::*;
 use crate::pawn::common::error::PawnError;
 use sqlx::{SqlitePool, Row};
+use std::sync::Arc;
 use std::collections::HashMap;
+use serde_json;
+use chrono::{DateTime, Utc};
 
 #[derive(Debug, Clone)]
 pub struct SettingsService {
-    pool: SqlitePool,
+    pool: Arc<SqlitePool>,
 }
 
 impl SettingsService {
-    pub fn new(pool: SqlitePool) -> Self {
+    pub fn new(pool: Arc<SqlitePool>) -> Self {
         Self { pool }
     }
 
@@ -46,7 +49,7 @@ impl SettingsService {
             query_builder = query_builder.bind(param);
         }
 
-        let settings = query_builder.fetch_all(&self.pool).await?;
+        let settings = query_builder.fetch_all(self.pool.as_ref()).await?;
         Ok(settings)
     }
 
@@ -60,7 +63,7 @@ impl SettingsService {
         )
         .bind(category)
         .bind(setting_key)
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.pool.as_ref())
         .await?;
 
         Ok(setting)
@@ -89,7 +92,7 @@ impl SettingsService {
         .bind(data.requires_restart.unwrap_or(false))
         .bind(data.is_user_configurable.unwrap_or(true))
         .bind(data.display_order.unwrap_or(0))
-        .fetch_one(&self.pool)
+        .fetch_one(self.pool.as_ref())
         .await?;
 
         Ok(setting)
@@ -120,7 +123,7 @@ impl SettingsService {
         .bind(data.is_user_configurable)
         .bind(data.display_order)
         .bind(data.id)
-        .fetch_one(&self.pool)
+        .fetch_one(self.pool.as_ref())
         .await?;
 
         Ok(setting)
@@ -129,7 +132,7 @@ impl SettingsService {
     pub async fn delete_application_setting(&self, id: i32) -> Result<(), PawnError> {
         sqlx::query("DELETE FROM application_settings WHERE id = ?")
             .bind(id)
-            .execute(&self.pool)
+            .execute(self.pool.as_ref())
             .await?;
 
         Ok(())
@@ -157,7 +160,7 @@ impl SettingsService {
             query_builder = query_builder.bind(param);
         }
 
-        let preferences = query_builder.fetch_all(&self.pool).await?;
+        let preferences = query_builder.fetch_all(self.pool.as_ref()).await?;
         Ok(preferences)
     }
 
@@ -173,7 +176,7 @@ impl SettingsService {
         .bind(user_id)
         .bind(category)
         .bind(setting_key)
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.pool.as_ref())
         .await?;
 
         Ok(preference)
@@ -199,7 +202,7 @@ impl SettingsService {
         .bind(&data.category)
         .bind(&data.setting_key)
         .bind(&data.setting_value)
-        .fetch_one(&self.pool)
+        .fetch_one(self.pool.as_ref())
         .await?;
 
         Ok(preference)
@@ -220,7 +223,7 @@ impl SettingsService {
         )
         .bind(&data.setting_value)
         .bind(data.id)
-        .fetch_one(&self.pool)
+        .fetch_one(self.pool.as_ref())
         .await?;
 
         Ok(preference)
@@ -229,7 +232,7 @@ impl SettingsService {
     pub async fn delete_user_preference(&self, id: i32) -> Result<(), PawnError> {
         sqlx::query("DELETE FROM user_preferences WHERE id = ?")
             .bind(id)
-            .execute(&self.pool)
+            .execute(self.pool.as_ref())
             .await?;
 
         Ok(())
@@ -270,7 +273,7 @@ impl SettingsService {
             query_builder = query_builder.bind(param);
         }
 
-        let rows = query_builder.fetch_all(&self.pool).await?;
+        let rows = query_builder.fetch_all(self.pool.as_ref()).await?;
         
         let mut settings = HashMap::new();
         for row in rows {
@@ -308,7 +311,7 @@ impl SettingsService {
         .bind(user_id)
         .bind(category)
         .bind(setting_key)
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.pool.as_ref())
         .await?;
 
         if let Some(row) = row {
@@ -340,7 +343,7 @@ impl SettingsService {
             query_builder = query_builder.bind(param);
         }
 
-        let templates = query_builder.fetch_all(&self.pool).await?;
+        let templates = query_builder.fetch_all(self.pool.as_ref()).await?;
         Ok(templates)
     }
 
@@ -349,7 +352,7 @@ impl SettingsService {
             "SELECT * FROM settings_templates WHERE id = ?",
         )
         .bind(id)
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.pool.as_ref())
         .await?;
 
         Ok(template)
@@ -374,7 +377,7 @@ impl SettingsService {
         .bind(&data.template_data)
         .bind(data.is_system_template.unwrap_or(false))
         .bind(data.is_default.unwrap_or(false))
-        .fetch_one(&self.pool)
+        .fetch_one(self.pool.as_ref())
         .await?;
 
         Ok(template)
@@ -405,7 +408,7 @@ impl SettingsService {
         .bind(data.is_system_template)
         .bind(data.is_default)
         .bind(data.id)
-        .fetch_one(&self.pool)
+        .fetch_one(self.pool.as_ref())
         .await?;
 
         Ok(template)
@@ -414,7 +417,7 @@ impl SettingsService {
     pub async fn delete_settings_template(&self, id: i32) -> Result<(), PawnError> {
         sqlx::query("DELETE FROM settings_templates WHERE id = ?")
             .bind(id)
-            .execute(&self.pool)
+            .execute(self.pool.as_ref())
             .await?;
 
         Ok(())
@@ -445,7 +448,7 @@ impl SettingsService {
         .bind(&backup_data)
         .bind(backup_size)
         .bind(&user_id)
-        .fetch_one(&self.pool)
+        .fetch_one(self.pool.as_ref())
         .await?;
 
         Ok(backup)
@@ -484,7 +487,7 @@ impl SettingsService {
             "SELECT * FROM settings_backup_history WHERE user_id = ? ORDER BY created_at DESC",
         )
         .bind(user_id)
-        .fetch_all(&self.pool)
+        .fetch_all(self.pool.as_ref())
         .await?;
 
         Ok(backups)
@@ -512,7 +515,7 @@ impl SettingsService {
             "SELECT * FROM settings_backup_history WHERE id = ?",
         )
         .bind(data.backup_id)
-        .fetch_one(&self.pool)
+        .fetch_one(self.pool.as_ref())
         .await?;
 
         // Parse backup data
@@ -547,7 +550,7 @@ impl SettingsService {
         // Update backup as restored
         sqlx::query("UPDATE settings_backup_history SET restored_at = CURRENT_TIMESTAMP WHERE id = ?")
             .bind(data.backup_id)
-            .execute(&self.pool)
+            .execute(self.pool.as_ref())
             .await?;
 
         Ok(())
@@ -651,7 +654,7 @@ impl SettingsService {
             "#,
         )
         .bind(user_id)
-        .fetch_all(&self.pool)
+        .fetch_all(self.pool.as_ref())
         .await?;
 
         let mut categories = Vec::new();
@@ -694,7 +697,7 @@ impl SettingsService {
             "#,
         )
         .bind(user_id)
-        .fetch_all(&self.pool)
+        .fetch_all(self.pool.as_ref())
         .await?;
 
         let recent_changes_summary: Vec<SettingsAuditSummary> = recent_changes
@@ -758,7 +761,7 @@ impl SettingsService {
             query_builder = query_builder.bind(param);
         }
 
-        let result = query_builder.execute(&self.pool).await?;
+        let result = query_builder.execute(self.pool.as_ref()).await?;
         let reset_count = result.rows_affected() as i32;
 
         Ok(SettingsResetResult {
@@ -768,6 +771,219 @@ impl SettingsService {
             backup_created,
         })
     }
+
+    pub async fn export_settings(
+        &self,
+        request: SettingsExportRequest,
+    ) -> Result<String, PawnError> {
+        let settings = if let Some(ref user_id) = request.user_id {
+            self.get_effective_settings(user_id, None).await?
+        } else {
+            // Get application defaults
+            self.get_application_settings(None).await?
+                .into_iter()
+                .map(|s| (format!("{}.{}", s.category, s.setting_key), s.setting_value.unwrap_or_default()))
+                .collect()
+        };
+        
+        match request.format.as_str() {
+            "json" => {
+                let json_data = serde_json::to_string_pretty(&settings)
+                    .map_err(|e| PawnError::InvalidInput(format!("JSON serialization error: {}", e)))?;
+                Ok(json_data)
+            }
+            "yaml" => {
+                let yaml_data = serde_yaml::to_string(&settings)
+                    .map_err(|e| PawnError::InvalidInput(format!("YAML serialization error: {}", e)))?;
+                Ok(yaml_data)
+            }
+            "csv" => {
+                let mut csv_data = String::from("category,setting_key,setting_value\n");
+                for (key, value) in settings {
+                    csv_data.push_str(&format!("{},{},{}\n", 
+                        key.split('.').next().unwrap_or("unknown"),
+                        key.split('.').nth(1).unwrap_or(&key),
+                        value.replace(',', "\"\"")
+                    ));
+                }
+                Ok(csv_data)
+            }
+            _ => Err(PawnError::InvalidInput(format!("Unsupported export format: {}", request.format)))
+        }
+    }
+
+    pub async fn import_settings(
+        &self,
+        request: SettingsImportRequest,
+    ) -> Result<SettingsImportResult, PawnError> {
+        let mut imported_count = 0;
+        let mut skipped_count = 0;
+        let mut error_count = 0;
+        let mut errors = Vec::new();
+        let mut warnings = Vec::new();
+        let mut backup_created = None;
+
+        // Create backup if requested
+        if request.create_backup_before_import.unwrap_or(false) {
+            let backup_data = CreateSettingsBackup {
+                backup_name: format!("Pre-import backup {}", chrono::Utc::now().format("%Y-%m-%d %H:%M:%S")),
+                backup_type: "automatic".to_string(),
+                user_id: request.user_id.clone(),
+                categories: None,
+            };
+            if let Ok(backup) = self.create_settings_backup(backup_data).await {
+                backup_created = Some(backup.backup_name);
+            }
+        }
+
+        let settings_data = match request.format.as_str() {
+            "json" => {
+                serde_json::from_str::<HashMap<String, String>>(&request.data)
+                    .map_err(|e| PawnError::InvalidInput(format!("JSON parsing error: {}", e)))?
+            }
+            "yaml" => {
+                serde_yaml::from_str::<HashMap<String, String>>(&request.data)
+                    .map_err(|e| PawnError::InvalidInput(format!("YAML parsing error: {}", e)))?
+            }
+            _ => {
+                return Err(PawnError::InvalidInput(format!("Unsupported import format: {}", request.format)));
+            }
+        };
+
+        for (setting_key, value) in settings_data {
+            if let Some((category, key)) = setting_key.split_once('.') {
+                let preference_data = CreateUserPreference {
+                    user_id: request.user_id.clone(),
+                    category: category.to_string(),
+                    setting_key: key.to_string(),
+                    setting_value: Some(value),
+                };
+
+                match self.create_user_preference(preference_data).await {
+                    Ok(_) => imported_count += 1,
+                    Err(e) => {
+                        error_count += 1;
+                        errors.push(SettingsImportError {
+                            category: category.to_string(),
+                            setting_key: key.to_string(),
+                            error_type: "validation".to_string(),
+                            message: e.to_string(),
+                            suggested_action: Some("Check setting value format".to_string()),
+                        });
+                    }
+                }
+            } else {
+                warnings.push(format!("Invalid setting key format: {}", setting_key));
+                skipped_count += 1;
+            }
+        }
+
+        Ok(SettingsImportResult {
+            success: errors.is_empty(),
+            imported_count,
+            skipped_count,
+            error_count,
+            warnings,
+            errors,
+            backup_created,
+        })
+    }
+
+    pub async fn apply_settings_template(
+        &self,
+        request: ApplySettingsTemplateRequest,
+    ) -> Result<SettingsTemplateResult, PawnError> {
+        let template = self.get_settings_template(request.template_id).await?
+            .ok_or_else(|| PawnError::NotFound("Settings template not found".to_string()))?;
+
+        let template_data: HashMap<String, String> = serde_json::from_str(&template.template_data)
+            .map_err(|e| PawnError::InvalidInput(format!("Invalid template data: {}", e)))?;
+
+        let mut applied_count = 0;
+        let mut skipped_count = 0;
+        let mut errors = Vec::new();
+        let mut warnings = Vec::new();
+
+        for (setting_key, value) in template_data {
+            if let Some((category, key)) = setting_key.split_once('.') {
+                // Skip if category filter specified and doesn't match
+                if let Some(ref categories) = request.categories {
+                    if !categories.contains(&category.to_string()) {
+                        skipped_count += 1;
+                        continue;
+                    }
+                }
+
+                let preference_data = CreateUserPreference {
+                    user_id: request.user_id.clone(),
+                    category: category.to_string(),
+                    setting_key: key.to_string(),
+                    setting_value: Some(value),
+                };
+
+                if request.override_existing {
+                    // Delete existing preference if it exists
+                    if let Some(ref user_id) = request.user_id {
+                        if let Ok(Some(existing)) = self.get_user_preference(user_id, category, key).await {
+                            let _ = self.delete_user_preference(existing.id).await;
+                        }
+                    }
+                }
+
+                match self.create_user_preference(preference_data).await {
+                    Ok(_) => applied_count += 1,
+                    Err(e) => {
+                        errors.push(format!("Failed to apply {}.{}: {}", category, key, e));
+                    }
+                }
+            } else {
+                warnings.push(format!("Invalid setting key format: {}", setting_key));
+                skipped_count += 1;
+            }
+        }
+
+        Ok(SettingsTemplateResult {
+            success: errors.is_empty(),
+            applied_count,
+            skipped_count,
+            errors,
+            warnings,
+        })
+    }
+
+    pub async fn get_settings_requiring_restart(&self, user_id: &str) -> Result<Vec<String>, PawnError> {
+        let query = r#"
+            SELECT DISTINCT up.category || '.' || up.setting_key as setting_key
+            FROM user_preferences up
+            JOIN application_settings ast ON ast.category = up.category AND ast.setting_key = up.setting_key
+            WHERE up.user_id = ? AND ast.requires_restart = 1
+        "#;
+
+        let rows = sqlx::query(query)
+            .bind(user_id)
+            .fetch_all(self.pool.as_ref())
+            .await?;
+
+        let mut restart_settings = Vec::new();
+        for row in rows {
+            let setting_key: String = row.get("setting_key");
+            restart_settings.push(setting_key);
+        }
+
+        Ok(restart_settings)
+    }
+
+    pub async fn get_settings_backup_history(&self, user_id: &str) -> Result<Vec<SettingsBackupHistory>, PawnError> {
+        let backups = sqlx::query_as::<_, SettingsBackupHistory>(
+            "SELECT * FROM settings_backup_history WHERE user_id = ? ORDER BY created_at DESC",
+        )
+        .bind(user_id)
+        .fetch_all(self.pool.as_ref())
+        .await?;
+
+        Ok(backups)
+    }
+
 }
 
 #[cfg(test)]

@@ -39,7 +39,7 @@ import {
   Info,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import type { PlayerStanding, TiebreakBreakdown } from '../../dto/bindings';
+import type { PlayerStanding, TiebreakBreakdown } from '@dto/bindings';
 import TiebreakBreakdownDialog from '../TiebreakBreakdownDialog';
 
 interface StandingsTableProps {

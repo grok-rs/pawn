@@ -30,12 +30,8 @@ import {
   RadioButtonUnchecked,
   Refresh,
 } from '@mui/icons-material';
-import { commands } from '../../dto/bindings';
-import type {
-  Round,
-  Pairing,
-  StandingsCalculationResult,
-} from '../../dto/bindings';
+import { commands } from '@dto/bindings';
+import type { Round, Pairing, StandingsCalculationResult } from '@dto/bindings';
 import PairingsDisplay from '../PairingsDisplay';
 import { StandingsTable } from '../StandingsTable';
 import { parseBackendError } from '../../utils/errorUtils';

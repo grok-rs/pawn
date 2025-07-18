@@ -35,8 +35,8 @@ import {
   ExitToApp,
   Pause,
 } from '@mui/icons-material';
-import { commands } from '../../dto/bindings';
-import type { Player } from '../../dto/bindings';
+import { commands } from '@dto/bindings';
+import type { Player } from '@dto/bindings';
 
 interface PlayerWithdrawalDialogProps {
   open: boolean;

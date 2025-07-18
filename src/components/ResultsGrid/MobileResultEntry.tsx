@@ -23,13 +23,12 @@ import {
   Save as SaveIcon,
   Warning as WarningIcon,
 } from '@mui/icons-material';
-import { invoke } from '@tauri-apps/api/core';
-
+import { commands } from '@dto/bindings';
 import type {
   GameResult,
   UpdateGameResult,
   GameResultValidation,
-} from '../../dto/bindings';
+} from '@dto/bindings';
 
 interface MobileResultEntryProps {
   tournamentId: number;
@@ -136,18 +135,13 @@ export const MobileResultEntry: React.FC<MobileResultEntryProps> = ({
       // Auto-validate on change
       if (result && result !== '*') {
         try {
-          const validation = await invoke<GameResultValidation>(
-            'plugin:pawn|validate_game_result',
-            {
-              data: {
-                game_id: gameId,
-                result,
-                result_type: resultType,
-                tournament_id: tournamentId,
-                changed_by: 'current_user',
-              },
-            }
-          );
+          const validation = await commands.validateGameResult({
+            game_id: gameId,
+            result,
+            result_type: resultType,
+            tournament_id: tournamentId,
+            changed_by: 'current_user',
+          });
 
           updateResultEntry(gameId, { validation });
 
@@ -177,9 +171,7 @@ export const MobileResultEntry: React.FC<MobileResultEntryProps> = ({
         changed_by: 'current_user',
       };
 
-      await invoke('plugin:pawn|update_game_result', {
-        data: updateData,
-      });
+      await commands.updateGameResult(updateData);
 
       // Mark as saved
       updateResultEntry(currentEntry.gameId, { isModified: false });

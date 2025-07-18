@@ -1,4 +1,4 @@
-import type { PlayerStanding } from '../dto/bindings';
+import type { PlayerStanding } from '@dto/bindings';
 
 export const exportStandingsToCsv = (
   standings: PlayerStanding[],

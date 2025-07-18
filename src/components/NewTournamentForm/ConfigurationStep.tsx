@@ -27,8 +27,8 @@ import {
   PersonAdd,
 } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
-import type { TiebreakType, TimeControlTemplate } from '../../dto/bindings';
-import { commands } from '../../dto/bindings';
+import type { TiebreakType, TimeControlTemplate } from '@dto/bindings';
+import { commands } from '@dto/bindings';
 
 import CustomFormHelperText from '../FormHelperText/FormHelperText';
 import TimeInputWithUnits from '../TimeInputWithUnits/TimeInputWithUnits';

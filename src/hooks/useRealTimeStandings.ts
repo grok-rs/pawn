@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import { commands } from '@dto/bindings';
 import type {
   StandingsCalculationResult,
   StandingsUpdateEvent,
-} from '../dto/bindings';
+} from '@dto/bindings';
 
 interface UseRealTimeStandingsOptions {
   tournamentId: number;
@@ -51,12 +51,9 @@ export const useRealTimeStandings = ({
       setError(null);
 
       try {
-        const command = force
-          ? 'force_recalculate_standings'
-          : 'get_realtime_standings';
-        const result = await invoke<StandingsCalculationResult>(command, {
-          tournamentId,
-        });
+        const result = force
+          ? await commands.forceRecalculateStandings(tournamentId)
+          : await commands.getRealtimeStandings(tournamentId);
 
         setStandings(result);
         setLastUpdated(new Date());
@@ -86,7 +83,7 @@ export const useRealTimeStandings = ({
 
   const clearCache = useCallback(async () => {
     try {
-      await invoke('clear_standings_cache', { tournamentId });
+      await commands.clearStandingsCache(tournamentId);
       // Fetch fresh data after clearing cache
       await fetchStandings(true);
     } catch (err) {
