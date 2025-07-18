@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box,
   Table,
@@ -13,7 +13,6 @@ import {
   FormControl,
   TextField,
   Button,
-  Chip,
   Typography,
   Alert,
   Grid,
@@ -23,11 +22,25 @@ import {
   DialogActions,
   IconButton,
   Tooltip,
+  Card,
+  CardContent,
+  useMediaQuery,
+  useTheme,
+  Menu,
+  Divider,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import {
   Save as SaveIcon,
   Warning as WarningIcon,
   History as HistoryIcon,
+  PhoneAndroid as PhoneIcon,
+  Computer as ComputerIcon,
+  FlashOn as BulkIcon,
+  ExpandMore as ExpandMoreIcon,
+  Clear as ClearIcon,
+  Upload as UploadIcon,
 } from '@mui/icons-material';
 import { invoke } from '@tauri-apps/api/core';
 
@@ -38,6 +51,9 @@ import type {
   BatchValidationResult,
   GameResultAudit,
 } from '../../dto/bindings';
+
+import { MobileResultEntry } from './MobileResultEntry';
+import { CsvImportDialog } from './CsvImportDialog';
 
 interface ResultsGridProps {
   tournamentId: number;
@@ -92,6 +108,19 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [validationResults, setValidationResults] =
     useState<BatchValidationResult | null>(null);
+  const [selectedGameIndex, setSelectedGameIndex] = useState<number>(0);
+  const [keyboardShortcutsEnabled, setKeyboardShortcutsEnabled] =
+    useState(true);
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const [showMobileView, setShowMobileView] = useState(false);
+  const [bulkMenuAnchor, setBulkMenuAnchor] = useState<null | HTMLElement>(
+    null
+  );
+  const [showCsvImport, setShowCsvImport] = useState(false);
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  const theme = useTheme();
+  const isMobileScreen = useMediaQuery(theme.breakpoints.down('lg'));
 
   // Initialize result entries from games
   useEffect(() => {
@@ -283,6 +312,229 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
     }
   }, [resultEntries, tournamentId, onResultsUpdated]);
 
+  // Bulk operations
+  const handleBulkOperation = useCallback(
+    async (
+      operation: 'all_draws' | 'all_ongoing' | 'clear_all' | 'reset_modified'
+    ) => {
+      setBulkMenuAnchor(null);
+
+      switch (operation) {
+        case 'all_draws': {
+          games.forEach(gameResult => {
+            if (gameResult.game.result !== '1/2-1/2') {
+              handleResultChange(gameResult.game.id, '1/2-1/2');
+            }
+          });
+          break;
+        }
+
+        case 'all_ongoing': {
+          games.forEach(gameResult => {
+            if (gameResult.game.result !== '*') {
+              handleResultChange(gameResult.game.id, '*');
+            }
+          });
+          break;
+        }
+
+        case 'clear_all': {
+          games.forEach(gameResult => {
+            if (gameResult.game.result !== '*') {
+              handleResultChange(gameResult.game.id, '*');
+            }
+          });
+          break;
+        }
+
+        case 'reset_modified': {
+          setResultEntries(prev => {
+            const newMap = new Map(prev);
+            Array.from(prev.values())
+              .filter(entry => entry.isModified)
+              .forEach(entry => {
+                const originalGame = games.find(
+                  g => g.game.id === entry.gameId
+                );
+                if (originalGame) {
+                  newMap.set(entry.gameId, {
+                    ...entry,
+                    result: originalGame.game.result,
+                    resultType: originalGame.game.result_type || undefined,
+                    resultReason: originalGame.game.result_reason || undefined,
+                    arbiterNotes: originalGame.game.arbiter_notes || undefined,
+                    isModified: false,
+                    validation: undefined,
+                  });
+                }
+              });
+            return newMap;
+          });
+          break;
+        }
+      }
+    },
+    [games, handleResultChange]
+  );
+
+  // Keyboard shortcuts functionality
+  const handleKeyboardShortcut = useCallback(
+    (key: string) => {
+      if (readOnly || !keyboardShortcutsEnabled || games.length === 0) return;
+
+      const currentGame = games[selectedGameIndex];
+      if (!currentGame) return;
+
+      let result: string | null = null;
+
+      switch (key.toLowerCase()) {
+        case '1':
+          result = '1-0';
+          break;
+        case '0':
+          result = '0-1';
+          break;
+        case '=':
+        case 'equal':
+          result = '1/2-1/2';
+          break;
+        case '*':
+          result = '*';
+          break;
+        case 'f': {
+          // Cycle through forfeit options
+          const currentEntry = resultEntries.get(currentGame.game.id);
+          if (currentEntry?.result === '0-1F') {
+            result = '1-0F';
+          } else {
+            result = '0-1F';
+          }
+          break;
+        }
+        case 'd': {
+          // Cycle through default options
+          const currentEntryD = resultEntries.get(currentGame.game.id);
+          if (currentEntryD?.result === '0-1D') {
+            result = '1-0D';
+          } else {
+            result = '0-1D';
+          }
+          break;
+        }
+        case 'a': {
+          result = 'ADJ';
+          break;
+        }
+        case 't': {
+          // Cycle through timeout options
+          const currentEntryT = resultEntries.get(currentGame.game.id);
+          if (currentEntryT?.result === '0-1T') {
+            result = '1-0T';
+          } else {
+            result = '0-1T';
+          }
+          break;
+        }
+        case 'x': {
+          result = '0-0';
+          break;
+        }
+        case 'c': {
+          result = 'CANC';
+          break;
+        }
+        default:
+          return;
+      }
+
+      if (result) {
+        handleResultChange(currentGame.game.id, result);
+      }
+    },
+    [
+      readOnly,
+      keyboardShortcutsEnabled,
+      games,
+      selectedGameIndex,
+      resultEntries,
+      handleResultChange,
+    ]
+  );
+
+  const navigateGames = useCallback(
+    (direction: 'up' | 'down') => {
+      if (games.length === 0) return;
+
+      if (direction === 'up' && selectedGameIndex > 0) {
+        setSelectedGameIndex(selectedGameIndex - 1);
+      } else if (direction === 'down' && selectedGameIndex < games.length - 1) {
+        setSelectedGameIndex(selectedGameIndex + 1);
+      }
+    },
+    [games.length, selectedGameIndex]
+  );
+
+  // Keyboard event listener
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Don't interfere with typing in input fields
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement ||
+        event.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+
+      // Handle navigation
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        navigateGames('up');
+        return;
+      }
+
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        navigateGames('down');
+        return;
+      }
+
+      // Handle shortcuts with Ctrl/Cmd modifier for safety
+      if (event.ctrlKey || event.metaKey) {
+        switch (event.key) {
+          case 's':
+            event.preventDefault();
+            handleSaveAll();
+            break;
+          case 'Enter':
+            event.preventDefault();
+            batchValidate();
+            break;
+          case '?':
+            event.preventDefault();
+            setShowKeyboardHelp(!showKeyboardHelp);
+            break;
+        }
+        return;
+      }
+
+      // Handle result shortcuts
+      handleKeyboardShortcut(event.key);
+    };
+
+    if (keyboardShortcutsEnabled) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [
+    keyboardShortcutsEnabled,
+    navigateGames,
+    handleKeyboardShortcut,
+    handleSaveAll,
+    batchValidate,
+    showKeyboardHelp,
+  ]);
+
   const handleShowAuditTrail = useCallback(async (gameId: number) => {
     try {
       const trail = await invoke<GameResultAudit[]>(
@@ -303,6 +555,18 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
     entry => entry.isModified
   ).length;
   const hasErrors = validationResults && !validationResults.overall_valid;
+
+  // Show mobile view if enabled or on mobile screen
+  if (showMobileView || (isMobileScreen && !readOnly)) {
+    return (
+      <MobileResultEntry
+        tournamentId={tournamentId}
+        games={games}
+        onResultsUpdated={onResultsUpdated}
+        onClose={() => setShowMobileView(false)}
+      />
+    );
+  }
 
   return (
     <Box>
@@ -334,6 +598,117 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                 Save All ({modifiedCount})
               </Button>
             </Grid>
+            <Grid item>
+              <Button
+                variant="outlined"
+                startIcon={<BulkIcon />}
+                endIcon={<ExpandMoreIcon />}
+                onClick={e => setBulkMenuAnchor(e.currentTarget)}
+                disabled={games.length === 0}
+              >
+                Bulk Operations
+              </Button>
+              <Menu
+                anchorEl={bulkMenuAnchor}
+                open={Boolean(bulkMenuAnchor)}
+                onClose={() => setBulkMenuAnchor(null)}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'left',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'left',
+                }}
+              >
+                <MenuItem
+                  onClick={() => handleBulkOperation('all_draws')}
+                  disabled={games.length === 0}
+                >
+                  <ListItemIcon>
+                    <BulkIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Set All Draws"
+                    secondary="Mark all games as ½-½"
+                  />
+                </MenuItem>
+                <MenuItem
+                  onClick={() => handleBulkOperation('all_ongoing')}
+                  disabled={games.length === 0}
+                >
+                  <ListItemIcon>
+                    <BulkIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Set All Ongoing"
+                    secondary="Mark all games as *"
+                  />
+                </MenuItem>
+                <Divider />
+                <MenuItem
+                  onClick={() => {
+                    setBulkMenuAnchor(null);
+                    setShowCsvImport(true);
+                  }}
+                >
+                  <ListItemIcon>
+                    <UploadIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Import from CSV"
+                    secondary="Upload CSV file with results"
+                  />
+                </MenuItem>
+                <Divider />
+                <MenuItem
+                  onClick={() => handleBulkOperation('reset_modified')}
+                  disabled={modifiedCount === 0}
+                >
+                  <ListItemIcon>
+                    <ClearIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Reset Changes"
+                    secondary={`Reset ${modifiedCount} modified games`}
+                  />
+                </MenuItem>
+              </Menu>
+            </Grid>
+            <Grid item>
+              <Button
+                variant="outlined"
+                onClick={() => setShowKeyboardHelp(!showKeyboardHelp)}
+                size="small"
+              >
+                Shortcuts (Ctrl+?)
+              </Button>
+            </Grid>
+            <Grid item>
+              <FormControl>
+                <Button
+                  variant={keyboardShortcutsEnabled ? 'contained' : 'outlined'}
+                  onClick={() =>
+                    setKeyboardShortcutsEnabled(!keyboardShortcutsEnabled)
+                  }
+                  size="small"
+                  color={keyboardShortcutsEnabled ? 'primary' : 'inherit'}
+                >
+                  {keyboardShortcutsEnabled ? 'Shortcuts ON' : 'Shortcuts OFF'}
+                </Button>
+              </FormControl>
+            </Grid>
+            <Grid item>
+              <Button
+                variant={showMobileView ? 'contained' : 'outlined'}
+                onClick={() => setShowMobileView(!showMobileView)}
+                size="small"
+                startIcon={showMobileView ? <PhoneIcon /> : <ComputerIcon />}
+                color={showMobileView ? 'primary' : 'inherit'}
+              >
+                {showMobileView ? 'Mobile' : 'Desktop'}
+              </Button>
+            </Grid>
           </>
         )}
       </Grid>
@@ -345,7 +720,66 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
         </Alert>
       )}
 
-      <TableContainer component={Paper}>
+      {showKeyboardHelp && !readOnly && (
+        <Card sx={{ mb: 2 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Keyboard Shortcuts
+            </Typography>
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Result Entry
+                </Typography>
+                <Typography variant="body2" component="div">
+                  <strong>1</strong> - White wins (1-0)
+                  <br />
+                  <strong>0</strong> - Black wins (0-1)
+                  <br />
+                  <strong>=</strong> - Draw (½-½)
+                  <br />
+                  <strong>*</strong> - Game ongoing
+                  <br />
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Special Results
+                </Typography>
+                <Typography variant="body2" component="div">
+                  <strong>F</strong> - Forfeit (toggles white/black)
+                  <br />
+                  <strong>D</strong> - Default (toggles white/black)
+                  <br />
+                  <strong>T</strong> - Timeout (toggles white/black)
+                  <br />
+                  <strong>A</strong> - Adjourned
+                  <br />
+                  <strong>X</strong> - Double forfeit
+                  <br />
+                  <strong>C</strong> - Cancelled
+                  <br />
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Navigation
+                </Typography>
+                <Typography variant="body2" component="div">
+                  <strong>↑/↓</strong> - Navigate games
+                  <br />
+                  <strong>Ctrl+S</strong> - Save all
+                  <br />
+                  <strong>Ctrl+Enter</strong> - Validate all
+                  <br />
+                </Typography>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+
+      <TableContainer component={Paper} ref={tableRef}>
         <Table size="small">
           <TableHead>
             <TableRow>
@@ -364,13 +798,33 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
               const entry = resultEntries.get(gameResult.game.id);
               if (!entry) return null;
 
-              return (
-                <TableRow key={gameResult.game.id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{gameResult.white_player.name}</TableCell>
-                  <TableCell>{gameResult.black_player.name}</TableCell>
+              const isSelected =
+                !readOnly &&
+                keyboardShortcutsEnabled &&
+                index === selectedGameIndex;
 
-                  <TableCell>
+              return (
+                <TableRow
+                  key={gameResult.game.id}
+                  sx={{
+                    backgroundColor: isSelected ? 'primary.main' : 'inherit',
+                    color: isSelected ? 'primary.contrastText' : 'inherit',
+                    '&:hover': {
+                      backgroundColor: isSelected ? 'primary.dark' : 'grey.100',
+                    },
+                    cursor: !readOnly ? 'pointer' : 'default',
+                  }}
+                  onClick={() => !readOnly && setSelectedGameIndex(index)}
+                >
+                  <TableCell sx={{ color: 'inherit' }}>{index + 1}</TableCell>
+                  <TableCell sx={{ color: 'inherit' }}>
+                    {gameResult.white_player.name}
+                  </TableCell>
+                  <TableCell sx={{ color: 'inherit' }}>
+                    {gameResult.black_player.name}
+                  </TableCell>
+
+                  <TableCell sx={{ color: 'inherit' }}>
                     {readOnly ? (
                       entry.result
                     ) : (
@@ -383,6 +837,13 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                               e.target.value
                             )
                           }
+                          sx={{
+                            '& .MuiSelect-select': {
+                              color: isSelected
+                                ? 'primary.contrastText'
+                                : 'inherit',
+                            },
+                          }}
                         >
                           {RESULT_OPTIONS.map(option => (
                             <MenuItem key={option.value} value={option.value}>
@@ -395,7 +856,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                   </TableCell>
 
                   {!readOnly && (
-                    <TableCell>
+                    <TableCell sx={{ color: 'inherit' }}>
                       <FormControl size="small" fullWidth>
                         <Select
                           value={entry.resultType || ''}
@@ -406,6 +867,13 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                             )
                           }
                           displayEmpty
+                          sx={{
+                            '& .MuiSelect-select': {
+                              color: isSelected
+                                ? 'primary.contrastText'
+                                : 'inherit',
+                            },
+                          }}
                         >
                           <MenuItem value="">Standard</MenuItem>
                           <MenuItem value="white_forfeit">
@@ -432,7 +900,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                   )}
 
                   {!readOnly && (
-                    <TableCell>
+                    <TableCell sx={{ color: 'inherit' }}>
                       <TextField
                         size="small"
                         fullWidth
@@ -443,11 +911,18 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                             resultReason: e.target.value,
                           })
                         }
+                        sx={{
+                          '& .MuiInputBase-input': {
+                            color: isSelected
+                              ? 'primary.contrastText'
+                              : 'inherit',
+                          },
+                        }}
                       />
                     </TableCell>
                   )}
 
-                  <TableCell>
+                  <TableCell sx={{ color: 'inherit' }}>
                     <Box display="flex" gap={1} alignItems="center">
                       {entry.isModified && (
                         <Chip label="Modified" size="small" color="warning" />
@@ -474,11 +949,14 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                     </Box>
                   </TableCell>
 
-                  <TableCell>
+                  <TableCell sx={{ color: 'inherit' }}>
                     <IconButton
                       size="small"
                       onClick={() => handleShowAuditTrail(gameResult.game.id)}
                       title="View audit trail"
+                      sx={{
+                        color: isSelected ? 'primary.contrastText' : 'inherit',
+                      }}
                     >
                       <HistoryIcon />
                     </IconButton>
@@ -542,6 +1020,19 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
           <Button onClick={() => setIsAuditDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
+
+      {/* CSV Import Dialog */}
+      <CsvImportDialog
+        open={showCsvImport}
+        onClose={() => setShowCsvImport(false)}
+        tournamentId={tournamentId}
+        onImportComplete={() => {
+          setShowCsvImport(false);
+          if (onResultsUpdated) {
+            onResultsUpdated();
+          }
+        }}
+      />
     </Box>
   );
 };

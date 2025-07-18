@@ -128,6 +128,43 @@ pub struct BatchValidationResult {
     pub results: Vec<(usize, GameResultValidation)>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct CsvResultImport {
+    pub tournament_id: i32,
+    pub csv_content: String,
+    pub validate_only: bool,
+    pub changed_by: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct CsvResultRow {
+    pub board_number: Option<i32>,
+    pub white_player: Option<String>,
+    pub black_player: Option<String>,
+    pub result: String,
+    pub result_type: Option<String>,
+    pub result_reason: Option<String>,
+    pub row_number: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct CsvImportResult {
+    pub success: bool,
+    pub total_rows: usize,
+    pub valid_rows: usize,
+    pub processed_rows: usize,
+    pub errors: Vec<CsvImportError>,
+    pub warnings: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct CsvImportError {
+    pub row_number: usize,
+    pub field: Option<String>,
+    pub message: String,
+    pub row_data: String,
+}
+
 // Enhanced Player Management DTOs
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]

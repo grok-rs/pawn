@@ -65,6 +65,7 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::game_result::approve_game_result,
             command::game_result::get_pending_approvals,
             command::game_result::get_game_result_types,
+            command::game_result::import_results_csv,
             // Enhanced Player Management Commands
             command::player::create_player_enhanced,
             command::player::update_player,
