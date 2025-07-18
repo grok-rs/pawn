@@ -168,33 +168,10 @@ pub async fn analyze_swiss_pairings(
     round_number: i32,
     options: SwissPairingOptions,
 ) -> CommandResult<SwissPairingAnalysis> {
-    // TODO: Implement Swiss pairing analysis using SwissPairingEngine
-    // This would analyze score groups, floats, color balance, and rating distribution
-
-    let _ = (state, tournament_id, round_number, options); // Suppress unused warnings
-
-    // Placeholder implementation
-    Ok(SwissPairingAnalysis {
-        score_groups: vec![],
-        float_statistics: crate::pawn::domain::dto::FloatStatisticsDto {
-            total_floats: 0,
-            up_floats: 0,
-            down_floats: 0,
-            float_percentage: 0.0,
-        },
-        color_balance_analysis: crate::pawn::domain::dto::ColorBalanceAnalysisDto {
-            players_with_color_imbalance: 0,
-            average_color_balance: 0.0,
-            players_needing_white: 0,
-            players_needing_black: 0,
-        },
-        rating_distribution: crate::pawn::domain::dto::RatingDistributionDto {
-            average_rating_difference: 0.0,
-            max_rating_difference: 0.0,
-            min_rating_difference: 0.0,
-            pairs_with_large_rating_gap: 0,
-        },
-    })
+    state
+        .swiss_analysis_service
+        .analyze_swiss_pairings(tournament_id, round_number, options)
+        .await
 }
 
 #[instrument(ret, skip(state))]
@@ -206,18 +183,10 @@ pub async fn analyze_round_robin_pairings(
     round_number: i32,
     options: RoundRobinOptions,
 ) -> CommandResult<RoundRobinAnalysis> {
-    // TODO: Implement Round-Robin analysis using RoundRobinEngine
-    // This would analyze Berger tables, color distribution, and progress
-
-    let _ = (state, tournament_id, round_number, options); // Suppress unused warnings
-
-    // Placeholder implementation
-    Ok(RoundRobinAnalysis {
-        total_rounds_needed: 0,
-        current_progress: 0.0,
-        berger_table_info: None,
-        color_distribution: vec![],
-    })
+    state
+        .round_robin_analysis_service
+        .analyze_round_robin_pairings(tournament_id, round_number, options)
+        .await
 }
 
 #[instrument(ret, skip(state))]

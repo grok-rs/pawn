@@ -119,9 +119,13 @@ pub enum TournamentStatus {
 
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum RoundStatus {
-    Upcoming,
-    InProgress,
-    Completed,
+    Planned,     // Round scheduled but not started
+    Pairing,     // Actively generating pairings
+    Published,   // Pairings complete and published
+    InProgress,  // Games being played
+    Finishing,   // Some games complete, waiting for others
+    Completed,   // All results entered
+    Verified,    // Results confirmed by arbiter
 }
 
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
@@ -255,19 +259,78 @@ impl GameResultType {
 impl RoundStatus {
     pub fn from_str(s: &str) -> Self {
         match s {
-            "upcoming" => RoundStatus::Upcoming,
+            "planned" => RoundStatus::Planned,
+            "pairing" => RoundStatus::Pairing,
+            "published" => RoundStatus::Published,
             "in_progress" => RoundStatus::InProgress,
+            "finishing" => RoundStatus::Finishing,
             "completed" => RoundStatus::Completed,
-            _ => RoundStatus::Upcoming,
+            "verified" => RoundStatus::Verified,
+            // Backward compatibility
+            "upcoming" => RoundStatus::Planned,
+            _ => RoundStatus::Planned,
         }
     }
 
     pub fn to_str(&self) -> &'static str {
         match self {
-            RoundStatus::Upcoming => "upcoming",
+            RoundStatus::Planned => "planned",
+            RoundStatus::Pairing => "pairing",
+            RoundStatus::Published => "published",
             RoundStatus::InProgress => "in_progress",
+            RoundStatus::Finishing => "finishing",
             RoundStatus::Completed => "completed",
+            RoundStatus::Verified => "verified",
         }
+    }
+
+    pub fn can_transition_to(&self, new_status: &RoundStatus) -> bool {
+        match (self, new_status) {
+            // Forward transitions
+            (RoundStatus::Planned, RoundStatus::Pairing) => true,
+            (RoundStatus::Pairing, RoundStatus::Published) => true,
+            (RoundStatus::Published, RoundStatus::InProgress) => true,
+            (RoundStatus::InProgress, RoundStatus::Finishing) => true,
+            (RoundStatus::Finishing, RoundStatus::Completed) => true,
+            (RoundStatus::Completed, RoundStatus::Verified) => true,
+            
+            // Direct transitions for simpler workflows
+            (RoundStatus::Planned, RoundStatus::Published) => true,  // Skip pairing step
+            (RoundStatus::Published, RoundStatus::Completed) => true, // Skip in_progress for quick entry
+            (RoundStatus::InProgress, RoundStatus::Completed) => true, // All games finished quickly
+            
+            // Backward transitions for corrections
+            (RoundStatus::Published, RoundStatus::Pairing) => true,   // Re-generate pairings
+            (RoundStatus::InProgress, RoundStatus::Published) => true, // Reopen before start
+            (RoundStatus::Finishing, RoundStatus::InProgress) => true, // Reopen game
+            (RoundStatus::Completed, RoundStatus::Finishing) => true,  // Reopen result
+            (RoundStatus::Verified, RoundStatus::Completed) => true,   // Unverify for changes
+            
+            // Same status (no-op)
+            (a, b) if a == b => true,
+            
+            _ => false,
+        }
+    }
+
+    pub fn is_active(&self) -> bool {
+        matches!(self, RoundStatus::InProgress | RoundStatus::Finishing)
+    }
+
+    pub fn is_final(&self) -> bool {
+        matches!(self, RoundStatus::Completed | RoundStatus::Verified)
+    }
+
+    pub fn can_generate_pairings(&self) -> bool {
+        matches!(self, RoundStatus::Planned | RoundStatus::Pairing)
+    }
+
+    pub fn can_start_games(&self) -> bool {
+        matches!(self, RoundStatus::Published)
+    }
+
+    pub fn can_enter_results(&self) -> bool {
+        matches!(self, RoundStatus::InProgress | RoundStatus::Finishing)
     }
 }
 

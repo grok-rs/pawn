@@ -74,17 +74,67 @@ impl<D: Db> RoundService<D> {
     }
 
     pub async fn update_round_status(&self, data: UpdateRoundStatus) -> Result<Round, PawnError> {
-        // Validate status
-        let status = RoundStatus::from_str(&data.status);
+        // Get current round to validate state transition
+        let current_round = self
+            .db
+            .get_round(data.round_id)
+            .await
+            .map_err(PawnError::Database)?;
+
+        let current_status = RoundStatus::from_str(&current_round.status);
+        let new_status = RoundStatus::from_str(&data.status);
+
+        // Validate state transition
+        if !current_status.can_transition_to(&new_status) {
+            return Err(PawnError::InvalidInput(format!(
+                "Cannot transition round from {} to {}",
+                current_status.to_str(),
+                new_status.to_str()
+            )));
+        }
+
+        // Additional validations based on new status
+        match new_status {
+            RoundStatus::InProgress => {
+                // Ensure pairings exist before starting round
+                let games = self
+                    .db
+                    .get_games_by_round(current_round.tournament_id, current_round.round_number)
+                    .await
+                    .map_err(PawnError::Database)?;
+                
+                if games.is_empty() {
+                    return Err(PawnError::InvalidInput(
+                        "Cannot start round: no pairings/games exist".into()
+                    ));
+                }
+            }
+            RoundStatus::Completed => {
+                // Ensure all games are finished before completing round
+                let games = self
+                    .db
+                    .get_games_by_round(current_round.tournament_id, current_round.round_number)
+                    .await
+                    .map_err(PawnError::Database)?;
+
+                let incomplete_games = games.iter().filter(|game| game.game.result == "*").count();
+                if incomplete_games > 0 {
+                    return Err(PawnError::InvalidInput(format!(
+                        "Cannot complete round: {incomplete_games} games are still in progress"
+                    )));
+                }
+            }
+            _ => {} // No additional validation needed
+        }
 
         let round = self
             .db
-            .update_round_status(data.round_id, status.to_str())
+            .update_round_status(data.round_id, new_status.to_str())
             .await
             .map_err(PawnError::Database)?;
 
         // If completing the round, update tournament current_round
-        if status == RoundStatus::Completed {
+        if new_status == RoundStatus::Completed {
             // This is handled by the database trigger, but we could add additional logic here
         }
 
@@ -347,28 +397,7 @@ impl<D: Db> RoundService<D> {
     }
 
     pub async fn complete_round(&self, round_id: i32) -> Result<Round, PawnError> {
-        // Get round details
-        let round = self
-            .db
-            .get_round(round_id)
-            .await
-            .map_err(PawnError::Database)?;
-
-        // Check if all games in the round are completed (no "*" results)
-        let games = self
-            .db
-            .get_games_by_round(round.tournament_id, round.round_number)
-            .await
-            .map_err(PawnError::Database)?;
-
-        let incomplete_games = games.iter().filter(|game| game.game.result == "*").count();
-        if incomplete_games > 0 {
-            return Err(PawnError::InvalidInput(format!(
-                "Cannot complete round: {incomplete_games} games are still in progress"
-            )));
-        }
-
-        // Update round status to completed
+        // Use the enhanced state machine validation in update_round_status
         self.update_round_status(UpdateRoundStatus {
             round_id,
             status: RoundStatus::Completed.to_str().to_string(),

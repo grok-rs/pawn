@@ -6,7 +6,8 @@ use tracing::info;
 use super::{
     db::sqlite::SqliteDb,
     service::{
-        player::PlayerService, round::RoundService, tiebreak::TiebreakCalculator,
+        player::PlayerService, round::RoundService, round_robin_analysis::RoundRobinAnalysisService,
+        swiss_analysis::SwissAnalysisService, tiebreak::TiebreakCalculator,
         time_control::TimeControlService, tournament::TournamentService,
     },
 };
@@ -20,6 +21,8 @@ pub struct State<D> {
     pub round_service: Arc<RoundService<D>>,
     pub player_service: Arc<PlayerService<D>>,
     pub time_control_service: Arc<TimeControlService<D>>,
+    pub swiss_analysis_service: Arc<SwissAnalysisService<D>>,
+    pub round_robin_analysis_service: Arc<RoundRobinAnalysisService<D>>,
 }
 
 pub type PawnState = State<SqliteDb>;
@@ -56,6 +59,8 @@ impl PawnState {
         let round_service = Arc::new(RoundService::new(Arc::clone(&sqlite)));
         let player_service = Arc::new(PlayerService::new(Arc::clone(&sqlite)));
         let time_control_service = Arc::new(TimeControlService::new(Arc::clone(&sqlite)));
+        let swiss_analysis_service = Arc::new(SwissAnalysisService::new(Arc::clone(&sqlite)));
+        let round_robin_analysis_service = Arc::new(RoundRobinAnalysisService::new(Arc::clone(&sqlite)));
 
         Self {
             app_data_dir,
@@ -65,6 +70,8 @@ impl PawnState {
             round_service,
             player_service,
             time_control_service,
+            swiss_analysis_service,
+            round_robin_analysis_service,
         }
     }
 }
