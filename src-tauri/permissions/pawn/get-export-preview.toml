@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-export-preview"
+description = "Allows getting export preview"
+commands.allow = ["get_export_preview"]
+
+[[permission]]
+identifier = "deny-get-export-preview"
+description = "Denies the get-export-preview command"
+commands.deny = ["get_export_preview"]

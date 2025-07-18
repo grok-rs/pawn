@@ -65,6 +65,7 @@ import { ResultsGrid } from '../../components/ResultsGrid';
 import { exportStandingsToCsv, exportStandingsToPdf } from '../../utils/export';
 import TournamentSettings from './TournamentSettings';
 import PlayerManagement from '../../components/PlayerManagement';
+import ExportDialog from '../../components/ExportDialog';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -111,6 +112,7 @@ const TournamentInfoPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
   const [hasMockData, setHasMockData] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -809,6 +811,15 @@ const TournamentInfoPage: React.FC = () => {
             <Print fontSize="small" sx={{ mr: 1 }} />
             {t('tournament.menuPrintReport')}
           </MenuItem>
+          <MenuItem
+            onClick={() => {
+              handleMenuClose();
+              setExportDialogOpen(true);
+            }}
+          >
+            <Download fontSize="small" sx={{ mr: 1 }} />
+            Export Tournament Data
+          </MenuItem>
           <MenuItem onClick={handleMenuClose}>
             <Share fontSize="small" sx={{ mr: 1 }} />
             {t('tournament.menuShareTournament')}
@@ -864,6 +875,16 @@ const TournamentInfoPage: React.FC = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Export Dialog */}
+        {tournamentDetails && (
+          <ExportDialog
+            open={exportDialogOpen}
+            onClose={() => setExportDialogOpen(false)}
+            tournamentId={tournamentDetails.tournament.id}
+            tournamentName={tournamentDetails.tournament.name}
+          />
+        )}
       </Box>
     </BaseLayout>
   );

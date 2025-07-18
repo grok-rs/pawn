@@ -46,6 +46,28 @@ pub enum PawnError {
     #[error("Validation error: {0}")]
     /// Represents validation errors for game results.
     ValidationError(String),
+    
+    #[error("PDF generation error: {0}")]
+    /// Represents PDF generation errors.
+    PdfError(String),
+    
+    #[error("Excel generation error: {0}")]
+    /// Represents Excel generation errors.
+    ExcelError(String),
+}
+
+// PDF error conversions
+impl From<printpdf::Error> for PawnError {
+    fn from(err: printpdf::Error) -> Self {
+        PawnError::PdfError(err.to_string())
+    }
+}
+
+// Excel error conversions
+impl From<rust_xlsxwriter::XlsxError> for PawnError {
+    fn from(err: rust_xlsxwriter::XlsxError) -> Self {
+        PawnError::ExcelError(err.to_string())
+    }
 }
 
 impl specta::NamedType for PawnError {
@@ -170,6 +192,14 @@ impl Serialize for PawnError {
             },
             Self::ValidationError(_) => TxErrorKind::ValidationError {
                 message: "Validation failed".to_string(),
+                details: error_message,
+            },
+            Self::PdfError(_) => TxErrorKind::ValidationError {
+                message: "PDF generation failed".to_string(),
+                details: error_message,
+            },
+            Self::ExcelError(_) => TxErrorKind::ValidationError {
+                message: "Excel generation failed".to_string(),
                 details: error_message,
             },
         };

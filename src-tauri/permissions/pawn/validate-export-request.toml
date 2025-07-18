@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-validate-export-request"
+description = "Allows validating export requests"
+commands.allow = ["validate_export_request"]
+
+[[permission]]
+identifier = "deny-validate-export-request"
+description = "Denies the validate-export-request command"
+commands.deny = ["validate_export_request"]

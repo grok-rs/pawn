@@ -78,6 +78,12 @@
     "pawn:allow-update-time-control",
     "pawn:allow-delete-time-control",
     "pawn:allow-get-time-control-templates",
-    "pawn:allow-validate-time-control-data"
+    "pawn:allow-validate-time-control-data",
+    "pawn:allow-export-tournament-data",
+    "pawn:allow-get-export-directory",
+    "pawn:allow-get-available-export-formats",
+    "pawn:allow-get-export-templates",
+    "pawn:allow-validate-export-request",
+    "pawn:allow-get-export-preview"
   ]
 }

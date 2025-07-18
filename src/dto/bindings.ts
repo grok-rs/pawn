@@ -58,6 +58,36 @@ export const commands = {
       tournamentId,
     });
   },
+  async getTiebreakBreakdown(
+    tournamentId: number,
+    playerId: number,
+    tiebreakType: TiebreakType
+  ): Promise<TiebreakBreakdown> {
+    return await TAURI_INVOKE('plugin:pawn|get_tiebreak_breakdown', {
+      tournamentId,
+      playerId,
+      tiebreakType,
+    });
+  },
+  async getRealtimeStandings(
+    tournamentId: number
+  ): Promise<StandingsCalculationResult> {
+    return await TAURI_INVOKE('plugin:pawn|get_realtime_standings', {
+      tournamentId,
+    });
+  },
+  async forceRecalculateStandings(
+    tournamentId: number
+  ): Promise<StandingsCalculationResult> {
+    return await TAURI_INVOKE('plugin:pawn|force_recalculate_standings', {
+      tournamentId,
+    });
+  },
+  async clearStandingsCache(tournamentId: number): Promise<null> {
+    return await TAURI_INVOKE('plugin:pawn|clear_standings_cache', {
+      tournamentId,
+    });
+  },
   async getTournamentSettings(
     tournamentId: number
   ): Promise<TournamentTiebreakConfig> {
@@ -444,6 +474,85 @@ export const commands = {
       tournamentId,
     });
   },
+  async exportTournamentData(request: ExportRequest): Promise<ExportResult> {
+    return await TAURI_INVOKE('plugin:pawn|export_tournament_data', {
+      request,
+    });
+  },
+  async getExportDirectory(): Promise<string> {
+    return await TAURI_INVOKE('plugin:pawn|get_export_directory');
+  },
+  async getAvailableExportFormats(): Promise<string[]> {
+    return await TAURI_INVOKE('plugin:pawn|get_available_export_formats');
+  },
+  async getExportTemplates(): Promise<string[]> {
+    return await TAURI_INVOKE('plugin:pawn|get_export_templates');
+  },
+  async validateExportRequest(request: ExportRequest): Promise<boolean> {
+    return await TAURI_INVOKE('plugin:pawn|validate_export_request', {
+      request,
+    });
+  },
+  async getExportPreview(request: ExportRequest): Promise<string> {
+    return await TAURI_INVOKE('plugin:pawn|get_export_preview', { request });
+  },
+  async calculateNorm(
+    request: NormCalculationRequest
+  ): Promise<NormCalculationResult> {
+    return await TAURI_INVOKE('plugin:pawn|calculate_norm', { request });
+  },
+  async calculateAvailableNorms(
+    tournamentId: number,
+    playerId: number
+  ): Promise<NormCalculationResult[]> {
+    return await TAURI_INVOKE('plugin:pawn|calculate_available_norms', {
+      tournamentId,
+      playerId,
+    });
+  },
+  async getNormTypes(): Promise<NormType[]> {
+    return await TAURI_INVOKE('plugin:pawn|get_norm_types');
+  },
+  async getNormRequirements(
+    normType: NormType
+  ): Promise<[number, number, number]> {
+    return await TAURI_INVOKE('plugin:pawn|get_norm_requirements', {
+      normType,
+    });
+  },
+  async calculatePrizeDistribution(
+    request: PrizeDistributionRequest
+  ): Promise<PrizeDistributionResult> {
+    return await TAURI_INVOKE('plugin:pawn|calculate_prize_distribution', {
+      request,
+    });
+  },
+  async getTournamentNormsSummary(
+    tournamentId: number
+  ): Promise<[number, string, NormCalculationResult[]][]> {
+    return await TAURI_INVOKE('plugin:pawn|get_tournament_norms_summary', {
+      tournamentId,
+    });
+  },
+  async getPrizeDistributionTemplates(): Promise<string[]> {
+    return await TAURI_INVOKE('plugin:pawn|get_prize_distribution_templates');
+  },
+  async validatePrizeDistribution(
+    request: PrizeDistributionRequest
+  ): Promise<string[]> {
+    return await TAURI_INVOKE('plugin:pawn|validate_prize_distribution', {
+      request,
+    });
+  },
+  async exportNormsReport(
+    tournamentId: number,
+    format: string
+  ): Promise<string> {
+    return await TAURI_INVOKE('plugin:pawn|export_norms_report', {
+      tournamentId,
+      format,
+    });
+  },
 };
 
 /** user-defined events **/
@@ -452,6 +561,11 @@ export const commands = {
 
 /** user-defined types **/
 
+export type AgeGroupPrize = {
+  age_group: string;
+  percentage: number;
+  description: string;
+};
 export type ApproveGameResult = {
   game_id: number;
   approved_by: string;
@@ -519,6 +633,7 @@ export type ColorConstraintDto = {
   required_color: string;
   priority: string;
 };
+export type ColorScheme = 'Default' | 'Professional' | 'Minimal' | 'Classic';
 export type CreateGame = {
   tournament_id: number;
   round_number: number;
@@ -608,6 +723,12 @@ export type CsvResultImport = {
   validate_only: boolean;
   changed_by: string | null;
 };
+export type DistributionMethod =
+  | 'TiedPlayersShareEqually'
+  | 'TiedPlayersGetFullPrize'
+  | 'TiedPlayersGetHighestPrize'
+  | 'TiedPlayersGetLowestPrize'
+  | 'TiebreakDeterminesWinner';
 export type EnhancedGameResult = {
   game: Game;
   white_player: Player;
@@ -630,12 +751,49 @@ export type EnhancedPairingResult = {
   performance_metrics: PairingPerformanceMetrics | null;
   warnings: string[];
 };
+export type ExportFormat = 'Csv' | 'Pdf' | 'Html' | 'Json' | 'Xlsx' | 'Txt';
+export type ExportRequest = {
+  tournament_id: number;
+  export_type: ExportType;
+  format: ExportFormat;
+  include_tiebreaks: boolean;
+  include_cross_table: boolean;
+  include_game_results: boolean;
+  include_player_details: boolean;
+  custom_filename: string | null;
+  template_options: ExportTemplateOptions | null;
+};
+export type ExportResult = {
+  success: boolean;
+  file_path: string | null;
+  file_name: string;
+  file_size: number;
+  export_time_ms: number;
+  error_message: string | null;
+};
+export type ExportTemplateOptions = {
+  include_header: boolean;
+  include_footer: boolean;
+  show_logos: boolean;
+  paper_size: PaperSize;
+  orientation: PageOrientation;
+  font_size: FontSize;
+  color_scheme: ColorScheme;
+};
+export type ExportType =
+  | 'Standings'
+  | 'CrossTable'
+  | 'GameResults'
+  | 'PlayerList'
+  | 'TournamentSummary'
+  | 'Complete';
 export type FloatStatisticsDto = {
   total_floats: number;
   up_floats: number;
   down_floats: number;
   float_percentage: number;
 };
+export type FontSize = 'Small' | 'Medium' | 'Large';
 export type ForbiddenPairingDto = {
   player1_id: number;
   player2_id: number;
@@ -714,6 +872,55 @@ export type ManualPairingOverrides = {
   color_constraints: ColorConstraintDto[];
   bye_assignments: number[];
 };
+export type NormCalculationRequest = {
+  tournament_id: number;
+  player_id: number;
+  norm_type: NormType;
+  tournament_category: number | null;
+  games_played: number;
+  points_scored: number;
+  performance_rating: number | null;
+};
+export type NormCalculationResult = {
+  norm_type: NormType;
+  achieved: boolean;
+  performance_rating: number;
+  required_performance_rating: number;
+  games_played: number;
+  minimum_games: number;
+  points_scored: number;
+  score_percentage: number;
+  minimum_score_percentage: number;
+  tournament_category: number | null;
+  requirements_met: NormRequirements;
+  missing_requirements: string[];
+  additional_info: string;
+};
+export type NormRequirements = {
+  performance_rating_met: boolean;
+  minimum_games_met: boolean;
+  minimum_score_met: boolean;
+  tournament_category_adequate: boolean;
+  opponent_diversity_met: boolean;
+};
+export type NormType =
+  | 'Grandmaster'
+  | 'InternationalMaster'
+  | 'FideMaster'
+  | 'CandidateMaster'
+  | 'WomanGrandmaster'
+  | 'WomanInternationalMaster'
+  | 'WomanFideMaster'
+  | 'WomanCandidateMaster';
+export type OpponentContribution = {
+  opponent_id: number;
+  opponent_name: string;
+  opponent_rating: number | null;
+  contribution_value: number;
+  game_result: string | null;
+  explanation: string;
+};
+export type PageOrientation = 'Portrait' | 'Landscape';
 export type Pairing = {
   white_player: Player;
   black_player: Player | null;
@@ -759,6 +966,7 @@ export type PairingWarningDto = {
   message: string;
   affected_players: number[];
 };
+export type PaperSize = 'A4' | 'A5' | 'Letter' | 'Legal';
 export type Player = {
   id: number;
   tournament_id: number;
@@ -851,11 +1059,54 @@ export type PlayerStatistics = {
   average_rating: number;
   titled_players: number;
 };
+export type PrizeAward = {
+  player: Player;
+  rank: number;
+  points: number;
+  prize_amount: number;
+  prize_description: string;
+  shared_with: number[];
+  prize_categories: string[];
+};
+export type PrizeDistributionRequest = {
+  tournament_id: number;
+  prize_structure: PrizeStructure;
+  currency: string;
+  total_prize_fund: number;
+  distribution_method: DistributionMethod;
+  special_prizes: SpecialPrize[];
+};
+export type PrizeDistributionResult = {
+  tournament_id: number;
+  prize_awards: PrizeAward[];
+  total_distributed: number;
+  currency: string;
+  distribution_summary: string;
+  special_awards: SpecialAward[];
+};
+export type PrizePlace = {
+  place: number;
+  percentage: number;
+  description: string;
+};
+export type PrizeStructure = {
+  first_place_percentage: number;
+  second_place_percentage: number;
+  third_place_percentage: number;
+  additional_places: PrizePlace[];
+  age_group_prizes: AgeGroupPrize[];
+  rating_group_prizes: RatingGroupPrize[];
+};
 export type RatingDistributionDto = {
   average_rating_difference: number;
   max_rating_difference: number;
   min_rating_difference: number;
   pairs_with_large_rating_gap: number;
+};
+export type RatingGroupPrize = {
+  rating_group: string;
+  percentage: number;
+  description: string;
 };
 export type RatingHistory = {
   id: number;
@@ -931,6 +1182,30 @@ export type SeedingPreview = {
   title: string | null;
   category: string | null;
 };
+export type SpecialAward = {
+  award_type: SpecialPrizeType;
+  player: Player;
+  amount: number;
+  description: string;
+  justification: string;
+};
+export type SpecialPrize = {
+  prize_type: SpecialPrizeType;
+  amount: number;
+  description: string;
+  criteria: string;
+};
+export type SpecialPrizeType =
+  | 'BestWoman'
+  | 'BestJunior'
+  | 'BestSenior'
+  | 'BestLocalPlayer'
+  | 'BestUnratedPlayer'
+  | 'BestUpset'
+  | 'MostImproved'
+  | 'FairPlay'
+  | 'BestGame'
+  | { Custom: string };
 export type StandingsCalculationResult = {
   standings: PlayerStanding[];
   last_updated: string;
@@ -950,6 +1225,20 @@ export type SwissPairingOptions = {
   avoid_same_team: boolean;
   color_preference_weight: number;
   rating_difference_penalty: number;
+};
+export type TiebreakBreakdown = {
+  tiebreak_type: TiebreakType;
+  value: number;
+  display_value: string;
+  explanation: string;
+  calculation_details: TiebreakCalculationStep[];
+  opponents_involved: OpponentContribution[];
+};
+export type TiebreakCalculationStep = {
+  step_number: number;
+  description: string;
+  calculation: string;
+  intermediate_result: number;
 };
 export type TiebreakScore = {
   tiebreak_type: TiebreakType;

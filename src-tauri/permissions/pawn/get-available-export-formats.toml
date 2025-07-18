@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-available-export-formats"
+description = "Allows getting available export formats"
+commands.allow = ["get_available_export_formats"]
+
+[[permission]]
+identifier = "deny-get-available-export-formats"
+description = "Denies the get-available-export-formats command"
+commands.deny = ["get_available_export_formats"]

@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-export-directory"
+description = "Allows getting the export directory path"
+commands.allow = ["get_export_directory"]
+
+[[permission]]
+identifier = "deny-get-export-directory"
+description = "Denies the get-export-directory command"
+commands.deny = ["get_export_directory"]

@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-export-templates"
+description = "Allows getting available export templates"
+commands.allow = ["get_export_templates"]
+
+[[permission]]
+identifier = "deny-get-export-templates"
+description = "Denies the get-export-templates command"
+commands.deny = ["get_export_templates"]

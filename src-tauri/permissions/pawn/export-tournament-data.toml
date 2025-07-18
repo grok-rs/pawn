@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-export-tournament-data"
+description = "Allows exporting tournament data in various formats"
+commands.allow = ["export_tournament_data"]
+
+[[permission]]
+identifier = "deny-export-tournament-data"
+description = "Denies the export-tournament-data command"
+commands.deny = ["export_tournament_data"]
