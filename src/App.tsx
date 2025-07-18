@@ -5,10 +5,11 @@ import { APP_ROUTES } from './constants/appRoutes';
 import NewTournamentPage from './pages/NewTournament';
 import TournamentsPage from './pages/Tournaments';
 import TournamentInfoPage from './pages/TournamentInfo';
+import { NotificationProvider } from './contexts/NotificationContext';
 
 function App(): ReactElement {
   return (
-    <>
+    <NotificationProvider>
       <Routes>
         {/* Default Route to /overview */}
         <Route path="/" element={<Navigate to={APP_ROUTES.TOURNAMENTS} />} />
@@ -27,7 +28,7 @@ function App(): ReactElement {
         {/* Catch-all Route to handle undefined paths and redirect to /overview */}
         <Route path="*" element={<Navigate to={APP_ROUTES.TOURNAMENTS} />} />
       </Routes>
-    </>
+    </NotificationProvider>
   );
 }
 

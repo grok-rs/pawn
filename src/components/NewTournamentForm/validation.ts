@@ -9,7 +9,7 @@ export const DEFAULT_TOURNAMENT_FORM_VALUES = {
   mainReferee: '',
   type: 'rapid',
   pairingSystem: 'swiss',
-  timeControlTemplate: '',
+  timeControlTemplate: null,
   rounds: 9,
   additionalTime: 30,
   additionalTimeUnit: 'seconds',
@@ -34,7 +34,7 @@ export const TOURNAMENT_FORM_SCHEMA = yup.object().shape({
   pairingSystem: yup.string().required('Tournament format is required'),
   timeControlTemplate: yup
     .mixed()
-    .required('Time control template is required'),
+    .nullable(),
   rounds: yup
     .number()
     .min(1, 'At least 1 round is required')

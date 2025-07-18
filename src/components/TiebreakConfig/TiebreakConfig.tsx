@@ -95,6 +95,7 @@ const TiebreakConfig: React.FC<TiebreakConfigProps> = ({
   const handleDragStart = (index: number) => (e: React.DragEvent) => {
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -102,14 +103,26 @@ const TiebreakConfig: React.FC<TiebreakConfigProps> = ({
     e.dataTransfer.dropEffect = 'move';
   };
 
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
   const handleDrop = (dropIndex: number) => (e: React.DragEvent) => {
     e.preventDefault();
-    if (draggedIndex === null || draggedIndex === dropIndex) return;
+    
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      return;
+    }
 
     const newTiebreaks = [...tiebreaks];
     const [removed] = newTiebreaks.splice(draggedIndex, 1);
     newTiebreaks.splice(dropIndex, 0, removed);
     onChange(newTiebreaks);
+    setDraggedIndex(null);
+  };
+
+  const handleDragEnd = () => {
     setDraggedIndex(null);
   };
 
@@ -191,12 +204,16 @@ const TiebreakConfig: React.FC<TiebreakConfigProps> = ({
                 draggable
                 onDragStart={handleDragStart(index)}
                 onDragOver={handleDragOver}
+                onDragEnter={handleDragEnter}
                 onDrop={handleDrop(index)}
+                onDragEnd={handleDragEnd}
                 sx={{
                   cursor: 'move',
                   '&:hover': { bgcolor: 'action.hover' },
                   borderBottom: index < tiebreaks.length - 1 ? 1 : 0,
                   borderColor: 'divider',
+                  opacity: draggedIndex === index ? 0.5 : 1,
+                  transition: 'opacity 0.2s ease',
                 }}
               >
                 <ListItemIcon>

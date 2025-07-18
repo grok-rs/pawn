@@ -9,7 +9,7 @@ export interface TournamentFormValues extends FieldValues {
   mainReferee: string;
   type: string;
   pairingSystem: string;
-  timeControlTemplate: number | string;
+  timeControlTemplate: number | string | null;
   rounds: number;
   additionalTime: number;
   additionalTimeUnit: string;
