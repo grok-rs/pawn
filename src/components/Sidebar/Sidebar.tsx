@@ -319,18 +319,38 @@ const Sidebar = ({ open, onToggle }: SidebarProps) => {
         {open && (
           <>
             <ListItemButton
+              onClick={() => handleNavigation(APP_ROUTES.SETTINGS)}
+              selected={isActive(APP_ROUTES.SETTINGS)}
               sx={{
                 borderRadius: 2,
                 mt: 1,
+                '&.Mui-selected': {
+                  backgroundColor: theme.palette.primary.light + '20',
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.light + '30',
+                  },
+                },
                 '&:hover': {
                   backgroundColor: theme.palette.action.hover,
                 },
               }}
             >
-              <ListItemIcon sx={{ minWidth: 40 }}>
+              <ListItemIcon
+                sx={{
+                  minWidth: 40,
+                  color: isActive(APP_ROUTES.SETTINGS)
+                    ? theme.palette.primary.main
+                    : 'inherit',
+                }}
+              >
                 <Settings />
               </ListItemIcon>
-              <ListItemText primary={t('settings')} />
+              <ListItemText
+                primary={t('settings')}
+                primaryTypographyProps={{
+                  fontWeight: isActive(APP_ROUTES.SETTINGS) ? 600 : 400,
+                }}
+              />
             </ListItemButton>
             <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
               <LanguageSwitcher />

@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-get-application-settings"
+description = "Allows retrieving application settings"
+commands.allow = ["get_application_settings"]
+
+[[permission]]
+identifier = "deny-get-application-settings"
+description = "Denies the get_application_settings command"
+commands.deny = ["get_application_settings"]

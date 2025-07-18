@@ -1,0 +1,71 @@
+[[permission]]
+identifier = "allow-settings-management"
+description = "Allows comprehensive settings management operations"
+commands.allow = [
+    "create_application_setting",
+    "update_application_setting",
+    "delete_application_setting",
+    "get_user_preferences",
+    "get_user_preference",
+    "create_user_preference",
+    "update_user_preference",
+    "delete_user_preference",
+    "get_effective_settings",
+    "get_effective_setting",
+    "get_settings_templates",
+    "get_settings_template",
+    "create_settings_template",
+    "update_settings_template",
+    "delete_settings_template",
+    "apply_settings_template",
+    "create_settings_backup",
+    "get_settings_backups",
+    "restore_settings_backup",
+    "export_settings",
+    "import_settings",
+    "validate_setting",
+    "search_settings",
+    "get_settings_overview",
+    "reset_settings",
+    "get_language_setting",
+    "set_language_setting",
+    "get_theme_setting",
+    "set_theme_setting",
+    "get_settings_requiring_restart"
+]
+
+[[permission]]
+identifier = "deny-settings-management"
+description = "Denies settings management operations"
+commands.deny = [
+    "create_application_setting",
+    "update_application_setting",
+    "delete_application_setting",
+    "get_user_preferences",
+    "get_user_preference",
+    "create_user_preference",
+    "update_user_preference",
+    "delete_user_preference",
+    "get_effective_settings",
+    "get_effective_setting",
+    "get_settings_templates",
+    "get_settings_template",
+    "create_settings_template",
+    "update_settings_template",
+    "delete_settings_template",
+    "apply_settings_template",
+    "create_settings_backup",
+    "get_settings_backups",
+    "restore_settings_backup",
+    "export_settings",
+    "import_settings",
+    "validate_setting",
+    "search_settings",
+    "get_settings_overview",
+    "reset_settings",
+    "get_language_setting",
+    "set_language_setting",
+    "get_theme_setting",
+    "set_theme_setting",
+    "get_settings_requiring_restart"
+]

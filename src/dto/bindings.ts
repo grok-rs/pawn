@@ -553,6 +553,218 @@ export const commands = {
       format,
     });
   },
+  async createTeam(data: CreateTeam): Promise<Team> {
+    return await TAURI_INVOKE('plugin:pawn|create_team', { data });
+  },
+  async getTeamById(teamId: number): Promise<Team> {
+    return await TAURI_INVOKE('plugin:pawn|get_team_by_id', { teamId });
+  },
+  async getTeamsByTournament(tournamentId: number): Promise<Team[]> {
+    return await TAURI_INVOKE('plugin:pawn|get_teams_by_tournament', {
+      tournamentId,
+    });
+  },
+  async updateTeam(data: UpdateTeam): Promise<Team> {
+    return await TAURI_INVOKE('plugin:pawn|update_team', { data });
+  },
+  async deleteTeam(teamId: number): Promise<null> {
+    return await TAURI_INVOKE('plugin:pawn|delete_team', { teamId });
+  },
+  async searchTeams(filters: TeamSearchFilters): Promise<Team[]> {
+    return await TAURI_INVOKE('plugin:pawn|search_teams', { filters });
+  },
+  async addPlayerToTeam(data: AddPlayerToTeam): Promise<TeamMembership> {
+    return await TAURI_INVOKE('plugin:pawn|add_player_to_team', { data });
+  },
+  async removePlayerFromTeam(data: RemovePlayerFromTeam): Promise<null> {
+    return await TAURI_INVOKE('plugin:pawn|remove_player_from_team', { data });
+  },
+  async getTeamMemberships(teamId: number): Promise<TeamMembership[]> {
+    return await TAURI_INVOKE('plugin:pawn|get_team_memberships', { teamId });
+  },
+  async getAllTeamMemberships(tournamentId: number): Promise<TeamMembership[]> {
+    return await TAURI_INVOKE('plugin:pawn|get_all_team_memberships', {
+      tournamentId,
+    });
+  },
+  async createTeamMatch(data: CreateTeamMatch): Promise<TeamMatch> {
+    return await TAURI_INVOKE('plugin:pawn|create_team_match', { data });
+  },
+  async updateTeamMatch(data: UpdateTeamMatch): Promise<TeamMatch> {
+    return await TAURI_INVOKE('plugin:pawn|update_team_match', { data });
+  },
+  async getTeamMatchById(matchId: number): Promise<TeamMatch> {
+    return await TAURI_INVOKE('plugin:pawn|get_team_match_by_id', { matchId });
+  },
+  async getTeamMatches(
+    tournamentId: number,
+    roundNumber: number | null
+  ): Promise<TeamMatch[]> {
+    return await TAURI_INVOKE('plugin:pawn|get_team_matches', {
+      tournamentId,
+      roundNumber,
+    });
+  },
+  async createTeamLineup(data: CreateTeamLineup): Promise<TeamLineup> {
+    return await TAURI_INVOKE('plugin:pawn|create_team_lineup', { data });
+  },
+  async getTeamLineups(
+    teamId: number,
+    roundNumber: number
+  ): Promise<TeamLineup[]> {
+    return await TAURI_INVOKE('plugin:pawn|get_team_lineups', {
+      teamId,
+      roundNumber,
+    });
+  },
+  async createTeamTournamentSettings(
+    data: CreateTeamTournamentSettings
+  ): Promise<TeamTournamentSettings> {
+    return await TAURI_INVOKE('plugin:pawn|create_team_tournament_settings', {
+      data,
+    });
+  },
+  async updateTeamTournamentSettings(
+    data: UpdateTeamTournamentSettings
+  ): Promise<TeamTournamentSettings> {
+    return await TAURI_INVOKE('plugin:pawn|update_team_tournament_settings', {
+      data,
+    });
+  },
+  async getTeamTournamentSettings(
+    tournamentId: number
+  ): Promise<TeamTournamentSettings> {
+    return await TAURI_INVOKE('plugin:pawn|get_team_tournament_settings', {
+      tournamentId,
+    });
+  },
+  async getTeamStatistics(tournamentId: number): Promise<TeamStatistics> {
+    return await TAURI_INVOKE('plugin:pawn|get_team_statistics', {
+      tournamentId,
+    });
+  },
+  async getTeamStandings(tournamentId: number): Promise<TeamStanding[]> {
+    return await TAURI_INVOKE('plugin:pawn|get_team_standings', {
+      tournamentId,
+    });
+  },
+  async validateTeamLineup(
+    teamId: number,
+    roundNumber: number
+  ): Promise<boolean> {
+    return await TAURI_INVOKE('plugin:pawn|validate_team_lineup', {
+      teamId,
+      roundNumber,
+    });
+  },
+  async validateTeamBoardOrder(
+    teamId: number,
+    roundNumber: number
+  ): Promise<boolean> {
+    return await TAURI_INVOKE('plugin:pawn|validate_team_board_order', {
+      teamId,
+      roundNumber,
+    });
+  },
+  async generateTeamPairings(
+    tournamentId: number,
+    roundNumber: number,
+    config: TeamPairingConfigDto
+  ): Promise<TeamPairingResultDto> {
+    return await TAURI_INVOKE('plugin:pawn|generate_team_pairings', {
+      tournamentId,
+      roundNumber,
+      config,
+    });
+  },
+  async getTeamPairingConfigDefault(): Promise<TeamPairingConfigDto> {
+    return await TAURI_INVOKE('plugin:pawn|get_team_pairing_config_default');
+  },
+  async validateTeamPairingConfig(
+    config: TeamPairingConfigDto
+  ): Promise<boolean> {
+    return await TAURI_INVOKE('plugin:pawn|validate_team_pairing_config', {
+      config,
+    });
+  },
+  async calculateTeamStandings(
+    tournamentId: number,
+    config: TeamScoringConfigDto
+  ): Promise<TeamStandingsResultDto> {
+    return await TAURI_INVOKE('plugin:pawn|calculate_team_standings', {
+      tournamentId,
+      config,
+    });
+  },
+  async getTeamScoringConfigDefault(): Promise<TeamScoringConfigDto> {
+    return await TAURI_INVOKE('plugin:pawn|get_team_scoring_config_default');
+  },
+  async validateTeamScoringConfig(
+    config: TeamScoringConfigDto
+  ): Promise<boolean> {
+    return await TAURI_INVOKE('plugin:pawn|validate_team_scoring_config', {
+      config,
+    });
+  },
+  async getApplicationSettings(
+    filter: SettingsFilter | null
+  ): Promise<ApplicationSetting[]> {
+    return await TAURI_INVOKE('plugin:pawn|get_application_settings', {
+      filter,
+    });
+  },
+  async getApplicationSetting(
+    category: string,
+    settingKey: string
+  ): Promise<ApplicationSetting | null> {
+    return await TAURI_INVOKE('plugin:pawn|get_application_setting', {
+      category,
+      settingKey,
+    });
+  },
+  async getEffectiveSettings(
+    userId: string,
+    category: string | null
+  ): Promise<Partial<{ [key in string]: string }>> {
+    return await TAURI_INVOKE('plugin:pawn|get_effective_settings', {
+      userId,
+      category,
+    });
+  },
+  async getEffectiveSetting(
+    userId: string,
+    category: string,
+    settingKey: string
+  ): Promise<string | null> {
+    return await TAURI_INVOKE('plugin:pawn|get_effective_setting', {
+      userId,
+      category,
+      settingKey,
+    });
+  },
+  async createUserPreference(
+    data: CreateUserPreference
+  ): Promise<UserPreference> {
+    return await TAURI_INVOKE('plugin:pawn|create_user_preference', { data });
+  },
+  async getLanguageSetting(userId: string): Promise<string> {
+    return await TAURI_INVOKE('plugin:pawn|get_language_setting', { userId });
+  },
+  async setLanguageSetting(userId: string, language: string): Promise<null> {
+    return await TAURI_INVOKE('plugin:pawn|set_language_setting', {
+      userId,
+      language,
+    });
+  },
+  async getThemeSetting(userId: string): Promise<string> {
+    return await TAURI_INVOKE('plugin:pawn|get_theme_setting', { userId });
+  },
+  async setThemeSetting(userId: string, theme: string): Promise<null> {
+    return await TAURI_INVOKE('plugin:pawn|set_theme_setting', {
+      userId,
+      theme,
+    });
+  },
 };
 
 /** user-defined events **/
@@ -561,10 +773,31 @@ export const commands = {
 
 /** user-defined types **/
 
+export type AddPlayerToTeam = {
+  team_id: number;
+  player_id: number;
+  board_number: number;
+  is_captain: boolean;
+};
 export type AgeGroupPrize = {
   age_group: string;
   percentage: number;
   description: string;
+};
+export type ApplicationSetting = {
+  id: number;
+  category: string;
+  setting_key: string;
+  setting_value: string | null;
+  setting_type: string;
+  default_value: string | null;
+  description: string | null;
+  validation_schema: string | null;
+  requires_restart: boolean;
+  is_user_configurable: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at: string | null;
 };
 export type ApproveGameResult = {
   game_id: number;
@@ -675,6 +908,51 @@ export type CreateRatingHistory = {
   effective_date: string;
 };
 export type CreateRound = { tournament_id: number; round_number: number };
+export type CreateTeam = {
+  tournament_id: number;
+  name: string;
+  captain: string | null;
+  description: string | null;
+  color: string | null;
+  club_affiliation: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  max_board_count: number;
+};
+export type CreateTeamLineup = {
+  team_id: number;
+  round_number: number;
+  board_number: number;
+  player_id: number;
+  is_substitute: boolean;
+  substituted_player_id: number | null;
+  submission_deadline: string | null;
+  submitted_by: string | null;
+  notes: string | null;
+};
+export type CreateTeamMatch = {
+  tournament_id: number;
+  round_number: number;
+  team_a_id: number;
+  team_b_id: number;
+  venue: string | null;
+  scheduled_time: string | null;
+  arbiter_name: string | null;
+};
+export type CreateTeamTournamentSettings = {
+  tournament_id: number;
+  team_size: number;
+  max_teams: number | null;
+  match_scoring_system: string;
+  match_points_win: number;
+  match_points_draw: number;
+  match_points_loss: number;
+  board_weight_system: string;
+  require_board_order: boolean;
+  allow_late_entries: boolean;
+  team_pairing_method: string;
+  color_allocation: string;
+};
 export type CreateTimeControl = {
   name: string;
   time_control_type: string;
@@ -702,6 +980,12 @@ export type CreateTournamentSeedingSettings = {
   use_initial_rating: boolean;
   randomize_unrated: boolean;
   protect_top_seeds: number;
+};
+export type CreateUserPreference = {
+  user_id: string | null;
+  category: string;
+  setting_key: string;
+  setting_value: string | null;
 };
 export type CsvImportError = {
   row_number: number;
@@ -787,6 +1071,21 @@ export type ExportType =
   | 'PlayerList'
   | 'TournamentSummary'
   | 'Complete';
+/**
+ * Extended team standing for commands
+ */
+export type ExtendedTeamStandingDto = {
+  team: Team;
+  points: number;
+  match_points: number;
+  board_points: number;
+  games_played: number;
+  matches_won: number;
+  matches_drawn: number;
+  matches_lost: number;
+  players: Player[];
+  tiebreak_scores: Partial<{ [key in string]: number }>;
+};
 export type FloatStatisticsDto = {
   total_floats: number;
   up_floats: number;
@@ -949,6 +1248,15 @@ export type PairingPerformanceMetrics = {
   cache_hits: number;
   cache_misses: number;
   algorithm_used: string;
+};
+/**
+ * Pairing quality metrics
+ */
+export type PairingQualityDto = {
+  color_balance_score: number;
+  rating_balance_score: number;
+  rematch_avoidance_score: number;
+  overall_quality: number;
 };
 export type PairingSuggestionDto = {
   suggestion_type: string;
@@ -1117,6 +1425,7 @@ export type RatingHistory = {
   effective_date: string;
   created_at: string;
 };
+export type RemovePlayerFromTeam = { team_id: number; player_id: number };
 export type Round = {
   id: number;
   tournament_id: number;
@@ -1182,6 +1491,12 @@ export type SeedingPreview = {
   title: string | null;
   category: string | null;
 };
+export type SettingsFilter = {
+  category: string | null;
+  setting_key: string | null;
+  user_configurable_only: boolean | null;
+  user_id: string | null;
+};
 export type SpecialAward = {
   award_type: SpecialPrizeType;
   player: Player;
@@ -1225,6 +1540,164 @@ export type SwissPairingOptions = {
   avoid_same_team: boolean;
   color_preference_weight: number;
   rating_difference_penalty: number;
+};
+export type Team = {
+  id: number;
+  tournament_id: number;
+  name: string;
+  captain: string | null;
+  description: string | null;
+  color: string | null;
+  club_affiliation: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  max_board_count: number;
+  status: string;
+  created_at: string;
+  updated_at: string | null;
+};
+export type TeamLineup = {
+  id: number;
+  team_id: number;
+  round_number: number;
+  board_number: number;
+  player_id: number;
+  is_substitute: boolean;
+  substituted_player_id: number | null;
+  submission_deadline: string | null;
+  submitted_at: string;
+  submitted_by: string | null;
+  notes: string | null;
+  created_at: string;
+};
+export type TeamMatch = {
+  id: number;
+  tournament_id: number;
+  round_number: number;
+  team_a_id: number;
+  team_b_id: number;
+  venue: string | null;
+  scheduled_time: string | null;
+  status: string;
+  team_a_match_points: number;
+  team_b_match_points: number;
+  team_a_board_points: number;
+  team_b_board_points: number;
+  arbiter_name: string | null;
+  arbiter_notes: string | null;
+  result_approved: boolean;
+  approved_by: string | null;
+  approved_at: string | null;
+  created_at: string;
+  updated_at: string | null;
+};
+export type TeamMembership = {
+  id: number;
+  team_id: number;
+  player_id: number;
+  board_number: number;
+  is_captain: boolean;
+  is_reserve: boolean;
+  rating_at_assignment: number | null;
+  status: string;
+  assigned_at: string;
+  created_at: string;
+};
+/**
+ * Team pairing configuration for commands
+ */
+export type TeamPairingConfigDto = {
+  pairing_method: string;
+  color_allocation: string;
+  board_order_policy: string;
+  allow_team_vs_team: boolean;
+  prevent_early_rematches: boolean;
+  max_score_difference: number | null;
+  prefer_balanced_matches: boolean;
+};
+/**
+ * Team pairing result for commands
+ */
+export type TeamPairingResultDto = {
+  team_matches: TeamMatch[];
+  individual_pairings: Pairing[];
+  bye_team: Team | null;
+  pairing_quality: PairingQualityDto;
+};
+/**
+ * Team scoring configuration for commands
+ */
+export type TeamScoringConfigDto = {
+  scoring_system: string;
+  match_points_win: number;
+  match_points_draw: number;
+  match_points_loss: number;
+  board_weight_system: string;
+  tiebreak_criteria: string[];
+  olympic_scoring: boolean;
+  minimum_games_for_board_points: number;
+};
+export type TeamSearchFilters = {
+  tournament_id: number;
+  name: string | null;
+  status: string | null;
+  captain: string | null;
+  club_affiliation: string | null;
+  min_members: number | null;
+  max_members: number | null;
+  has_captain: boolean | null;
+  limit: number | null;
+  offset: number | null;
+};
+export type TeamStanding = {
+  team: Team;
+  points: number;
+  match_points: number;
+  board_points: number;
+  games_played: number;
+  matches_won: number;
+  matches_drawn: number;
+  matches_lost: number;
+  players: Player[];
+};
+/**
+ * Team standings result for commands
+ */
+export type TeamStandingsResultDto = {
+  standings: ExtendedTeamStandingDto[];
+  tiebreak_explanations: Partial<{ [key in number]: string }>;
+  scoring_config: TeamScoringConfigDto;
+};
+/**
+ * Statistics for team tournaments
+ */
+export type TeamStatistics = {
+  total_teams: number;
+  active_teams: number;
+  withdrawn_teams: number;
+  disqualified_teams: number;
+  total_players: number;
+  matches_played: number;
+  matches_completed: number;
+  matches_scheduled: number;
+  average_team_rating: number;
+};
+export type TeamTournamentSettings = {
+  id: number;
+  tournament_id: number;
+  team_size: number;
+  max_teams: number | null;
+  match_scoring_system: string;
+  match_points_win: number;
+  match_points_draw: number;
+  match_points_loss: number;
+  board_weight_system: string;
+  require_board_order: boolean;
+  allow_late_entries: boolean;
+  team_pairing_method: string;
+  color_allocation: string;
+  created_at: string;
+  updated_at: string | null;
 };
 export type TiebreakBreakdown = {
   tiebreak_type: TiebreakType;
@@ -1319,6 +1792,9 @@ export type Tournament = {
   contact_email: string | null;
   entry_fee: number | null;
   currency: string | null;
+  is_team_tournament: boolean | null;
+  team_size: number | null;
+  max_teams: number | null;
 };
 export type TournamentDetails = {
   tournament: Tournament;
@@ -1392,6 +1868,46 @@ export type UpdatePlayerSeeding = {
   initial_rating: number | null;
 };
 export type UpdateRoundStatus = { round_id: number; status: string };
+export type UpdateTeam = {
+  id: number;
+  name: string | null;
+  captain: string | null;
+  description: string | null;
+  color: string | null;
+  club_affiliation: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  max_board_count: number | null;
+  status: string | null;
+};
+export type UpdateTeamMatch = {
+  id: number;
+  status: string | null;
+  venue: string | null;
+  scheduled_time: string | null;
+  team_a_match_points: number | null;
+  team_b_match_points: number | null;
+  team_a_board_points: number | null;
+  team_b_board_points: number | null;
+  arbiter_name: string | null;
+  arbiter_notes: string | null;
+  result_approved: boolean | null;
+  approved_by: string | null;
+};
+export type UpdateTeamTournamentSettings = {
+  tournament_id: number;
+  team_size: number | null;
+  max_teams: number | null;
+  match_scoring_system: string | null;
+  match_points_win: number | null;
+  match_points_draw: number | null;
+  match_points_loss: number | null;
+  board_weight_system: string | null;
+  require_board_order: boolean | null;
+  allow_late_entries: boolean | null;
+  team_pairing_method: string | null;
+  color_allocation: string | null;
+};
 export type UpdateTimeControl = {
   id: number;
   name: string | null;
@@ -1432,6 +1948,16 @@ export type UpdateTournamentSettings = {
   prize_structure: string | null;
 };
 export type UpdateTournamentStatus = { tournament_id: number; status: string };
+export type UserPreference = {
+  id: number;
+  user_id: string;
+  category: string;
+  setting_key: string;
+  setting_value: string | null;
+  is_custom: boolean;
+  created_at: string;
+  updated_at: string | null;
+};
 export type ValidateGameResult = {
   game_id: number;
   result: string;
