@@ -167,6 +167,16 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::team::calculate_team_standings,
             command::team::get_team_scoring_config_default,
             command::team::validate_team_scoring_config,
+            // Application Settings Commands
+            command::settings::get_application_settings,
+            command::settings::get_application_setting,
+            command::settings::get_effective_settings,
+            command::settings::get_effective_setting,
+            command::settings::create_user_preference,
+            command::settings::get_language_setting,
+            command::settings::set_language_setting,
+            command::settings::get_theme_setting,
+            command::settings::set_theme_setting,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Throw);
 

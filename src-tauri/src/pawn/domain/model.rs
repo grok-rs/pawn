@@ -934,3 +934,247 @@ pub struct TeamBoardRules {
     pub board_order_validation: bool,
     pub created_at: String,
 }
+
+// Application Settings Models
+
+#[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
+pub struct ApplicationSetting {
+    pub id: i32,
+    pub category: String,
+    pub setting_key: String,
+    pub setting_value: Option<String>,
+    pub setting_type: String, // "string", "integer", "float", "boolean", "json", "array"
+    pub default_value: Option<String>,
+    pub description: Option<String>,
+    pub validation_schema: Option<String>,
+    pub requires_restart: bool,
+    pub is_user_configurable: bool,
+    pub display_order: i32,
+    pub created_at: String,
+    pub updated_at: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
+pub struct UserPreference {
+    pub id: i32,
+    pub user_id: String,
+    pub category: String,
+    pub setting_key: String,
+    pub setting_value: Option<String>,
+    pub is_custom: bool,
+    pub created_at: String,
+    pub updated_at: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
+pub struct SettingsTemplate {
+    pub id: i32,
+    pub template_name: String,
+    pub template_description: Option<String>,
+    pub template_category: String,
+    pub template_data: String, // JSON data
+    pub is_system_template: bool,
+    pub is_default: bool,
+    pub created_at: String,
+    pub updated_at: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
+pub struct SettingsBackupHistory {
+    pub id: i32,
+    pub backup_name: String,
+    pub backup_type: String, // "manual", "automatic", "migration", "template"
+    pub backup_data: String, // JSON snapshot
+    pub backup_size: Option<i32>,
+    pub user_id: String,
+    pub created_at: String,
+    pub restored_at: Option<String>,
+    pub is_active: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
+pub struct SettingsAuditLog {
+    pub id: i32,
+    pub user_id: String,
+    pub category: String,
+    pub setting_key: String,
+    pub old_value: Option<String>,
+    pub new_value: Option<String>,
+    pub change_type: String, // "create", "update", "delete", "reset", "import", "restore"
+    pub change_source: String, // "ui", "api", "migration", "template", "backup_restore", "system"
+    pub ip_address: Option<String>,
+    pub user_agent: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+pub enum SettingType {
+    String,
+    Integer,
+    Float,
+    Boolean,
+    Json,
+    Array,
+}
+
+#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+pub enum SettingCategory {
+    General,
+    Display,
+    Tournament,
+    Performance,
+    Privacy,
+    Security,
+    Data,
+}
+
+#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+pub enum BackupType {
+    Manual,
+    Automatic,
+    Migration,
+    Template,
+}
+
+#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+pub enum ChangeType {
+    Create,
+    Update,
+    Delete,
+    Reset,
+    Import,
+    Restore,
+}
+
+#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+pub enum ChangeSource {
+    UI,
+    API,
+    Migration,
+    Template,
+    BackupRestore,
+    System,
+}
+
+impl SettingType {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "string" => SettingType::String,
+            "integer" => SettingType::Integer,
+            "float" => SettingType::Float,
+            "boolean" => SettingType::Boolean,
+            "json" => SettingType::Json,
+            "array" => SettingType::Array,
+            _ => SettingType::String,
+        }
+    }
+
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            SettingType::String => "string",
+            SettingType::Integer => "integer",
+            SettingType::Float => "float",
+            SettingType::Boolean => "boolean",
+            SettingType::Json => "json",
+            SettingType::Array => "array",
+        }
+    }
+}
+
+impl SettingCategory {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "general" => SettingCategory::General,
+            "display" => SettingCategory::Display,
+            "tournament" => SettingCategory::Tournament,
+            "performance" => SettingCategory::Performance,
+            "privacy" => SettingCategory::Privacy,
+            "security" => SettingCategory::Security,
+            "data" => SettingCategory::Data,
+            _ => SettingCategory::General,
+        }
+    }
+
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            SettingCategory::General => "general",
+            SettingCategory::Display => "display",
+            SettingCategory::Tournament => "tournament",
+            SettingCategory::Performance => "performance",
+            SettingCategory::Privacy => "privacy",
+            SettingCategory::Security => "security",
+            SettingCategory::Data => "data",
+        }
+    }
+}
+
+impl BackupType {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "manual" => BackupType::Manual,
+            "automatic" => BackupType::Automatic,
+            "migration" => BackupType::Migration,
+            "template" => BackupType::Template,
+            _ => BackupType::Manual,
+        }
+    }
+
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            BackupType::Manual => "manual",
+            BackupType::Automatic => "automatic",
+            BackupType::Migration => "migration",
+            BackupType::Template => "template",
+        }
+    }
+}
+
+impl ChangeType {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "create" => ChangeType::Create,
+            "update" => ChangeType::Update,
+            "delete" => ChangeType::Delete,
+            "reset" => ChangeType::Reset,
+            "import" => ChangeType::Import,
+            "restore" => ChangeType::Restore,
+            _ => ChangeType::Update,
+        }
+    }
+
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            ChangeType::Create => "create",
+            ChangeType::Update => "update",
+            ChangeType::Delete => "delete",
+            ChangeType::Reset => "reset",
+            ChangeType::Import => "import",
+            ChangeType::Restore => "restore",
+        }
+    }
+}
+
+impl ChangeSource {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "ui" => ChangeSource::UI,
+            "api" => ChangeSource::API,
+            "migration" => ChangeSource::Migration,
+            "template" => ChangeSource::Template,
+            "backup_restore" => ChangeSource::BackupRestore,
+            "system" => ChangeSource::System,
+            _ => ChangeSource::UI,
+        }
+    }
+
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            ChangeSource::UI => "ui",
+            ChangeSource::API => "api",
+            ChangeSource::Migration => "migration",
+            ChangeSource::Template => "template",
+            ChangeSource::BackupRestore => "backup_restore",
+            ChangeSource::System => "system",
+        }
+    }
+}

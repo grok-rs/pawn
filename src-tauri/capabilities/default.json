@@ -113,6 +113,9 @@
     "pawn:allow-validate-team-pairing-config",
     "pawn:allow-calculate-team-standings",
     "pawn:allow-get-team-scoring-config-default",
-    "pawn:allow-validate-team-scoring-config"
+    "pawn:allow-validate-team-scoring-config",
+    "pawn:allow-get-application-settings",
+    "pawn:allow-get-application-setting",
+    "pawn:allow-settings-management"
   ]
 }

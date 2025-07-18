@@ -5,6 +5,7 @@ pub mod norm_calculation;
 pub mod player;
 pub mod round;
 pub mod seeding;
+pub mod settings;
 pub mod team;
 pub mod time_control;
 pub mod tournament;
