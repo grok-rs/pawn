@@ -41,6 +41,7 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::tournament::get_tournament_standings,
             command::tournament::get_tournament_settings,
             command::tournament::update_tournament_settings,
+            command::tournament::update_tournament_status,
             command::round::get_rounds_by_tournament,
             command::round::get_current_round,
             command::round::create_round,

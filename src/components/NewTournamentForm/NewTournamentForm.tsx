@@ -22,8 +22,8 @@ const TournamentForm = () => {
     // resolver: yupResolver(TOURNAMENT_FORM_SCHEMA),
   });
 
-  const onSubmit = (data: TournamentFormValues) => {
-    console.log('Form data:', data);
+  const onSubmit = (_data: TournamentFormValues) => {
+    // Form data submitted
   };
 
   return (

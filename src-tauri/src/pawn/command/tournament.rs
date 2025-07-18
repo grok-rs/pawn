@@ -5,7 +5,7 @@ use crate::pawn::{
     common::types::CommandResult,
     db::Db,
     domain::{
-        dto::{CreateGame, CreatePlayer, CreateTournament, UpdateTournamentSettings},
+        dto::{CreateGame, CreatePlayer, CreateTournament, UpdateTournamentSettings, UpdateTournamentStatus},
         model::{Game, GameResult, Player, PlayerResult, Tournament, TournamentDetails},
         tiebreak::{StandingsCalculationResult, TournamentTiebreakConfig},
     },
@@ -52,6 +52,16 @@ pub async fn get_tournament_details(
 #[specta::specta]
 pub async fn delete_tournament(state: State<'_, PawnState>, id: i32) -> CommandResult<()> {
     state.tournament_service.delete_tournament(id).await
+}
+
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn update_tournament_status(
+    state: State<'_, PawnState>,
+    data: UpdateTournamentStatus,
+) -> CommandResult<Tournament> {
+    state.tournament_service.update_tournament_status(data).await
 }
 
 // Player operations

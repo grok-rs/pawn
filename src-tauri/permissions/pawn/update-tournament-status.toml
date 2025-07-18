@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-update-tournament-status"
+description = "Allows updating tournament status"
+commands.allow = ["update_tournament_status"]
+
+[[permission]]
+identifier = "deny-update-tournament-status"
+description = "Denies the update-tournament-status command"
+commands.deny = ["update_tournament_status"]

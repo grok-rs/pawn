@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -104,11 +104,7 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
     },
   });
 
-  useEffect(() => {
-    fetchCategories();
-  }, [tournamentId]);
-
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     setLoading(true);
     try {
       const categoriesData =
@@ -121,10 +117,14 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [tournamentId, t]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const handleCreateCategory = () => {
-    console.log('Create category button clicked');
+    // Create category button clicked
     setEditingCategory(null);
     reset({
       name: '',
@@ -153,7 +153,7 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
   };
 
   const onSubmitCategory = async (data: CategoryFormData) => {
-    console.log('Form submitted with data:', data);
+    // Form submitted with data
     setLoading(true);
     try {
       const categoryData: CreatePlayerCategory = {
@@ -170,14 +170,14 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
             : null,
       };
 
-      console.log('Creating category with data:', categoryData);
+      // Creating category with data
 
       if (editingCategory) {
         // Update existing category (would need update command)
-        console.log('Update category not implemented yet');
+        // Update category not implemented yet
       } else {
-        const result = await commands.createPlayerCategory(categoryData);
-        console.log('Category created successfully:', result);
+        await commands.createPlayerCategory(categoryData);
+        // Category created successfully
       }
 
       setCategoryFormOpen(false);

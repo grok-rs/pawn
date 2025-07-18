@@ -23,6 +23,7 @@
     "pawn:allow-get-tournament-standings",
     "pawn:allow-get-tournament-settings",
     "pawn:allow-update-tournament-settings",
+    "pawn:allow-update-tournament-status",
     "pawn:create-round",
     "pawn:create-next-round",
     "pawn:create-pairings-as-games",

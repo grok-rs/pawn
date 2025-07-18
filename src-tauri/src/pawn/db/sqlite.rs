@@ -118,6 +118,19 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
+    async fn update_tournament_status(&self, tournament_id: i32, status: &str) -> Result<Tournament, sqlx::Error> {
+        // Update tournament status
+        sqlx::query("UPDATE tournaments SET status = ? WHERE id = ?")
+            .bind(status)
+            .bind(tournament_id)
+            .execute(&self.pool)
+            .await?;
+
+        // Return the updated tournament
+        self.get_tournament(tournament_id).await
+    }
+
+    #[instrument(ret, skip(self))]
     async fn get_players_by_tournament(
         &self,
         tournament_id: i32,

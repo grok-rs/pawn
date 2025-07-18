@@ -58,6 +58,12 @@ pub struct UpdateTournamentSettings {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct UpdateTournamentStatus {
+    pub tournament_id: i32,
+    pub status: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateRound {
     pub tournament_id: i32,
     pub round_number: i32,

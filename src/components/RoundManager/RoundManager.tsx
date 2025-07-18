@@ -28,6 +28,7 @@ import {
   CheckCircle,
   Schedule,
   RadioButtonUnchecked,
+  Refresh,
 } from '@mui/icons-material';
 import { commands } from '../../dto/bindings';
 import type {
@@ -37,6 +38,7 @@ import type {
 } from '../../dto/bindings';
 import PairingsDisplay from '../PairingsDisplay';
 import { StandingsTable } from '../StandingsTable';
+import { parseBackendError } from '../../utils/errorUtils';
 
 interface RoundManagerProps {
   tournamentId: number;
@@ -61,6 +63,9 @@ const RoundManager: React.FC<RoundManagerProps> = ({
     null
   );
   const [standingsLoading, setStandingsLoading] = useState(false);
+  const [roundsWithGames, setRoundsWithGames] = useState<Set<number>>(
+    new Set()
+  );
 
   const fetchStandings = useCallback(async () => {
     try {
@@ -75,6 +80,25 @@ const RoundManager: React.FC<RoundManagerProps> = ({
     }
   }, [tournamentId]);
 
+  const checkRoundsWithGames = useCallback(async (rounds: Round[]) => {
+    const roundsWithGamesSet = new Set<number>();
+
+    for (const round of rounds) {
+      try {
+        const roundDetails = await commands.getRoundDetails(round.id);
+        if (roundDetails.games.length > 0) {
+          roundsWithGamesSet.add(round.id);
+        }
+      } catch (err) {
+        console.error(`Failed to fetch details for round ${round.id}:`, err);
+        // Assume round has games if we can't check (safer)
+        roundsWithGamesSet.add(round.id);
+      }
+    }
+
+    setRoundsWithGames(roundsWithGamesSet);
+  }, []);
+
   const fetchRounds = useCallback(async () => {
     try {
       setLoading(true);
@@ -86,6 +110,9 @@ const RoundManager: React.FC<RoundManagerProps> = ({
       setRounds(roundsData);
       setCurrentRound(currentRoundData || null);
 
+      // Check which rounds have games
+      await checkRoundsWithGames(roundsData);
+
       // Also fetch current standings
       await fetchStandings();
     } catch (err) {
@@ -94,7 +121,7 @@ const RoundManager: React.FC<RoundManagerProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [tournamentId, t, fetchStandings]);
+  }, [tournamentId, t, fetchStandings, checkRoundsWithGames]);
 
   const handleCreateRound = async () => {
     try {
@@ -146,7 +173,10 @@ const RoundManager: React.FC<RoundManagerProps> = ({
         return;
       }
 
-      // Update status to 'published' after successful pairing generation
+      // Automatically create games from the generated pairings
+      await commands.createPairingsAsGames(tournamentId, roundNumber, pairings);
+
+      // Update status to 'published' after successful pairing generation and game creation
       if (roundToUpdate) {
         await handleUpdateRoundStatus(roundToUpdate.id, 'published');
       }
@@ -154,7 +184,7 @@ const RoundManager: React.FC<RoundManagerProps> = ({
       setGeneratedPairings(pairings);
       setShowPairings(true);
     } catch (err) {
-      console.error('Failed to generate pairings:', err);
+      console.error('Failed to generate pairings or create games:', err);
 
       // Reset status back to planned on error
       const roundToUpdate = rounds.find(r => r.round_number === roundNumber);
@@ -162,16 +192,12 @@ const RoundManager: React.FC<RoundManagerProps> = ({
         await handleUpdateRoundStatus(roundToUpdate.id, 'planned');
       }
 
-      // Extract more detailed error information
-      let errorMessage = t('failedToGeneratePairings');
-      if (err instanceof Error) {
-        errorMessage += `: ${err.message}`;
-      } else if (typeof err === 'string') {
-        errorMessage += `: ${err}`;
-      } else if (err && typeof err === 'object' && 'message' in err) {
-        errorMessage += `: ${String(err.message)}`;
-      }
-
+      // Use the error utility to parse and localize the error message
+      const errorMessage = parseBackendError(
+        err,
+        t,
+        'failedToGeneratePairings'
+      );
       setError(errorMessage);
     } finally {
       setActionLoading(false);
@@ -227,7 +253,14 @@ const RoundManager: React.FC<RoundManagerProps> = ({
       onRoundUpdate?.();
     } catch (err) {
       console.error('Failed to update round status:', err);
-      setError(t('failedToUpdateRoundStatus'));
+
+      // Use the error utility to parse and localize the error message
+      const errorMessage = parseBackendError(
+        err,
+        t,
+        'failedToUpdateRoundStatus'
+      );
+      setError(errorMessage);
     } finally {
       setActionLoading(false);
     }
@@ -241,7 +274,10 @@ const RoundManager: React.FC<RoundManagerProps> = ({
       onRoundUpdate?.();
     } catch (err) {
       console.error('Failed to complete round:', err);
-      setError(t('failedToCompleteRound'));
+
+      // Use the error utility to parse and localize the error message
+      const errorMessage = parseBackendError(err, t, 'failedToCompleteRound');
+      setError(errorMessage);
     } finally {
       setActionLoading(false);
     }
@@ -256,6 +292,32 @@ const RoundManager: React.FC<RoundManagerProps> = ({
     } catch (err) {
       console.error('Failed to create next round:', err);
       setError(t('failedToCreateNextRound'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRegeneratePairings = async (
+    roundId: number,
+    roundNumber: number
+  ) => {
+    try {
+      setActionLoading(true);
+      setError(null);
+
+      // Reset round status to 'planned' to allow regeneration
+      await handleUpdateRoundStatus(roundId, 'planned');
+
+      // Generate new pairings
+      await handleGeneratePairings(roundNumber);
+    } catch (err) {
+      console.error('Failed to regenerate pairings:', err);
+      const errorMessage = parseBackendError(
+        err,
+        t,
+        'failedToRegeneratePairings'
+      );
+      setError(errorMessage);
     } finally {
       setActionLoading(false);
     }
@@ -511,17 +573,36 @@ const RoundManager: React.FC<RoundManagerProps> = ({
                   )}
 
                   {round.status === 'published' && (
-                    <Button
-                      size="small"
-                      startIcon={<PlayArrow />}
-                      color="primary"
-                      onClick={() =>
-                        handleUpdateRoundStatus(round.id, 'in_progress')
-                      }
-                      disabled={actionLoading}
-                    >
-                      {t('rounds.startRound')}
-                    </Button>
+                    <>
+                      {roundsWithGames.has(round.id) ? (
+                        <Button
+                          size="small"
+                          startIcon={<PlayArrow />}
+                          color="primary"
+                          onClick={() =>
+                            handleUpdateRoundStatus(round.id, 'in_progress')
+                          }
+                          disabled={actionLoading}
+                        >
+                          {t('rounds.startRound')}
+                        </Button>
+                      ) : (
+                        <Button
+                          size="small"
+                          startIcon={<Refresh />}
+                          color="warning"
+                          onClick={() =>
+                            handleRegeneratePairings(
+                              round.id,
+                              round.round_number
+                            )
+                          }
+                          disabled={actionLoading}
+                        >
+                          {t('rounds.regeneratePairings')}
+                        </Button>
+                      )}
+                    </>
                   )}
 
                   {(round.status === 'in_progress' ||

@@ -72,6 +72,11 @@ export const commands = {
       settings,
     });
   },
+  async updateTournamentStatus(
+    data: UpdateTournamentStatus
+  ): Promise<Tournament> {
+    return await TAURI_INVOKE('plugin:pawn|update_tournament_status', { data });
+  },
   async getRoundsByTournament(tournamentId: number): Promise<Round[]> {
     return await TAURI_INVOKE('plugin:pawn|get_rounds_by_tournament', {
       tournamentId,
@@ -503,35 +508,6 @@ export type BulkImportResult = {
   validations: PlayerImportValidation[];
   imported_player_ids: number[];
 };
-export type CsvImportError = {
-  row_number: number;
-  field: string | null;
-  message: string;
-  row_data: string;
-};
-export type CsvImportResult = {
-  success: boolean;
-  total_rows: number;
-  valid_rows: number;
-  processed_rows: number;
-  errors: CsvImportError[];
-  warnings: string[];
-};
-export type CsvResultImport = {
-  tournament_id: number;
-  csv_content: string;
-  validate_only: boolean;
-  changed_by: string | null;
-};
-export type CsvResultRow = {
-  board_number: number | null;
-  white_player: string | null;
-  black_player: string | null;
-  result: string;
-  result_type: string | null;
-  result_reason: string | null;
-  row_number: number;
-};
 export type ColorBalanceAnalysisDto = {
   players_with_color_imbalance: number;
   average_color_balance: number;
@@ -611,6 +587,26 @@ export type CreateTournamentSeedingSettings = {
   use_initial_rating: boolean;
   randomize_unrated: boolean;
   protect_top_seeds: number;
+};
+export type CsvImportError = {
+  row_number: number;
+  field: string | null;
+  message: string;
+  row_data: string;
+};
+export type CsvImportResult = {
+  success: boolean;
+  total_rows: number;
+  valid_rows: number;
+  processed_rows: number;
+  errors: CsvImportError[];
+  warnings: string[];
+};
+export type CsvResultImport = {
+  tournament_id: number;
+  csv_content: string;
+  validate_only: boolean;
+  changed_by: string | null;
 };
 export type EnhancedGameResult = {
   game: Game;
@@ -895,7 +891,14 @@ export type RoundRobinOptions = {
   use_berger_tables: boolean;
   team_size: number | null;
 };
-export type RoundStatus = 'Upcoming' | 'InProgress' | 'Completed';
+export type RoundStatus =
+  | 'Planned'
+  | 'Pairing'
+  | 'Published'
+  | 'InProgress'
+  | 'Finishing'
+  | 'Completed'
+  | 'Verified';
 export type ScoreGroupDto = {
   score: number;
   player_count: number;
@@ -1139,6 +1142,7 @@ export type UpdateTournamentSettings = {
   organizer_email: string | null;
   prize_structure: string | null;
 };
+export type UpdateTournamentStatus = { tournament_id: number; status: string };
 export type ValidateGameResult = {
   game_id: number;
   result: string;

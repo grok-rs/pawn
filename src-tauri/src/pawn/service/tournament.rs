@@ -4,7 +4,7 @@ use crate::pawn::{
     common::error::PawnError,
     db::Db,
     domain::{
-        dto::{CreateGame, CreatePlayer, CreateTournament},
+        dto::{CreateGame, CreatePlayer, CreateTournament, UpdateTournamentStatus},
         model::{Game, GameResult, Player, PlayerResult, Tournament, TournamentDetails},
     },
 };
@@ -95,6 +95,48 @@ impl<D: Db> TournamentService<D> {
     pub async fn delete_tournament(&self, id: i32) -> Result<(), PawnError> {
         self.db
             .delete_tournament(id)
+            .await
+            .map_err(PawnError::Database)
+    }
+
+    pub async fn update_tournament_status(&self, data: UpdateTournamentStatus) -> Result<Tournament, PawnError> {
+        // Validate tournament status
+        let valid_statuses = vec!["created", "ongoing", "paused", "completed", "cancelled"];
+        if !valid_statuses.contains(&data.status.as_str()) {
+            return Err(PawnError::InvalidInput(format!(
+                "Invalid tournament status: {}. Valid statuses are: {}",
+                data.status,
+                valid_statuses.join(", ")
+            )));
+        }
+
+        // Special validation for completing a tournament
+        if data.status == "completed" {
+            // Check if all rounds are completed
+            let rounds = self.db.get_rounds_by_tournament(data.tournament_id).await.map_err(PawnError::Database)?;
+            let tournament = self.db.get_tournament(data.tournament_id).await.map_err(PawnError::Database)?;
+            
+            let completed_rounds = rounds.iter().filter(|r| r.status == "completed").count();
+            if completed_rounds < tournament.total_rounds as usize {
+                return Err(PawnError::InvalidInput(format!(
+                    "TOURNAMENT_INCOMPLETE_ROUNDS_ERROR::{}::{}",
+                    tournament.total_rounds - completed_rounds as i32,
+                    tournament.total_rounds
+                )));
+            }
+
+            // Check if all games have results
+            let games = self.db.get_games_by_tournament(data.tournament_id).await.map_err(PawnError::Database)?;
+            let incomplete_games = games.iter().filter(|game| game.result == "*").count();
+            if incomplete_games > 0 {
+                return Err(PawnError::InvalidInput(format!(
+                    "TOURNAMENT_INCOMPLETE_GAMES_ERROR::{incomplete_games}"
+                )));
+            }
+        }
+
+        self.db
+            .update_tournament_status(data.tournament_id, &data.status)
             .await
             .map_err(PawnError::Database)
     }

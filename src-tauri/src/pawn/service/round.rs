@@ -87,7 +87,7 @@ impl<D: Db> RoundService<D> {
         // Validate state transition
         if !current_status.can_transition_to(&new_status) {
             return Err(PawnError::InvalidInput(format!(
-                "Cannot transition round from {} to {}",
+                "ROUND_INVALID_TRANSITION::{}::{}",
                 current_status.to_str(),
                 new_status.to_str()
             )));
@@ -104,9 +104,16 @@ impl<D: Db> RoundService<D> {
                     .map_err(PawnError::Database)?;
                 
                 if games.is_empty() {
-                    return Err(PawnError::InvalidInput(
-                        "Cannot start round: no pairings/games exist".into()
-                    ));
+                    // Check if round is published but has no games (data inconsistency)
+                    if current_status == RoundStatus::Published {
+                        return Err(PawnError::InvalidInput(
+                            "ROUND_PUBLISHED_NO_GAMES_ERROR".into()
+                        ));
+                    } else {
+                        return Err(PawnError::InvalidInput(
+                            "ROUND_NO_PAIRINGS_ERROR".into()
+                        ));
+                    }
                 }
             }
             RoundStatus::Completed => {
@@ -120,7 +127,7 @@ impl<D: Db> RoundService<D> {
                 let incomplete_games = games.iter().filter(|game| game.game.result == "*").count();
                 if incomplete_games > 0 {
                     return Err(PawnError::InvalidInput(format!(
-                        "Cannot complete round: {incomplete_games} games are still in progress"
+                        "INCOMPLETE_GAMES_ERROR::{incomplete_games}"
                     )));
                 }
             }

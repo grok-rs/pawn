@@ -6,7 +6,7 @@ const ImportTournamentButton = () => {
   const { t } = useTranslation();
 
   const handleImport = () => {
-    console.log('Importing tournaments...');
+    // Importing tournaments
     // Add your import logic here
   };
 

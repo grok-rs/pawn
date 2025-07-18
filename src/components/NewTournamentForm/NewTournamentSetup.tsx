@@ -9,6 +9,7 @@ import StepperNavigation from './StepperNavigation/StepperNavigation';
 import { StyledBox, StyledDivider } from './styled';
 import { DEFAULT_TOURNAMENT_FORM_VALUES } from './validation';
 import { commands, CreateTournament, Tournament } from '../../dto/bindings';
+import { TournamentFormValues } from './types';
 
 const NewTournamentSetup = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const NewTournamentSetup = () => {
 
   // Create tournament after configuration step (step 2)
   const createTournamentFromFormData = useCallback(
-    async (data: any) => {
+    async (data: TournamentFormValues) => {
       if (createdTournament) return createdTournament; // Already created
 
       try {
@@ -44,17 +45,22 @@ const NewTournamentSetup = () => {
         };
 
         const newTournament = await commands.createTournament(createTournament);
-        console.log('Tournament created successfully:', newTournament);
+        // Tournament created successfully
         setCreatedTournament(newTournament);
 
         showSuccess('Tournament created successfully!');
         return newTournament;
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Failed to create tournament:', error);
-        const errorMessage =
-          error?.details ||
-          error?.message ||
-          'Failed to create tournament. Please try again.';
+        let errorMessage = 'Failed to create tournament. Please try again.';
+
+        if (error && typeof error === 'object') {
+          if ('details' in error && typeof error.details === 'string') {
+            errorMessage = error.details;
+          } else if ('message' in error && typeof error.message === 'string') {
+            errorMessage = error.message;
+          }
+        }
         showError(errorMessage);
         throw error;
       }
@@ -63,9 +69,7 @@ const NewTournamentSetup = () => {
   );
 
   // Final submission - just navigate to tournament
-  const onSubmit = async (data: any) => {
-    console.log('Final submit', data);
-
+  const onSubmit = async (data: TournamentFormValues) => {
     // Tournament should already be created, just navigate to it
     if (createdTournament) {
       navigate(`/tournament/${createdTournament.id}`);
@@ -74,7 +78,7 @@ const NewTournamentSetup = () => {
       try {
         const tournament = await createTournamentFromFormData(data);
         navigate(`/tournament/${tournament.id}`);
-      } catch (error) {
+      } catch {
         // Error already handled in createTournamentFromFormData
       }
     }

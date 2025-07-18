@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Table,
@@ -28,6 +29,7 @@ import {
   useTheme,
   Menu,
   Divider,
+  Chip,
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
@@ -74,21 +76,7 @@ interface ResultEntry {
   requiresApproval: boolean;
 }
 
-const RESULT_OPTIONS = [
-  { value: '1-0', label: 'White wins (1-0)', standard: true },
-  { value: '0-1', label: 'Black wins (0-1)', standard: true },
-  { value: '1/2-1/2', label: 'Draw (½-½)', standard: true },
-  { value: '*', label: 'Ongoing (*)', standard: true },
-  { value: '0-1F', label: 'White forfeit', standard: false },
-  { value: '1-0F', label: 'Black forfeit', standard: false },
-  { value: '0-1D', label: 'White default', standard: false },
-  { value: '1-0D', label: 'Black default', standard: false },
-  { value: 'ADJ', label: 'Adjourned', standard: false },
-  { value: '0-1T', label: 'Timeout (White)', standard: false },
-  { value: '1-0T', label: 'Timeout (Black)', standard: false },
-  { value: '0-0', label: 'Double forfeit', standard: false },
-  { value: 'CANC', label: 'Cancelled', standard: false },
-];
+// RESULT_OPTIONS will be created inside the component to access translations
 
 export const ResultsGrid: React.FC<ResultsGridProps> = ({
   tournamentId,
@@ -97,6 +85,61 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
   onResultsUpdated,
   readOnly = false,
 }) => {
+  const { t } = useTranslation();
+
+  // Create result options with translations
+  const RESULT_OPTIONS = [
+    { value: '1-0', label: t('gameResults.results.whiteWins'), standard: true },
+    { value: '0-1', label: t('gameResults.results.blackWins'), standard: true },
+    { value: '1/2-1/2', label: t('gameResults.results.draw'), standard: true },
+    { value: '*', label: t('gameResults.results.ongoing'), standard: true },
+    {
+      value: '0-1F',
+      label: t('gameResults.results.whiteForfeit'),
+      standard: false,
+    },
+    {
+      value: '1-0F',
+      label: t('gameResults.results.blackForfeit'),
+      standard: false,
+    },
+    {
+      value: '0-1D',
+      label: t('gameResults.results.whiteDefault'),
+      standard: false,
+    },
+    {
+      value: '1-0D',
+      label: t('gameResults.results.blackDefault'),
+      standard: false,
+    },
+    {
+      value: 'ADJ',
+      label: t('gameResults.results.adjourned'),
+      standard: false,
+    },
+    {
+      value: '0-1T',
+      label: t('gameResults.results.whiteTimeout'),
+      standard: false,
+    },
+    {
+      value: '1-0T',
+      label: t('gameResults.results.blackTimeout'),
+      standard: false,
+    },
+    {
+      value: '0-0',
+      label: t('gameResults.results.doubleForfeit'),
+      standard: false,
+    },
+    {
+      value: 'CANC',
+      label: t('gameResults.results.cancelled'),
+      standard: false,
+    },
+  ];
+
   const [resultEntries, setResultEntries] = useState<Map<number, ResultEntry>>(
     new Map()
   );
@@ -572,8 +615,11 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
     <Box>
       <Grid container spacing={2} alignItems="center" mb={2}>
         <Grid item>
-          <Typography variant="h6">
-            Game Results {roundNumber ? `- Round ${roundNumber}` : ''}
+          <Typography variant="h6" color="primary" fontWeight={600}>
+            {t('gameResults.title')}{' '}
+            {roundNumber
+              ? `- ${t('gameResults.roundTitle', { roundNumber })}`
+              : ''}
           </Typography>
         </Grid>
         {!readOnly && (
@@ -584,7 +630,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                 onClick={batchValidate}
                 disabled={modifiedCount === 0}
               >
-                Validate All ({modifiedCount})
+                {t('gameResults.buttons.validateAll')} ({modifiedCount})
               </Button>
             </Grid>
             <Grid item>
@@ -595,7 +641,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                 disabled={modifiedCount === 0 || isSaving}
                 color={hasErrors ? 'error' : 'primary'}
               >
-                Save All ({modifiedCount})
+                {t('gameResults.buttons.saveAll')} ({modifiedCount})
               </Button>
             </Grid>
             <Grid item>
@@ -606,7 +652,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                 onClick={e => setBulkMenuAnchor(e.currentTarget)}
                 disabled={games.length === 0}
               >
-                Bulk Operations
+                {t('gameResults.buttons.bulkOperations')}
               </Button>
               <Menu
                 anchorEl={bulkMenuAnchor}
@@ -629,8 +675,8 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                     <BulkIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Set All Draws"
-                    secondary="Mark all games as ½-½"
+                    primary={t('gameResults.bulk.setAllDraws')}
+                    secondary={t('gameResults.bulk.setAllDrawsDesc')}
                   />
                 </MenuItem>
                 <MenuItem
@@ -641,8 +687,8 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                     <BulkIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Set All Ongoing"
-                    secondary="Mark all games as *"
+                    primary={t('gameResults.bulk.setAllOngoing')}
+                    secondary={t('gameResults.bulk.setAllOngoingDesc')}
                   />
                 </MenuItem>
                 <Divider />
@@ -656,8 +702,8 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                     <UploadIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Import from CSV"
-                    secondary="Upload CSV file with results"
+                    primary={t('gameResults.bulk.importCsv')}
+                    secondary={t('gameResults.bulk.importCsvDesc')}
                   />
                 </MenuItem>
                 <Divider />
@@ -669,8 +715,10 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                     <ClearIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Reset Changes"
-                    secondary={`Reset ${modifiedCount} modified games`}
+                    primary={t('gameResults.bulk.resetChanges')}
+                    secondary={t('gameResults.bulk.resetChangesDesc', {
+                      count: modifiedCount,
+                    })}
                   />
                 </MenuItem>
               </Menu>
@@ -681,7 +729,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                 onClick={() => setShowKeyboardHelp(!showKeyboardHelp)}
                 size="small"
               >
-                Shortcuts (Ctrl+?)
+                {t('gameResults.buttons.shortcuts')} (Ctrl+?)
               </Button>
             </Grid>
             <Grid item>
@@ -694,7 +742,9 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                   size="small"
                   color={keyboardShortcutsEnabled ? 'primary' : 'inherit'}
                 >
-                  {keyboardShortcutsEnabled ? 'Shortcuts ON' : 'Shortcuts OFF'}
+                  {keyboardShortcutsEnabled
+                    ? t('gameResults.buttons.shortcutsOn')
+                    : t('gameResults.buttons.shortcutsOff')}
                 </Button>
               </FormControl>
             </Grid>
@@ -706,7 +756,9 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                 startIcon={showMobileView ? <PhoneIcon /> : <ComputerIcon />}
                 color={showMobileView ? 'primary' : 'inherit'}
               >
-                {showMobileView ? 'Mobile' : 'Desktop'}
+                {showMobileView
+                  ? t('gameResults.buttons.mobile')
+                  : t('gameResults.buttons.desktop')}
               </Button>
             </Grid>
           </>
@@ -715,8 +767,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
 
       {hasErrors && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Validation failed for some results. Please review and correct the
-          errors.
+          {t('gameResults.messages.validationFailed')}
         </Alert>
       )}
 
@@ -724,53 +775,56 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
         <Card sx={{ mb: 2 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
-              Keyboard Shortcuts
+              {t('gameResults.shortcuts.title')}
             </Typography>
             <Grid container spacing={3}>
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" gutterBottom>
-                  Result Entry
+                  {t('gameResults.shortcuts.resultEntry')}
                 </Typography>
                 <Typography variant="body2" component="div">
-                  <strong>1</strong> - White wins (1-0)
+                  <strong>1</strong> - {t('gameResults.shortcuts.whiteWins')}
                   <br />
-                  <strong>0</strong> - Black wins (0-1)
+                  <strong>0</strong> - {t('gameResults.shortcuts.blackWins')}
                   <br />
-                  <strong>=</strong> - Draw (½-½)
+                  <strong>=</strong> - {t('gameResults.shortcuts.draw')}
                   <br />
-                  <strong>*</strong> - Game ongoing
+                  <strong>*</strong> - {t('gameResults.shortcuts.ongoing')}
                   <br />
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" gutterBottom>
-                  Special Results
+                  {t('gameResults.shortcuts.specialResults')}
                 </Typography>
                 <Typography variant="body2" component="div">
-                  <strong>F</strong> - Forfeit (toggles white/black)
+                  <strong>F</strong> - {t('gameResults.shortcuts.forfeit')}
                   <br />
-                  <strong>D</strong> - Default (toggles white/black)
+                  <strong>D</strong> - {t('gameResults.shortcuts.default')}
                   <br />
-                  <strong>T</strong> - Timeout (toggles white/black)
+                  <strong>T</strong> - {t('gameResults.shortcuts.timeout')}
                   <br />
-                  <strong>A</strong> - Adjourned
+                  <strong>A</strong> - {t('gameResults.shortcuts.adjourned')}
                   <br />
-                  <strong>X</strong> - Double forfeit
+                  <strong>X</strong> -{' '}
+                  {t('gameResults.shortcuts.doubleForfeit')}
                   <br />
-                  <strong>C</strong> - Cancelled
+                  <strong>C</strong> - {t('gameResults.shortcuts.cancelled')}
                   <br />
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" gutterBottom>
-                  Navigation
+                  {t('gameResults.shortcuts.navigation')}
                 </Typography>
                 <Typography variant="body2" component="div">
-                  <strong>↑/↓</strong> - Navigate games
+                  <strong>↑/↓</strong> -{' '}
+                  {t('gameResults.shortcuts.navigateGames')}
                   <br />
-                  <strong>Ctrl+S</strong> - Save all
+                  <strong>Ctrl+S</strong> - {t('gameResults.shortcuts.saveAll')}
                   <br />
-                  <strong>Ctrl+Enter</strong> - Validate all
+                  <strong>Ctrl+Enter</strong> -{' '}
+                  {t('gameResults.shortcuts.validateAll')}
                   <br />
                 </Typography>
               </Grid>
@@ -783,14 +837,18 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Board</TableCell>
-              <TableCell>White</TableCell>
-              <TableCell>Black</TableCell>
-              <TableCell>Result</TableCell>
-              {!readOnly && <TableCell>Type</TableCell>}
-              {!readOnly && <TableCell>Reason/Notes</TableCell>}
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell>{t('gameResults.headers.board')}</TableCell>
+              <TableCell>{t('gameResults.headers.white')}</TableCell>
+              <TableCell>{t('gameResults.headers.black')}</TableCell>
+              <TableCell>{t('gameResults.headers.result')}</TableCell>
+              {!readOnly && (
+                <TableCell>{t('gameResults.headers.type')}</TableCell>
+              )}
+              {!readOnly && (
+                <TableCell>{t('gameResults.headers.reasonNotes')}</TableCell>
+              )}
+              <TableCell>{t('gameResults.headers.status')}</TableCell>
+              <TableCell>{t('gameResults.headers.actions')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -875,25 +933,33 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                             },
                           }}
                         >
-                          <MenuItem value="">Standard</MenuItem>
+                          <MenuItem value="">
+                            {t('gameResults.types.standard')}
+                          </MenuItem>
                           <MenuItem value="white_forfeit">
-                            White Forfeit
+                            {t('gameResults.types.whiteForfeit')}
                           </MenuItem>
                           <MenuItem value="black_forfeit">
-                            Black Forfeit
+                            {t('gameResults.types.blackForfeit')}
                           </MenuItem>
                           <MenuItem value="white_default">
-                            White Default
+                            {t('gameResults.types.whiteDefault')}
                           </MenuItem>
                           <MenuItem value="black_default">
-                            Black Default
+                            {t('gameResults.types.blackDefault')}
                           </MenuItem>
-                          <MenuItem value="timeout">Timeout</MenuItem>
-                          <MenuItem value="adjourned">Adjourned</MenuItem>
+                          <MenuItem value="timeout">
+                            {t('gameResults.types.timeout')}
+                          </MenuItem>
+                          <MenuItem value="adjourned">
+                            {t('gameResults.types.adjourned')}
+                          </MenuItem>
                           <MenuItem value="double_forfeit">
-                            Double Forfeit
+                            {t('gameResults.types.doubleForfeit')}
                           </MenuItem>
-                          <MenuItem value="cancelled">Cancelled</MenuItem>
+                          <MenuItem value="cancelled">
+                            {t('gameResults.types.cancelled')}
+                          </MenuItem>
                         </Select>
                       </FormControl>
                     </TableCell>
@@ -904,7 +970,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                       <TextField
                         size="small"
                         fullWidth
-                        placeholder="Reason/Notes"
+                        placeholder={t('gameResults.placeholders.reasonNotes')}
                         value={entry.resultReason || ''}
                         onChange={e =>
                           updateResultEntry(gameResult.game.id, {
@@ -925,11 +991,15 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                   <TableCell sx={{ color: 'inherit' }}>
                     <Box display="flex" gap={1} alignItems="center">
                       {entry.isModified && (
-                        <Chip label="Modified" size="small" color="warning" />
+                        <Chip
+                          label={t('gameResults.status.modified')}
+                          size="small"
+                          color="warning"
+                        />
                       )}
                       {entry.requiresApproval && (
                         <Chip
-                          label="Needs Approval"
+                          label={t('gameResults.status.needsApproval')}
                           size="small"
                           color="error"
                         />
@@ -953,7 +1023,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                     <IconButton
                       size="small"
                       onClick={() => handleShowAuditTrail(gameResult.game.id)}
-                      title="View audit trail"
+                      title={t('gameResults.tooltips.auditTrail')}
                       sx={{
                         color: isSelected ? 'primary.contrastText' : 'inherit',
                       }}
@@ -975,21 +1045,33 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
         maxWidth={false}
         fullWidth
       >
-        <DialogTitle>Audit Trail - Game {selectedAuditGame}</DialogTitle>
+        <DialogTitle>
+          {t('gameResults.audit.title', { gameId: selectedAuditGame })}
+        </DialogTitle>
         <DialogContent>
           {auditTrail.length === 0 ? (
-            <Typography>No audit trail available</Typography>
+            <Typography>{t('gameResults.audit.noData')}</Typography>
           ) : (
             <TableContainer>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Old Result</TableCell>
-                    <TableCell>New Result</TableCell>
-                    <TableCell>Changed By</TableCell>
-                    <TableCell>Reason</TableCell>
-                    <TableCell>Approved</TableCell>
+                    <TableCell>{t('gameResults.audit.headers.date')}</TableCell>
+                    <TableCell>
+                      {t('gameResults.audit.headers.oldResult')}
+                    </TableCell>
+                    <TableCell>
+                      {t('gameResults.audit.headers.newResult')}
+                    </TableCell>
+                    <TableCell>
+                      {t('gameResults.audit.headers.changedBy')}
+                    </TableCell>
+                    <TableCell>
+                      {t('gameResults.audit.headers.reason')}
+                    </TableCell>
+                    <TableCell>
+                      {t('gameResults.audit.headers.approved')}
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -998,15 +1080,27 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                       <TableCell>
                         {new Date(record.changed_at).toLocaleString()}
                       </TableCell>
-                      <TableCell>{record.old_result || 'N/A'}</TableCell>
+                      <TableCell>
+                        {record.old_result || t('gameResults.audit.na')}
+                      </TableCell>
                       <TableCell>{record.new_result}</TableCell>
-                      <TableCell>{record.changed_by || 'System'}</TableCell>
+                      <TableCell>
+                        {record.changed_by || t('gameResults.audit.system')}
+                      </TableCell>
                       <TableCell>{record.reason || ''}</TableCell>
                       <TableCell>
                         {record.approved ? (
-                          <Chip label="Approved" color="success" size="small" />
+                          <Chip
+                            label={t('gameResults.audit.approved')}
+                            color="success"
+                            size="small"
+                          />
                         ) : (
-                          <Chip label="Pending" color="warning" size="small" />
+                          <Chip
+                            label={t('gameResults.audit.pending')}
+                            color="warning"
+                            size="small"
+                          />
                         )}
                       </TableCell>
                     </TableRow>
@@ -1017,7 +1111,9 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsAuditDialogOpen(false)}>Close</Button>
+          <Button onClick={() => setIsAuditDialogOpen(false)}>
+            {t('gameResults.buttons.close')}
+          </Button>
         </DialogActions>
       </Dialog>
 
