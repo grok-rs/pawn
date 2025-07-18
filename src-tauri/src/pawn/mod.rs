@@ -104,6 +104,14 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::time_control::delete_time_control,
             command::time_control::get_time_control_templates,
             command::time_control::validate_time_control_data,
+            // Seeding and Ranking Commands
+            command::seeding::create_tournament_seeding_settings,
+            command::seeding::get_tournament_seeding_settings,
+            command::seeding::update_tournament_seeding_settings,
+            command::seeding::generate_tournament_seeding,
+            command::seeding::apply_tournament_seeding,
+            command::seeding::generate_pairing_numbers,
+            command::seeding::analyze_tournament_seeding,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Throw);
 

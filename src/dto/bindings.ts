@@ -385,6 +385,57 @@ export const commands = {
       data,
     });
   },
+  async createTournamentSeedingSettings(
+    settings: CreateTournamentSeedingSettings
+  ): Promise<TournamentSeedingSettings> {
+    return await TAURI_INVOKE(
+      'plugin:pawn|create_tournament_seeding_settings',
+      { settings }
+    );
+  },
+  async getTournamentSeedingSettings(
+    tournamentId: number
+  ): Promise<TournamentSeedingSettings | null> {
+    return await TAURI_INVOKE('plugin:pawn|get_tournament_seeding_settings', {
+      tournamentId,
+    });
+  },
+  async updateTournamentSeedingSettings(
+    settings: UpdateTournamentSeedingSettings
+  ): Promise<TournamentSeedingSettings> {
+    return await TAURI_INVOKE(
+      'plugin:pawn|update_tournament_seeding_settings',
+      { settings }
+    );
+  },
+  async generateTournamentSeeding(
+    request: GenerateSeedingRequest
+  ): Promise<SeedingPreview[]> {
+    return await TAURI_INVOKE('plugin:pawn|generate_tournament_seeding', {
+      request,
+    });
+  },
+  async applyTournamentSeeding(
+    batchUpdate: BatchUpdatePlayerSeeding
+  ): Promise<Player[]> {
+    return await TAURI_INVOKE('plugin:pawn|apply_tournament_seeding', {
+      batchUpdate,
+    });
+  },
+  async generatePairingNumbers(
+    request: GeneratePairingNumbersRequest
+  ): Promise<Player[]> {
+    return await TAURI_INVOKE('plugin:pawn|generate_pairing_numbers', {
+      request,
+    });
+  },
+  async analyzeTournamentSeeding(
+    tournamentId: number
+  ): Promise<SeedingAnalysis> {
+    return await TAURI_INVOKE('plugin:pawn|analyze_tournament_seeding', {
+      tournamentId,
+    });
+  },
 };
 
 /** user-defined events **/
@@ -399,6 +450,10 @@ export type ApproveGameResult = {
   notes: string | null;
 };
 export type AssignPlayerToCategory = { player_id: number; category_id: number };
+export type BatchUpdatePlayerSeeding = {
+  tournament_id: number;
+  seeding_updates: UpdatePlayerSeeding[];
+};
 export type BatchUpdateResults = {
   tournament_id: number;
   updates: UpdateGameResult[];
@@ -518,6 +573,13 @@ export type CreateTournament = {
   total_rounds: number;
   country_code: string;
 };
+export type CreateTournamentSeedingSettings = {
+  tournament_id: number;
+  seeding_method: string;
+  use_initial_rating: boolean;
+  randomize_unrated: boolean;
+  protect_top_seeds: number;
+};
 export type EnhancedGameResult = {
   game: Game;
   white_player: Player;
@@ -594,10 +656,22 @@ export type GameResultValidation = {
   errors: string[];
   warnings: string[];
 };
+export type GeneratePairingNumbersRequest = {
+  tournament_id: number;
+  method: string;
+  start_number: number;
+  preserve_existing: boolean;
+};
 export type GeneratePairingsRequest = {
   tournament_id: number;
   round_number: number;
   pairing_method: string;
+};
+export type GenerateSeedingRequest = {
+  tournament_id: number;
+  seeding_method: string;
+  preserve_manual_seeds: boolean;
+  category_id: number | null;
 };
 export type KnockoutBracket = {
   id: number;
@@ -670,6 +744,9 @@ export type Player = {
   phone: string | null;
   club: string | null;
   status: string;
+  seed_number: number | null;
+  pairing_number: number | null;
+  initial_rating: number | null;
   created_at: string;
   updated_at: string | null;
 };
@@ -794,6 +871,31 @@ export type ScoreGroupDto = {
   floats_up: number;
   floats_down: number;
 };
+export type SeedingAnalysis = {
+  total_players: number;
+  rated_players: number;
+  unrated_players: number;
+  manual_seeds: number;
+  rating_range: [number, number] | null;
+  average_rating: number | null;
+  seeding_conflicts: SeedingConflict[];
+};
+export type SeedingConflict = {
+  player_id: number;
+  player_name: string;
+  conflict_type: string;
+  description: string;
+  suggested_action: string;
+};
+export type SeedingPreview = {
+  player_id: number;
+  player_name: string;
+  current_seed: number | null;
+  proposed_seed: number;
+  rating: number | null;
+  title: string | null;
+  category: string | null;
+};
 export type StandingsCalculationResult = {
   standings: PlayerStanding[];
   last_updated: string;
@@ -899,6 +1001,16 @@ export type TournamentDetails = {
   players: PlayerResult[];
   games: GameResult[];
 };
+export type TournamentSeedingSettings = {
+  id: number;
+  tournament_id: number;
+  seeding_method: string;
+  use_initial_rating: boolean;
+  randomize_unrated: boolean;
+  protect_top_seeds: number;
+  created_at: string;
+  updated_at: string | null;
+};
 export type TournamentTiebreakConfig = {
   tournament_id: number;
   tiebreaks: TiebreakType[];
@@ -949,6 +1061,12 @@ export type UpdatePlayer = {
   club: string | null;
   status: string | null;
 };
+export type UpdatePlayerSeeding = {
+  player_id: number;
+  seed_number: number | null;
+  pairing_number: number | null;
+  initial_rating: number | null;
+};
 export type UpdateRoundStatus = { round_id: number; status: string };
 export type UpdateTimeControl = {
   id: number;
@@ -965,6 +1083,13 @@ export type UpdateTimeControl = {
 export type UpdateTournamentPairingMethod = {
   tournament_id: number;
   pairing_method: string;
+};
+export type UpdateTournamentSeedingSettings = {
+  id: number;
+  seeding_method: string | null;
+  use_initial_rating: boolean | null;
+  randomize_unrated: boolean | null;
+  protect_top_seeds: number | null;
 };
 export type UpdateTournamentSettings = {
   tournament_id: number;

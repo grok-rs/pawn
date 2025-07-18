@@ -145,44 +145,128 @@ const TournamentListItem = ({
       }}
       onClick={handleViewTournament}
     >
-      <CardContent>
+      <CardContent
+        sx={{
+          p: { mobile: 2, tablet: 3 },
+        }}
+      >
         <Box
           sx={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'flex-start',
-            mb: 2,
+            mb: { mobile: 2, tablet: 2.5 },
           }}
         >
           <Box sx={{ flex: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <EmojiEvents sx={{ color: theme.palette.primary.main }} />
-              <Typography variant="h6" fontWeight={600}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: { mobile: 1, tablet: 1.5 },
+                mb: { mobile: 1, tablet: 1.5 },
+                flexWrap: 'wrap',
+              }}
+            >
+              <EmojiEvents
+                sx={{
+                  color: theme.palette.primary.main,
+                  fontSize: { mobile: '1.25rem', tablet: '1.5rem' },
+                }}
+              />
+              <Typography
+                variant="h6"
+                fontWeight={600}
+                sx={{
+                  fontSize: { mobile: '1.125rem', tablet: '1.25rem' },
+                  lineHeight: 1.2,
+                }}
+              >
                 {tournament.name}
               </Typography>
               {getStatusChip()}
             </Box>
             <Box
               sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 3,
+                display: 'grid',
+                gridTemplateColumns: {
+                  mobile: '1fr',
+                  tablet: '1fr 1fr',
+                  laptop: 'repeat(auto-fit, minmax(200px, 1fr))',
+                },
+                gap: { mobile: 1.5, tablet: 2 },
                 color: 'text.secondary',
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <CalendarToday fontSize="small" />
-                <Typography variant="body2">
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  py: 0.5,
+                }}
+              >
+                <CalendarToday
+                  sx={{
+                    fontSize: { mobile: '1rem', tablet: '1.125rem' },
+                    color: 'text.secondary',
+                  }}
+                />
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: { mobile: '0.875rem', tablet: '1rem' },
+                    fontWeight: 500,
+                  }}
+                >
                   {formatDate(tournament.date)}
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <LocationOn fontSize="small" />
-                <Typography variant="body2">{tournament.location}</Typography>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  py: 0.5,
+                }}
+              >
+                <LocationOn
+                  sx={{
+                    fontSize: { mobile: '1rem', tablet: '1.125rem' },
+                    color: 'text.secondary',
+                  }}
+                />
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: { mobile: '0.875rem', tablet: '1rem' },
+                    fontWeight: 500,
+                  }}
+                >
+                  {tournament.location}
+                </Typography>
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <People fontSize="small" />
-                <Typography variant="body2">
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  py: 0.5,
+                }}
+              >
+                <People
+                  sx={{
+                    fontSize: { mobile: '1rem', tablet: '1.125rem' },
+                    color: 'text.secondary',
+                  }}
+                />
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: { mobile: '0.875rem', tablet: '1rem' },
+                    fontWeight: 500,
+                  }}
+                >
                   {actualPlayerCount !== null ? (
                     actualPlayerCount !== tournament.player_count ? (
                       <>
@@ -191,7 +275,10 @@ const TournamentListItem = ({
                         <Typography
                           variant="caption"
                           color="text.secondary"
-                          sx={{ ml: 0.5 }}
+                          sx={{
+                            ml: 0.5,
+                            fontSize: { mobile: '0.75rem', tablet: '0.875rem' },
+                          }}
                         >
                           ({t('actualPlayers').toLowerCase()})
                         </Typography>
@@ -204,24 +291,72 @@ const TournamentListItem = ({
                   )}
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Timer fontSize="small" />
-                <Typography variant="body2">
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  py: 0.5,
+                }}
+              >
+                <Timer
+                  sx={{
+                    fontSize: { mobile: '1rem', tablet: '1.125rem' },
+                    color: 'text.secondary',
+                  }}
+                />
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: { mobile: '0.875rem', tablet: '1rem' },
+                    fontWeight: 500,
+                  }}
+                >
                   {tournament.time_type
                     ? t(`timeControls.${tournament.time_type}`)
                     : '-'}
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Category fontSize="small" />
-                <Typography variant="body2">
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  py: 0.5,
+                }}
+              >
+                <Category
+                  sx={{
+                    fontSize: { mobile: '1rem', tablet: '1.125rem' },
+                    color: 'text.secondary',
+                  }}
+                />
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: { mobile: '0.875rem', tablet: '1rem' },
+                    fontWeight: 500,
+                  }}
+                >
                   {tournament.tournament_type || '-'}
                 </Typography>
               </Box>
             </Box>
           </Box>
-          <IconButton size="small" onClick={handleMenuClick} sx={{ ml: 1 }}>
-            <MoreVert />
+          <IconButton
+            onClick={handleMenuClick}
+            sx={{
+              ml: { mobile: 1, tablet: 2 },
+              minHeight: '44px',
+              minWidth: '44px',
+              '&:hover': {
+                backgroundColor: 'action.hover',
+              },
+            }}
+          >
+            <MoreVert
+              sx={{ fontSize: { mobile: '1.25rem', tablet: '1.5rem' } }}
+            />
           </IconButton>
         </Box>
 

@@ -571,3 +571,84 @@ pub struct TournamentTemplateFilter {
     pub is_public: Option<bool>,
     pub created_by: Option<String>,
 }
+
+// Seeding and Ranking DTOs
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct CreateTournamentSeedingSettings {
+    pub tournament_id: i32,
+    pub seeding_method: String, // rating, manual, random, category_based
+    pub use_initial_rating: bool,
+    pub randomize_unrated: bool,
+    pub protect_top_seeds: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct UpdateTournamentSeedingSettings {
+    pub id: i32,
+    pub seeding_method: Option<String>,
+    pub use_initial_rating: Option<bool>,
+    pub randomize_unrated: Option<bool>,
+    pub protect_top_seeds: Option<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct GenerateSeedingRequest {
+    pub tournament_id: i32,
+    pub seeding_method: String,
+    pub preserve_manual_seeds: bool,
+    pub category_id: Option<i32>, // For category-based seeding
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct UpdatePlayerSeeding {
+    pub player_id: i32,
+    pub seed_number: Option<i32>,
+    pub pairing_number: Option<i32>,
+    pub initial_rating: Option<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct BatchUpdatePlayerSeeding {
+    pub tournament_id: i32,
+    pub seeding_updates: Vec<UpdatePlayerSeeding>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct SeedingPreview {
+    pub player_id: i32,
+    pub player_name: String,
+    pub current_seed: Option<i32>,
+    pub proposed_seed: i32,
+    pub rating: Option<i32>,
+    pub title: Option<String>,
+    pub category: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct GeneratePairingNumbersRequest {
+    pub tournament_id: i32,
+    pub method: String, // sequential, random, by_seed
+    pub start_number: i32,
+    pub preserve_existing: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct SeedingAnalysis {
+    pub total_players: i32,
+    pub rated_players: i32,
+    pub unrated_players: i32,
+    pub manual_seeds: i32,
+    pub rating_range: Option<(i32, i32)>, // min, max rating
+    pub average_rating: Option<f64>,
+    pub seeding_conflicts: Vec<SeedingConflict>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct SeedingConflict {
+    pub player_id: i32,
+    pub player_name: String,
+    pub conflict_type: String, // "duplicate_seed", "rating_mismatch", "missing_data"
+    pub description: String,
+    pub suggested_action: String,
+}

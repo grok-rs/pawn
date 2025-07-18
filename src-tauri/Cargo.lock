@@ -2996,6 +2996,7 @@ dependencies = [
  "once_cell",
  "proptest",
  "quickcheck",
+ "rand 0.8.5",
  "rstest",
  "serde",
  "serde_json",

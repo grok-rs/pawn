@@ -57,7 +57,12 @@ const NewTournamentPage = () => {
 
         {/* Page Header */}
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" fontWeight={700} gutterBottom color="text.primary">
+          <Typography
+            variant="h4"
+            fontWeight={700}
+            gutterBottom
+            color="text.primary"
+          >
             {t('createNewTournament')}
           </Typography>
           <Typography variant="body1" color="text.secondary">

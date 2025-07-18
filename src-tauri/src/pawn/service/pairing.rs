@@ -577,6 +577,9 @@ impl PairingService {
                 phone: None,
                 club: None,
                 status: "bye".to_string(),
+                seed_number: None,
+                pairing_number: None,
+                initial_rating: None,
                 created_at: String::new(),
                 updated_at: None,
             });

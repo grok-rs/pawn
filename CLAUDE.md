@@ -72,8 +72,9 @@ This file provides comprehensive guidance to Claude Code (claude.ai/code) when w
 - **Database Reset**: Remove `~/.local/share/pawn/db/pawn.sqlite` to reset database
 
 ### Enhanced Features Testing
-- **Player Demo**: Navigate to `/demo/enhanced-players` in running application
-- **Sample Data**: Use "Create Sample Tournament" in demo for testing
+- **Player Management**: Access comprehensive player features within tournament pages
+- **Sample Data**: Use "Create Sample Tournament" in tournaments page for testing
+- **Player Features**: All enhanced player management accessible via tournament info pages
 
 ### GitHub Operations
 - **Issues & PRs**: Use `gh` command for all GitHub operations (view issues, PRs, comments)
@@ -96,9 +97,9 @@ This file provides comprehensive guidance to Claude Code (claude.ai/code) when w
 **Component Organization**:
 - **Pages**: `src/pages/` (Tournaments, NewTournament, TournamentInfo)
 - **Components**: `src/components/` with index.ts barrel exports
-  - `EnhancedPlayerDemo/` - Complete player management demonstration
+  - `PlayerManagement/` - Complete player management system
   - `TournamentList/`, `BaseLayout/`, etc.
-- **Routing**: React Router in `src/App.tsx` with enhanced player demo route
+- **Routing**: React Router in `src/App.tsx` with tournament-focused navigation
 - **State**: Local component state (no Redux dependency for simplicity)
 - **Forms**: react-hook-form + Yup validation
 - **Internationalization**: react-i18next (en, ru, ua)
@@ -197,7 +198,7 @@ time_controls (
 - **Bulk Import**: CSV import with comprehensive validation pipeline
 - **Player Categorization**: Flexible tournament section management
 - **Status Management**: Player withdrawals, bye requests, late entries
-- **Interactive Demo**: Complete demonstration system at `/demo/enhanced-players`
+- **Player Management**: Integrated player management system within tournament workflows
 
 **Knockout Tournament System** (Latest):
 - **Bracket Generation**: Automatic seeding algorithms for single/double elimination
@@ -525,7 +526,7 @@ jobs:
 ### Testing Enhanced Features
 
 **TDD Demo Workflow**:
-1. Navigate to `/demo/enhanced-players` for interactive testing
+1. Access player management through tournament info pages for comprehensive testing
 2. Use "Create Sample Tournament" for quick setup
 3. Write tests for new features before implementation
 4. Test all CRUD operations, search, and bulk import

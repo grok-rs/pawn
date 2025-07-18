@@ -281,8 +281,13 @@ const ConfigurationStep = () => {
                     }
                   >
                     <MenuItem value="">
-                      <Typography color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                        {loadingTemplates ? 'Loading templates...' : 'Select a time control template (optional)'}
+                      <Typography
+                        color="text.secondary"
+                        sx={{ fontStyle: 'italic' }}
+                      >
+                        {loadingTemplates
+                          ? 'Loading templates...'
+                          : 'Select a time control template (optional)'}
                       </Typography>
                     </MenuItem>
                     {timeControlTemplates.map(template => (

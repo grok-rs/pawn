@@ -9,12 +9,16 @@ interface NotificationContextType {
   showInfo: (message: string) => void;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+const NotificationContext = createContext<NotificationContextType | undefined>(
+  undefined
+);
 
 export const useNotification = () => {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error('useNotification must be used within a NotificationProvider');
+    throw new Error(
+      'useNotification must be used within a NotificationProvider'
+    );
   }
   return context;
 };
@@ -29,7 +33,9 @@ interface NotificationProviderProps {
   children: ReactNode;
 }
 
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
+export const NotificationProvider: React.FC<NotificationProviderProps> = ({
+  children,
+}) => {
   const [notification, setNotification] = useState<NotificationState>({
     open: false,
     message: '',
@@ -49,7 +55,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const showWarning = (message: string) => showNotification(message, 'warning');
   const showInfo = (message: string) => showNotification(message, 'info');
 
-  const handleClose = (_event?: React.SyntheticEvent | Event, reason?: string) => {
+  const handleClose = (
+    _event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
     if (reason === 'clickaway') {
       return;
     }

@@ -1,6 +1,7 @@
 import ConfigurationStep from './ConfigurationStep';
 import GeneralInfoStep from './GeneralInfoStep';
 import PreviewStep from './PreviewStep';
+import SeedingStep from './SeedingStep';
 import { TOURNAMENT_FORM_SCHEMA } from './validation';
 
 export const NEW_TOURNAMENT_FORM_STEPS = [
@@ -25,6 +26,15 @@ export const NEW_TOURNAMENT_FORM_STEPS = [
   },
   {
     id: 3,
+    label: 'form.steps.seeding',
+    stepIntro: {
+      title: 'form.steps.seeding.title',
+      description: 'form.steps.seeding.description',
+    },
+    component: SeedingStep,
+  },
+  {
+    id: 4,
     label: 'form.steps.preview',
     stepIntro: {
       title: 'form.steps.preview.title',

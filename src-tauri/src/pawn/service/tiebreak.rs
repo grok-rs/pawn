@@ -563,6 +563,9 @@ mod tests {
             phone: None,
             club: None,
             status: "active".to_string(),
+            seed_number: None,
+            pairing_number: None,
+            initial_rating: None,
             created_at: "2024-01-01T00:00:00".to_string(),
             updated_at: None,
         }

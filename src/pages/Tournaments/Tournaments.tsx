@@ -173,33 +173,59 @@ const TournamentsPage = () => {
     <Card
       sx={{
         transition: 'all 0.3s ease',
+        height: '100%',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: theme.shadows[4],
         },
       }}
     >
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Box
+      <CardContent
+        sx={{
+          p: { mobile: 2, tablet: 3 },
+          height: '100%',
+          display: 'flex',
+          flexDirection: { mobile: 'row', tablet: 'column' },
+          alignItems: { mobile: 'center', tablet: 'flex-start' },
+          gap: { mobile: 2, tablet: 1.5 },
+        }}
+      >
+        <Box
+          sx={{
+            p: { mobile: 1.5, tablet: 2 },
+            borderRadius: 2,
+            backgroundColor: color + '20',
+            color: color,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: { mobile: 'auto', tablet: '56px' },
+            minHeight: { mobile: 'auto', tablet: '56px' },
+          }}
+        >
+          {icon}
+        </Box>
+        <Box sx={{ flex: 1, textAlign: { mobile: 'left', tablet: 'left' } }}>
+          <Typography
+            variant="h4"
+            fontWeight={700}
             sx={{
-              p: 1.5,
-              borderRadius: 2,
-              backgroundColor: color + '20',
-              color: color,
-              display: 'flex',
+              fontSize: { mobile: '1.75rem', tablet: '2rem', laptop: '2.5rem' },
+              mb: 0.5,
             }}
           >
-            {icon}
-          </Box>
-          <Box>
-            <Typography variant="h4" fontWeight={700}>
-              {value}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {title}
-            </Typography>
-          </Box>
+            {value}
+          </Typography>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              fontSize: { mobile: '0.875rem', tablet: '1rem' },
+              fontWeight: 500,
+            }}
+          >
+            {title}
+          </Typography>
         </Box>
       </CardContent>
     </Card>
@@ -243,11 +269,11 @@ const TournamentsPage = () => {
             </Box>
           </Box>
 
-          {/* Stats Cards */}
+          {/* Stats Cards - Optimized for Tablet Layout */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid size={{ mobile: 12, tablet: 6, laptop: 3 }}>
+            <Grid size={{ mobile: 12, tablet: 6, laptop: 3, desktop: 3 }}>
               {loading ? (
-                <Skeleton variant="rounded" height={100} />
+                <Skeleton variant="rounded" height={120} />
               ) : (
                 <StatCard
                   title={t('totalTournaments')}
@@ -257,9 +283,9 @@ const TournamentsPage = () => {
                 />
               )}
             </Grid>
-            <Grid size={{ mobile: 12, tablet: 6, laptop: 3 }}>
+            <Grid size={{ mobile: 12, tablet: 6, laptop: 3, desktop: 3 }}>
               {loading ? (
-                <Skeleton variant="rounded" height={100} />
+                <Skeleton variant="rounded" height={120} />
               ) : (
                 <StatCard
                   title={t('ongoing')}
@@ -269,9 +295,9 @@ const TournamentsPage = () => {
                 />
               )}
             </Grid>
-            <Grid size={{ mobile: 12, tablet: 6, laptop: 3 }}>
+            <Grid size={{ mobile: 12, tablet: 6, laptop: 3, desktop: 3 }}>
               {loading ? (
-                <Skeleton variant="rounded" height={100} />
+                <Skeleton variant="rounded" height={120} />
               ) : (
                 <StatCard
                   title={t('notStarted')}
@@ -281,9 +307,9 @@ const TournamentsPage = () => {
                 />
               )}
             </Grid>
-            <Grid size={{ mobile: 12, tablet: 6, laptop: 3 }}>
+            <Grid size={{ mobile: 12, tablet: 6, laptop: 3, desktop: 3 }}>
               {loading ? (
-                <Skeleton variant="rounded" height={100} />
+                <Skeleton variant="rounded" height={120} />
               ) : (
                 <StatCard
                   title={t('finished')}
@@ -295,23 +321,27 @@ const TournamentsPage = () => {
             </Grid>
           </Grid>
 
-          {/* Search and Filter Bar */}
+          {/* Search and Filter Bar - Enhanced for Tablet */}
           <Paper
             sx={{
-              p: 2,
+              p: { mobile: 2, tablet: 3 },
               display: 'flex',
-              gap: 2,
-              alignItems: 'center',
+              flexDirection: { mobile: 'column', tablet: 'row' },
+              gap: { mobile: 2, tablet: 3 },
+              alignItems: { mobile: 'stretch', tablet: 'center' },
               backgroundColor: 'background.paper',
             }}
           >
             <TextField
               placeholder={t('searchTournaments')}
               variant="outlined"
-              size="small"
+              size="medium"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              sx={{ flex: 1 }}
+              sx={{
+                flex: 1,
+                minWidth: { tablet: '300px' },
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -320,33 +350,51 @@ const TournamentsPage = () => {
                 ),
               }}
             />
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                gap: { mobile: 1, tablet: 1.5 },
+                flexWrap: 'wrap',
+                justifyContent: { mobile: 'center', tablet: 'flex-start' },
+              }}
+            >
               <Chip
                 label={t('all')}
                 onClick={() => setFilter('all')}
                 color={filter === 'all' ? 'primary' : 'default'}
                 variant={filter === 'all' ? 'filled' : 'outlined'}
+                clickable
               />
               <Chip
                 label={t('ongoing')}
                 onClick={() => setFilter('ongoing')}
                 color={filter === 'ongoing' ? 'success' : 'default'}
                 variant={filter === 'ongoing' ? 'filled' : 'outlined'}
+                clickable
               />
               <Chip
                 label={t('notStarted')}
                 onClick={() => setFilter('draft')}
                 color={filter === 'draft' ? 'warning' : 'default'}
                 variant={filter === 'draft' ? 'filled' : 'outlined'}
+                clickable
               />
               <Chip
                 label={t('finished')}
                 onClick={() => setFilter('finished')}
                 color={filter === 'finished' ? 'info' : 'default'}
                 variant={filter === 'finished' ? 'filled' : 'outlined'}
+                clickable
               />
             </Box>
-            <IconButton onClick={handleFilterClick}>
+            <IconButton
+              onClick={handleFilterClick}
+              sx={{
+                minHeight: '44px',
+                minWidth: '44px',
+                alignSelf: { mobile: 'center', tablet: 'auto' },
+              }}
+            >
               <FilterList />
             </IconButton>
             <Menu

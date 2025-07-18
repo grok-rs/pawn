@@ -5,6 +5,7 @@ pub mod pairing_optimizer;
 pub mod player;
 pub mod round;
 pub mod round_robin_pairing;
+pub mod seeding;
 pub mod swiss_pairing;
 pub mod tiebreak;
 pub mod time_control;

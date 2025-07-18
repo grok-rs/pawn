@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use specta::Type as SpectaType;
 use sqlx::{FromRow, prelude::Type};
 
@@ -39,6 +39,9 @@ pub struct Player {
     pub phone: Option<String>,      // Contact information
     pub club: Option<String>,       // Club/federation affiliation
     pub status: String,             // Registration status
+    pub seed_number: Option<i32>,   // Manual seed assignment (1, 2, 3, etc.)
+    pub pairing_number: Option<i32>, // Sequential pairing number for tournaments
+    pub initial_rating: Option<i32>, // Rating at tournament start for seeding consistency
     pub created_at: String,
     pub updated_at: Option<String>,
 }
@@ -467,6 +470,49 @@ impl ChessTitle {
             ChessTitle::WFM => "WFM",
             ChessTitle::WCM => "WCM",
             ChessTitle::None => "",
+        }
+    }
+}
+
+// Seeding and Ranking Models
+
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct TournamentSeedingSettings {
+    pub id: i32,
+    pub tournament_id: i32,
+    pub seeding_method: String, // rating, manual, random, category_based
+    pub use_initial_rating: bool, // Use rating at tournament start
+    pub randomize_unrated: bool, // Randomize placement of unrated players
+    pub protect_top_seeds: i32, // Number of top seeds to protect from changes
+    pub created_at: String,
+    pub updated_at: Option<String>,
+}
+
+#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+pub enum SeedingMethod {
+    Rating,       // Automatic seeding by rating (highest to lowest)
+    Manual,       // Manual seed assignment by tournament director
+    Random,       // Random seeding/pairing numbers
+    CategoryBased, // Seeding within player categories
+}
+
+impl SeedingMethod {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "rating" => SeedingMethod::Rating,
+            "manual" => SeedingMethod::Manual,
+            "random" => SeedingMethod::Random,
+            "category_based" => SeedingMethod::CategoryBased,
+            _ => SeedingMethod::Rating,
+        }
+    }
+
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            SeedingMethod::Rating => "rating",
+            SeedingMethod::Manual => "manual",
+            SeedingMethod::Random => "random",
+            SeedingMethod::CategoryBased => "category_based",
         }
     }
 }

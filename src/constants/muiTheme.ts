@@ -128,11 +128,17 @@ export const muiTheme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 8,
-          padding: '8px 16px',
+          padding: '12px 20px',
+          minHeight: '44px', // Touch-friendly minimum size for tablets
           transition: 'all 0.2s ease-in-out',
           '&:hover': {
             transform: 'translateY(-1px)',
             boxShadow: '0px 4px 8px rgba(0,0,0,0.1)',
+          },
+          // Enhanced touch targets for tablets
+          '@media (max-width: 1024px)': {
+            padding: '14px 24px',
+            fontSize: '1rem',
           },
         },
         contained: {
@@ -178,6 +184,18 @@ export const muiTheme = createTheme({
         root: {
           borderRadius: 6,
           fontWeight: 500,
+          minHeight: '32px', // Better touch targets for tablets
+          '& .MuiChip-label': {
+            padding: '6px 12px',
+            fontSize: '0.875rem',
+          },
+          // Enhanced spacing for tablet touch interaction
+          '@media (max-width: 1024px)': {
+            minHeight: '36px',
+            '& .MuiChip-label': {
+              padding: '8px 14px',
+            },
+          },
         },
       },
     },
@@ -186,6 +204,7 @@ export const muiTheme = createTheme({
         root: {
           '& .MuiOutlinedInput-root': {
             borderRadius: 8,
+            minHeight: '44px', // Better touch targets for tablets
             transition: 'all 0.2s ease-in-out',
             '&:hover': {
               '& .MuiOutlinedInput-notchedOutline': {
@@ -196,6 +215,16 @@ export const muiTheme = createTheme({
               '& .MuiOutlinedInput-notchedOutline': {
                 borderWidth: 2,
               },
+            },
+            // Enhanced touch interaction for tablets
+            '@media (max-width: 1024px)': {
+              minHeight: '48px',
+              fontSize: '1rem',
+            },
+          },
+          '& .MuiInputLabel-root': {
+            '@media (max-width: 1024px)': {
+              fontSize: '1rem',
             },
           },
         },

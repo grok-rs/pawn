@@ -32,9 +32,7 @@ export const TOURNAMENT_FORM_SCHEMA = yup.object().shape({
   mainReferee: yup.string(),
   type: yup.string().required('Tournament type is required'),
   pairingSystem: yup.string().required('Tournament format is required'),
-  timeControlTemplate: yup
-    .mixed()
-    .nullable(),
+  timeControlTemplate: yup.mixed().nullable(),
   rounds: yup
     .number()
     .min(1, 'At least 1 round is required')

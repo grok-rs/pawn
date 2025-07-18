@@ -894,7 +894,7 @@
   "tournament.types.blitz.timeRange": "3-10 minutes",
   "tournament.types.scheveningen": "Scheveningen",
   "tournament.types.scheveningen.description": "Team-based tournament format",
-  
+
   "tournament.templates.useTemplate": "Use Template",
 
   "tournament.teams.management": "Team Management",
@@ -942,5 +942,58 @@
   "common.unknown": "Unknown",
 
   "tiebreakSettings": "Tiebreak Settings",
-  "tiebreakConfiguration": "Configure the order of tiebreak criteria used to rank players with equal points"
+  "tiebreakConfiguration": "Configure the order of tiebreak criteria used to rank players with equal points",
+
+  "form.steps.seeding": "Player Seeding",
+  "form.steps.seeding.title": "Configure Player Seeding",
+  "form.steps.seeding.description": "Set up how players will be seeded for tournament pairings",
+
+  "seeding.title": "Player Seeding",
+  "seeding.description": "Configure how players will be seeded for the tournament. Seeding determines initial pairing order and can affect the tournament flow.",
+  "seeding.settings.title": "Seeding Configuration",
+  "seeding.method": "Seeding Method",
+  "seeding.methods.rating": "Rating-Based",
+  "seeding.methods.random": "Random",
+  "seeding.methods.manual": "Manual",
+  "seeding.methods.categoryBased": "Category-Based",
+  "seeding.protectTopSeeds": "Protect Top Seeds",
+  "seeding.protectTopSeedsHelp": "Number of top-rated players to protect from early pairing",
+  "seeding.useInitialRating": "Use Initial Rating",
+  "seeding.randomizeUnrated": "Randomize Unrated Players",
+  "seeding.generatePreview": "Generate Preview",
+  "seeding.applySeeding": "Apply Seeding",
+  "seeding.analysis.title": "Seeding Analysis",
+  "seeding.analysis.totalPlayers": "Total Players",
+  "seeding.analysis.ratedPlayers": "Rated Players",
+  "seeding.analysis.unratedPlayers": "Unrated Players",
+  "seeding.analysis.manualSeeds": "Manual Seeds",
+  "seeding.analysis.ratingRange": "Rating Range",
+  "seeding.analysis.average": "avg",
+  "seeding.analysis.conflicts": "Seeding Conflicts",
+  "seeding.preview.title": "Seeding Preview",
+  "seeding.preview.seed": "Seed",
+  "seeding.preview.player": "Player",
+  "seeding.preview.rating": "Rating",
+  "seeding.preview.playerTitle": "Title",
+  "seeding.preview.currentSeed": "Current",
+  "seeding.preview.change": "Change",
+  "seeding.noTournamentWarning": "Tournament must be created first before configuring seeding.",
+  "seeding.previewModeNote": "You can preview seeding options here. Settings will be applied after the tournament is created.",
+
+  "pairingNumbers.title": "Pairing Numbers Management",
+  "pairingNumbers.description": "Generate pairing numbers for players. These numbers are used for tournament organization and board assignments.",
+  "pairingNumbers.method": "Generation Method",
+  "pairingNumbers.methods.sequential": "Sequential",
+  "pairingNumbers.methods.random": "Random",
+  "pairingNumbers.methods.bySeed": "By Seed Order",
+  "pairingNumbers.startNumber": "Start Number",
+  "pairingNumbers.startNumberHelp": "The first number to assign",
+  "pairingNumbers.preserveExisting": "Preserve Existing Numbers",
+  "pairingNumbers.generate": "Generate Numbers",
+  "pairingNumbers.existingWarning": "{{existing}} of {{total}} players already have pairing numbers.",
+  "pairingNumbers.seedMethodWarning": "Seed-based method requires players to have seed numbers assigned first.",
+
+  "common.unrated": "Unrated",
+  "common.noChange": "No Change",
+  "common.new": "New"
 }

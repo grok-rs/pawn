@@ -322,6 +322,9 @@ impl<D: Db> RoundService<D> {
                     phone: None,
                     club: None,
                     status: "bye".to_string(),
+                    seed_number: None,
+                    pairing_number: None,
+                    initial_rating: None,
                     created_at: chrono::Utc::now().to_rfc3339(),
                     updated_at: None,
                 };

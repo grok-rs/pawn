@@ -109,7 +109,7 @@ const TiebreakConfig: React.FC<TiebreakConfigProps> = ({
 
   const handleDrop = (dropIndex: number) => (e: React.DragEvent) => {
     e.preventDefault();
-    
+
     if (draggedIndex === null || draggedIndex === dropIndex) {
       setDraggedIndex(null);
       return;

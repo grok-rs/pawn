@@ -691,7 +691,7 @@
   "tournament.types.blitz.timeRange": "3-10 хвилин",
   "tournament.types.scheveningen": "Шевенінген",
   "tournament.types.scheveningen.description": "Командний формат турніру",
-  
+
   "tournament.templates.useTemplate": "Використати шаблон",
 
   "tournament.teams.management": "Управління командами",
@@ -739,5 +739,58 @@
   "common.unknown": "Невідомо",
 
   "tiebreakSettings": "Налаштування тай-брейка",
-  "tiebreakConfiguration": "Налаштуйте порядок критеріїв тай-брейка для ранжування гравців з рівними очками"
+  "tiebreakConfiguration": "Налаштуйте порядок критеріїв тай-брейка для ранжування гравців з рівними очками",
+
+  "form.steps.seeding": "Рейтинг гравців",
+  "form.steps.seeding.title": "Налаштування рейтингу гравців",
+  "form.steps.seeding.description": "Налаштуйте як будуть розставлені гравці для турнірних пар",
+
+  "seeding.title": "Рейтинг гравців",
+  "seeding.description": "Налаштуйте як гравці будуть розставлені в турнірі. Рейтинг визначає початковий порядок пар і може вплинути на хід турніру.",
+  "seeding.settings.title": "Налаштування рейтингу",
+  "seeding.method": "Метод рейтингу",
+  "seeding.methods.rating": "За рейтингом",
+  "seeding.methods.random": "Випадковий",
+  "seeding.methods.manual": "Ручний",
+  "seeding.methods.categoryBased": "За категоріями",
+  "seeding.protectTopSeeds": "Захистити топ-гравців",
+  "seeding.protectTopSeedsHelp": "Кількість найсильніших гравців для захисту від ранніх зустрічей",
+  "seeding.useInitialRating": "Використовувати початковий рейтинг",
+  "seeding.randomizeUnrated": "Перемішати нерейтингових",
+  "seeding.generatePreview": "Створити попередній перегляд",
+  "seeding.applySeeding": "Застосувати рейтинг",
+  "seeding.analysis.title": "Аналіз рейтингу",
+  "seeding.analysis.totalPlayers": "Всього гравців",
+  "seeding.analysis.ratedPlayers": "Рейтингових гравців",
+  "seeding.analysis.unratedPlayers": "Нерейтингових гравців",
+  "seeding.analysis.manualSeeds": "Ручних номерів",
+  "seeding.analysis.ratingRange": "Діапазон рейтингу",
+  "seeding.analysis.average": "сер.",
+  "seeding.analysis.conflicts": "Конфлікти рейтингу",
+  "seeding.preview.title": "Попередній перегляд рейтингу",
+  "seeding.preview.seed": "Номер",
+  "seeding.preview.player": "Гравець",
+  "seeding.preview.rating": "Рейтинг",
+  "seeding.preview.playerTitle": "Звання",
+  "seeding.preview.currentSeed": "Поточний",
+  "seeding.preview.change": "Зміна",
+  "seeding.noTournamentWarning": "Спочатку необхідно створити турнір перед налаштуванням рейтингу.",
+  "seeding.previewModeNote": "Ви можете переглянути варіанти рейтингу тут. Налаштування будуть застосовані після створення турніру.",
+
+  "pairingNumbers.title": "Управління номерами пар",
+  "pairingNumbers.description": "Створіть номери пар для гравців. Ці номери використовуються для організації турніру та призначення дошок.",
+  "pairingNumbers.method": "Метод генерації",
+  "pairingNumbers.methods.sequential": "Послідовний",
+  "pairingNumbers.methods.random": "Випадковий",
+  "pairingNumbers.methods.bySeed": "За порядком рейтингу",
+  "pairingNumbers.startNumber": "Початковий номер",
+  "pairingNumbers.startNumberHelp": "Перший номер для призначення",
+  "pairingNumbers.preserveExisting": "Зберегти існуючі номери",
+  "pairingNumbers.generate": "Створити номери",
+  "pairingNumbers.existingWarning": "{{existing}} з {{total}} гравців вже мають номери пар.",
+  "pairingNumbers.seedMethodWarning": "Метод за рейтингом вимагає, щоб у гравців були призначені номери рейтингу.",
+
+  "common.unrated": "Без рейтингу",
+  "common.noChange": "Без змін",
+  "common.new": "Новий"
 }
