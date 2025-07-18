@@ -1041,3 +1041,112 @@ pub struct SettingsTemplateResult {
     pub errors: Vec<String>,
     pub warnings: Vec<String>,
 }
+
+// Round History DTOs
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct RoundHistory {
+    pub round: crate::pawn::domain::model::Round,
+    pub standings: Vec<crate::pawn::domain::tiebreak::PlayerStanding>,
+    pub games: Vec<crate::pawn::domain::model::GameResult>,
+    pub statistics: RoundStatistics,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct RoundStatistics {
+    pub total_games: i32,
+    pub completed_games: i32,
+    pub ongoing_games: i32,
+    pub white_wins: i32,
+    pub black_wins: i32,
+    pub draws: i32,
+    pub completion_rate: f64,
+    pub average_game_duration: Option<f64>, // in minutes
+    pub performance_metrics: Vec<PlayerPerformanceMetric>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct PlayerPerformanceMetric {
+    pub player_id: i32,
+    pub player_name: String,
+    pub round_score: f32,
+    pub cumulative_score: f32,
+    pub position: i32,
+    pub position_change: i32, // compared to previous round
+    pub rating_change: Option<i32>,
+    pub color_balance: ColorBalance,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct ColorBalance {
+    pub white_games: i32,
+    pub black_games: i32,
+    pub color_preference: String, // "white", "black", "balanced"
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct RoundProgression {
+    pub tournament_id: i32,
+    pub round_histories: Vec<RoundHistory>,
+    pub progression_chart: Vec<PlayerProgressionData>,
+    pub tournament_statistics: TournamentStatistics,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct PlayerProgressionData {
+    pub player_id: i32,
+    pub player_name: String,
+    pub round_scores: Vec<f32>,
+    pub cumulative_scores: Vec<f32>,
+    pub positions: Vec<i32>,
+    pub rating_changes: Vec<Option<i32>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct TournamentStatistics {
+    pub total_rounds: i32,
+    pub completed_rounds: i32,
+    pub total_games: i32,
+    pub result_distribution: ResultDistribution,
+    pub player_activity: Vec<PlayerActivityMetric>,
+    pub round_duration_stats: RoundDurationStats,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct ResultDistribution {
+    pub white_wins: i32,
+    pub black_wins: i32,
+    pub draws: i32,
+    pub decisive_games: i32,
+    pub draw_rate: f64,
+    pub white_advantage: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct PlayerActivityMetric {
+    pub player_id: i32,
+    pub player_name: String,
+    pub games_played: i32,
+    pub byes: i32,
+    pub withdrawals: i32,
+    pub activity_rate: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct RoundDurationStats {
+    pub average_duration: f64,
+    pub median_duration: f64,
+    pub min_duration: f64,
+    pub max_duration: f64,
+    pub duration_by_round: Vec<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct RoundExportRequest {
+    pub tournament_id: i32,
+    pub round_number: Option<i32>, // None for all rounds
+    pub format: String, // "csv", "pdf", "json"
+    pub include_statistics: bool,
+    pub include_standings: bool,
+    pub include_games: bool,
+}

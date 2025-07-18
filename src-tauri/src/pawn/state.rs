@@ -8,8 +8,9 @@ use super::{
     service::{
         export::ExportService, norm_calculation::NormCalculationService, player::PlayerService, 
         realtime_standings::RealTimeStandingsService, round::RoundService, 
-        round_robin_analysis::RoundRobinAnalysisService, settings::SettingsService, swiss_analysis::SwissAnalysisService, 
-        team::TeamService, tiebreak::TiebreakCalculator, time_control::TimeControlService, tournament::TournamentService,
+        round_history::RoundHistoryService, round_robin_analysis::RoundRobinAnalysisService, 
+        settings::SettingsService, swiss_analysis::SwissAnalysisService, team::TeamService, 
+        tiebreak::TiebreakCalculator, time_control::TimeControlService, tournament::TournamentService,
     },
 };
 
@@ -21,6 +22,7 @@ pub struct State<D> {
     pub tiebreak_calculator: Arc<TiebreakCalculator<D>>,
     pub realtime_standings_service: Arc<RealTimeStandingsService<D>>,
     pub round_service: Arc<RoundService<D>>,
+    pub round_history_service: Arc<RoundHistoryService<D>>,
     pub player_service: Arc<PlayerService<D>>,
     pub time_control_service: Arc<TimeControlService<D>>,
     pub swiss_analysis_service: Arc<SwissAnalysisService<D>>,
@@ -64,6 +66,7 @@ impl PawnState {
         let tiebreak_calculator = Arc::new(TiebreakCalculator::new(Arc::clone(&sqlite)));
         let realtime_standings_service = Arc::new(RealTimeStandingsService::new(Arc::clone(&sqlite), Arc::clone(&tiebreak_calculator)));
         let round_service = Arc::new(RoundService::new(Arc::clone(&sqlite)));
+        let round_history_service = Arc::new(RoundHistoryService::new(Arc::clone(&sqlite)));
         let player_service = Arc::new(PlayerService::new(Arc::clone(&sqlite)));
         let time_control_service = Arc::new(TimeControlService::new(Arc::clone(&sqlite)));
         let swiss_analysis_service = Arc::new(SwissAnalysisService::new(Arc::clone(&sqlite)));
@@ -89,6 +92,7 @@ impl PawnState {
             tiebreak_calculator,
             realtime_standings_service,
             round_service,
+            round_history_service,
             player_service,
             time_control_service,
             swiss_analysis_service,

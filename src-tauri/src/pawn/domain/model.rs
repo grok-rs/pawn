@@ -29,7 +29,7 @@ pub struct Tournament {
     pub max_teams: Option<i32>,
 }
 
-#[derive(Debug, Serialize, serde::Deserialize, FromRow, SpectaType, Clone)]
+#[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct Player {
     pub id: i32,
     pub tournament_id: i32,
@@ -50,7 +50,7 @@ pub struct Player {
     pub updated_at: Option<String>,
 }
 
-#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+#[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct Game {
     pub id: i32,
     pub tournament_id: i32,
@@ -76,7 +76,7 @@ pub struct PlayerResult {
     pub losses: i32,
 }
 
-#[derive(Debug, Serialize, SpectaType, Clone)]
+#[derive(Debug, Serialize, Deserialize, SpectaType, Clone)]
 pub struct GameResult {
     pub game: Game,
     pub white_player: Player,
@@ -90,7 +90,7 @@ pub struct TournamentDetails {
     pub games: Vec<GameResult>,
 }
 
-#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+#[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct Round {
     pub id: i32,
     pub tournament_id: i32,

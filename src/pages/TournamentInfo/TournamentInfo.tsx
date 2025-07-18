@@ -51,6 +51,7 @@ import {
   Share,
   PlayCircleOutline,
   Assignment,
+  Timeline,
 } from '@mui/icons-material';
 import { commands } from '@dto/bindings';
 import type {
@@ -66,6 +67,7 @@ import { exportStandingsToCsv, exportStandingsToPdf } from '../../utils/export';
 import TournamentSettings from './TournamentSettings';
 import PlayerManagement from '../../components/PlayerManagement';
 import ExportDialog from '../../components/ExportDialog';
+import RoundViewer from '../../components/RoundViewer';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -607,16 +609,22 @@ const TournamentInfoPage: React.FC = () => {
                 {...a11yProps(1)}
               />
               <Tab
+                icon={<Timeline />}
+                label={t('tournament.roundHistory')}
+                iconPosition="start"
+                {...a11yProps(2)}
+              />
+              <Tab
                 icon={<Assignment />}
                 label={t('resultsTab')}
                 iconPosition="start"
-                {...a11yProps(2)}
+                {...a11yProps(3)}
               />
               <Tab
                 icon={<People />}
                 label={t('playersTab')}
                 iconPosition="start"
-                {...a11yProps(3)}
+                {...a11yProps(4)}
               />
             </Tabs>
           </Paper>
@@ -739,6 +747,11 @@ const TournamentInfoPage: React.FC = () => {
           </TabPanel>
 
           <TabPanel value={tabValue} index={2}>
+            {/* Round History Viewer */}
+            <RoundViewer tournamentId={parseInt(id!)} />
+          </TabPanel>
+
+          <TabPanel value={tabValue} index={3}>
             {/* Results Management */}
             {games.length > 0 ? (
               <ResultsGrid
@@ -777,7 +790,7 @@ const TournamentInfoPage: React.FC = () => {
             )}
           </TabPanel>
 
-          <TabPanel value={tabValue} index={3}>
+          <TabPanel value={tabValue} index={4}>
             {/* Enhanced Player Management */}
             <PlayerManagement
               tournamentId={parseInt(id!)}

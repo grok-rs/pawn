@@ -6,8 +6,9 @@ use crate::pawn::{
     domain::{
         dto::{
             CreateRound, EnhancedPairingRequest, EnhancedPairingResult, GeneratePairingsRequest,
-            PairingValidationResults, RoundRobinAnalysis, RoundRobinOptions, SwissPairingAnalysis,
-            SwissPairingOptions, UpdateRoundStatus, UpdateTournamentPairingMethod,
+            PairingValidationResults, RoundExportRequest, RoundHistory, RoundProgression,
+            RoundRobinAnalysis, RoundRobinOptions, SwissPairingAnalysis, SwissPairingOptions,
+            UpdateRoundStatus, UpdateTournamentPairingMethod,
         },
         model::{GameResult, Pairing, Round, RoundDetails},
     },
@@ -225,4 +226,46 @@ pub async fn benchmark_pairing_performance(
 
     // Placeholder implementation
     Ok(vec![])
+}
+
+// Round History Commands
+
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn get_round_history(
+    state: State<'_, PawnState>,
+    tournament_id: i32,
+    round_number: i32,
+) -> CommandResult<RoundHistory> {
+    state
+        .round_history_service
+        .get_round_history(tournament_id, round_number)
+        .await
+}
+
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn get_tournament_progression(
+    state: State<'_, PawnState>,
+    tournament_id: i32,
+) -> CommandResult<RoundProgression> {
+    state
+        .round_history_service
+        .get_tournament_progression(tournament_id)
+        .await
+}
+
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn export_round_data(
+    state: State<'_, PawnState>,
+    request: RoundExportRequest,
+) -> CommandResult<Vec<u8>> {
+    state
+        .round_history_service
+        .export_round_data(request)
+        .await
 }

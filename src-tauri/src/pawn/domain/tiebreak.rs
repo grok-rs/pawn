@@ -170,7 +170,7 @@ impl Default for TournamentTiebreakConfig {
     }
 }
 
-#[derive(Debug, Clone, Serialize, SpectaType)]
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct PlayerStanding {
     pub player: crate::pawn::domain::model::Player,
     pub rank: i32,

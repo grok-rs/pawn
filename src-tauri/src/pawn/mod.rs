@@ -14,6 +14,8 @@ pub mod db;
 pub mod domain;
 pub mod service;
 pub mod state;
+#[cfg(test)]
+pub mod test;
 
 pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
     debug!("init_plugin");
@@ -58,6 +60,10 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::round::analyze_round_robin_pairings,
             command::round::validate_pairing_configuration,
             command::round::benchmark_pairing_performance,
+            // Round History Commands
+            command::round::get_round_history,
+            command::round::get_tournament_progression,
+            command::round::export_round_data,
             command::game_result::update_game_result,
             command::game_result::validate_game_result,
             command::game_result::batch_update_results,

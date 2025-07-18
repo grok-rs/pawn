@@ -7,6 +7,7 @@ pub mod pairing_optimizer;
 pub mod player;
 pub mod realtime_standings;
 pub mod round;
+pub mod round_history;
 pub mod round_robin_analysis;
 pub mod round_robin_pairing;
 pub mod seeding;
