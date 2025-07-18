@@ -152,7 +152,7 @@ const NewTournamentPage = () => {
                   showSelection={true}
                   onSelectTemplate={template => {
                     // In a real implementation, this would populate the form with template data
-                    console.log('Selected template:', template);
+                    // Selected template: template
                   }}
                 />
               </CardContent>

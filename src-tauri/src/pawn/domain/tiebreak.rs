@@ -98,6 +98,34 @@ pub struct TiebreakScore {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct TiebreakBreakdown {
+    pub tiebreak_type: TiebreakType,
+    pub value: f64,
+    pub display_value: String,
+    pub explanation: String,
+    pub calculation_details: Vec<TiebreakCalculationStep>,
+    pub opponents_involved: Vec<OpponentContribution>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct TiebreakCalculationStep {
+    pub step_number: i32,
+    pub description: String,
+    pub calculation: String,
+    pub intermediate_result: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct OpponentContribution {
+    pub opponent_id: i32,
+    pub opponent_name: String,
+    pub opponent_rating: Option<i32>,
+    pub contribution_value: f64,
+    pub game_result: Option<String>, // "1-0", "0-1", "1/2-1/2"
+    pub explanation: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct TournamentTiebreakConfig {
     pub tournament_id: i32,
     pub tiebreaks: Vec<TiebreakType>,
@@ -161,6 +189,415 @@ pub struct StandingsCalculationResult {
     pub standings: Vec<PlayerStanding>,
     pub last_updated: String,
     pub tiebreak_config: TournamentTiebreakConfig,
+}
+
+#[derive(Debug, Clone, Serialize, SpectaType)]
+pub struct CrossTableEntry {
+    pub player_id: i32,
+    pub opponent_id: i32,
+    pub result: Option<f64>, // None for no game, 0.0 for loss, 0.5 for draw, 1.0 for win
+    pub color: Option<String>, // "white" or "black"
+    pub round: Option<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, SpectaType)]
+pub struct CrossTableRow {
+    pub player: crate::pawn::domain::model::Player,
+    pub results: Vec<CrossTableEntry>,
+    pub total_points: f64,
+    pub games_played: i32,
+}
+
+#[derive(Debug, Clone, Serialize, SpectaType)]
+pub struct CrossTable {
+    pub tournament_id: i32,
+    pub players: Vec<crate::pawn::domain::model::Player>,
+    pub rows: Vec<CrossTableRow>,
+    pub last_updated: String,
+}
+
+#[derive(Debug, Clone, Serialize, SpectaType)]
+pub struct StandingsUpdateEvent {
+    pub tournament_id: i32,
+    pub event_type: StandingsEventType,
+    pub affected_players: Vec<i32>,
+    pub timestamp: String,
+    pub standings: Vec<PlayerStanding>,
+}
+
+#[derive(Debug, Clone, Serialize, SpectaType)]
+pub enum StandingsEventType {
+    GameResultUpdated,
+    PlayerAdded,
+    PlayerRemoved,
+    PlayerStatusChanged,
+    RoundCompleted,
+    TournamentStarted,
+    Manual, // Manual recalculation requested
+}
+
+#[derive(Debug, Clone, Serialize, SpectaType)]
+pub struct RealTimeStandingsConfig {
+    pub auto_update_enabled: bool,
+    pub update_interval_seconds: u64,
+    pub broadcast_to_clients: bool,
+    pub cache_duration_seconds: u64,
+}
+
+impl Default for RealTimeStandingsConfig {
+    fn default() -> Self {
+        Self {
+            auto_update_enabled: true,
+            update_interval_seconds: 30,
+            broadcast_to_clients: true,
+            cache_duration_seconds: 300, // 5 minutes
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct ExportRequest {
+    pub tournament_id: i32,
+    pub export_type: ExportType,
+    pub format: ExportFormat,
+    pub include_tiebreaks: bool,
+    pub include_cross_table: bool,
+    pub include_game_results: bool,
+    pub include_player_details: bool,
+    pub custom_filename: Option<String>,
+    pub template_options: Option<ExportTemplateOptions>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub enum ExportType {
+    Standings,
+    CrossTable,
+    GameResults,
+    PlayerList,
+    TournamentSummary,
+    Complete, // All data
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub enum ExportFormat {
+    Csv,
+    Pdf,
+    Html,
+    Json,
+    Xlsx,
+    Txt,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct ExportTemplateOptions {
+    pub include_header: bool,
+    pub include_footer: bool,
+    pub show_logos: bool,
+    pub paper_size: PaperSize,
+    pub orientation: PageOrientation,
+    pub font_size: FontSize,
+    pub color_scheme: ColorScheme,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub enum PaperSize {
+    A4,
+    A5,
+    Letter,
+    Legal,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub enum PageOrientation {
+    Portrait,
+    Landscape,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub enum FontSize {
+    Small,
+    Medium,
+    Large,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub enum ColorScheme {
+    Default,
+    Professional,
+    Minimal,
+    Classic,
+}
+
+impl Default for ExportTemplateOptions {
+    fn default() -> Self {
+        Self {
+            include_header: true,
+            include_footer: true,
+            show_logos: true,
+            paper_size: PaperSize::A4,
+            orientation: PageOrientation::Portrait,
+            font_size: FontSize::Medium,
+            color_scheme: ColorScheme::Professional,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct NormCalculationRequest {
+    pub tournament_id: i32,
+    pub player_id: i32,
+    pub norm_type: NormType,
+    pub tournament_category: Option<i32>, // Average rating of participants
+    pub games_played: i32,
+    pub points_scored: f64,
+    pub performance_rating: Option<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub enum NormType {
+    Grandmaster,    // GM norm
+    InternationalMaster,  // IM norm
+    FideMaster,     // FM norm
+    CandidateMaster, // CM norm
+    WomanGrandmaster, // WGM norm
+    WomanInternationalMaster, // WIM norm
+    WomanFideMaster, // WFM norm
+    WomanCandidateMaster, // WCM norm
+}
+
+impl NormType {
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            NormType::Grandmaster => "Grandmaster",
+            NormType::InternationalMaster => "International Master",
+            NormType::FideMaster => "FIDE Master",
+            NormType::CandidateMaster => "Candidate Master",
+            NormType::WomanGrandmaster => "Woman Grandmaster",
+            NormType::WomanInternationalMaster => "Woman International Master",
+            NormType::WomanFideMaster => "Woman FIDE Master",
+            NormType::WomanCandidateMaster => "Woman Candidate Master",
+        }
+    }
+
+    pub fn short_name(&self) -> &'static str {
+        match self {
+            NormType::Grandmaster => "GM",
+            NormType::InternationalMaster => "IM",
+            NormType::FideMaster => "FM",
+            NormType::CandidateMaster => "CM",
+            NormType::WomanGrandmaster => "WGM",
+            NormType::WomanInternationalMaster => "WIM",
+            NormType::WomanFideMaster => "WFM",
+            NormType::WomanCandidateMaster => "WCM",
+        }
+    }
+
+    pub fn required_performance_rating(&self) -> i32 {
+        match self {
+            NormType::Grandmaster => 2600,
+            NormType::InternationalMaster => 2450,
+            NormType::FideMaster => 2300,
+            NormType::CandidateMaster => 2200,
+            NormType::WomanGrandmaster => 2400,
+            NormType::WomanInternationalMaster => 2250,
+            NormType::WomanFideMaster => 2100,
+            NormType::WomanCandidateMaster => 2000,
+        }
+    }
+
+    pub fn minimum_games(&self) -> i32 {
+        match self {
+            NormType::Grandmaster | NormType::InternationalMaster => 9,
+            NormType::FideMaster | NormType::CandidateMaster => 7,
+            NormType::WomanGrandmaster | NormType::WomanInternationalMaster => 9,
+            NormType::WomanFideMaster | NormType::WomanCandidateMaster => 7,
+        }
+    }
+
+    pub fn minimum_score_percentage(&self) -> f64 {
+        match self {
+            NormType::Grandmaster => 0.35, // 35%
+            NormType::InternationalMaster => 0.35,
+            NormType::FideMaster => 0.35,
+            NormType::CandidateMaster => 0.35,
+            NormType::WomanGrandmaster => 0.35,
+            NormType::WomanInternationalMaster => 0.35,
+            NormType::WomanFideMaster => 0.35,
+            NormType::WomanCandidateMaster => 0.35,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct NormCalculationResult {
+    pub norm_type: NormType,
+    pub achieved: bool,
+    pub performance_rating: i32,
+    pub required_performance_rating: i32,
+    pub games_played: i32,
+    pub minimum_games: i32,
+    pub points_scored: f64,
+    pub score_percentage: f64,
+    pub minimum_score_percentage: f64,
+    pub tournament_category: Option<i32>,
+    pub requirements_met: NormRequirements,
+    pub missing_requirements: Vec<String>,
+    pub additional_info: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct NormRequirements {
+    pub performance_rating_met: bool,
+    pub minimum_games_met: bool,
+    pub minimum_score_met: bool,
+    pub tournament_category_adequate: bool,
+    pub opponent_diversity_met: bool, // Need opponents from different federations
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct PrizeDistributionRequest {
+    pub tournament_id: i32,
+    pub prize_structure: PrizeStructure,
+    pub currency: String,
+    pub total_prize_fund: f64,
+    pub distribution_method: DistributionMethod,
+    pub special_prizes: Vec<SpecialPrize>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct PrizeStructure {
+    pub first_place_percentage: f64,
+    pub second_place_percentage: f64,
+    pub third_place_percentage: f64,
+    pub additional_places: Vec<PrizePlace>,
+    pub age_group_prizes: Vec<AgeGroupPrize>,
+    pub rating_group_prizes: Vec<RatingGroupPrize>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct PrizePlace {
+    pub place: i32,
+    pub percentage: f64,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct AgeGroupPrize {
+    pub age_group: String, // "U18", "U16", "U14", "U12", "U10", "U8", "50+", "65+"
+    pub percentage: f64,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct RatingGroupPrize {
+    pub rating_group: String, // "U2200", "U2000", "U1800", "U1600", "U1400", "U1200", "Unrated"
+    pub percentage: f64,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct SpecialPrize {
+    pub prize_type: SpecialPrizeType,
+    pub amount: f64,
+    pub description: String,
+    pub criteria: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub enum SpecialPrizeType {
+    BestWoman,
+    BestJunior,
+    BestSenior,
+    BestLocalPlayer,
+    BestUnratedPlayer,
+    BestUpset,
+    MostImproved,
+    FairPlay,
+    BestGame,
+    Custom(String),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub enum DistributionMethod {
+    TiedPlayersShareEqually,
+    TiedPlayersGetFullPrize,
+    TiedPlayersGetHighestPrize,
+    TiedPlayersGetLowestPrize,
+    TiebreakDeterminesWinner,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct PrizeDistributionResult {
+    pub tournament_id: i32,
+    pub prize_awards: Vec<PrizeAward>,
+    pub total_distributed: f64,
+    pub currency: String,
+    pub distribution_summary: String,
+    pub special_awards: Vec<SpecialAward>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct PrizeAward {
+    pub player: crate::pawn::domain::model::Player,
+    pub rank: i32,
+    pub points: f64,
+    pub prize_amount: f64,
+    pub prize_description: String,
+    pub shared_with: Vec<i32>, // Player IDs if prize is shared
+    pub prize_categories: Vec<String>, // "Overall", "U18", "U2000", etc.
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct SpecialAward {
+    pub award_type: SpecialPrizeType,
+    pub player: crate::pawn::domain::model::Player,
+    pub amount: f64,
+    pub description: String,
+    pub justification: String,
+}
+
+impl Default for PrizeStructure {
+    fn default() -> Self {
+        Self {
+            first_place_percentage: 40.0,
+            second_place_percentage: 25.0,
+            third_place_percentage: 15.0,
+            additional_places: vec![
+                PrizePlace {
+                    place: 4,
+                    percentage: 10.0,
+                    description: "4th place".to_string(),
+                },
+                PrizePlace {
+                    place: 5,
+                    percentage: 5.0,
+                    description: "5th place".to_string(),
+                },
+                PrizePlace {
+                    place: 6,
+                    percentage: 3.0,
+                    description: "6th place".to_string(),
+                },
+                PrizePlace {
+                    place: 7,
+                    percentage: 2.0,
+                    description: "7th place".to_string(),
+                },
+            ],
+            age_group_prizes: vec![],
+            rating_group_prizes: vec![],
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
+pub struct ExportResult {
+    pub success: bool,
+    pub file_path: Option<String>,
+    pub file_name: String,
+    pub file_size: u64,
+    pub export_time_ms: u64,
+    pub error_message: Option<String>,
 }
 
 #[cfg(test)]

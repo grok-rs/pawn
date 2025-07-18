@@ -16,6 +16,7 @@ import {
   Divider,
   FormControlLabel,
   Switch,
+  IconButton,
 } from '@mui/material';
 import {
   DataGrid,
@@ -35,9 +36,11 @@ import {
   TrendingDown,
   Remove,
   ExpandMore,
+  Info,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import type { PlayerStanding } from '../../dto/bindings';
+import type { PlayerStanding, TiebreakBreakdown } from '../../dto/bindings';
+import TiebreakBreakdownDialog from '../TiebreakBreakdownDialog';
 
 interface StandingsTableProps {
   standings: PlayerStanding[];
@@ -46,6 +49,10 @@ interface StandingsTableProps {
   onExportCsv?: () => void;
   onExportPdf?: () => void;
   onPrint?: () => void;
+  onTiebreakBreakdown?: (
+    playerId: number,
+    tiebreakType: string
+  ) => Promise<TiebreakBreakdown>;
 }
 
 // Tiebreak short names are now localized through translation keys
@@ -57,6 +64,7 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
   onExportCsv,
   onExportPdf,
   onPrint,
+  onTiebreakBreakdown,
 }) => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,6 +73,10 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [columnVisibility, setColumnVisibility] =
     useState<GridColumnVisibilityModel>({});
+  const [tiebreakBreakdown, setTiebreakBreakdown] =
+    useState<TiebreakBreakdown | null>(null);
+  const [breakdownDialogOpen, setBreakdownDialogOpen] = useState(false);
+  const [selectedPlayerName, setSelectedPlayerName] = useState('');
 
   const filteredStandings = useMemo(() => {
     if (!searchQuery) return standings;
@@ -280,15 +292,45 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
           return {
             field: `tiebreak_${index}`,
             headerName: t(`tiebreaks.short.${tiebreakType}`),
-            width: 100,
+            width: 120,
             align: 'center',
             headerAlign: 'center',
             valueGetter: (_value: any, row: any) =>
               row.tiebreak_scores[index]?.display_value || '-',
             renderCell: (params: GridRenderCellParams) => (
-              <Tooltip title={t(`tiebreaks.${tiebreakType}.name`)}>
-                <Typography variant="body2">{params.value}</Typography>
-              </Tooltip>
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                gap={0.5}
+              >
+                <Tooltip title={t(`tiebreaks.${tiebreakType}.name`)}>
+                  <Typography variant="body2">{params.value}</Typography>
+                </Tooltip>
+                {onTiebreakBreakdown && params.value !== '-' && (
+                  <Tooltip title={t('showTiebreakBreakdown')}>
+                    <IconButton
+                      size="small"
+                      onClick={() =>
+                        handleTiebreakClick(
+                          params.row.player.id,
+                          tiebreakType,
+                          params.row.player.name
+                        )
+                      }
+                      sx={{
+                        padding: 0.25,
+                        '&:hover': {
+                          backgroundColor: 'primary.main',
+                          color: 'primary.contrastText',
+                        },
+                      }}
+                    >
+                      <Info sx={{ fontSize: 14 }} />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Box>
             ),
           };
         })
@@ -302,6 +344,29 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
 
   const handleCloseMenu = () => {
     setAnchorEl(null);
+  };
+
+  const handleTiebreakClick = async (
+    playerId: number,
+    tiebreakType: string,
+    playerName: string
+  ) => {
+    if (!onTiebreakBreakdown) return;
+
+    try {
+      const breakdown = await onTiebreakBreakdown(playerId, tiebreakType);
+      setTiebreakBreakdown(breakdown);
+      setSelectedPlayerName(playerName);
+      setBreakdownDialogOpen(true);
+    } catch {
+      // Handle error silently or show user notification
+    }
+  };
+
+  const handleBreakdownDialogClose = () => {
+    setBreakdownDialogOpen(false);
+    setTiebreakBreakdown(null);
+    setSelectedPlayerName('');
   };
 
   return (
@@ -437,6 +502,14 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
           </MenuItem>
         )}
       </Menu>
+
+      {/* Tiebreak Breakdown Dialog */}
+      <TiebreakBreakdownDialog
+        open={breakdownDialogOpen}
+        onClose={handleBreakdownDialogClose}
+        breakdown={tiebreakBreakdown}
+        playerName={selectedPlayerName}
+      />
     </Paper>
   );
 };

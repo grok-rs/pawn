@@ -50,6 +50,17 @@ pub async fn update_game_result(
         "Successfully updated game {} result to {}",
         updated_game.id, updated_game.result
     );
+    
+    // Trigger real-time standings update
+    let affected_players = vec![updated_game.white_player_id, updated_game.black_player_id];
+    if let Err(e) = state.realtime_standings_service
+        .handle_game_result_update(updated_game.tournament_id, affected_players)
+        .await
+    {
+        warn!("Failed to update real-time standings: {}", e);
+        // Don't fail the entire operation if standings update fails
+    }
+    
     Ok(updated_game)
 }
 

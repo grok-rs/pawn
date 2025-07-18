@@ -1,8 +1,11 @@
+pub mod export;
 pub mod knockout;
 pub mod manual_pairing;
+pub mod norm_calculation;
 pub mod pairing;
 pub mod pairing_optimizer;
 pub mod player;
+pub mod realtime_standings;
 pub mod round;
 pub mod round_robin_analysis;
 pub mod round_robin_pairing;

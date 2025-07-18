@@ -1,0 +1,128 @@
+/* Minimal CSS template for tournament exports */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 15px;
+    background-color: white;
+    color: #333;
+    line-height: 1.5;
+}
+
+h1 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 2em;
+    font-weight: normal;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+}
+
+h2 {
+    color: #333;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+    font-weight: normal;
+}
+
+p {
+    margin: 5px 0;
+    font-size: 1em;
+}
+
+/* Tournament header information */
+.tournament-header {
+    margin-bottom: 25px;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+}
+
+/* Standings table */
+.standings {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    border: 1px solid #ddd;
+}
+
+.standings th {
+    background-color: #f8f8f8;
+    color: #333;
+    padding: 10px 8px;
+    text-align: left;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+    font-size: 0.95em;
+}
+
+.standings td {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9em;
+}
+
+.standings tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Cross table */
+.crosstable {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    border: 1px solid #ddd;
+    font-family: 'Courier New', monospace;
+}
+
+.crosstable th {
+    background-color: #f8f8f8;
+    color: #333;
+    padding: 6px 4px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.85em;
+    border-bottom: 1px solid #ddd;
+}
+
+.crosstable td {
+    padding: 6px 4px;
+    border: 1px solid #eee;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+.crosstable tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Footer */
+footer {
+    margin-top: 30px;
+    text-align: center;
+    color: #999;
+    font-size: 0.85em;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+/* Print styles */
+@media print {
+    body {
+        margin: 10px;
+        font-size: 10px;
+    }
+    
+    h1 {
+        font-size: 1.6em;
+        margin-bottom: 20px;
+    }
+    
+    h2 {
+        font-size: 1.2em;
+        margin-top: 20px;
+    }
+    
+    .standings th, .crosstable th {
+        background-color: #f0f0f0 !important;
+    }
+}

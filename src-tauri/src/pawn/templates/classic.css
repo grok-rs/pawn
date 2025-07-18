@@ -1,0 +1,191 @@
+/* Classic CSS template for tournament exports */
+body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    margin: 25px;
+    background-color: #fdfdf8;
+    color: #2c2c2c;
+    line-height: 1.6;
+}
+
+h1 {
+    color: #8b4513;
+    text-align: center;
+    margin-bottom: 35px;
+    font-size: 2.3em;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    border-bottom: 3px double #8b4513;
+    padding-bottom: 15px;
+}
+
+h2 {
+    color: #654321;
+    margin-top: 35px;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    font-weight: bold;
+    border-left: 5px solid #8b4513;
+    padding-left: 15px;
+    background-color: #f9f9f4;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+p {
+    margin: 8px 0;
+    font-size: 1.05em;
+}
+
+/* Tournament header information */
+.tournament-header {
+    background-color: #f4f4e8;
+    padding: 25px;
+    border: 2px solid #8b4513;
+    border-radius: 10px;
+    margin-bottom: 35px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Standings table */
+.standings {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 25px 0;
+    background-color: #fff;
+    border: 2px solid #8b4513;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.standings th {
+    background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%);
+    color: white;
+    padding: 15px 10px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1em;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.standings td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #d4af37;
+    font-size: 1.05em;
+    text-align: center;
+}
+
+.standings tr:nth-child(even) {
+    background-color: #faf9f2;
+}
+
+.standings tr:hover {
+    background-color: #f0e68c;
+}
+
+.standings td:first-child {
+    font-weight: bold;
+    color: #8b4513;
+}
+
+.standings td:nth-child(2) {
+    text-align: left;
+    font-weight: bold;
+    color: #654321;
+}
+
+/* Cross table */
+.crosstable {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 25px 0;
+    background-color: #fff;
+    border: 2px solid #8b4513;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    font-family: 'Georgia', serif;
+}
+
+.crosstable th {
+    background: linear-gradient(135deg, #cd853f 0%, #daa520 100%);
+    color: white;
+    padding: 12px 8px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1em;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.crosstable td {
+    padding: 10px 8px;
+    border: 1px solid #d4af37;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.crosstable tr:nth-child(even) {
+    background-color: #faf9f2;
+}
+
+.crosstable tr:hover {
+    background-color: #f0e68c;
+}
+
+.crosstable td:first-child {
+    text-align: left;
+    font-weight: bold;
+    background-color: #f4f4e8;
+    color: #654321;
+}
+
+/* Footer */
+footer {
+    margin-top: 50px;
+    text-align: center;
+    color: #8b4513;
+    font-size: 0.95em;
+    border-top: 2px solid #8b4513;
+    padding-top: 20px;
+    font-style: italic;
+    background-color: #f9f9f4;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+/* Print styles */
+@media print {
+    body {
+        background-color: white;
+        margin: 20px;
+        font-size: 11px;
+    }
+    
+    h1 {
+        color: #000 !important;
+        font-size: 2em;
+        text-shadow: none !important;
+    }
+    
+    h2 {
+        color: #000 !important;
+        background-color: #f0f0f0 !important;
+    }
+    
+    .standings th, .crosstable th {
+        background: #000 !important;
+        color: white !important;
+        text-shadow: none !important;
+    }
+    
+    .tournament-header {
+        background-color: #f0f0f0 !important;
+        border: 2px solid #000 !important;
+    }
+    
+    footer {
+        background-color: #f0f0f0 !important;
+        border-top: 2px solid #000 !important;
+    }
+}

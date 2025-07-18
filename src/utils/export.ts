@@ -61,7 +61,7 @@ export const exportStandingsToPdf = async (
   _tournamentName: string
 ) => {
   // TODO: Implement PDF export using a library like jsPDF
-  console.log('PDF export not yet implemented');
+  // PDF export not yet implemented
 
   // For now, we'll just open the print dialog
   window.print();

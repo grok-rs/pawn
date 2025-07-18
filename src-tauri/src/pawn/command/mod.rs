@@ -1,5 +1,7 @@
+pub mod export;
 pub mod game_result;
 pub mod knockout;
+pub mod norm_calculation;
 pub mod player;
 pub mod round;
 pub mod seeding;

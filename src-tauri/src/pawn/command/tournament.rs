@@ -7,7 +7,7 @@ use crate::pawn::{
     domain::{
         dto::{CreateGame, CreatePlayer, CreateTournament, UpdateTournamentSettings, UpdateTournamentStatus},
         model::{Game, GameResult, Player, PlayerResult, Tournament, TournamentDetails},
-        tiebreak::{StandingsCalculationResult, TournamentTiebreakConfig},
+        tiebreak::{StandingsCalculationResult, StandingsUpdateEvent, TiebreakBreakdown, TiebreakType, TournamentTiebreakConfig},
     },
     state::PawnState,
 };
@@ -179,6 +179,76 @@ pub async fn get_tournament_standings(
         .tiebreak_calculator
         .calculate_standings(tournament_id, &config)
         .await
+}
+
+// Tiebreak breakdown
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn get_tiebreak_breakdown(
+    state: State<'_, PawnState>,
+    tournament_id: i32,
+    player_id: i32,
+    tiebreak_type: TiebreakType,
+) -> CommandResult<TiebreakBreakdown> {
+    // Get tournament data
+    let players = state.player_service.get_players_by_tournament(tournament_id).await?;
+    let games = state.tournament_service.get_games_by_tournament(tournament_id).await?;
+    let player_results = state.tournament_service.get_player_results(tournament_id).await?;
+    
+    // Convert player results to HashMap for efficient lookup
+    let mut results_map = std::collections::HashMap::new();
+    for result in player_results {
+        results_map.insert(result.player.id, result);
+    }
+    
+    // Find the specific player
+    let player = players.iter()
+        .find(|p| p.id == player_id)
+        .ok_or_else(|| crate::pawn::common::error::PawnError::NotFound("Player not found".to_string()))?;
+    
+    // Generate breakdown
+    state.tiebreak_calculator
+        .generate_tiebreak_breakdown(player, tiebreak_type, &games, &players, &results_map)
+        .await
+}
+
+// Real-time standings
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn get_realtime_standings(
+    state: State<'_, PawnState>,
+    tournament_id: i32,
+) -> CommandResult<StandingsCalculationResult> {
+    state.realtime_standings_service
+        .get_realtime_standings(tournament_id)
+        .await
+}
+
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn force_recalculate_standings(
+    state: State<'_, PawnState>,
+    tournament_id: i32,
+) -> CommandResult<StandingsCalculationResult> {
+    state.realtime_standings_service
+        .force_recalculate_standings(tournament_id)
+        .await
+}
+
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn clear_standings_cache(
+    state: State<'_, PawnState>,
+    tournament_id: i32,
+) -> CommandResult<()> {
+    state.realtime_standings_service
+        .clear_cache(tournament_id)
+        .await;
+    Ok(())
 }
 
 // Tournament settings

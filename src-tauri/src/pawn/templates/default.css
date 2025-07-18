@@ -1,0 +1,137 @@
+/* Default CSS template for tournament exports */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 20px;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+h1 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2.2em;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 10px;
+}
+
+h2 {
+    color: #34495e;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+    border-left: 4px solid #3498db;
+    padding-left: 10px;
+}
+
+p {
+    margin: 5px 0;
+    line-height: 1.6;
+}
+
+/* Tournament header information */
+.tournament-header {
+    background-color: #ecf0f1;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Standings table */
+.standings {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.standings th {
+    background-color: #3498db;
+    color: white;
+    padding: 12px 8px;
+    text-align: left;
+    font-weight: bold;
+    border-bottom: 2px solid #2980b9;
+}
+
+.standings td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+.standings tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.standings tr:hover {
+    background-color: #e8f4f8;
+}
+
+/* Cross table */
+.crosstable {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    font-family: 'Courier New', monospace;
+}
+
+.crosstable th {
+    background-color: #e74c3c;
+    color: white;
+    padding: 8px 6px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.crosstable td {
+    padding: 8px 6px;
+    border: 1px solid #ddd;
+    text-align: center;
+    font-weight: bold;
+}
+
+.crosstable tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.crosstable tr:hover {
+    background-color: #fdf2f2;
+}
+
+/* Footer */
+footer {
+    margin-top: 50px;
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 0.9em;
+    border-top: 1px solid #bdc3c7;
+    padding-top: 20px;
+}
+
+/* Print styles */
+@media print {
+    body {
+        background-color: white;
+        margin: 0;
+        font-size: 12px;
+    }
+    
+    .standings th {
+        background-color: #333 !important;
+        color: white !important;
+    }
+    
+    .crosstable th {
+        background-color: #333 !important;
+        color: white !important;
+    }
+    
+    h1, h2 {
+        color: #000 !important;
+    }
+}

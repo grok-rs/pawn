@@ -39,6 +39,10 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::tournament::populate_mock_data,
             command::tournament::populate_mock_tournaments,
             command::tournament::get_tournament_standings,
+            command::tournament::get_tiebreak_breakdown,
+            command::tournament::get_realtime_standings,
+            command::tournament::force_recalculate_standings,
+            command::tournament::clear_standings_cache,
             command::tournament::get_tournament_settings,
             command::tournament::update_tournament_settings,
             command::tournament::update_tournament_status,
@@ -114,6 +118,23 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::seeding::apply_tournament_seeding,
             command::seeding::generate_pairing_numbers,
             command::seeding::analyze_tournament_seeding,
+            // Export Commands
+            command::export::export_tournament_data,
+            command::export::get_export_directory,
+            command::export::get_available_export_formats,
+            command::export::get_export_templates,
+            command::export::validate_export_request,
+            command::export::get_export_preview,
+            // Norm Calculation Commands
+            command::norm_calculation::calculate_norm,
+            command::norm_calculation::calculate_available_norms,
+            command::norm_calculation::get_norm_types,
+            command::norm_calculation::get_norm_requirements,
+            command::norm_calculation::calculate_prize_distribution,
+            command::norm_calculation::get_tournament_norms_summary,
+            command::norm_calculation::get_prize_distribution_templates,
+            command::norm_calculation::validate_prize_distribution,
+            command::norm_calculation::export_norms_report,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Throw);
 

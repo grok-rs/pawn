@@ -131,7 +131,7 @@ const SeedingStep = () => {
         applied: true,
       });
 
-      console.log('Seeding applied successfully');
+      // Seeding applied successfully
     } catch (error: unknown) {
       console.error('Failed to apply seeding:', error);
     } finally {

@@ -626,9 +626,9 @@ const TournamentInfoPage: React.FC = () => {
               <StandingsTable
                 standings={standings.standings}
                 loading={loadingStandings}
-                onPlayerClick={playerId =>
-                  console.log('Player clicked:', playerId)
-                }
+                onPlayerClick={playerId => {
+                  // Player clicked: playerId
+                }}
                 onExportCsv={handleExportCsv}
                 onExportPdf={handleExportPdf}
                 onPrint={handlePrint}
