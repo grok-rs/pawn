@@ -199,6 +199,9 @@ export const commands = {
   async getGameResultTypes(): Promise<[string, string][]> {
     return await TAURI_INVOKE('plugin:pawn|get_game_result_types');
   },
+  async importResultsCsv(data: CsvResultImport): Promise<CsvImportResult> {
+    return await TAURI_INVOKE('plugin:pawn|import_results_csv', { data });
+  },
   async createPlayerEnhanced(data: CreatePlayer): Promise<Player> {
     return await TAURI_INVOKE('plugin:pawn|create_player_enhanced', { data });
   },
@@ -499,6 +502,35 @@ export type BulkImportResult = {
   error_count: number;
   validations: PlayerImportValidation[];
   imported_player_ids: number[];
+};
+export type CsvImportError = {
+  row_number: number;
+  field: string | null;
+  message: string;
+  row_data: string;
+};
+export type CsvImportResult = {
+  success: boolean;
+  total_rows: number;
+  valid_rows: number;
+  processed_rows: number;
+  errors: CsvImportError[];
+  warnings: string[];
+};
+export type CsvResultImport = {
+  tournament_id: number;
+  csv_content: string;
+  validate_only: boolean;
+  changed_by: string | null;
+};
+export type CsvResultRow = {
+  board_number: number | null;
+  white_player: string | null;
+  black_player: string | null;
+  result: string;
+  result_type: string | null;
+  result_reason: string | null;
+  row_number: number;
 };
 export type ColorBalanceAnalysisDto = {
   players_with_color_imbalance: number;
