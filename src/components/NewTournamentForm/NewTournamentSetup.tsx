@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useNotification } from '../../contexts/NotificationContext';
 
 import { APP_ROUTES } from '../../constants/appRoutes';
 import FormStepper from '../FormStepper';
@@ -11,6 +12,7 @@ import { commands, CreateTournament } from '../../dto/bindings';
 
 const NewTournamentSetup = () => {
   const navigate = useNavigate();
+  const { showSuccess, showError } = useNotification();
 
   const onCancel = () => navigate(APP_ROUTES.TOURNAMENTS);
 
@@ -38,11 +40,14 @@ const NewTournamentSetup = () => {
       const newTournament = await commands.createTournament(createTournament);
       console.log('Tournament created successfully:', newTournament);
 
+      showSuccess('Tournament created successfully!');
+      
       // Navigate to the tournament page
       navigate(`/tournament/${newTournament.id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create tournament:', error);
-      // TODO: Show error message to user
+      const errorMessage = error?.details || error?.message || 'Failed to create tournament. Please try again.';
+      showError(errorMessage);
     }
   };
 

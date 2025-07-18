@@ -273,12 +273,18 @@ const ConfigurationStep = () => {
                     {...register('timeControlTemplate')}
                     label={t('tournament.configuration.timeControlTemplate')}
                     disabled={loadingTemplates}
+                    displayEmpty
                     startAdornment={
                       <InputAdornment position="start">
                         <Timer color="action" />
                       </InputAdornment>
                     }
                   >
+                    <MenuItem value="">
+                      <Typography color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                        {loadingTemplates ? 'Loading templates...' : 'Select a time control template (optional)'}
+                      </Typography>
+                    </MenuItem>
                     {timeControlTemplates.map(template => (
                       <MenuItem key={template.id} value={template.id}>
                         <Box>

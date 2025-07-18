@@ -56,6 +56,7 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
     const typeMap: Record<string, string> = {
       rapid: t('tournament.types.rapid'),
       classical: t('tournament.types.classic'),
+      classic: t('tournament.types.classic'),
       blitz: t('tournament.types.blitz'),
     };
     return typeMap[type] || type;

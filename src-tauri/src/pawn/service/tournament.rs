@@ -58,9 +58,9 @@ impl<D: Db> TournamentService<D> {
                 "Tournament name cannot be empty".into(),
             ));
         }
-        if data.player_count <= 0 {
+        if data.player_count < 0 {
             return Err(PawnError::InvalidInput(
-                "Player count must be positive".into(),
+                "Player count cannot be negative".into(),
             ));
         }
         if data.total_rounds <= 0 {

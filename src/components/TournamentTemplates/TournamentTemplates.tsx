@@ -68,10 +68,11 @@ interface TournamentTemplatesProps {
 }
 
 const TOURNAMENT_TYPES = [
-  { value: 'swiss', label: 'tournament.types.swiss' },
-  { value: 'roundRobin', label: 'tournament.types.roundRobin' },
-  { value: 'knockout', label: 'tournament.types.knockout' },
-  { value: 'scheveningen', label: 'tournament.types.scheveningen' },
+  { value: 'swiss', label: 'tournament.types.swiss', description: 'tournament.types.swiss.description' },
+  { value: 'roundRobin', label: 'tournament.types.roundRobin', description: 'tournament.types.roundRobin.description' },
+  { value: 'knockout', label: 'tournament.types.knockout', description: 'tournament.types.knockout.description' },
+  { value: 'elimination', label: 'tournament.types.elimination', description: 'tournament.types.elimination.description' },
+  { value: 'scheveningen', label: 'tournament.types.scheveningen', description: 'tournament.types.scheveningen.description' },
 ];
 
 const TIME_TYPES = [
@@ -241,7 +242,7 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
 
   const getTypeLabel = (
     type: string,
-    types: Array<{ value: string; label: string }>
+    types: Array<{ value: string; label: string; description?: string }>
   ) => {
     const typeObj = types.find(t => t.value === type);
     return typeObj ? t(typeObj.label) : type;
@@ -257,25 +258,30 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 3,
+          alignItems: 'flex-start',
+          mb: 4,
+          flexDirection: { mobile: 'column', tablet: 'row' },
+          gap: 2,
         }}
       >
-        <Typography variant="h5" fontWeight={700}>
-          {t('tournament.templates.title')}
-        </Typography>
+        <Box>
+          <Typography variant="h4" fontWeight={700} gutterBottom>
+            {t('tournament.templates.title')}
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 600 }}>
+            {t('tournament.templates.description')}
+          </Typography>
+        </Box>
         <Button
           variant="contained"
+          size="large"
           startIcon={<Add />}
           onClick={() => setCreateDialogOpen(true)}
+          sx={{ minWidth: 180, alignSelf: { mobile: 'stretch', tablet: 'flex-start' } }}
         >
           {t('tournament.templates.create')}
         </Button>
       </Box>
-
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        {t('tournament.templates.description')}
-      </Typography>
 
       {templates.length === 0 ? (
         <Alert severity="info">
@@ -293,9 +299,18 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    boxShadow: 4,
+                    transform: 'translateY(-2px)',
+                  },
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  minWidth: 0, // Prevent overflow
+                  overflow: 'hidden',
                 }}
               >
-                <CardContent sx={{ flexGrow: 1 }}>
+                <CardContent sx={{ flexGrow: 1, minWidth: 0, overflow: 'hidden' }}>
                   <Box
                     sx={{
                       display: 'flex',
@@ -304,7 +319,17 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                       mb: 2,
                     }}
                   >
-                    <Typography variant="h6" fontWeight={600}>
+                    <Typography 
+                      variant="h6" 
+                      fontWeight={600}
+                      sx={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        pr: 1
+                      }}
+                      title={template.name}
+                    >
                       {template.name}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
@@ -341,57 +366,93 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                       )}
                       size="small"
                       color="primary"
-                      variant="outlined"
+                      variant="filled"
                     />
                     <Chip
                       icon={<Timer />}
                       label={getTypeLabel(template.time_type, TIME_TYPES)}
                       size="small"
                       color="secondary"
+                      variant="filled"
+                    />
+                    <Chip
+                      label={`${template.default_rounds} ${t('tournament.templates.rounds')}`}
+                      size="small"
                       variant="outlined"
                     />
                   </Box>
 
                   <Typography variant="caption" color="text.secondary">
-                    {t('tournament.templates.rounds')}:{' '}
-                    {template.default_rounds} •
                     {t('tournament.templates.createdBy')}:{' '}
-                    {template.created_by || t('common.unknown')} •
+                    {template.created_by || t('common.unknown')} •{' '}
                     {formatDate(template.created_at)}
                   </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions sx={{ p: 2, pt: 0, flexDirection: 'column', gap: 1 }}>
                   {showSelection && onSelectTemplate && (
                     <Button
                       size="small"
                       variant="contained"
+                      fullWidth
                       onClick={() => onSelectTemplate(template)}
+                      sx={{ 
+                        minHeight: 36,
+                        fontSize: '0.75rem',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
                     >
                       {t('tournament.templates.useTemplate')}
                     </Button>
                   )}
-                  <Button
-                    size="small"
-                    startIcon={<Visibility />}
-                    onClick={() => openViewDialog(template)}
-                  >
-                    {t('common.view')}
-                  </Button>
-                  <Button
-                    size="small"
-                    startIcon={<Edit />}
-                    onClick={() => openEditDialog(template)}
-                  >
-                    {t('common.edit')}
-                  </Button>
-                  <Button
-                    size="small"
-                    color="error"
-                    startIcon={<Delete />}
-                    onClick={() => handleDeleteTemplate(template.id)}
-                  >
-                    {t('common.delete')}
-                  </Button>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: 0.5, 
+                    width: '100%',
+                    flexWrap: 'wrap'
+                  }}>
+                    <Button
+                      size="small"
+                      startIcon={<Visibility />}
+                      onClick={() => openViewDialog(template)}
+                      sx={{ 
+                        flex: '1 1 auto',
+                        minWidth: 0,
+                        fontSize: '0.75rem',
+                        px: 1
+                      }}
+                    >
+                      {t('common.view')}
+                    </Button>
+                    <Button
+                      size="small"
+                      startIcon={<Edit />}
+                      onClick={() => openEditDialog(template)}
+                      sx={{ 
+                        flex: '1 1 auto',
+                        minWidth: 0,
+                        fontSize: '0.75rem',
+                        px: 1
+                      }}
+                    >
+                      {t('common.edit')}
+                    </Button>
+                    <Button
+                      size="small"
+                      color="error"
+                      startIcon={<Delete />}
+                      onClick={() => handleDeleteTemplate(template.id)}
+                      sx={{ 
+                        flex: '1 1 auto',
+                        minWidth: 0,
+                        fontSize: '0.75rem',
+                        px: 1
+                      }}
+                    >
+                      {t('common.delete')}
+                    </Button>
+                  </Box>
                 </CardActions>
               </Card>
             </Grid>
@@ -456,7 +517,12 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
                 >
                   {TOURNAMENT_TYPES.map(type => (
                     <MenuItem key={type.value} value={type.value}>
-                      {t(type.label)}
+                      <Box>
+                        <Typography>{t(type.label)}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {t(type.description)}
+                        </Typography>
+                      </Box>
                     </MenuItem>
                   ))}
                 </Select>
