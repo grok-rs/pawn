@@ -731,6 +731,7 @@
   "tournament.templates.useTemplate": "Использовать шаблон",
   "tournament.templates.name": "Название шаблона",
   "tournament.templates.makePublic": "Сделать публичным",
+  "tournament.roundHistory": "История туров",
 
   "player.rating": "Рейтинг",
 
@@ -899,5 +900,174 @@
   "gameResults.messages.validationError": "Ошибка проверки",
   "gameResults.messages.batchValidationFailed": "Массовая проверка не удалась",
   "gameResults.messages.saveResultsFailed": "Не удалось сохранить результаты",
-  "gameResults.messages.auditTrailFailed": "Не удалось получить журнал изменений"
+  "gameResults.messages.auditTrailFailed": "Не удалось получить журнал изменений",
+
+  "roundViewer": {
+    "title": "История туров",
+    "subtitle": "Просмотр развития турнира во времени",
+    "loading": "Загрузка истории туров...",
+    "noRounds": "Нет доступных туров",
+    "errorLoading": "Ошибка загрузки истории туров",
+    "retry": "Повторить",
+
+    "navigation": {
+      "first": "Первый",
+      "previous": "Предыдущий",
+      "next": "Следующий",
+      "last": "Последний",
+      "currentRound": "Текущий тур",
+      "roundOf": "Тур {{current}} из {{total}}",
+      "goToRound": "Перейти к туру"
+    },
+
+    "viewModes": {
+      "history": "История",
+      "standings": "Таблица",
+      "games": "Партии",
+      "statistics": "Статистика",
+      "progression": "Прогрессия"
+    },
+
+    "roundInfo": {
+      "roundNumber": "Тур {{number}}",
+      "completedAt": "Завершен в {{time}}",
+      "duration": "Продолжительность: {{duration}}",
+      "totalGames": "Всего партий: {{count}}",
+      "completedGames": "Завершено: {{completed}}/{{total}}",
+      "status": "Статус: {{status}}"
+    },
+
+    "standings": {
+      "title": "Таблица после тура {{round}}",
+      "position": "Место",
+      "player": "Игрок",
+      "rating": "Рейтинг",
+      "points": "Очки",
+      "games": "Партии",
+      "wins": "Победы",
+      "draws": "Ничьи",
+      "losses": "Поражения",
+      "tiebreaks": "Доп. показатели",
+      "performance": "Перформанс",
+      "change": "Изменение"
+    },
+
+    "games": {
+      "title": "Партии тура {{round}}",
+      "board": "Доска",
+      "white": "Белые",
+      "black": "Черные",
+      "result": "Результат",
+      "status": "Статус",
+      "noGames": "Нет партий в этом туре",
+      "gameDetails": "Детали партии"
+    },
+
+    "statistics": {
+      "title": "Статистика тура {{round}}",
+      "overview": "Обзор",
+      "results": "Распределение результатов",
+      "performance": "Показатели производительности",
+      "totalGames": "Всего партий",
+      "completedGames": "Завершенные партии",
+      "pendingGames": "Ожидающие партии",
+      "whiteWins": "Победы белых",
+      "blackWins": "Победы черных",
+      "draws": "Ничьи",
+      "averageRating": "Средний рейтинг",
+      "ratingRange": "Диапазон рейтинга",
+      "highestRated": "Самый высокий рейтинг",
+      "lowestRated": "Самый низкий рейтинг",
+      "roundDuration": "Продолжительность тура",
+      "averageGameTime": "Среднее время партии",
+      "longestGame": "Самая длинная партия",
+      "shortestGame": "Самая короткая партия"
+    },
+
+    "progression": {
+      "title": "Прогрессия турнира",
+      "subtitle": "Отслеживание выступления игроков во времени",
+      "scoreProgression": "Прогрессия очков",
+      "positionProgression": "Прогрессия позиций",
+      "cumulativeScore": "Накопленные очки",
+      "roundScore": "Очки тура",
+      "position": "Позиция",
+      "round": "Тур",
+      "player": "Игрок",
+      "selectPlayers": "Выбрать игроков",
+      "allPlayers": "Все игроки",
+      "topPlayers": "Топ {{count}} игроков",
+      "customSelection": "Произвольный выбор",
+      "showLegend": "Показать легенду",
+      "hideLegend": "Скрыть легенду"
+    },
+
+    "export": {
+      "title": "Экспорт данных тура",
+      "description": "Экспорт данных турнира до выбранного тура",
+      "format": "Формат экспорта",
+      "includeStandings": "Включить таблицу",
+      "includeGames": "Включить партии",
+      "includeStatistics": "Включить статистику",
+      "includeProgression": "Включить данные прогрессии",
+      "fileName": "Имя файла",
+      "export": "Экспорт",
+      "cancel": "Отмена",
+      "exporting": "Экспорт...",
+      "success": "Экспорт завершен успешно",
+      "error": "Ошибка экспорта",
+      "formats": {
+        "json": "JSON",
+        "csv": "CSV",
+        "pdf": "PDF",
+        "xlsx": "Excel"
+      }
+    },
+
+    "filters": {
+      "title": "Фильтры",
+      "roundRange": "Диапазон туров",
+      "playerFilter": "Фильтр игроков",
+      "ratingRange": "Диапазон рейтинга",
+      "resultFilter": "Фильтр результатов",
+      "statusFilter": "Фильтр статуса",
+      "apply": "Применить фильтры",
+      "clear": "Очистить фильтры",
+      "reset": "Сбросить"
+    },
+
+    "actions": {
+      "refresh": "Обновить",
+      "fullscreen": "Полный экран",
+      "exitFullscreen": "Выйти из полного экрана",
+      "print": "Печать",
+      "share": "Поделиться",
+      "bookmark": "Закладка",
+      "compare": "Сравнить туры"
+    },
+
+    "tooltips": {
+      "firstRound": "Перейти к первому туру",
+      "previousRound": "Перейти к предыдущему туру",
+      "nextRound": "Перейти к следующему туру",
+      "lastRound": "Перейти к последнему туру",
+      "exportData": "Экспорт данных текущего тура",
+      "changeView": "Изменить режим просмотра",
+      "refreshData": "Обновить данные",
+      "playerProgression": "Просмотр прогрессии игрока",
+      "roundStatistics": "Просмотр статистики тура"
+    },
+
+    "messages": {
+      "noDataForRound": "Нет данных для тура {{round}}",
+      "loadingRound": "Загрузка тура {{round}}...",
+      "roundCompleted": "Тур {{round}} завершен",
+      "roundInProgress": "Тур {{round}} в процессе",
+      "roundNotStarted": "Тур {{round}} не начат",
+      "dataUpdated": "Данные успешно обновлены",
+      "noChanges": "Нет изменений с последнего обновления",
+      "syncError": "Не удалось синхронизировать данные",
+      "offlineMode": "Офлайн режим - показаны кэшированные данные"
+    }
+  }
 }

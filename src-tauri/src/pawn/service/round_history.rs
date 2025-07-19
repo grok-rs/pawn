@@ -11,7 +11,7 @@ use crate::pawn::{
             RoundProgression, RoundStatistics, TournamentStatistics,
         },
         model::{GameResult},
-        tiebreak::PlayerStanding,
+        tiebreak::{PlayerStanding, TournamentTiebreakConfig},
     },
     service::tiebreak::TiebreakCalculator,
 };
@@ -96,10 +96,10 @@ impl<D: Db> RoundHistoryService<D> {
             // Update progression chart data
             for standing in &round_history.standings {
                 let player_data = player_data_map
-                    .entry(standing.player_id)
+                    .entry(standing.player.id)
                     .or_insert_with(|| PlayerProgressionData {
-                        player_id: standing.player_id,
-                        player_name: standing.player_name.clone(),
+                        player_id: standing.player.id,
+                        player_name: standing.player.name.clone(),
                         round_scores: Vec::new(),
                         cumulative_scores: Vec::new(),
                         positions: Vec::new(),
@@ -108,14 +108,14 @@ impl<D: Db> RoundHistoryService<D> {
 
                 // Calculate round score (difference from previous cumulative)
                 let round_score = if let Some(prev_score) = player_data.cumulative_scores.last() {
-                    standing.points - prev_score
+                    (standing.points - (*prev_score as f64)) as f32
                 } else {
-                    standing.points
+                    standing.points as f32
                 };
 
                 player_data.round_scores.push(round_score);
-                player_data.cumulative_scores.push(standing.points);
-                player_data.positions.push(standing.position);
+                player_data.cumulative_scores.push(standing.points as f32);
+                player_data.positions.push(standing.rank);
                 player_data.rating_changes.push(None); // TODO: Calculate rating changes
             }
 
@@ -144,26 +144,22 @@ impl<D: Db> RoundHistoryService<D> {
         // Get all games up to and including the specified round
         let all_games = self
             .db
-            .get_games_by_tournament(tournament_id)
+            .get_game_results(tournament_id)
             .await
             .map_err(PawnError::Database)?;
 
         let historical_games: Vec<GameResult> = all_games
             .into_iter()
-            .filter(|game| game.game.round_number <= round_number)
+            .filter(|game_result| game_result.game.round_number <= round_number)
             .collect();
 
-        // Get all players
-        let players = self
-            .db
-            .get_players_by_tournament(tournament_id)
-            .await
-            .map_err(PawnError::Database)?;
+        // Get tournament tiebreak config
+        let config = TournamentTiebreakConfig::default();
 
         // Calculate standings using the tiebreak calculator
         let standings_result = self
             .tiebreak_calculator
-            .calculate_standings(players, historical_games)
+            .calculate_standings(tournament_id, &config)
             .await?;
 
         Ok(standings_result.standings)
@@ -204,8 +200,8 @@ impl<D: Db> RoundHistoryService<D> {
             let player_games: Vec<&GameResult> = games
                 .iter()
                 .filter(|g| {
-                    g.game.white_player_id == standing.player_id
-                        || g.game.black_player_id == standing.player_id
+                    g.game.white_player_id == standing.player.id
+                        || g.game.black_player_id == standing.player.id
                 })
                 .collect();
 
@@ -214,14 +210,14 @@ impl<D: Db> RoundHistoryService<D> {
             let mut round_score = 0.0;
 
             for game in &player_games {
-                if game.game.white_player_id == standing.player_id {
+                if game.game.white_player_id == standing.player.id {
                     white_games += 1;
                     match game.game.result.as_str() {
                         "1-0" => round_score += 1.0,
                         "1/2-1/2" => round_score += 0.5,
                         _ => {}
                     }
-                } else if game.game.black_player_id == standing.player_id {
+                } else if game.game.black_player_id == standing.player.id {
                     black_games += 1;
                     match game.game.result.as_str() {
                         "0-1" => round_score += 1.0,
@@ -240,11 +236,11 @@ impl<D: Db> RoundHistoryService<D> {
             };
 
             performance_metrics.push(PlayerPerformanceMetric {
-                player_id: standing.player_id,
-                player_name: standing.player_name.clone(),
-                round_score,
-                cumulative_score: standing.points,
-                position: standing.position,
+                player_id: standing.player.id,
+                player_name: standing.player.name.clone(),
+                round_score: round_score as f32,
+                cumulative_score: standing.points as f32,
+                position: standing.rank,
                 position_change: 0, // TODO: Calculate position change
                 rating_change: None, // TODO: Calculate rating change
                 color_balance: ColorBalance {
@@ -319,19 +315,23 @@ impl<D: Db> RoundHistoryService<D> {
         for round_history in round_histories {
             for game in &round_history.games {
                 // Track games played for each player
-                let white_entry = player_activity_map
-                    .entry(game.white_player.id)
-                    .or_insert((game.white_player.name.clone(), 0, 0, 0));
-                white_entry.1 += 1;
+                {
+                    let white_entry = player_activity_map
+                        .entry(game.white_player.id)
+                        .or_insert((game.white_player.name.clone(), 0, 0, 0));
+                    white_entry.1 += 1;
+                    
+                    // Check for byes (opponent with negative ID)
+                    if game.black_player.id < 0 {
+                        white_entry.2 += 1; // Bye for white player
+                    }
+                }
 
-                let black_entry = player_activity_map
-                    .entry(game.black_player.id)
-                    .or_insert((game.black_player.name.clone(), 0, 0, 0));
-                black_entry.1 += 1;
-
-                // Check for byes (opponent with negative ID)
-                if game.black_player.id < 0 {
-                    white_entry.2 += 1; // Bye for white player
+                {
+                    let black_entry = player_activity_map
+                        .entry(game.black_player.id)
+                        .or_insert((game.black_player.name.clone(), 0, 0, 0));
+                    black_entry.1 += 1;
                 }
             }
         }

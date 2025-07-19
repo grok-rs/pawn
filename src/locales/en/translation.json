@@ -935,6 +935,7 @@
   "tournament.templates.useTemplate": "Use Template",
   "tournament.templates.name": "Template Name",
   "tournament.templates.makePublic": "Make Public",
+  "tournament.roundHistory": "Round History",
 
   "player.rating": "Rating",
 
@@ -1137,5 +1138,174 @@
   "cacheCleared": "Cache cleared successfully",
   "loadingStandings": "Loading standings...",
   "noStandingsAvailable": "No standings available",
-  "loadStandings": "Load Standings"
+  "loadStandings": "Load Standings",
+
+  "roundViewer": {
+    "title": "Round History",
+    "subtitle": "View tournament progression over time",
+    "loading": "Loading round history...",
+    "noRounds": "No rounds available",
+    "errorLoading": "Error loading round history",
+    "retry": "Retry",
+
+    "navigation": {
+      "first": "First",
+      "previous": "Previous",
+      "next": "Next",
+      "last": "Last",
+      "currentRound": "Current Round",
+      "roundOf": "Round {{current}} of {{total}}",
+      "goToRound": "Go to Round"
+    },
+
+    "viewModes": {
+      "history": "History",
+      "standings": "Standings",
+      "games": "Games",
+      "statistics": "Statistics",
+      "progression": "Progression"
+    },
+
+    "roundInfo": {
+      "roundNumber": "Round {{number}}",
+      "completedAt": "Completed at {{time}}",
+      "duration": "Duration: {{duration}}",
+      "totalGames": "Total Games: {{count}}",
+      "completedGames": "Completed: {{completed}}/{{total}}",
+      "status": "Status: {{status}}"
+    },
+
+    "standings": {
+      "title": "Standings after Round {{round}}",
+      "position": "Pos",
+      "player": "Player",
+      "rating": "Rating",
+      "points": "Points",
+      "games": "Games",
+      "wins": "Wins",
+      "draws": "Draws",
+      "losses": "Losses",
+      "tiebreaks": "Tiebreaks",
+      "performance": "Performance",
+      "change": "Change"
+    },
+
+    "games": {
+      "title": "Games from Round {{round}}",
+      "board": "Board",
+      "white": "White",
+      "black": "Black",
+      "result": "Result",
+      "status": "Status",
+      "noGames": "No games in this round",
+      "gameDetails": "Game Details"
+    },
+
+    "statistics": {
+      "title": "Round {{round}} Statistics",
+      "overview": "Overview",
+      "results": "Results Distribution",
+      "performance": "Performance Metrics",
+      "totalGames": "Total Games",
+      "completedGames": "Completed Games",
+      "pendingGames": "Pending Games",
+      "whiteWins": "White Wins",
+      "blackWins": "Black Wins",
+      "draws": "Draws",
+      "averageRating": "Average Rating",
+      "ratingRange": "Rating Range",
+      "highestRated": "Highest Rated",
+      "lowestRated": "Lowest Rated",
+      "roundDuration": "Round Duration",
+      "averageGameTime": "Average Game Time",
+      "longestGame": "Longest Game",
+      "shortestGame": "Shortest Game"
+    },
+
+    "progression": {
+      "title": "Tournament Progression",
+      "subtitle": "Track player performance over time",
+      "scoreProgression": "Score Progression",
+      "positionProgression": "Position Progression",
+      "cumulativeScore": "Cumulative Score",
+      "roundScore": "Round Score",
+      "position": "Position",
+      "round": "Round",
+      "player": "Player",
+      "selectPlayers": "Select Players",
+      "allPlayers": "All Players",
+      "topPlayers": "Top {{count}} Players",
+      "customSelection": "Custom Selection",
+      "showLegend": "Show Legend",
+      "hideLegend": "Hide Legend"
+    },
+
+    "export": {
+      "title": "Export Round Data",
+      "description": "Export tournament data up to the selected round",
+      "format": "Export Format",
+      "includeStandings": "Include Standings",
+      "includeGames": "Include Games",
+      "includeStatistics": "Include Statistics",
+      "includeProgression": "Include Progression Data",
+      "fileName": "File Name",
+      "export": "Export",
+      "cancel": "Cancel",
+      "exporting": "Exporting...",
+      "success": "Export completed successfully",
+      "error": "Export failed",
+      "formats": {
+        "json": "JSON",
+        "csv": "CSV",
+        "pdf": "PDF",
+        "xlsx": "Excel"
+      }
+    },
+
+    "filters": {
+      "title": "Filters",
+      "roundRange": "Round Range",
+      "playerFilter": "Player Filter",
+      "ratingRange": "Rating Range",
+      "resultFilter": "Result Filter",
+      "statusFilter": "Status Filter",
+      "apply": "Apply Filters",
+      "clear": "Clear Filters",
+      "reset": "Reset"
+    },
+
+    "actions": {
+      "refresh": "Refresh",
+      "fullscreen": "Fullscreen",
+      "exitFullscreen": "Exit Fullscreen",
+      "print": "Print",
+      "share": "Share",
+      "bookmark": "Bookmark",
+      "compare": "Compare Rounds"
+    },
+
+    "tooltips": {
+      "firstRound": "Go to first round",
+      "previousRound": "Go to previous round",
+      "nextRound": "Go to next round",
+      "lastRound": "Go to last round",
+      "exportData": "Export current round data",
+      "changeView": "Change view mode",
+      "refreshData": "Refresh data",
+      "playerProgression": "View player progression",
+      "roundStatistics": "View round statistics"
+    },
+
+    "messages": {
+      "noDataForRound": "No data available for round {{round}}",
+      "loadingRound": "Loading round {{round}}...",
+      "roundCompleted": "Round {{round}} completed",
+      "roundInProgress": "Round {{round}} in progress",
+      "roundNotStarted": "Round {{round}} not started",
+      "dataUpdated": "Data updated successfully",
+      "noChanges": "No changes since last update",
+      "syncError": "Failed to sync data",
+      "offlineMode": "Offline mode - showing cached data"
+    }
+  }
 }

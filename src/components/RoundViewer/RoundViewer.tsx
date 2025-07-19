@@ -567,9 +567,14 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
               mb: 2,
             }}
           >
-            <Typography variant="h6">{t('roundViewer.navigation')}</Typography>
+            <Typography variant="h6">
+              {t('roundViewer.navigation.currentRound')}
+            </Typography>
             <Chip
-              label={`${t('round')} ${selectedRound} / ${maxRound}`}
+              label={t('roundViewer.navigation.roundOf', {
+                current: selectedRound,
+                total: maxRound,
+              })}
               color="primary"
               variant="outlined"
             />
@@ -580,24 +585,28 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
               <IconButton
                 onClick={() => handleRoundChange(1)}
                 disabled={selectedRound === 1}
+                title={t('roundViewer.tooltips.firstRound')}
               >
                 <FirstPage />
               </IconButton>
               <IconButton
                 onClick={() => handleRoundChange(selectedRound - 1)}
                 disabled={selectedRound === 1}
+                title={t('roundViewer.tooltips.previousRound')}
               >
                 <NavigateBefore />
               </IconButton>
               <IconButton
                 onClick={() => handleRoundChange(selectedRound + 1)}
                 disabled={selectedRound === maxRound}
+                title={t('roundViewer.tooltips.nextRound')}
               >
                 <NavigateNext />
               </IconButton>
               <IconButton
                 onClick={() => handleRoundChange(maxRound)}
                 disabled={selectedRound === maxRound}
+                title={t('roundViewer.tooltips.lastRound')}
               >
                 <LastPage />
               </IconButton>
@@ -617,8 +626,9 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
               onClick={() => setShowExportDialog(true)}
               variant="outlined"
               size="small"
+              title={t('roundViewer.tooltips.exportData')}
             >
-              {t('export')}
+              {t('roundViewer.export.export')}
             </Button>
           </Box>
         </CardContent>
@@ -633,35 +643,35 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
               variant={viewMode === 'history' ? 'contained' : 'outlined'}
               startIcon={<Timeline />}
             >
-              {t('roundViewer.history')}
+              {t('roundViewer.viewModes.history')}
             </Button>
             <Button
               onClick={() => setViewMode('standings')}
               variant={viewMode === 'standings' ? 'contained' : 'outlined'}
               startIcon={<TableChart />}
             >
-              {t('roundViewer.standings')}
+              {t('roundViewer.viewModes.standings')}
             </Button>
             <Button
               onClick={() => setViewMode('games')}
               variant={viewMode === 'games' ? 'contained' : 'outlined'}
               startIcon={<Games />}
             >
-              {t('roundViewer.games')}
+              {t('roundViewer.viewModes.games')}
             </Button>
             <Button
               onClick={() => setViewMode('statistics')}
               variant={viewMode === 'statistics' ? 'contained' : 'outlined'}
               startIcon={<BarChart />}
             >
-              {t('roundViewer.statistics')}
+              {t('roundViewer.viewModes.statistics')}
             </Button>
             <Button
               onClick={() => setViewMode('progression')}
               variant={viewMode === 'progression' ? 'contained' : 'outlined'}
               startIcon={<Analytics />}
             >
-              {t('roundViewer.progression')}
+              {t('roundViewer.viewModes.progression')}
             </Button>
           </ButtonGroup>
         </CardContent>
@@ -678,7 +688,7 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                   sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
                 >
                   <Typography variant="h6">
-                    {t('roundViewer.overview')}
+                    {t('roundViewer.statistics.overview')}
                   </Typography>
                   <IconButton
                     size="small"
@@ -700,7 +710,9 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                           {roundHistory.round.round_number}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {t('roundViewer.roundNumber')}
+                          {t('roundViewer.roundInfo.roundNumber', {
+                            number: roundHistory.round.round_number,
+                          })}
                         </Typography>
                       </Paper>
                     </Grid>
@@ -726,7 +738,9 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                           color="text.secondary"
                           sx={{ mt: 1 }}
                         >
-                          {t('roundViewer.status')}
+                          {t('roundViewer.roundInfo.status', {
+                            status: roundHistory.round.status,
+                          })}
                         </Typography>
                       </Paper>
                     </Grid>
@@ -736,7 +750,7 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                           {roundHistory.statistics.completion_rate.toFixed(1)}%
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {t('roundViewer.completionRate')}
+                          {t('roundViewer.statistics.completedGames')}
                         </Typography>
                       </Paper>
                     </Grid>
@@ -747,7 +761,7 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                           min
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {t('roundViewer.avgDuration')}
+                          {t('roundViewer.statistics.averageGameTime')}
                         </Typography>
                       </Paper>
                     </Grid>
@@ -764,7 +778,7 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  {t('roundViewer.historicalStandings')}
+                  {t('roundViewer.standings.title', { round: selectedRound })}
                 </Typography>
                 <List>
                   {roundHistory.standings.map((standing, index) => (
@@ -813,15 +827,14 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                         }
                         secondary={
                           <Typography variant="body2" color="text.secondary">
-                            {t('roundViewer.record', {
-                              wins: standing.wins,
-                              draws: standing.draws,
-                              losses: standing.losses,
-                            })}
+                            {t('roundViewer.standings.wins')}: {standing.wins},{' '}
+                            {t('roundViewer.standings.draws')}: {standing.draws}
+                            , {t('roundViewer.standings.losses')}:{' '}
+                            {standing.losses}
                             {standing.performance_rating && (
                               <>
                                 {' '}
-                                • {t('roundViewer.performance')}:{' '}
+                                • {t('roundViewer.standings.performance')}:{' '}
                                 {standing.performance_rating}
                               </>
                             )}
@@ -842,7 +855,7 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  {t('roundViewer.roundGames')}
+                  {t('roundViewer.games.title', { round: selectedRound })}
                 </Typography>
                 <List>
                   {roundHistory.games.map(gameResult => (
@@ -877,14 +890,9 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                         }
                         secondary={
                           <Typography variant="body2" color="text.secondary">
-                            {t('roundViewer.gameInfo', {
-                              whiteRating:
-                                gameResult.white_player.rating || 'Unrated',
-                              blackRating:
-                                gameResult.black_player.rating || 'Unrated',
-                              resultType:
-                                gameResult.game.result_type || 'Normal',
-                            })}
+                            {t('roundViewer.games.board')}: {gameResult.game.id}{' '}
+                            - {gameResult.white_player.name} vs{' '}
+                            {gameResult.black_player.name}
                           </Typography>
                         }
                       />
@@ -904,7 +912,7 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      {t('roundViewer.resultDistribution')}
+                      {t('roundViewer.statistics.results')}
                     </Typography>
                     <ResponsiveContainer width="100%" height={300}>
                       <RechartsPieChart>
@@ -932,7 +940,7 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      {t('roundViewer.roundStats')}
+                      {t('roundViewer.statistics.overview')}
                     </Typography>
                     <Stack spacing={2}>
                       <Box
@@ -941,7 +949,9 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                           justifyContent: 'space-between',
                         }}
                       >
-                        <Typography>{t('roundViewer.totalGames')}</Typography>
+                        <Typography>
+                          {t('roundViewer.statistics.totalGames')}
+                        </Typography>
                         <Typography fontWeight="bold">
                           {roundHistory.statistics.total_games}
                         </Typography>
@@ -953,7 +963,7 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                         }}
                       >
                         <Typography>
-                          {t('roundViewer.completedGames')}
+                          {t('roundViewer.statistics.completedGames')}
                         </Typography>
                         <Typography fontWeight="bold">
                           {roundHistory.statistics.completed_games}
@@ -965,7 +975,9 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                           justifyContent: 'space-between',
                         }}
                       >
-                        <Typography>{t('roundViewer.ongoingGames')}</Typography>
+                        <Typography>
+                          {t('roundViewer.statistics.pendingGames')}
+                        </Typography>
                         <Typography fontWeight="bold">
                           {roundHistory.statistics.ongoing_games}
                         </Typography>
@@ -977,7 +989,9 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                           justifyContent: 'space-between',
                         }}
                       >
-                        <Typography>{t('roundViewer.whiteWins')}</Typography>
+                        <Typography>
+                          {t('roundViewer.statistics.whiteWins')}
+                        </Typography>
                         <Typography fontWeight="bold" color="success.main">
                           {roundHistory.statistics.white_wins}
                         </Typography>
@@ -988,7 +1002,9 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                           justifyContent: 'space-between',
                         }}
                       >
-                        <Typography>{t('roundViewer.blackWins')}</Typography>
+                        <Typography>
+                          {t('roundViewer.statistics.blackWins')}
+                        </Typography>
                         <Typography fontWeight="bold" color="info.main">
                           {roundHistory.statistics.black_wins}
                         </Typography>
@@ -999,7 +1015,9 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                           justifyContent: 'space-between',
                         }}
                       >
-                        <Typography>{t('roundViewer.draws')}</Typography>
+                        <Typography>
+                          {t('roundViewer.statistics.draws')}
+                        </Typography>
                         <Typography fontWeight="bold" color="warning.main">
                           {roundHistory.statistics.draws}
                         </Typography>
@@ -1020,7 +1038,7 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      {t('roundViewer.scoreProgression')}
+                      {t('roundViewer.progression.scoreProgression')}
                     </Typography>
                     <ResponsiveContainer width="100%" height={400}>
                       <LineChart data={progressionChartData}>
@@ -1048,7 +1066,7 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      {t('roundViewer.positionProgression')}
+                      {t('roundViewer.progression.positionProgression')}
                     </Typography>
                     <ResponsiveContainer width="100%" height={400}>
                       <LineChart data={positionChartData}>
@@ -1082,16 +1100,16 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
         open={showExportDialog}
         onClose={() => setShowExportDialog(false)}
       >
-        <DialogTitle>{t('roundViewer.exportRound')}</DialogTitle>
+        <DialogTitle>{t('roundViewer.export.title')}</DialogTitle>
         <DialogContent>
           <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>{t('roundViewer.exportFormat')}</InputLabel>
+            <InputLabel>{t('roundViewer.export.format')}</InputLabel>
             <Select
               value={exportFormat}
               onChange={e =>
                 setExportFormat(e.target.value as 'json' | 'csv' | 'pdf')
               }
-              label={t('roundViewer.exportFormat')}
+              label={t('roundViewer.export.format')}
             >
               <MenuItem value="json">JSON</MenuItem>
               <MenuItem value="csv">CSV</MenuItem>
@@ -1101,10 +1119,10 @@ const RoundViewer: React.FC<RoundViewerProps> = ({ tournamentId, onClose }) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShowExportDialog(false)}>
-            {t('cancel')}
+            {t('roundViewer.export.cancel')}
           </Button>
           <Button onClick={handleExport} variant="contained">
-            {t('export')}
+            {t('roundViewer.export.export')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -731,6 +731,7 @@
   "tournament.templates.useTemplate": "Використати шаблон",
   "tournament.templates.name": "Назва шаблона",
   "tournament.templates.makePublic": "Зробити публічним",
+  "tournament.roundHistory": "Історія турів",
 
   "player.rating": "Рейтинг",
 
@@ -899,5 +900,174 @@
   "gameResults.messages.validationError": "Помилка перевірки",
   "gameResults.messages.batchValidationFailed": "Масова перевірка не вдалася",
   "gameResults.messages.saveResultsFailed": "Не вдалося зберегти результати",
-  "gameResults.messages.auditTrailFailed": "Не вдалося отримати журнал змін"
+  "gameResults.messages.auditTrailFailed": "Не вдалося отримати журнал змін",
+
+  "roundViewer": {
+    "title": "Історія турів",
+    "subtitle": "Перегляд розвитку турніру в часі",
+    "loading": "Завантаження історії турів...",
+    "noRounds": "Немає доступних турів",
+    "errorLoading": "Помилка завантаження історії турів",
+    "retry": "Повторити",
+
+    "navigation": {
+      "first": "Перший",
+      "previous": "Попередній",
+      "next": "Наступний",
+      "last": "Останній",
+      "currentRound": "Поточний тур",
+      "roundOf": "Тур {{current}} з {{total}}",
+      "goToRound": "Перейти до туру"
+    },
+
+    "viewModes": {
+      "history": "Історія",
+      "standings": "Таблиця",
+      "games": "Партії",
+      "statistics": "Статистика",
+      "progression": "Прогресія"
+    },
+
+    "roundInfo": {
+      "roundNumber": "Тур {{number}}",
+      "completedAt": "Завершено о {{time}}",
+      "duration": "Тривалість: {{duration}}",
+      "totalGames": "Всього партій: {{count}}",
+      "completedGames": "Завершено: {{completed}}/{{total}}",
+      "status": "Статус: {{status}}"
+    },
+
+    "standings": {
+      "title": "Таблиця після туру {{round}}",
+      "position": "Місце",
+      "player": "Гравець",
+      "rating": "Рейтинг",
+      "points": "Очки",
+      "games": "Партії",
+      "wins": "Перемоги",
+      "draws": "Нічиї",
+      "losses": "Поразки",
+      "tiebreaks": "Доп. показники",
+      "performance": "Перформанс",
+      "change": "Зміна"
+    },
+
+    "games": {
+      "title": "Партії туру {{round}}",
+      "board": "Дошка",
+      "white": "Білі",
+      "black": "Чорні",
+      "result": "Результат",
+      "status": "Статус",
+      "noGames": "Немає партій в цьому турі",
+      "gameDetails": "Деталі партії"
+    },
+
+    "statistics": {
+      "title": "Статистика туру {{round}}",
+      "overview": "Огляд",
+      "results": "Розподіл результатів",
+      "performance": "Показники продуктивності",
+      "totalGames": "Всього партій",
+      "completedGames": "Завершені партії",
+      "pendingGames": "Очікуючі партії",
+      "whiteWins": "Перемоги білих",
+      "blackWins": "Перемоги чорних",
+      "draws": "Нічиї",
+      "averageRating": "Середній рейтинг",
+      "ratingRange": "Діапазон рейтингу",
+      "highestRated": "Найвищий рейтинг",
+      "lowestRated": "Найнижчий рейтинг",
+      "roundDuration": "Тривалість туру",
+      "averageGameTime": "Середній час партії",
+      "longestGame": "Найдовша партія",
+      "shortestGame": "Найкоротша партія"
+    },
+
+    "progression": {
+      "title": "Прогресія турніру",
+      "subtitle": "Відстеження виступу гравців у часі",
+      "scoreProgression": "Прогресія очок",
+      "positionProgression": "Прогресія позицій",
+      "cumulativeScore": "Накопичені очки",
+      "roundScore": "Очки туру",
+      "position": "Позиція",
+      "round": "Тур",
+      "player": "Гравець",
+      "selectPlayers": "Вибрати гравців",
+      "allPlayers": "Всі гравці",
+      "topPlayers": "Топ {{count}} гравців",
+      "customSelection": "Довільний вибір",
+      "showLegend": "Показати легенду",
+      "hideLegend": "Приховати легенду"
+    },
+
+    "export": {
+      "title": "Експорт даних туру",
+      "description": "Експорт даних турніру до вибраного туру",
+      "format": "Формат експорту",
+      "includeStandings": "Включити таблицю",
+      "includeGames": "Включити партії",
+      "includeStatistics": "Включити статистику",
+      "includeProgression": "Включити дані прогресії",
+      "fileName": "Ім'я файлу",
+      "export": "Експорт",
+      "cancel": "Скасувати",
+      "exporting": "Експорт...",
+      "success": "Експорт завершено успішно",
+      "error": "Помилка експорту",
+      "formats": {
+        "json": "JSON",
+        "csv": "CSV",
+        "pdf": "PDF",
+        "xlsx": "Excel"
+      }
+    },
+
+    "filters": {
+      "title": "Фільтри",
+      "roundRange": "Діапазон турів",
+      "playerFilter": "Фільтр гравців",
+      "ratingRange": "Діапазон рейтингу",
+      "resultFilter": "Фільтр результатів",
+      "statusFilter": "Фільтр статусу",
+      "apply": "Застосувати фільтри",
+      "clear": "Очистити фільтри",
+      "reset": "Скинути"
+    },
+
+    "actions": {
+      "refresh": "Оновити",
+      "fullscreen": "Повний екран",
+      "exitFullscreen": "Вийти з повного екрану",
+      "print": "Друк",
+      "share": "Поділитися",
+      "bookmark": "Закладка",
+      "compare": "Порівняти тури"
+    },
+
+    "tooltips": {
+      "firstRound": "Перейти до першого туру",
+      "previousRound": "Перейти до попереднього туру",
+      "nextRound": "Перейти до наступного туру",
+      "lastRound": "Перейти до останнього туру",
+      "exportData": "Експорт даних поточного туру",
+      "changeView": "Змінити режим перегляду",
+      "refreshData": "Оновити дані",
+      "playerProgression": "Перегляд прогресії гравця",
+      "roundStatistics": "Перегляд статистики туру"
+    },
+
+    "messages": {
+      "noDataForRound": "Немає даних для туру {{round}}",
+      "loadingRound": "Завантаження туру {{round}}...",
+      "roundCompleted": "Тур {{round}} завершено",
+      "roundInProgress": "Тур {{round}} в процесі",
+      "roundNotStarted": "Тур {{round}} не почато",
+      "dataUpdated": "Дані успішно оновлено",
+      "noChanges": "Немає змін з останнього оновлення",
+      "syncError": "Не вдалося синхронізувати дані",
+      "offlineMode": "Офлайн режим - показані кешовані дані"
+    }
+  }
 }
