@@ -206,7 +206,6 @@ impl<D: Db> TimeControlService<D> {
 
         Ok(templates)
     }
-
 }
 
 // Methods that don't require database access
@@ -319,6 +318,7 @@ impl<D> TimeControlService<D> {
     }
 
     /// Generate time control display string
+    #[allow(dead_code)]
     pub fn format_time_control(&self, time_control: &TimeControl) -> String {
         let base = time_control
             .base_time_minutes
@@ -388,10 +388,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("classical", "classical", Some(90), Some(30));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(validation.is_valid);
         assert!(validation.errors.is_empty());
     }
@@ -401,10 +401,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("classical", "classical", Some(15), Some(10));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(!validation.is_valid);
         assert!(validation.errors.len() == 1);
         assert!(validation.errors[0].contains("at least 30 minutes"));
@@ -415,10 +415,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("classical", "classical", Some(90), None);
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(validation.is_valid);
         assert!(validation.warnings.len() == 1);
         assert!(validation.warnings[0].contains("typically use increments"));
@@ -429,10 +429,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("rapid", "rapid", Some(15), Some(10));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(validation.is_valid);
         assert!(validation.errors.is_empty());
     }
@@ -442,10 +442,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("rapid", "rapid", None, Some(10));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(!validation.is_valid);
         assert!(validation.errors.len() == 1);
         assert!(validation.errors[0].contains("must have base time"));
@@ -456,10 +456,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("rapid", "rapid", Some(120), Some(10));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(validation.is_valid);
         assert!(validation.warnings.len() == 1);
         assert!(validation.warnings[0].contains("between 3-60 minutes"));
@@ -470,10 +470,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("blitz", "blitz", Some(5), Some(3));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(validation.is_valid);
         assert!(validation.errors.is_empty());
     }
@@ -483,10 +483,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("blitz", "blitz", None, Some(3));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(!validation.is_valid);
         assert!(validation.errors.len() == 1);
         assert!(validation.errors[0].contains("must have base time"));
@@ -497,10 +497,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("blitz", "blitz", Some(15), Some(10));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(validation.is_valid);
         assert!(validation.warnings.len() == 1);
         assert!(validation.warnings[0].contains("10 minutes or less"));
@@ -511,10 +511,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("bullet", "bullet", Some(1), Some(1));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(validation.is_valid);
         assert!(validation.errors.is_empty());
     }
@@ -524,10 +524,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("bullet", "bullet", None, Some(1));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(!validation.is_valid);
         assert!(validation.errors.len() == 1);
         assert!(validation.errors[0].contains("must have base time"));
@@ -538,10 +538,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("bullet", "bullet", Some(5), Some(2));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(validation.is_valid);
         assert!(validation.warnings.len() == 1);
         assert!(validation.warnings[0].contains("3 minutes or less"));
@@ -552,10 +552,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("correspondence", "correspondence", Some(60), None);
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(validation.is_valid);
         assert!(validation.warnings.len() == 1);
         assert!(validation.warnings[0].contains("days per move"));
@@ -566,10 +566,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("fischer", "fischer", Some(15), Some(10));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(validation.is_valid);
         assert!(validation.errors.is_empty());
     }
@@ -579,10 +579,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("fischer", "fischer", None, Some(10));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(!validation.is_valid);
         assert!(validation.errors.len() == 1);
         assert!(validation.errors[0].contains("must have base time"));
@@ -593,10 +593,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("fischer", "fischer", Some(15), None);
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(!validation.is_valid);
         assert!(validation.errors.len() == 1);
         assert!(validation.errors[0].contains("increment/delay"));
@@ -607,10 +607,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("bronstein", "bronstein", Some(30), Some(15));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(validation.is_valid);
         assert!(validation.errors.is_empty());
     }
@@ -620,10 +620,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("custom", "custom", Some(123), Some(456));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(validation.is_valid);
         assert!(validation.errors.is_empty());
         assert!(validation.warnings.is_empty());
@@ -634,7 +634,7 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = CreateTimeControl {
             name: "".to_string(),
             time_control_type: "rapid".to_string(),
@@ -645,9 +645,9 @@ mod tests {
             total_sessions: None,
             description: None,
         };
-        
+
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(!validation.is_valid);
         assert!(validation.errors.len() == 1);
         assert!(validation.errors[0].contains("cannot be empty"));
@@ -658,7 +658,7 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = CreateTimeControl {
             name: "   ".to_string(),
             time_control_type: "rapid".to_string(),
@@ -669,9 +669,9 @@ mod tests {
             total_sessions: None,
             description: None,
         };
-        
+
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(!validation.is_valid);
         assert!(validation.errors.len() == 1);
         assert!(validation.errors[0].contains("cannot be empty"));
@@ -682,10 +682,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("Test", "rapid", Some(15), Some(10));
         let duration = service.calculate_estimated_duration(&data);
-        
+
         assert!(duration.is_some());
         // 15 min base + (40 moves * 10 sec / 60) = 15 + 6.67 ≈ 21 min per player
         // Total: 21 * 2 = 42 minutes
@@ -697,10 +697,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("Test", "classical", Some(60), None);
         let duration = service.calculate_estimated_duration(&data);
-        
+
         assert!(duration.is_some());
         // 60 min base per player * 2 = 120 minutes total
         assert_eq!(duration.unwrap(), 120);
@@ -711,10 +711,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("Test", "correspondence", None, Some(0));
         let duration = service.calculate_estimated_duration(&data);
-        
+
         assert!(duration.is_none());
     }
 
@@ -723,10 +723,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let tc = create_test_time_control(Some(15), Some(10), "rapid");
         let formatted = service.format_time_control(&tc);
-        
+
         assert_eq!(formatted, "15min +10s");
     }
 
@@ -735,10 +735,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let tc = create_test_time_control(Some(30), None, "classical");
         let formatted = service.format_time_control(&tc);
-        
+
         assert_eq!(formatted, "30min");
     }
 
@@ -747,10 +747,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let tc = create_test_time_control(None, Some(30), "correspondence");
         let formatted = service.format_time_control(&tc);
-        
+
         assert_eq!(formatted, "No limit +30s");
     }
 
@@ -759,10 +759,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let tc = create_test_time_control(None, None, "custom");
         let formatted = service.format_time_control(&tc);
-        
+
         assert_eq!(formatted, "No limit");
     }
 
@@ -771,10 +771,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let tc = create_test_time_control(Some(5), Some(0), "blitz");
         let formatted = service.format_time_control(&tc);
-        
+
         assert_eq!(formatted, "5min +0s");
     }
 
@@ -783,10 +783,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("Test Rapid", "rapid", Some(10), Some(5));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(validation.is_valid);
         assert!(validation.estimated_game_duration_minutes.is_some());
         // 10 + (40 * 5 / 60) = 10 + 3.33 ≈ 13 per player * 2 = 26 total
@@ -798,7 +798,7 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = CreateTimeControl {
             name: "".to_string(),
             time_control_type: "fischer".to_string(),
@@ -809,14 +809,29 @@ mod tests {
             total_sessions: None,
             description: None,
         };
-        
+
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(!validation.is_valid);
         assert_eq!(validation.errors.len(), 3); // empty name, no base time, no increment
-        assert!(validation.errors.iter().any(|e| e.contains("cannot be empty")));
-        assert!(validation.errors.iter().any(|e| e.contains("must have base time")));
-        assert!(validation.errors.iter().any(|e| e.contains("increment/delay")));
+        assert!(
+            validation
+                .errors
+                .iter()
+                .any(|e| e.contains("cannot be empty"))
+        );
+        assert!(
+            validation
+                .errors
+                .iter()
+                .any(|e| e.contains("must have base time"))
+        );
+        assert!(
+            validation
+                .errors
+                .iter()
+                .any(|e| e.contains("increment/delay"))
+        );
     }
 
     #[test]
@@ -824,10 +839,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("Unknown Type", "UnknownType", Some(30), Some(10));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         // Should default to Classical validation rules
         assert!(validation.is_valid);
         assert!(validation.errors.is_empty());
@@ -838,10 +853,10 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         let data = create_test_data("Long Game", "custom", Some(999), Some(999));
         let validation = service.validate_time_control_data(&data).unwrap();
-        
+
         assert!(validation.is_valid);
         let duration = validation.estimated_game_duration_minutes.unwrap();
         // 999 + (40 * 999 / 60) = 999 + 666 = 1665 per player * 2 = 3330 total
@@ -853,12 +868,12 @@ mod tests {
         let service = TimeControlService {
             db: std::sync::Arc::new(()),
         };
-        
+
         // Test with very large values
         let tc_large = create_test_time_control(Some(999), Some(999), "custom");
         let formatted_large = service.format_time_control(&tc_large);
         assert_eq!(formatted_large, "999min +999s");
-        
+
         // Test with single digit values
         let tc_small = create_test_time_control(Some(1), Some(1), "bullet");
         let formatted_small = service.format_time_control(&tc_small);

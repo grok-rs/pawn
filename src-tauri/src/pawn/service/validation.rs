@@ -294,7 +294,7 @@ mod tests {
     fn test_validation_result_add_error() {
         let mut result = ValidationResult::new();
         result.add_error("Test error".to_string());
-        
+
         assert!(!result.is_valid);
         assert_eq!(result.errors.len(), 1);
         assert_eq!(result.errors[0], "Test error");
@@ -305,7 +305,7 @@ mod tests {
     fn test_validation_result_add_warning() {
         let mut result = ValidationResult::new();
         result.add_warning("Test warning".to_string());
-        
+
         assert!(result.is_valid);
         assert!(result.errors.is_empty());
         assert_eq!(result.warnings.len(), 1);
@@ -351,13 +351,13 @@ mod tests {
     #[test]
     fn test_validate_result_format_valid_results() {
         let valid_results = vec![
-            "1-0", "0-1", "1/2-1/2", "*", "0-1F", "1-0F", "0-1D", "1-0D", 
-            "ADJ", "0-1T", "1-0T", "0-0", "CANC"
+            "1-0", "0-1", "1/2-1/2", "*", "0-1F", "1-0F", "0-1D", "1-0D", "ADJ", "0-1T", "1-0T",
+            "0-0", "CANC",
         ];
 
         for result in valid_results {
             let validation = ResultValidationService::validate_result_format(result, None);
-            assert!(validation.is_valid, "Result '{}' should be valid", result);
+            assert!(validation.is_valid, "Result '{result}' should be valid");
             assert!(validation.errors.is_empty());
         }
     }
@@ -394,9 +394,12 @@ mod tests {
         ];
 
         for (result, result_type) in test_cases {
-            let validation = ResultValidationService::validate_result_format(result, Some(result_type));
-            assert!(validation.is_valid, 
-                "Result '{}' with type '{}' should be valid", result, result_type);
+            let validation =
+                ResultValidationService::validate_result_format(result, Some(result_type));
+            assert!(
+                validation.is_valid,
+                "Result '{result}' with type '{result_type}' should be valid"
+            );
             assert!(validation.errors.is_empty());
         }
     }
@@ -413,9 +416,12 @@ mod tests {
         ];
 
         for (result, result_type) in test_cases {
-            let validation = ResultValidationService::validate_result_format(result, Some(result_type));
-            assert!(!validation.is_valid, 
-                "Result '{}' with type '{}' should be invalid", result, result_type);
+            let validation =
+                ResultValidationService::validate_result_format(result, Some(result_type));
+            assert!(
+                !validation.is_valid,
+                "Result '{result}' with type '{result_type}' should be invalid"
+            );
             assert_eq!(validation.errors.len(), 1);
             assert!(validation.errors[0].contains("not compatible"));
         }
@@ -426,10 +432,12 @@ mod tests {
         let standard_results = vec!["1-0", "0-1", "1/2-1/2", "*"];
 
         for result in standard_results {
-            let validation = ResultValidationService::validate_approval_requirements(
-                result, None, None
+            let validation =
+                ResultValidationService::validate_approval_requirements(result, None, None);
+            assert!(
+                validation.is_valid,
+                "Standard result '{result}' should not require approval"
             );
-            assert!(validation.is_valid, "Standard result '{}' should not require approval", result);
             assert!(validation.errors.is_empty());
             assert!(validation.warnings.is_empty());
         }
@@ -440,10 +448,12 @@ mod tests {
         let special_results = vec!["0-1F", "1-0F", "0-1D", "1-0D", "0-0", "CANC"];
 
         for result in special_results {
-            let validation = ResultValidationService::validate_approval_requirements(
-                result, None, None
+            let validation =
+                ResultValidationService::validate_approval_requirements(result, None, None);
+            assert!(
+                !validation.is_valid,
+                "Special result '{result}' should require approval"
             );
-            assert!(!validation.is_valid, "Special result '{}' should require approval", result);
             assert_eq!(validation.errors.len(), 1);
             assert!(validation.errors[0].contains("requires arbiter approval"));
             assert!(validation.errors[0].contains("no authority specified"));
@@ -456,9 +466,14 @@ mod tests {
 
         for result in special_results {
             let validation = ResultValidationService::validate_approval_requirements(
-                result, None, Some("chief_arbiter")
+                result,
+                None,
+                Some("chief_arbiter"),
             );
-            assert!(validation.is_valid, "Special result '{}' with authority should be valid", result);
+            assert!(
+                validation.is_valid,
+                "Special result '{result}' with authority should be valid"
+            );
             assert!(validation.errors.is_empty());
             assert_eq!(validation.warnings.len(), 1);
             assert!(validation.warnings[0].contains("requires arbiter approval"));

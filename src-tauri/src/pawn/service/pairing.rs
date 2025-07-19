@@ -830,19 +830,19 @@ mod tests {
     fn test_pairing_service_new() {
         // Red: Test service creation
         let _service = PairingService::new();
-        
+
         // Green: Verify service is created successfully
         // Since the struct fields are not public, we can only test that it compiles and doesn't panic
-        assert!(true); // Service created without panic
+        // Service created without panic - no assertion needed
     }
 
     #[test]
     fn test_pairing_service_default() {
         // Red: Test default implementation
         let _service = PairingService::default();
-        
+
         // Green: Verify default creates the same as new
-        assert!(true); // Default service created without panic
+        // Default service created without panic - no assertion needed
     }
 
     #[test]
@@ -852,28 +852,52 @@ mod tests {
         let players = vec![];
         let player_results = vec![];
         let round_number = 1;
-        
+
         // Green: All methods should handle empty players gracefully
-        let swiss_result = service.generate_pairings(players.clone(), player_results.clone(), round_number, &PairingMethod::Swiss);
+        let swiss_result = service.generate_pairings(
+            players.clone(),
+            player_results.clone(),
+            round_number,
+            &PairingMethod::Swiss,
+        );
         assert!(swiss_result.is_ok());
         assert_eq!(swiss_result.unwrap().len(), 0);
-        
-        let round_robin_result = service.generate_pairings(players.clone(), player_results.clone(), round_number, &PairingMethod::RoundRobin);
+
+        let round_robin_result = service.generate_pairings(
+            players.clone(),
+            player_results.clone(),
+            round_number,
+            &PairingMethod::RoundRobin,
+        );
         // Round robin might return an error for empty players, which is acceptable
-        match round_robin_result {
-            Ok(pairings) => assert_eq!(pairings.len(), 0),
-            Err(_) => {}, // Error is acceptable for empty players in round robin
+        if let Ok(pairings) = round_robin_result {
+            assert_eq!(pairings.len(), 0);
         }
-        
-        let manual_result = service.generate_pairings(players.clone(), player_results.clone(), round_number, &PairingMethod::Manual);
+
+        let manual_result = service.generate_pairings(
+            players.clone(),
+            player_results.clone(),
+            round_number,
+            &PairingMethod::Manual,
+        );
         assert!(manual_result.is_ok());
         assert_eq!(manual_result.unwrap().len(), 0);
-        
-        let knockout_result = service.generate_pairings(players.clone(), player_results.clone(), round_number, &PairingMethod::Knockout);
+
+        let knockout_result = service.generate_pairings(
+            players.clone(),
+            player_results.clone(),
+            round_number,
+            &PairingMethod::Knockout,
+        );
         assert!(knockout_result.is_ok());
         assert_eq!(knockout_result.unwrap().len(), 0);
-        
-        let scheveningen_result = service.generate_pairings(players, player_results, round_number, &PairingMethod::Scheveningen);
+
+        let scheveningen_result = service.generate_pairings(
+            players,
+            player_results,
+            round_number,
+            &PairingMethod::Scheveningen,
+        );
         assert!(scheveningen_result.is_ok());
         assert_eq!(scheveningen_result.unwrap().len(), 0);
     }
@@ -890,7 +914,7 @@ mod tests {
             create_test_player_result(players[0].clone(), 0.0),
             create_test_player_result(players[1].clone(), 0.0),
         ];
-        
+
         // Green: Manual method should return empty vector
         let result = service.generate_pairings(players, player_results, 1, &PairingMethod::Manual);
         assert!(result.is_ok());
@@ -909,9 +933,10 @@ mod tests {
             create_test_player_result(players[0].clone(), 0.0),
             create_test_player_result(players[1].clone(), 0.0),
         ];
-        
+
         // Green: Knockout method should return empty vector
-        let result = service.generate_pairings(players, player_results, 1, &PairingMethod::Knockout);
+        let result =
+            service.generate_pairings(players, player_results, 1, &PairingMethod::Knockout);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 0);
     }
@@ -928,13 +953,13 @@ mod tests {
             create_test_player_result(players[0].clone(), 0.0),
             create_test_player_result(players[1].clone(), 0.0),
         ];
-        
+
         // Green: Should generate one pairing
         let result = service.generate_swiss_pairings_basic(players.clone(), player_results, 1);
         assert!(result.is_ok());
         let pairings = result.unwrap();
         assert_eq!(pairings.len(), 1);
-        
+
         // Higher rated player should be white
         assert_eq!(pairings[0].white_player.id, 1);
         assert_eq!(pairings[0].black_player.as_ref().unwrap().id, 2);
@@ -955,17 +980,17 @@ mod tests {
             create_test_player_result(players[1].clone(), 0.0),
             create_test_player_result(players[2].clone(), 0.0),
         ];
-        
+
         // Green: Should generate 2 pairings (one regular, one bye)
         let result = service.generate_swiss_pairings_basic(players, player_results, 1);
         assert!(result.is_ok());
         let pairings = result.unwrap();
         assert_eq!(pairings.len(), 2);
-        
+
         // First pairing should be between top two players
         assert_eq!(pairings[0].white_player.id, 1);
         assert_eq!(pairings[0].black_player.as_ref().unwrap().id, 2);
-        
+
         // Second pairing should be a bye for the remaining player
         assert_eq!(pairings[1].white_player.id, 3);
         assert!(pairings[1].black_player.is_none());
@@ -983,13 +1008,13 @@ mod tests {
             create_test_player_result(players[0].clone(), 1.0), // Higher points
             create_test_player_result(players[1].clone(), 0.0), // Lower points
         ];
-        
+
         // Green: Player with higher points should be sorted first despite lower rating
         let result = service.generate_swiss_pairings_basic(players, player_results, 2);
         assert!(result.is_ok());
         let pairings = result.unwrap();
         assert_eq!(pairings.len(), 1);
-        
+
         // Player 1 should be white due to higher points
         assert_eq!(pairings[0].white_player.id, 1);
         assert_eq!(pairings[0].black_player.as_ref().unwrap().id, 2);
@@ -1003,15 +1028,13 @@ mod tests {
             create_test_player(1, "Player 1", 1500, 1),
             create_test_player(2, "Player 2", 1400, 1),
         ];
-        let pairings = vec![
-            Pairing {
-                white_player: players[0].clone(),
-                black_player: Some(players[1].clone()),
-                board_number: 1,
-            }
-        ];
+        let pairings = vec![Pairing {
+            white_player: players[0].clone(),
+            black_player: Some(players[1].clone()),
+            board_number: 1,
+        }];
         let game_history = vec![];
-        
+
         // Green: Quick validation should work without errors
         let result = service.quick_validate_pairings(&pairings, &players, &game_history, 1, 1);
         assert!(result.is_ok());
@@ -1030,14 +1053,14 @@ mod tests {
             create_test_player_result(players[1].clone(), 0.0),
         ];
         let game_history = vec![];
-        
+
         // Green: Should delegate to Swiss pairing engine
         let result = service.generate_pairings_with_history(
-            players, 
-            player_results, 
-            game_history, 
-            1, 
-            &PairingMethod::Swiss
+            players,
+            player_results,
+            game_history,
+            1,
+            &PairingMethod::Swiss,
         );
         assert!(result.is_ok());
     }
@@ -1047,7 +1070,7 @@ mod tests {
         // Red: Test round robin with less than 2 players
         let service = PairingService::new();
         let players = vec![create_test_player(1, "Player 1", 1500, 1)];
-        
+
         // Green: Should return empty pairings
         let result = service.generate_round_robin_pairings_legacy(players, 1);
         assert!(result.is_ok());
@@ -1062,11 +1085,11 @@ mod tests {
             create_test_player(1, "Player 1", 1500, 1),
             create_test_player(2, "Player 2", 1400, 1),
         ];
-        
+
         // Green: Should return error for invalid round number (too high)
         let result = service.generate_round_robin_pairings_legacy(players.clone(), 10);
         assert!(result.is_err());
-        
+
         // Should return error for round 0
         let result = service.generate_round_robin_pairings_legacy(players, 0);
         assert!(result.is_err());
@@ -1077,7 +1100,7 @@ mod tests {
         // Red: Test Scheveningen with less than 2 players
         let service = PairingService::new();
         let players = vec![create_test_player(1, "Player 1", 1500, 1)];
-        
+
         // Green: Should return empty pairings
         let result = service.generate_scheveningen_pairings_legacy(players, 1);
         assert!(result.is_ok());
@@ -1094,13 +1117,13 @@ mod tests {
             create_test_player(3, "Player 3", 1400, 1),
             create_test_player(4, "Player 4", 1300, 1),
         ];
-        
+
         // Green: Should create pairings between the two teams
         let result = service.generate_scheveningen_pairings_legacy(players, 1);
         assert!(result.is_ok());
         let pairings = result.unwrap();
         assert_eq!(pairings.len(), 2);
-        
+
         // Should have board numbers assigned
         assert_eq!(pairings[0].board_number, 1);
         assert_eq!(pairings[1].board_number, 2);
@@ -1120,27 +1143,29 @@ mod tests {
             create_test_player_result(players[1].clone(), 0.0),
             create_test_player_result(players[2].clone(), 0.0),
         ];
-        
+
         // Create game history where Player 1 already played Player 2
-        let game_history = vec![
-            create_test_game_result(players[0].clone(), players[1].clone(), GameResultType::WhiteWins)
-        ];
-        
+        let game_history = vec![create_test_game_result(
+            players[0].clone(),
+            players[1].clone(),
+            GameResultType::WhiteWins,
+        )];
+
         // Green: Swiss pairing with history should avoid rematches when possible
         let result = service.generate_swiss_pairings_with_history_legacy(
-            players, 
-            player_results, 
-            game_history, 
-            2
+            players,
+            player_results,
+            game_history,
+            2,
         );
         assert!(result.is_ok());
         let pairings = result.unwrap();
-        
+
         // Should create pairings that avoid the previous matchup
         assert_eq!(pairings.len(), 2); // One pairing + one bye
     }
 
-    #[test] 
+    #[test]
     fn test_color_balance_calculation() {
         // Red: Test color balance logic in history-based pairing
         let service = PairingService::new();
@@ -1152,19 +1177,21 @@ mod tests {
             create_test_player_result(players[0].clone(), 0.0),
             create_test_player_result(players[1].clone(), 0.0),
         ];
-        
+
         // Create history where Player 1 played white in previous game (against dummy player)
         let dummy_player = create_test_player(99, "Dummy", 1000, 1);
-        let game_history = vec![
-            create_test_game_result(players[0].clone(), dummy_player, GameResultType::Draw)
-        ];
-        
+        let game_history = vec![create_test_game_result(
+            players[0].clone(),
+            dummy_player,
+            GameResultType::Draw,
+        )];
+
         // Green: Color assignment should consider previous color usage
         let result = service.generate_swiss_pairings_with_history_legacy(
             players,
             player_results,
             game_history,
-            2
+            2,
         );
         assert!(result.is_ok());
     }
@@ -1185,7 +1212,7 @@ mod tests {
             create_test_player_result(players[2].clone(), 0.0),
             create_test_player_result(players[3].clone(), 0.0),
         ];
-        
+
         // Green: Board numbers should be sequential starting from 1
         let result = service.generate_swiss_pairings_basic(players, player_results, 1);
         assert!(result.is_ok());

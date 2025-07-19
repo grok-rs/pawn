@@ -966,7 +966,7 @@ mod tests {
     use super::*;
 
     // Unit tests focused on data structures and configuration
-    
+
     #[test]
     fn test_team_pairing_config_creation() {
         let config = TeamPairingConfig {
@@ -978,10 +978,16 @@ mod tests {
             max_score_difference: Some(2.0),
             prefer_balanced_matches: true,
         };
-        
+
         assert!(matches!(config.pairing_method, TeamPairingMethod::Swiss));
-        assert!(matches!(config.color_allocation, ColorAllocation::AlternatingBoards));
-        assert!(matches!(config.board_order_policy, BoardOrderPolicy::RatingDescending));
+        assert!(matches!(
+            config.color_allocation,
+            ColorAllocation::AlternatingBoards
+        ));
+        assert!(matches!(
+            config.board_order_policy,
+            BoardOrderPolicy::RatingDescending
+        ));
         assert!(config.allow_team_vs_team);
         assert!(config.prevent_early_rematches);
         assert_eq!(config.max_score_difference, Some(2.0));
@@ -991,10 +997,16 @@ mod tests {
     #[test]
     fn test_default_team_pairing_config() {
         let config = TeamPairingConfig::default();
-        
+
         assert!(matches!(config.pairing_method, TeamPairingMethod::Swiss));
-        assert!(matches!(config.color_allocation, ColorAllocation::AlternatingBoards));
-        assert!(matches!(config.board_order_policy, BoardOrderPolicy::RatingDescending));
+        assert!(matches!(
+            config.color_allocation,
+            ColorAllocation::AlternatingBoards
+        ));
+        assert!(matches!(
+            config.board_order_policy,
+            BoardOrderPolicy::RatingDescending
+        ));
         assert!(config.allow_team_vs_team);
         assert!(config.prevent_early_rematches);
         assert_eq!(config.max_score_difference, Some(1.0));
@@ -1010,13 +1022,13 @@ mod tests {
             TeamPairingMethod::Knockout,
             TeamPairingMethod::DoubleRoundRobin,
         ];
-        
+
         assert_eq!(methods.len(), 5);
-        
+
         // Test that we can clone and debug print them
         for method in methods {
             let cloned = method.clone();
-            let debug_str = format!("{:?}", cloned);
+            let debug_str = format!("{cloned:?}");
             assert!(!debug_str.is_empty());
         }
     }
@@ -1029,13 +1041,13 @@ mod tests {
             ColorAllocation::BalancedRotation,
             ColorAllocation::FixedBoards,
         ];
-        
+
         assert_eq!(strategies.len(), 4);
-        
+
         // Test that we can clone and debug print them
         for strategy in strategies {
             let cloned = strategy.clone();
-            let debug_str = format!("{:?}", cloned);
+            let debug_str = format!("{cloned:?}");
             assert!(!debug_str.is_empty());
         }
     }
@@ -1048,13 +1060,13 @@ mod tests {
             BoardOrderPolicy::CaptainChoice,
             BoardOrderPolicy::Flexible,
         ];
-        
+
         assert_eq!(policies.len(), 4);
-        
+
         // Test that we can clone and debug print them
         for policy in policies {
             let cloned = policy.clone();
-            let debug_str = format!("{:?}", cloned);
+            let debug_str = format!("{cloned:?}");
             assert!(!debug_str.is_empty());
         }
     }
@@ -1067,7 +1079,7 @@ mod tests {
             rematch_avoidance_score: 0.95,
             overall_quality: 0.84,
         };
-        
+
         assert_eq!(quality.color_balance_score, 0.85);
         assert_eq!(quality.rating_balance_score, 0.75);
         assert_eq!(quality.rematch_avoidance_score, 0.95);
@@ -1082,7 +1094,7 @@ mod tests {
             rematch_avoidance_score: 0.5,
             overall_quality: 0.67,
         };
-        
+
         // Test that scores are within valid bounds
         assert!(quality.color_balance_score >= 0.0 && quality.color_balance_score <= 1.0);
         assert!(quality.rating_balance_score >= 0.0 && quality.rating_balance_score <= 1.0);
@@ -1099,16 +1111,16 @@ mod tests {
             (TeamPairingMethod::Knockout, "Knockout system"),
             (TeamPairingMethod::DoubleRoundRobin, "Double round robin"),
         ];
-        
+
         for (method, description) in configs {
             let config = TeamPairingConfig {
                 pairing_method: method,
                 ..Default::default()
             };
-            
+
             // Test that config can be created with each method
             assert!(!description.is_empty());
-            let debug_str = format!("{:?}", config);
+            let debug_str = format!("{config:?}");
             assert!(debug_str.contains(&format!("{:?}", config.pairing_method)));
         }
     }
@@ -1119,12 +1131,12 @@ mod tests {
             max_score_difference: Some(1.5),
             ..Default::default()
         };
-        
+
         let config_without_limit = TeamPairingConfig {
             max_score_difference: None,
             ..Default::default()
         };
-        
+
         assert_eq!(config_with_limit.max_score_difference, Some(1.5));
         assert_eq!(config_without_limit.max_score_difference, None);
     }
@@ -1137,7 +1149,7 @@ mod tests {
             rematch_avoidance_score: 0.0,
             overall_quality: 0.0,
         };
-        
+
         // Test that zero values are valid
         assert_eq!(quality.color_balance_score, 0.0);
         assert_eq!(quality.rating_balance_score, 0.0);
@@ -1151,11 +1163,11 @@ mod tests {
         let alternating_rounds = ColorAllocation::AlternatingRounds;
         let balanced_rotation = ColorAllocation::BalancedRotation;
         let fixed_boards = ColorAllocation::FixedBoards;
-        
+
         // Test that each allocation strategy is distinct
-        assert!(format!("{:?}", alternating_boards) != format!("{:?}", alternating_rounds));
-        assert!(format!("{:?}", balanced_rotation) != format!("{:?}", fixed_boards));
-        assert!(format!("{:?}", alternating_boards) != format!("{:?}", balanced_rotation));
+        assert!(format!("{alternating_boards:?}") != format!("{alternating_rounds:?}"));
+        assert!(format!("{balanced_rotation:?}") != format!("{fixed_boards:?}"));
+        assert!(format!("{alternating_boards:?}") != format!("{balanced_rotation:?}"));
     }
 
     #[test]
@@ -1164,11 +1176,11 @@ mod tests {
         let rating_ascending = BoardOrderPolicy::RatingAscending;
         let captain_choice = BoardOrderPolicy::CaptainChoice;
         let flexible = BoardOrderPolicy::Flexible;
-        
+
         // Test that each policy is distinct
-        assert!(format!("{:?}", rating_descending) != format!("{:?}", rating_ascending));
-        assert!(format!("{:?}", captain_choice) != format!("{:?}", flexible));
-        assert!(format!("{:?}", rating_descending) != format!("{:?}", captain_choice));
+        assert!(format!("{rating_descending:?}") != format!("{rating_ascending:?}"));
+        assert!(format!("{captain_choice:?}") != format!("{flexible:?}"));
+        assert!(format!("{rating_descending:?}") != format!("{captain_choice:?}"));
     }
 
     #[test]
@@ -1179,18 +1191,18 @@ mod tests {
             prefer_balanced_matches: false,
             ..Default::default()
         };
-        
+
         assert!(!config.allow_team_vs_team);
         assert!(!config.prevent_early_rematches);
         assert!(!config.prefer_balanced_matches);
-        
+
         let config2 = TeamPairingConfig {
             allow_team_vs_team: true,
             prevent_early_rematches: true,
             prefer_balanced_matches: true,
             ..Default::default()
         };
-        
+
         assert!(config2.allow_team_vs_team);
         assert!(config2.prevent_early_rematches);
         assert!(config2.prefer_balanced_matches);
