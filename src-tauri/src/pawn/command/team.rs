@@ -308,6 +308,7 @@ pub async fn validate_team_board_order(
 // =====================================================
 
 /// Team pairing configuration for commands
+#[allow(dead_code)]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 pub struct TeamPairingConfigDto {
     pub pairing_method: String, // "swiss", "round_robin", "scheveningen", "knockout", "double_round_robin"
@@ -320,6 +321,7 @@ pub struct TeamPairingConfigDto {
 }
 
 /// Team pairing result for commands
+#[allow(dead_code)]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 pub struct TeamPairingResultDto {
     pub team_matches: Vec<TeamMatch>,
@@ -329,6 +331,7 @@ pub struct TeamPairingResultDto {
 }
 
 /// Pairing quality metrics
+#[allow(dead_code)]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 pub struct PairingQualityDto {
     pub color_balance_score: f32,
@@ -476,7 +479,7 @@ pub async fn validate_team_pairing_config(
 
     // Validate score difference
     if let Some(diff) = config.max_score_difference {
-        if diff < 0.0 || diff > 10.0 {
+        if !(0.0..=10.0).contains(&diff) {
             return Err(crate::pawn::common::error::PawnError::InvalidInput(
                 "Max score difference must be between 0.0 and 10.0".to_string(),
             ));
@@ -491,6 +494,7 @@ pub async fn validate_team_pairing_config(
 // =====================================================
 
 /// Team scoring configuration for commands
+#[allow(dead_code)]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 pub struct TeamScoringConfigDto {
     pub scoring_system: String, // "match_points", "board_points", "olympic_points", "custom_points"
@@ -504,6 +508,7 @@ pub struct TeamScoringConfigDto {
 }
 
 /// Team standings result for commands
+#[allow(dead_code)]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 pub struct TeamStandingsResultDto {
     pub standings: Vec<ExtendedTeamStandingDto>,
@@ -512,6 +517,7 @@ pub struct TeamStandingsResultDto {
 }
 
 /// Extended team standing for commands
+#[allow(dead_code)]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 pub struct ExtendedTeamStandingDto {
     pub team: Team,
@@ -572,7 +578,7 @@ pub async fn calculate_team_standings(
             "draw_count" => TeamTiebreakCriterion::DrawCount,
             _ => {
                 return Err(crate::pawn::common::error::PawnError::InvalidInput(
-                    format!("Invalid tiebreak criterion: {}", criterion_str),
+                    format!("Invalid tiebreak criterion: {criterion_str}"),
                 ));
             }
         };
@@ -691,7 +697,7 @@ pub async fn validate_team_scoring_config(
             | "draw_count" => {}
             _ => {
                 return Err(crate::pawn::common::error::PawnError::InvalidInput(
-                    format!("Invalid tiebreak criterion: {}", criterion),
+                    format!("Invalid tiebreak criterion: {criterion}"),
                 ));
             }
         }

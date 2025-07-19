@@ -17,11 +17,24 @@ use crate::pawn::{
     service::tiebreak::TiebreakCalculator,
 };
 
+/// Parameters for checking norm requirements
+struct NormCheckParams<'a> {
+    norm_type: &'a NormType,
+    performance_rating: i32,
+    games_played: i32,
+    score_percentage: f64,
+    tournament_category: i32,
+    player_games: &'a [&'a Game],
+    all_players: &'a [Player],
+}
+
+#[allow(dead_code)]
 pub struct NormCalculationService<D> {
     db: Arc<D>,
     tiebreak_calculator: Arc<TiebreakCalculator<D>>,
 }
 
+#[allow(dead_code)]
 impl<D: Db> NormCalculationService<D> {
     pub fn new(db: Arc<D>, tiebreak_calculator: Arc<TiebreakCalculator<D>>) -> Self {
         Self {
@@ -87,15 +100,15 @@ impl<D: Db> NormCalculationService<D> {
 
         // Check all requirements
         let requirements_met = self
-            .check_norm_requirements(
-                &request.norm_type,
+            .check_norm_requirements(NormCheckParams {
+                norm_type: &request.norm_type,
                 performance_rating,
                 games_played,
                 score_percentage,
                 tournament_category,
-                &player_games,
-                &all_players,
-            )
+                player_games: &player_games,
+                all_players: &all_players,
+            })
             .await?;
 
         // Generate missing requirements list
@@ -306,7 +319,8 @@ impl<D: Db> NormCalculationService<D> {
             average_opponent_rating - 800.0
         } else {
             // Use logistic function to convert percentage to rating difference
-            let rating_diff = 400.0 * (score_percentage / (1.0 - score_percentage)).ln() / 2.302585;
+            let rating_diff = 400.0 * (score_percentage / (1.0 - score_percentage)).ln()
+                / std::f64::consts::LN_10;
             average_opponent_rating + rating_diff
         };
 
@@ -366,33 +380,29 @@ impl<D: Db> NormCalculationService<D> {
     /// Check all norm requirements
     async fn check_norm_requirements(
         &self,
-        norm_type: &NormType,
-        performance_rating: i32,
-        games_played: i32,
-        score_percentage: f64,
-        tournament_category: i32,
-        player_games: &[&Game],
-        all_players: &[Player],
+        params: NormCheckParams<'_>,
     ) -> Result<NormRequirements, PawnError> {
-        let performance_rating_met = performance_rating >= norm_type.required_performance_rating();
-        let minimum_games_met = games_played >= norm_type.minimum_games();
-        let minimum_score_met = score_percentage >= norm_type.minimum_score_percentage();
+        let performance_rating_met =
+            params.performance_rating >= params.norm_type.required_performance_rating();
+        let minimum_games_met = params.games_played >= params.norm_type.minimum_games();
+        let minimum_score_met =
+            params.score_percentage >= params.norm_type.minimum_score_percentage();
 
         // Tournament category should be adequate for the norm
-        let tournament_category_adequate = match norm_type {
-            NormType::Grandmaster => tournament_category >= 2380,
-            NormType::InternationalMaster => tournament_category >= 2230,
-            NormType::FideMaster => tournament_category >= 2080,
-            NormType::CandidateMaster => tournament_category >= 1930,
-            NormType::WomanGrandmaster => tournament_category >= 2180,
-            NormType::WomanInternationalMaster => tournament_category >= 2030,
-            NormType::WomanFideMaster => tournament_category >= 1880,
-            NormType::WomanCandidateMaster => tournament_category >= 1730,
+        let tournament_category_adequate = match params.norm_type {
+            NormType::Grandmaster => params.tournament_category >= 2380,
+            NormType::InternationalMaster => params.tournament_category >= 2230,
+            NormType::FideMaster => params.tournament_category >= 2080,
+            NormType::CandidateMaster => params.tournament_category >= 1930,
+            NormType::WomanGrandmaster => params.tournament_category >= 2180,
+            NormType::WomanInternationalMaster => params.tournament_category >= 2030,
+            NormType::WomanFideMaster => params.tournament_category >= 1880,
+            NormType::WomanCandidateMaster => params.tournament_category >= 1730,
         };
 
         // Check opponent diversity (simplified - in real implementation would check federations)
         let opponent_diversity_met = self
-            .check_opponent_diversity(player_games, all_players)
+            .check_opponent_diversity(params.player_games, params.all_players)
             .await?;
 
         Ok(NormRequirements {
@@ -481,7 +491,7 @@ impl<D: Db> NormCalculationService<D> {
     ) -> Result<String, PawnError> {
         let mut info = Vec::new();
 
-        info.push(format!("Tournament category: {}", tournament_category));
+        info.push(format!("Tournament category: {tournament_category}"));
         info.push(format!("Norm type: {}", norm_type.display_name()));
 
         if requirements.performance_rating_met {
@@ -683,11 +693,10 @@ impl<D: Db> NormCalculationService<D> {
     ) -> Result<crate::pawn::domain::tiebreak::TournamentTiebreakConfig, PawnError> {
         match self.db.get_tournament_settings(tournament_id).await? {
             Some(config) => Ok(config),
-            None => {
-                let mut config = crate::pawn::domain::tiebreak::TournamentTiebreakConfig::default();
-                config.tournament_id = tournament_id;
-                Ok(config)
-            }
+            None => Ok(crate::pawn::domain::tiebreak::TournamentTiebreakConfig {
+                tournament_id,
+                ..Default::default()
+            }),
         }
     }
 
@@ -723,35 +732,33 @@ impl<D: Db> NormCalculationService<D> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[tokio::test]
     async fn test_norm_calculation_service_creation() {
         // Test would require mock database and tiebreak calculator
-        assert!(true); // Placeholder
+        todo!("Implement test with mock database and tiebreak calculator")
     }
 
     #[tokio::test]
     async fn test_performance_rating_calculation() {
         // Test performance rating calculation logic
-        assert!(true); // Placeholder
+        todo!("Implement performance rating calculation test")
     }
 
     #[tokio::test]
     async fn test_tournament_category_calculation() {
         // Test tournament category calculation
-        assert!(true); // Placeholder
+        todo!("Implement tournament category calculation test")
     }
 
     #[tokio::test]
     async fn test_prize_distribution_tied_players() {
         // Test prize distribution for tied players
-        assert!(true); // Placeholder
+        todo!("Implement prize distribution test for tied players")
     }
 
     #[tokio::test]
     async fn test_norm_requirements_validation() {
         // Test norm requirements validation
-        assert!(true); // Placeholder
+        todo!("Implement norm requirements validation test")
     }
 }

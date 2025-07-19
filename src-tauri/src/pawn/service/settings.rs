@@ -6,11 +6,13 @@ use sqlx::{Row, SqlitePool};
 use std::collections::HashMap;
 use std::sync::Arc;
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct SettingsService {
     pool: Arc<SqlitePool>,
 }
 
+#[allow(dead_code)]
 impl SettingsService {
     pub fn new(pool: Arc<SqlitePool>) -> Self {
         Self { pool }
@@ -282,7 +284,7 @@ impl SettingsService {
             let effective_value: Option<String> = row.try_get("effective_value")?;
 
             if let Some(value) = effective_value {
-                let full_key = format!("{}.{}", category, setting_key);
+                let full_key = format!("{category}.{setting_key}");
                 settings.insert(full_key, value);
             }
         }
@@ -472,7 +474,7 @@ impl SettingsService {
                 .filter(|(key, _)| {
                     categories
                         .iter()
-                        .any(|cat| key.starts_with(&format!("{}.", cat)))
+                        .any(|cat| key.starts_with(&format!("{cat}.")))
                 })
                 .collect()
         } else {
@@ -480,7 +482,7 @@ impl SettingsService {
         };
 
         let backup_data = serde_json::to_string(&filtered_settings).map_err(|e| {
-            PawnError::InvalidInput(format!("Failed to serialize backup data: {}", e))
+            PawnError::InvalidInput(format!("Failed to serialize backup data: {e}"))
         })?;
 
         Ok(backup_data)
@@ -530,7 +532,7 @@ impl SettingsService {
 
         // Parse backup data
         let backup_settings: HashMap<String, String> = serde_json::from_str(&backup.backup_data)
-            .map_err(|e| PawnError::InvalidInput(format!("Failed to parse backup data: {}", e)))?;
+            .map_err(|e| PawnError::InvalidInput(format!("Failed to parse backup data: {e}")))?;
 
         // Restore settings
         for (full_key, value) in backup_settings {
@@ -584,7 +586,7 @@ impl SettingsService {
         // Basic type validation
         match request.setting_type.as_str() {
             "integer" => {
-                if let Err(_) = request.setting_value.parse::<i64>() {
+                if request.setting_value.parse::<i64>().is_err() {
                     result.is_valid = false;
                     result.errors.push(format!(
                         "Value '{}' is not a valid integer",
@@ -593,7 +595,7 @@ impl SettingsService {
                 }
             }
             "float" => {
-                if let Err(_) = request.setting_value.parse::<f64>() {
+                if request.setting_value.parse::<f64>().is_err() {
                     result.is_valid = false;
                     result.errors.push(format!(
                         "Value '{}' is not a valid float",
@@ -621,9 +623,7 @@ impl SettingsService {
             "json" => {
                 if let Err(e) = serde_json::from_str::<serde_json::Value>(&request.setting_value) {
                     result.is_valid = false;
-                    result
-                        .errors
-                        .push(format!("Value is not valid JSON: {}", e));
+                    result.errors.push(format!("Value is not valid JSON: {e}"));
                 }
             }
             _ => {} // string and array types are generally valid
@@ -632,12 +632,12 @@ impl SettingsService {
         // Additional validation based on setting key
         match (request.category.as_str(), request.setting_key.as_str()) {
             ("general", "language") => {
-                let valid_languages = vec!["en", "ru", "ua"];
+                let valid_languages = ["en", "ru", "ua"];
                 let lang = request.setting_value.trim_matches('"');
                 if !valid_languages.contains(&lang) {
                     result
                         .warnings
-                        .push(format!("Language '{}' may not be fully supported", lang));
+                        .push(format!("Language '{lang}' may not be fully supported"));
                 }
             }
             ("performance", "cache_size_mb") => {
@@ -830,13 +830,13 @@ impl SettingsService {
         match request.format.as_str() {
             "json" => {
                 let json_data = serde_json::to_string_pretty(&settings).map_err(|e| {
-                    PawnError::InvalidInput(format!("JSON serialization error: {}", e))
+                    PawnError::InvalidInput(format!("JSON serialization error: {e}"))
                 })?;
                 Ok(json_data)
             }
             "yaml" => {
                 let yaml_data = serde_yaml::to_string(&settings).map_err(|e| {
-                    PawnError::InvalidInput(format!("YAML serialization error: {}", e))
+                    PawnError::InvalidInput(format!("YAML serialization error: {e}"))
                 })?;
                 Ok(yaml_data)
             }
@@ -888,9 +888,9 @@ impl SettingsService {
 
         let settings_data = match request.format.as_str() {
             "json" => serde_json::from_str::<HashMap<String, String>>(&request.data)
-                .map_err(|e| PawnError::InvalidInput(format!("JSON parsing error: {}", e)))?,
+                .map_err(|e| PawnError::InvalidInput(format!("JSON parsing error: {e}")))?,
             "yaml" => serde_yaml::from_str::<HashMap<String, String>>(&request.data)
-                .map_err(|e| PawnError::InvalidInput(format!("YAML parsing error: {}", e)))?,
+                .map_err(|e| PawnError::InvalidInput(format!("YAML parsing error: {e}")))?,
             _ => {
                 return Err(PawnError::InvalidInput(format!(
                     "Unsupported import format: {}",
@@ -922,7 +922,7 @@ impl SettingsService {
                     }
                 }
             } else {
-                warnings.push(format!("Invalid setting key format: {}", setting_key));
+                warnings.push(format!("Invalid setting key format: {setting_key}"));
                 skipped_count += 1;
             }
         }
@@ -948,7 +948,7 @@ impl SettingsService {
             .ok_or_else(|| PawnError::NotFound("Settings template not found".to_string()))?;
 
         let template_data: HashMap<String, String> = serde_json::from_str(&template.template_data)
-            .map_err(|e| PawnError::InvalidInput(format!("Invalid template data: {}", e)))?;
+            .map_err(|e| PawnError::InvalidInput(format!("Invalid template data: {e}")))?;
 
         let mut applied_count = 0;
         let mut skipped_count = 0;
@@ -986,11 +986,11 @@ impl SettingsService {
                 match self.create_user_preference(preference_data).await {
                     Ok(_) => applied_count += 1,
                     Err(e) => {
-                        errors.push(format!("Failed to apply {}.{}: {}", category, key, e));
+                        errors.push(format!("Failed to apply {category}.{key}: {e}"));
                     }
                 }
             } else {
-                warnings.push(format!("Invalid setting key format: {}", setting_key));
+                warnings.push(format!("Invalid setting key format: {setting_key}"));
                 skipped_count += 1;
             }
         }
@@ -1048,15 +1048,11 @@ impl SettingsService {
 mod tests {
     use super::*;
     use sqlx::SqlitePool;
-    use tempfile::TempDir;
 
     async fn get_test_db() -> SqlitePool {
-        let temp_dir = TempDir::new().expect("Failed to create temp directory");
-        let db_path = temp_dir.path().join("test.db");
-        let database_url = format!("sqlite://{}?mode=rwc", db_path.display());
-        let pool = SqlitePool::connect(&database_url)
+        let pool = SqlitePool::connect(":memory:")
             .await
-            .expect("Failed to connect to test database");
+            .expect("Failed to connect to in-memory test database");
 
         // Apply migrations
         sqlx::migrate!("./migrations")
@@ -1070,7 +1066,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_effective_settings() {
         let pool = get_test_db().await;
-        let service = SettingsService::new(pool);
+        let service = SettingsService::new(Arc::new(pool));
 
         // Test getting effective settings for default user
         let settings = service
@@ -1085,7 +1081,7 @@ mod tests {
     #[tokio::test]
     async fn test_user_preference_override() {
         let pool = get_test_db().await;
-        let service = SettingsService::new(pool);
+        let service = SettingsService::new(Arc::new(pool));
 
         // Create a user preference
         let preference_data = CreateUserPreference {
@@ -1112,7 +1108,7 @@ mod tests {
     #[tokio::test]
     async fn test_settings_validation() {
         let pool = get_test_db().await;
-        let service = SettingsService::new(pool);
+        let service = SettingsService::new(Arc::new(pool));
 
         // Test valid integer
         let request = SettingsValidationRequest {
@@ -1143,7 +1139,7 @@ mod tests {
     #[tokio::test]
     async fn test_settings_backup_restore() {
         let pool = get_test_db().await;
-        let service = SettingsService::new(pool);
+        let service = SettingsService::new(Arc::new(pool));
 
         // Create a user preference
         let preference_data = CreateUserPreference {

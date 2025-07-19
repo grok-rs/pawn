@@ -1,32 +1,45 @@
 use crate::pawn::common::error::PawnError;
 use crate::pawn::db::Db;
+#[allow(dead_code)]
 use crate::pawn::domain::dto::{
     AddPlayerToTeam, CreateTeam, CreateTeamLineup, CreateTeamMatch, CreateTeamTournamentSettings,
     RemovePlayerFromTeam, TeamSearchFilters, UpdateTeam, UpdateTeamMatch,
     UpdateTeamTournamentSettings,
 };
+#[allow(dead_code)]
 use crate::pawn::domain::model::{
-    Team, TeamLineup, TeamMatch, TeamMembership, TeamStanding, TeamTournamentSettings, Tournament,
+    Team, TeamLineup, TeamMatch, TeamMembership, TeamStanding, TeamTournamentSettings,
 };
 use std::sync::Arc;
 use tracing::{info, instrument, warn};
 
 /// Statistics for team tournaments
+#[allow(dead_code)]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 pub struct TeamStatistics {
+    #[allow(dead_code)]
     pub total_teams: i32,
+    #[allow(dead_code)]
     pub active_teams: i32,
+    #[allow(dead_code)]
     pub withdrawn_teams: i32,
+    #[allow(dead_code)]
     pub disqualified_teams: i32,
+    #[allow(dead_code)]
     pub total_players: i32,
+    #[allow(dead_code)]
     pub matches_played: i32,
+    #[allow(dead_code)]
     pub matches_completed: i32,
+    #[allow(dead_code)]
     pub matches_scheduled: i32,
+    #[allow(dead_code)]
     pub average_team_rating: f64,
 }
 
 /// Team membership statistics
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct TeamMembershipStatistics {
     pub total_members: i32,
     pub active_members: i32,
@@ -38,6 +51,7 @@ pub struct TeamMembershipStatistics {
 
 /// Team match statistics
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct TeamMatchStatistics {
     pub total_matches: i32,
     pub completed_matches: i32,
@@ -48,64 +62,20 @@ pub struct TeamMatchStatistics {
     pub average_match_duration_minutes: f64,
 }
 
+#[allow(dead_code)]
 pub struct TeamService<D> {
     db: Arc<D>,
 }
 
+#[allow(dead_code)]
 impl<D: Db> TeamService<D> {
+    #[allow(dead_code)]
     pub fn new(db: Arc<D>) -> Self {
         Self { db }
     }
 
-    /// Static method for validating team data (for testing)
-    pub fn validate_team_data_static(data: &CreateTeam) -> Result<(), PawnError> {
-        if data.name.trim().is_empty() {
-            return Err(PawnError::ValidationError(
-                "Team name cannot be empty".to_string(),
-            ));
-        }
-
-        if data.name.len() > 100 {
-            return Err(PawnError::ValidationError(
-                "Team name cannot exceed 100 characters".to_string(),
-            ));
-        }
-
-        if let Some(ref captain) = data.captain {
-            if captain.trim().is_empty() {
-                return Err(PawnError::ValidationError(
-                    "Captain name cannot be empty".to_string(),
-                ));
-            }
-        }
-
-        if let Some(ref email) = data.contact_email {
-            if !email.contains('@') {
-                return Err(PawnError::ValidationError(
-                    "Invalid email format".to_string(),
-                ));
-            }
-        }
-
-        Ok(())
-    }
-
-    /// Static method for validating status transitions (for testing)
-    pub fn is_valid_status_transition_static(current_status: &str, new_status: &str) -> bool {
-        match (current_status, new_status) {
-            ("scheduled", "in_progress") => true,
-            ("scheduled", "postponed") => true,
-            ("scheduled", "cancelled") => true,
-            ("in_progress", "completed") => true,
-            ("in_progress", "postponed") => true,
-            ("postponed", "scheduled") => true,
-            ("postponed", "cancelled") => true,
-            (current, new) if current == new => true,
-            _ => false,
-        }
-    }
-
     /// Get a reference to the database for use in other services
+    #[allow(dead_code)]
     pub fn get_db(&self) -> &Arc<D> {
         &self.db
     }
@@ -116,6 +86,7 @@ impl<D: Db> TeamService<D> {
 
     /// Create a new team with validation
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn create_team(&self, data: CreateTeam) -> Result<Team, PawnError> {
         info!("Creating team: {}", data.name);
 
@@ -145,6 +116,7 @@ impl<D: Db> TeamService<D> {
 
     /// Update an existing team
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn update_team(&self, data: UpdateTeam) -> Result<Team, PawnError> {
         info!("Updating team ID: {}", data.id);
 
@@ -174,22 +146,20 @@ impl<D: Db> TeamService<D> {
 
             // Check if new name is unique (if different from current)
             if let Ok(existing_team) = self.db.get_team_by_id(data.id).await {
-                if existing_team.name != *name {
-                    if self
+                if existing_team.name != *name
+                    && self
                         .is_team_name_taken(existing_team.tournament_id, name)
                         .await?
-                    {
-                        return Err(PawnError::ValidationError(format!(
-                            "Team name '{}' is already taken in this tournament",
-                            name
-                        )));
-                    }
+                {
+                    return Err(PawnError::ValidationError(format!(
+                        "Team name '{name}' is already taken in this tournament"
+                    )));
                 }
             }
         }
 
         if let Some(max_board_count) = data.max_board_count {
-            if max_board_count < 1 || max_board_count > 12 {
+            if !(1..=12).contains(&max_board_count) {
                 return Err(PawnError::ValidationError(
                     "Max board count must be between 1 and 12".to_string(),
                 ));
@@ -212,6 +182,7 @@ impl<D: Db> TeamService<D> {
 
     /// Delete a team and all its memberships
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn delete_team(&self, team_id: i32) -> Result<(), PawnError> {
         info!("Deleting team ID: {}", team_id);
 
@@ -241,6 +212,7 @@ impl<D: Db> TeamService<D> {
 
     /// Get team by ID
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn get_team_by_id(&self, team_id: i32) -> Result<Team, PawnError> {
         self.db
             .get_team_by_id(team_id)
@@ -250,6 +222,7 @@ impl<D: Db> TeamService<D> {
 
     /// Get all teams for a tournament
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn get_teams_by_tournament(
         &self,
         tournament_id: i32,
@@ -262,6 +235,7 @@ impl<D: Db> TeamService<D> {
 
     /// Search teams with filters
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn search_teams(&self, filters: TeamSearchFilters) -> Result<Vec<Team>, PawnError> {
         self.db.search_teams(filters).await.map_err(PawnError::from)
     }
@@ -272,6 +246,7 @@ impl<D: Db> TeamService<D> {
 
     /// Add a player to a team
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn add_player_to_team(
         &self,
         data: AddPlayerToTeam,
@@ -301,7 +276,7 @@ impl<D: Db> TeamService<D> {
         }
 
         // Validate board number
-        if data.board_number < 1 || data.board_number > team.max_board_count {
+        if !(1..=team.max_board_count).contains(&data.board_number) {
             return Err(PawnError::ValidationError(format!(
                 "Board number must be between 1 and {}",
                 team.max_board_count
@@ -330,12 +305,10 @@ impl<D: Db> TeamService<D> {
         }
 
         // Validate captain assignment
-        if data.is_captain {
-            if self.team_has_captain(data.team_id).await? {
-                return Err(PawnError::ValidationError(
-                    "Team already has a captain".to_string(),
-                ));
-            }
+        if data.is_captain && self.team_has_captain(data.team_id).await? {
+            return Err(PawnError::ValidationError(
+                "Team already has a captain".to_string(),
+            ));
         }
 
         let membership = self
@@ -350,6 +323,7 @@ impl<D: Db> TeamService<D> {
 
     /// Remove a player from a team
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn remove_player_from_team(
         &self,
         data: RemovePlayerFromTeam,
@@ -390,6 +364,7 @@ impl<D: Db> TeamService<D> {
 
     /// Get team memberships for a team
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn get_team_memberships(
         &self,
         team_id: i32,
@@ -402,6 +377,7 @@ impl<D: Db> TeamService<D> {
 
     /// Get team membership statistics
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn get_team_membership_statistics(
         &self,
         tournament_id: i32,
@@ -452,6 +428,7 @@ impl<D: Db> TeamService<D> {
 
     /// Create a team match
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn create_team_match(&self, data: CreateTeamMatch) -> Result<TeamMatch, PawnError> {
         info!(
             "Creating team match between teams {} and {}",
@@ -505,6 +482,7 @@ impl<D: Db> TeamService<D> {
 
     /// Update team match result
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn update_team_match(&self, data: UpdateTeamMatch) -> Result<TeamMatch, PawnError> {
         info!("Updating team match ID: {}", data.id);
 
@@ -527,7 +505,7 @@ impl<D: Db> TeamService<D> {
 
         // Validate match points
         if let Some(team_a_points) = data.team_a_match_points {
-            if team_a_points < 0.0 || team_a_points > 3.0 {
+            if !(0.0..=3.0).contains(&team_a_points) {
                 return Err(PawnError::ValidationError(
                     "Team match points must be between 0 and 3".to_string(),
                 ));
@@ -535,7 +513,7 @@ impl<D: Db> TeamService<D> {
         }
 
         if let Some(team_b_points) = data.team_b_match_points {
-            if team_b_points < 0.0 || team_b_points > 3.0 {
+            if !(0.0..=3.0).contains(&team_b_points) {
                 return Err(PawnError::ValidationError(
                     "Team match points must be between 0 and 3".to_string(),
                 ));
@@ -570,6 +548,7 @@ impl<D: Db> TeamService<D> {
 
     /// Get team matches for a tournament
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn get_team_matches(
         &self,
         tournament_id: i32,
@@ -583,6 +562,7 @@ impl<D: Db> TeamService<D> {
 
     /// Get team match statistics
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn get_team_match_statistics(
         &self,
         tournament_id: i32,
@@ -617,6 +597,7 @@ impl<D: Db> TeamService<D> {
 
     /// Create team lineup for a round
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn create_team_lineup(
         &self,
         data: CreateTeamLineup,
@@ -634,7 +615,7 @@ impl<D: Db> TeamService<D> {
             .map_err(PawnError::from)?;
 
         // Validate board number
-        if data.board_number < 1 || data.board_number > team.max_board_count {
+        if !(1..=team.max_board_count).contains(&data.board_number) {
             return Err(PawnError::ValidationError(format!(
                 "Board number must be between 1 and {}",
                 team.max_board_count
@@ -692,6 +673,7 @@ impl<D: Db> TeamService<D> {
 
     /// Get team lineups for a team and round
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn get_team_lineups(
         &self,
         team_id: i32,
@@ -709,6 +691,7 @@ impl<D: Db> TeamService<D> {
 
     /// Create team tournament settings
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn create_team_tournament_settings(
         &self,
         data: CreateTeamTournamentSettings,
@@ -737,6 +720,7 @@ impl<D: Db> TeamService<D> {
 
     /// Update team tournament settings
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn update_team_tournament_settings(
         &self,
         data: UpdateTeamTournamentSettings,
@@ -768,6 +752,7 @@ impl<D: Db> TeamService<D> {
 
     /// Get team tournament settings
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn get_team_tournament_settings(
         &self,
         tournament_id: i32,
@@ -784,6 +769,7 @@ impl<D: Db> TeamService<D> {
 
     /// Get comprehensive team statistics for a tournament
     #[instrument(skip(self))]
+    #[allow(dead_code)]
     pub async fn get_team_statistics(
         &self,
         tournament_id: i32,
@@ -842,6 +828,7 @@ impl<D: Db> TeamService<D> {
     // =====================================================
 
     /// Validate basic team data
+    #[allow(dead_code)]
     fn validate_team_data(&self, data: &CreateTeam) -> Result<(), PawnError> {
         if data.name.trim().is_empty() {
             return Err(PawnError::ValidationError(
@@ -875,18 +862,19 @@ impl<D: Db> TeamService<D> {
     }
 
     /// Validate tournament settings
+    #[allow(dead_code)]
     fn validate_tournament_settings(
         &self,
         data: &CreateTeamTournamentSettings,
     ) -> Result<(), PawnError> {
-        if data.team_size < 1 || data.team_size > 12 {
+        if !(1..=12).contains(&data.team_size) {
             return Err(PawnError::ValidationError(
                 "Team size must be between 1 and 12".to_string(),
             ));
         }
 
         if let Some(max_teams) = data.max_teams {
-            if max_teams < 2 || max_teams > 100 {
+            if !(2..=100).contains(&max_teams) {
                 return Err(PawnError::ValidationError(
                     "Max teams must be between 2 and 100".to_string(),
                 ));
@@ -905,6 +893,7 @@ impl<D: Db> TeamService<D> {
     }
 
     /// Check if team name is already taken in tournament
+    #[allow(dead_code)]
     async fn is_team_name_taken(&self, tournament_id: i32, name: &str) -> Result<bool, PawnError> {
         let teams = self.get_teams_by_tournament(tournament_id).await?;
         Ok(teams
@@ -913,6 +902,7 @@ impl<D: Db> TeamService<D> {
     }
 
     /// Validate tournament supports teams
+    #[allow(dead_code)]
     async fn validate_tournament_for_teams(&self, tournament_id: i32) -> Result<(), PawnError> {
         let tournament = self
             .db
@@ -930,6 +920,7 @@ impl<D: Db> TeamService<D> {
     }
 
     /// Check if player is on any team in the tournament
+    #[allow(dead_code)]
     async fn is_player_on_team(
         &self,
         player_id: i32,
@@ -948,6 +939,7 @@ impl<D: Db> TeamService<D> {
     }
 
     /// Check if player is on a specific team
+    #[allow(dead_code)]
     async fn is_player_on_specific_team(
         &self,
         player_id: i32,
@@ -958,6 +950,7 @@ impl<D: Db> TeamService<D> {
     }
 
     /// Check if board is already occupied
+    #[allow(dead_code)]
     async fn is_board_occupied(&self, team_id: i32, board_number: i32) -> Result<bool, PawnError> {
         let memberships = self.get_team_memberships(team_id).await?;
         Ok(memberships
@@ -966,12 +959,14 @@ impl<D: Db> TeamService<D> {
     }
 
     /// Check if team already has a captain
+    #[allow(dead_code)]
     async fn team_has_captain(&self, team_id: i32) -> Result<bool, PawnError> {
         let memberships = self.get_team_memberships(team_id).await?;
         Ok(memberships.iter().any(|m| m.is_captain))
     }
 
     /// Check if team has active matches
+    #[allow(dead_code)]
     async fn has_active_matches(&self, team_id: i32) -> Result<bool, PawnError> {
         let team = self.get_team_by_id(team_id).await?;
         let matches = self.get_team_matches(team.tournament_id, None).await?;
@@ -983,13 +978,15 @@ impl<D: Db> TeamService<D> {
     }
 
     /// Check if player has active lineups
-    async fn has_active_lineups(&self, team_id: i32, player_id: i32) -> Result<bool, PawnError> {
+    #[allow(dead_code)]
+    async fn has_active_lineups(&self, _team_id: i32, _player_id: i32) -> Result<bool, PawnError> {
         // This would need implementation to check if player has lineups in future rounds
         // For now, return false as a placeholder
         Ok(false)
     }
 
     /// Check if match exists between teams in a round
+    #[allow(dead_code)]
     async fn match_exists(
         &self,
         team_a_id: i32,
@@ -1008,6 +1005,7 @@ impl<D: Db> TeamService<D> {
     }
 
     /// Check if lineup exists for team, round, and board
+    #[allow(dead_code)]
     async fn lineup_exists(
         &self,
         team_id: i32,
@@ -1019,6 +1017,7 @@ impl<D: Db> TeamService<D> {
     }
 
     /// Validate team match status transitions
+    #[allow(dead_code)]
     fn is_valid_status_transition(&self, current_status: &str, new_status: &str) -> bool {
         match (current_status, new_status) {
             ("scheduled", "in_progress") => true,
@@ -1034,6 +1033,7 @@ impl<D: Db> TeamService<D> {
     }
 
     /// Get team match by ID
+    #[allow(dead_code)]
     pub async fn get_team_match_by_id(&self, match_id: i32) -> Result<TeamMatch, PawnError> {
         self.db
             .get_team_match_by_id(match_id)
@@ -1042,6 +1042,7 @@ impl<D: Db> TeamService<D> {
     }
 
     /// Get all team memberships for a tournament
+    #[allow(dead_code)]
     pub async fn get_all_team_memberships(
         &self,
         tournament_id: i32,
@@ -1053,6 +1054,7 @@ impl<D: Db> TeamService<D> {
     }
 
     /// Get team standings for a tournament
+    #[allow(dead_code)]
     pub async fn get_team_standings(
         &self,
         tournament_id: i32,
@@ -1062,9 +1064,9 @@ impl<D: Db> TeamService<D> {
         let teams = self.get_teams_by_tournament(tournament_id).await?;
 
         let mut standings = Vec::new();
-        for (index, team) in teams.iter().enumerate() {
+        for team in teams.iter() {
             let memberships = self.get_team_memberships(team.id).await?;
-            let member_count = memberships.len() as i32;
+            let _member_count = memberships.len() as i32;
 
             standings.push(TeamStanding {
                 team: team.clone(),
@@ -1083,6 +1085,7 @@ impl<D: Db> TeamService<D> {
     }
 
     /// Validate team lineup for a round
+    #[allow(dead_code)]
     pub async fn validate_team_lineup(
         &self,
         team_id: i32,
@@ -1108,6 +1111,7 @@ impl<D: Db> TeamService<D> {
     }
 
     /// Validate team board order for a round
+    #[allow(dead_code)]
     pub async fn validate_team_board_order(
         &self,
         team_id: i32,
@@ -1134,13 +1138,70 @@ impl<D: Db> TeamService<D> {
 }
 
 // =====================================================
+// Static utility functions for testing
+// =====================================================
+
+/// Static function for validating team data (for testing)
+#[allow(dead_code)]
+pub fn validate_team_data_static(data: &CreateTeam) -> Result<(), PawnError> {
+    if data.name.trim().is_empty() {
+        return Err(PawnError::ValidationError(
+            "Team name cannot be empty".to_string(),
+        ));
+    }
+
+    if data.name.len() > 100 {
+        return Err(PawnError::ValidationError(
+            "Team name cannot exceed 100 characters".to_string(),
+        ));
+    }
+
+    if let Some(ref captain) = data.captain {
+        if captain.trim().is_empty() {
+            return Err(PawnError::ValidationError(
+                "Captain name cannot be empty".to_string(),
+            ));
+        }
+    }
+
+    if let Some(ref email) = data.contact_email {
+        if !email.contains('@') {
+            return Err(PawnError::ValidationError(
+                "Invalid email format".to_string(),
+            ));
+        }
+    }
+
+    #[allow(dead_code)]
+    Ok(())
+}
+
+/// Static function for validating status transitions (for testing)
+#[allow(dead_code)]
+pub fn is_valid_status_transition_static(current_status: &str, new_status: &str) -> bool {
+    match (current_status, new_status) {
+        ("scheduled", "in_progress") => true,
+        ("scheduled", "postponed") => true,
+        ("scheduled", "cancelled") => true,
+        ("in_progress", "completed") => true,
+        ("in_progress", "postponed") => true,
+        ("postponed", "scheduled") => true,
+        ("postponed", "cancelled") => true,
+        (current, new) if current == new => true,
+        _ => false,
+    }
+}
+
+// =====================================================
 // Unit Tests
 // =====================================================
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::pawn::domain::model::Tournament;
 
+    #[allow(dead_code)]
     fn create_test_team() -> Team {
         Team {
             id: 1,
@@ -1159,6 +1220,7 @@ mod tests {
         }
     }
 
+    #[allow(dead_code)]
     fn create_test_tournament() -> Tournament {
         Tournament {
             id: 1,
@@ -1186,6 +1248,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(dead_code)]
     fn test_validate_team_data() {
         // Test invalid team data - empty name
         let invalid_data = CreateTeam {
@@ -1200,7 +1263,7 @@ mod tests {
             max_board_count: 4,
         };
 
-        assert!(TeamService::<()>::validate_team_data_static(&invalid_data).is_err());
+        assert!(validate_team_data_static(&invalid_data).is_err());
 
         // Test valid team data
         let valid_data = CreateTeam {
@@ -1215,39 +1278,31 @@ mod tests {
             max_board_count: 4,
         };
 
-        assert!(TeamService::<()>::validate_team_data_static(&valid_data).is_ok());
+        assert!(validate_team_data_static(&valid_data).is_ok());
     }
 
     #[test]
+    #[allow(dead_code)]
     fn test_is_valid_status_transition() {
         // Test valid transitions
-        assert!(TeamService::<()>::is_valid_status_transition_static(
+        assert!(is_valid_status_transition_static(
             "scheduled",
             "in_progress"
         ));
-        assert!(TeamService::<()>::is_valid_status_transition_static(
-            "scheduled",
-            "postponed"
-        ));
-        assert!(TeamService::<()>::is_valid_status_transition_static(
+        assert!(is_valid_status_transition_static("scheduled", "postponed"));
+        assert!(is_valid_status_transition_static(
             "in_progress",
             "completed"
         ));
-        assert!(TeamService::<()>::is_valid_status_transition_static(
-            "postponed",
-            "scheduled"
-        ));
+        assert!(is_valid_status_transition_static("postponed", "scheduled"));
 
         // Test invalid transitions
-        assert!(!TeamService::<()>::is_valid_status_transition_static(
+        assert!(!is_valid_status_transition_static(
             "completed",
             "in_progress"
         ));
-        assert!(!TeamService::<()>::is_valid_status_transition_static(
-            "cancelled",
-            "scheduled"
-        ));
-        assert!(!TeamService::<()>::is_valid_status_transition_static(
+        assert!(!is_valid_status_transition_static("cancelled", "scheduled"));
+        assert!(!is_valid_status_transition_static(
             "in_progress",
             "scheduled"
         ));

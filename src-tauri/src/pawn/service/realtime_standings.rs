@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -272,11 +274,10 @@ impl<D: Db> RealTimeStandingsService<D> {
     ) -> Result<TournamentTiebreakConfig, PawnError> {
         match self.db.get_tournament_settings(tournament_id).await? {
             Some(config) => Ok(config),
-            None => {
-                let mut config = TournamentTiebreakConfig::default();
-                config.tournament_id = tournament_id;
-                Ok(config)
-            }
+            None => Ok(TournamentTiebreakConfig {
+                tournament_id,
+                ..Default::default()
+            }),
         }
     }
 
@@ -371,10 +372,6 @@ pub struct CacheStatistics {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use std::sync::Arc;
-    use tokio::time::{Duration, sleep};
-
     #[tokio::test]
     async fn test_realtime_standings_service() {
         // Mock implementation - in real tests, you'd use a mock database
@@ -389,24 +386,24 @@ mod tests {
         // Test performance metrics
         // Test cache invalidation
 
-        assert!(true); // Placeholder
+        todo!("Implement caching behavior test")
     }
 
     #[tokio::test]
     async fn test_performance_threshold_warning() {
         // Test that slow calculations generate warnings
-        assert!(true); // Placeholder
+        todo!("Implement performance threshold warning test")
     }
 
     #[tokio::test]
     async fn test_cache_expiration() {
         // Test that cache expires after configured duration
-        assert!(true); // Placeholder
+        todo!("Implement cache expiration test")
     }
 
     #[tokio::test]
     async fn test_event_broadcasting() {
         // Test that events are properly broadcast to subscribers
-        assert!(true); // Placeholder
+        todo!("Implement event broadcasting test")
     }
 }

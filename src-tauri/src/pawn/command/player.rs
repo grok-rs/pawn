@@ -156,6 +156,18 @@ pub async fn assign_player_to_category(
     state.player_service.assign_player_to_category(data).await
 }
 
+#[tauri::command]
+#[specta::specta]
+pub async fn get_player_category_assignments(
+    tournament_id: i32,
+    state: State<'_, PawnState>,
+) -> Result<Vec<PlayerCategoryAssignment>, TxError> {
+    state
+        .player_service
+        .get_player_category_assignments(tournament_id)
+        .await
+}
+
 // Player Status Management
 
 #[tauri::command]

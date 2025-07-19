@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::pawn::{
     common::error::PawnError,
     domain::model::{GameResult, Pairing, Player, PlayerResult},
@@ -8,50 +10,87 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 /// Based on FIDE Handbook C.04 Swiss Pairing Rules
 pub struct SwissPairingEngine;
 
+/// Parameters for handling odd groups with float management
+struct OddGroupParams<'a> {
+    all_players: &'a [SwissPlayer],
+    paired_ids: &'a mut HashSet<i32>,
+    float_count: &'a mut usize,
+    max_floats_allowed: usize,
+    group_index: usize,
+    byes: &'a mut Vec<SwissPlayer>,
+    floated_players: &'a mut HashSet<i32>,
+}
+
 #[derive(Debug, Clone)]
 pub struct SwissPlayer {
     pub player: Player,
+
     pub points: f64,
+
     pub rating: i32,
+
     pub color_history: Vec<Color>,
+
     pub opponents: HashSet<i32>,
+
     pub color_preference: ColorPreference,
+
     pub is_bye_eligible: bool,
+
     pub float_history: Vec<FloatDirection>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+
 pub enum Color {
     White,
+
     Black,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+
 pub enum ColorPreference {
     Absolute(Color), // Must have this color (3+ consecutive same color)
-    Strong(Color),   // Strong preference (2 consecutive same color)
-    Mild(Color),     // Mild preference (color balance)
-    None,            // No preference
+
+    Strong(Color), // Strong preference (2 consecutive same color)
+
+    Mild(Color), // Mild preference (color balance)
+
+    None, // No preference
 }
 
 #[derive(Debug, Clone, Copy)]
+
 pub enum FloatDirection {
     Up,   // Floated up to higher score group
     Down, // Floated down to lower score group
 }
 
 #[derive(Debug, Clone)]
+
 pub struct ScoreGroup {
     pub points: f64,
+
     pub players: Vec<SwissPlayer>,
 }
 
 #[derive(Debug)]
+
 pub struct PairingResult {
     pub pairings: Vec<Pairing>,
+
     pub byes: Vec<SwissPlayer>,
+
     pub float_count: usize,
+
     pub validation_errors: Vec<String>,
+}
+
+impl Default for SwissPairingEngine {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl SwissPairingEngine {
@@ -552,8 +591,7 @@ impl SwissPairingEngine {
     ) -> Result<(), PawnError> {
         if float_count > max_floats_allowed {
             return Err(PawnError::InvalidInput(format!(
-                "FIDE C.04.1.3 violation: {} floats exceed maximum allowed {} for round {} with {} players",
-                float_count, max_floats_allowed, round_number, total_players
+                "FIDE C.04.1.3 violation: {float_count} floats exceed maximum allowed {max_floats_allowed} for round {round_number} with {total_players} players"
             )));
         }
 
@@ -721,16 +759,14 @@ impl SwissPairingEngine {
         // FIDE C.04.2.2.2: In tournaments of 9+ rounds, color imbalance should not exceed ±2
         if round_number >= 9 && difference > 2 {
             return Err(PawnError::InvalidInput(format!(
-                "FIDE C.04.2.2.2 violation: Color imbalance of {} exceeds maximum of ±2 for tournament of {} rounds",
-                difference, round_number
+                "FIDE C.04.2.2.2 violation: Color imbalance of {difference} exceeds maximum of ±2 for tournament of {round_number} rounds"
             )));
         }
 
         // For shorter tournaments, allow ±3 imbalance
         if difference > 3 {
             return Err(PawnError::InvalidInput(format!(
-                "Excessive color imbalance: {} exceeds reasonable limit of ±3",
-                difference
+                "Excessive color imbalance: {difference} exceeds reasonable limit of ±3"
             )));
         }
 
@@ -808,15 +844,13 @@ impl SwissPairingEngine {
         // Check if violations exceed FIDE limits
         if same_club_violations > max_allowed_club_violations {
             validation_errors.insert(0, format!(
-                "FIDE team avoidance violation: {} same-club pairings exceed maximum of {} allowed",
-                same_club_violations, max_allowed_club_violations
+                "FIDE team avoidance violation: {same_club_violations} same-club pairings exceed maximum of {max_allowed_club_violations} allowed"
             ));
         }
 
         if same_federation_violations > max_allowed_federation_violations {
             validation_errors.insert(0, format!(
-                "FIDE federation avoidance violation: {} same-federation pairings exceed maximum of {} allowed",
-                same_federation_violations, max_allowed_federation_violations
+                "FIDE federation avoidance violation: {same_federation_violations} same-federation pairings exceed maximum of {max_allowed_federation_violations} allowed"
             ));
         }
 
@@ -894,40 +928,38 @@ impl SwissPairingEngine {
     fn handle_odd_group_with_floats(
         &self,
         score_group: &mut ScoreGroup,
-        all_players: &[SwissPlayer],
-        paired_ids: &mut HashSet<i32>,
-        float_count: &mut usize,
-        max_floats_allowed: usize,
-        group_index: usize,
-        byes: &mut Vec<SwissPlayer>,
-        floated_players: &mut HashSet<i32>,
+        params: &mut OddGroupParams,
     ) -> Result<bool, PawnError> {
         // Try to get a downfloater if float limit allows
-        if *float_count < max_floats_allowed {
+        if *params.float_count < params.max_floats_allowed {
             if let Some(floater) = self.find_suitable_downfloater(
-                all_players,
+                params.all_players,
                 score_group.points,
-                paired_ids,
-                group_index,
+                params.paired_ids,
+                params.group_index,
             ) {
                 // Mark the floated player as paired to prevent duplicate processing
                 let floater_id = floater.player.id;
-                paired_ids.insert(floater_id);
-                floated_players.insert(floater_id);
+                params.paired_ids.insert(floater_id);
+                params.floated_players.insert(floater_id);
                 score_group.players.push(floater);
-                *float_count += 1;
-                tracing::info!("Floated player {} to group {}", floater_id, group_index);
+                *params.float_count += 1;
+                tracing::info!(
+                    "Floated player {} to group {}",
+                    floater_id,
+                    params.group_index
+                );
                 tracing::debug!(
                     "Added downfloater to group {}, total floats: {}",
-                    group_index,
-                    *float_count
+                    params.group_index,
+                    *params.float_count
                 );
                 return Ok(true);
             }
         }
 
         // Try to send an upfloater to the group above
-        if group_index > 0 && *float_count < max_floats_allowed {
+        if params.group_index > 0 && *params.float_count < params.max_floats_allowed {
             // This would require coordination with previous groups
             // For now, we'll assign a bye
         }
@@ -936,12 +968,12 @@ impl SwissPairingEngine {
         if let Some(bye_player) = self.select_bye_player(&score_group.players) {
             let bye_player_id = bye_player.player.id;
             let bye_player_name = bye_player.player.name.clone();
-            byes.push(bye_player.clone());
+            params.byes.push(bye_player.clone());
             score_group.players.retain(|p| p.player.id != bye_player_id);
             tracing::debug!(
                 "Assigned bye to: {} in group {}",
                 bye_player_name,
-                group_index
+                params.group_index
             );
             return Ok(true);
         }
@@ -1662,7 +1694,9 @@ fn opposite_color(color: Color) -> Color {
 }
 
 /// Wrapper for f64 to enable ordering in BTreeMap
+
 #[derive(Debug, Clone, Copy, PartialEq)]
+
 struct OrderedFloat(f64);
 
 impl Eq for OrderedFloat {}
@@ -1745,6 +1779,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_empty_tournament() {
         let engine = SwissPairingEngine::new();
         let result = engine
@@ -1757,6 +1792,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_single_player() {
         let engine = SwissPairingEngine::new();
         let player = create_test_player(1, "Player 1", Some(1500));
@@ -1772,6 +1808,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_two_players() {
         let engine = SwissPairingEngine::new();
         let player1 = create_test_player(1, "Player 1", Some(1600));
@@ -1799,6 +1836,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_four_players_same_score() {
         let engine = SwissPairingEngine::new();
         let players = vec![
@@ -1822,6 +1860,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_avoid_rematches() {
         let engine = SwissPairingEngine::new();
         let player1 = create_test_player(1, "Player 1", Some(1500));
@@ -1879,11 +1918,12 @@ mod tests {
         for pairing in &result.pairings {
             let white_id = pairing.white_player.id;
             let black_id = pairing.black_player.as_ref().unwrap().id;
-            assert!(!(white_id == 1 && black_id == 2) && !(white_id == 2 && black_id == 1));
+            assert!(!(white_id == 1 && black_id == 2 || white_id == 2 && black_id == 1));
         }
     }
 
     #[test]
+
     fn test_color_preference_calculation() {
         let engine = SwissPairingEngine::new();
 
@@ -1899,7 +1939,7 @@ mod tests {
 
         // Test mild preference (color imbalance)
         let color_history = vec![Color::White, Color::White, Color::Black];
-        let preference = engine.calculate_color_preference(&color_history);
+        let _preference = engine.calculate_color_preference(&color_history);
         // Since this is 2 whites vs 1 black, should prefer black but algorithm might not classify as mild
         // Let's test with a clearer imbalance
         let color_history_clear = vec![Color::White, Color::White, Color::White, Color::Black];
@@ -1917,6 +1957,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_score_groups_formation() {
         let engine = SwissPairingEngine::new();
         let players = vec![
@@ -1954,6 +1995,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_accelerated_pairings() {
         let engine = SwissPairingEngine::new();
         let players = vec![
@@ -1992,6 +2034,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_color_assignment() {
         let engine = SwissPairingEngine::new();
         let player1 = SwissPlayer {
@@ -2024,6 +2067,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_late_entry_integration() {
         let engine = SwissPairingEngine::new();
         let mut existing_players = vec![SwissPlayer {
@@ -2051,6 +2095,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_pairing_score_calculation() {
         let engine = SwissPairingEngine::new();
 
@@ -2083,6 +2128,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_team_avoidance() {
         let engine = SwissPairingEngine::new();
 
@@ -2096,7 +2142,7 @@ mod tests {
             is_bye_eligible: true,
             float_history: vec![],
         };
-        player1.player.club = Some("Chess Club A".to_string());
+        player1.player.club = Some("Manhattan Chess Academy".to_string());
 
         let mut player2 = SwissPlayer {
             player: create_test_player(2, "Player 2", Some(1500)),
@@ -2108,7 +2154,7 @@ mod tests {
             is_bye_eligible: true,
             float_history: vec![],
         };
-        player2.player.club = Some("Chess Club A".to_string());
+        player2.player.club = Some("Manhattan Chess Academy".to_string());
 
         // Players from same club should be considered teammates
         assert!(engine.are_teammates(&player1, &player2));
@@ -2119,6 +2165,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_bye_player_selection() {
         let engine = SwissPairingEngine::new();
 
@@ -2153,6 +2200,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_full_tournament_round() {
         let engine = SwissPairingEngine::new();
 

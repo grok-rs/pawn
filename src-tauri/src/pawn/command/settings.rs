@@ -96,7 +96,7 @@ pub async fn set_language_setting(
         user_id: Some(user_id),
         category: "general".to_string(),
         setting_key: "language".to_string(),
-        setting_value: Some(format!("\"{}\"", language)),
+        setting_value: Some(format!("\"{language}\"")),
     };
 
     state
@@ -134,7 +134,7 @@ pub async fn set_theme_setting(
         user_id: Some(user_id),
         category: "display".to_string(),
         setting_key: "theme".to_string(),
-        setting_value: Some(format!("\"{}\"", theme)),
+        setting_value: Some(format!("\"{theme}\"")),
     };
 
     state

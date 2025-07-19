@@ -20,7 +20,6 @@ path = "src/bin/generate_bindings.rs"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-# tauri = { version = "2", features = [] }
 tauri = { version = "2.5.1", features = ["protocol-asset"] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
@@ -31,10 +30,8 @@ thiserror = "2.0.12"
 chrono = "0.4"
 async-trait = "0.1"
 ts-rs = "11.0.1"
-# specta = "=2.0.0-rc.22"
 specta = { version = "2.0.0-rc.20", features = ["serde", "serde_json"] }
 specta-typescript = "0.0.9"
-# tauri-specta = { version = "=2.0.0-rc.21", features = ["derive", "typescript"] }
 tauri-specta = { version = "2.0.0-rc.17", features = ["derive", "typescript"] }
 tauri-utils = "2.4.0"
 uuid = { version = "1.17.0", features = ["v4"] }

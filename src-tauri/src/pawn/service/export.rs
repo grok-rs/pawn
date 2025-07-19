@@ -20,12 +20,14 @@ use crate::pawn::{
     service::tiebreak::TiebreakCalculator,
 };
 
+#[allow(dead_code)]
 pub struct ExportService<D> {
     db: Arc<D>,
     tiebreak_calculator: Arc<TiebreakCalculator<D>>,
     export_dir: PathBuf,
 }
 
+#[allow(dead_code)]
 impl<D: Db> ExportService<D> {
     pub fn new(
         db: Arc<D>,
@@ -254,10 +256,9 @@ impl<D: Db> ExportService<D> {
             }
         }
 
-        let mut file = File::create(file_path).map_err(|e| PawnError::Io(e))?;
+        let mut file = File::create(file_path).map_err(PawnError::Io)?;
 
-        file.write_all(output.as_bytes())
-            .map_err(|e| PawnError::Io(e))?;
+        file.write_all(output.as_bytes()).map_err(PawnError::Io)?;
 
         Ok(output.len() as u64)
     }
@@ -275,12 +276,12 @@ impl<D: Db> ExportService<D> {
         });
 
         let json_string =
-            serde_json::to_string_pretty(&export_json).map_err(|e| PawnError::SerdeError(e))?;
+            serde_json::to_string_pretty(&export_json).map_err(PawnError::SerdeError)?;
 
-        let mut file = File::create(file_path).map_err(|e| PawnError::Io(e))?;
+        let mut file = File::create(file_path).map_err(PawnError::Io)?;
 
         file.write_all(json_string.as_bytes())
-            .map_err(|e| PawnError::Io(e))?;
+            .map_err(PawnError::Io)?;
 
         Ok(json_string.len() as u64)
     }
@@ -385,7 +386,7 @@ impl<D: Db> ExportService<D> {
                         None => "-",
                         _ => "?",
                     };
-                    html.push_str(&format!("<td>{}</td>", display));
+                    html.push_str(&format!("<td>{display}</td>"));
                 }
                 html.push_str(&format!("<td>{}</td></tr>\n", row.total_points));
             }
@@ -401,10 +402,9 @@ impl<D: Db> ExportService<D> {
         html.push_str("</footer>\n");
         html.push_str("</body>\n</html>");
 
-        let mut file = File::create(file_path).map_err(|e| PawnError::Io(e))?;
+        let mut file = File::create(file_path).map_err(PawnError::Io)?;
 
-        file.write_all(html.as_bytes())
-            .map_err(|e| PawnError::Io(e))?;
+        file.write_all(html.as_bytes()).map_err(PawnError::Io)?;
 
         Ok(html.len() as u64)
     }
@@ -442,10 +442,9 @@ impl<D: Db> ExportService<D> {
             }
         }
 
-        let mut file = File::create(file_path).map_err(|e| PawnError::Io(e))?;
+        let mut file = File::create(file_path).map_err(PawnError::Io)?;
 
-        file.write_all(output.as_bytes())
-            .map_err(|e| PawnError::Io(e))?;
+        file.write_all(output.as_bytes()).map_err(PawnError::Io)?;
 
         Ok(output.len() as u64)
     }
@@ -455,13 +454,13 @@ impl<D: Db> ExportService<D> {
         &self,
         data: &ExportData,
         file_path: &Path,
-        request: &ExportRequest,
+        _request: &ExportRequest,
     ) -> Result<u64, PawnError> {
         use printpdf::*;
 
         // Create PDF document
         let (doc, page1, layer1) = PdfDocument::new(
-            &format!("{} - Tournament Report", data.tournament.name),
+            format!("{} - Tournament Report", data.tournament.name),
             Mm(210.0), // A4 width
             Mm(297.0), // A4 height
             "Layer 1",
@@ -478,7 +477,7 @@ impl<D: Db> ExportService<D> {
 
         // Tournament title
         current_layer.use_text(
-            &format!("{}", data.tournament.name),
+            data.tournament.name.to_string(),
             18.0,
             Mm(20.0),
             y_pos,
@@ -488,7 +487,7 @@ impl<D: Db> ExportService<D> {
 
         // Tournament details
         current_layer.use_text(
-            &format!("Location: {}", data.tournament.location),
+            format!("Location: {}", data.tournament.location),
             12.0,
             Mm(20.0),
             y_pos,
@@ -496,7 +495,7 @@ impl<D: Db> ExportService<D> {
         );
         y_pos -= Mm(6.0);
         current_layer.use_text(
-            &format!("Date: {}", data.tournament.date),
+            format!("Date: {}", data.tournament.date),
             12.0,
             Mm(20.0),
             y_pos,
@@ -504,7 +503,7 @@ impl<D: Db> ExportService<D> {
         );
         y_pos -= Mm(6.0);
         current_layer.use_text(
-            &format!("Players: {}", data.tournament.player_count),
+            format!("Players: {}", data.tournament.player_count),
             12.0,
             Mm(20.0),
             y_pos,
@@ -512,7 +511,7 @@ impl<D: Db> ExportService<D> {
         );
         y_pos -= Mm(6.0);
         current_layer.use_text(
-            &format!(
+            format!(
                 "Rounds: {}/{}",
                 data.tournament.rounds_played, data.tournament.total_rounds
             ),
@@ -543,24 +542,24 @@ impl<D: Db> ExportService<D> {
                     break;
                 }
 
-                current_layer.use_text(&format!("{}", standing.rank), 10.0, Mm(20.0), y_pos, &font);
+                current_layer.use_text(format!("{}", standing.rank), 10.0, Mm(20.0), y_pos, &font);
                 current_layer.use_text(&standing.player.name, 10.0, Mm(40.0), y_pos, &font);
                 current_layer.use_text(
-                    &format!("{}", standing.player.rating.unwrap_or(0)),
+                    format!("{}", standing.player.rating.unwrap_or(0)),
                     10.0,
                     Mm(100.0),
                     y_pos,
                     &font,
                 );
                 current_layer.use_text(
-                    &format!("{}", standing.points),
+                    format!("{}", standing.points),
                     10.0,
                     Mm(130.0),
                     y_pos,
                     &font,
                 );
                 current_layer.use_text(
-                    &format!("{}-{}-{}", standing.wins, standing.draws, standing.losses),
+                    format!("{}-{}-{}", standing.wins, standing.draws, standing.losses),
                     10.0,
                     Mm(160.0),
                     y_pos,
@@ -576,7 +575,7 @@ impl<D: Db> ExportService<D> {
 
         // Add footer
         current_layer.use_text(
-            &format!(
+            format!(
                 "Generated by Pawn Tournament Manager on {}",
                 chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC")
             ),
@@ -604,7 +603,7 @@ impl<D: Db> ExportService<D> {
         let mut workbook = Workbook::new();
 
         // Tournament info worksheet
-        let mut info_sheet = workbook.add_worksheet().set_name("Tournament Info")?;
+        let info_sheet = workbook.add_worksheet().set_name("Tournament Info")?;
 
         // Add tournament information
         info_sheet.write_string(0, 0, "Tournament Name")?;
@@ -619,7 +618,7 @@ impl<D: Db> ExportService<D> {
         info_sheet.write_string(
             4,
             1,
-            &format!(
+            format!(
                 "{}/{}",
                 data.tournament.rounds_played, data.tournament.total_rounds
             ),
@@ -627,7 +626,7 @@ impl<D: Db> ExportService<D> {
 
         // Standings worksheet (if available)
         if let Some(ref standings) = data.standings {
-            let mut standings_sheet = workbook.add_worksheet().set_name("Final Standings")?;
+            let standings_sheet = workbook.add_worksheet().set_name("Final Standings")?;
 
             // Create header format
             let header_format = Format::new()
@@ -733,7 +732,7 @@ impl<D: Db> ExportService<D> {
         }
 
         // Players worksheet
-        let mut players_sheet = workbook.add_worksheet().set_name("Players")?;
+        let players_sheet = workbook.add_worksheet().set_name("Players")?;
 
         // Create header format
         let header_format = Format::new()
@@ -813,11 +812,10 @@ impl<D: Db> ExportService<D> {
     ) -> Result<TournamentTiebreakConfig, PawnError> {
         match self.db.get_tournament_settings(tournament_id).await? {
             Some(config) => Ok(config),
-            None => {
-                let mut config = TournamentTiebreakConfig::default();
-                config.tournament_id = tournament_id;
-                Ok(config)
-            }
+            None => Ok(TournamentTiebreakConfig {
+                tournament_id,
+                ..Default::default()
+            }),
         }
     }
 
@@ -828,6 +826,7 @@ impl<D: Db> ExportService<D> {
 }
 
 /// Container for all export data
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 struct ExportData {
     tournament: Tournament,
@@ -839,8 +838,6 @@ struct ExportData {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use std::sync::Arc;
     use tempfile::TempDir;
 
     #[tokio::test]
@@ -861,27 +858,27 @@ mod tests {
         // Test custom filename
         // Test tournament name sanitization
         // Test timestamp inclusion
-        assert!(true); // Placeholder
+        todo!("Implement filename generation test")
     }
 
     #[tokio::test]
     async fn test_csv_export() {
         // Test CSV format generation
         // Test headers and data integrity
-        assert!(true); // Placeholder
+        todo!("Implement CSV export test")
     }
 
     #[tokio::test]
     async fn test_json_export() {
         // Test JSON format generation
         // Test data completeness
-        assert!(true); // Placeholder
+        todo!("Implement JSON export test")
     }
 
     #[tokio::test]
     async fn test_html_export() {
         // Test HTML format generation
         // Test styling and structure
-        assert!(true); // Placeholder
+        todo!("Implement HTML export test")
     }
 }

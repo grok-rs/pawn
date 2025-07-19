@@ -9,11 +9,13 @@ use crate::pawn::{
 };
 use std::sync::Arc;
 
+#[allow(dead_code)]
 pub struct RoundService<D> {
     db: Arc<D>,
     pairing_service: PairingService,
 }
 
+#[allow(dead_code)]
 impl<D: Db> RoundService<D> {
     pub fn new(db: Arc<D>) -> Self {
         Self {
@@ -81,8 +83,8 @@ impl<D: Db> RoundService<D> {
             .await
             .map_err(PawnError::Database)?;
 
-        let current_status = RoundStatus::from_str(&current_round.status);
-        let new_status = RoundStatus::from_str(&data.status);
+        let current_status = current_round.status.parse().unwrap_or(RoundStatus::Planned);
+        let new_status = data.status.parse().unwrap_or(RoundStatus::Planned);
 
         // Validate state transition
         if !current_status.can_transition_to(&new_status) {
@@ -158,7 +160,7 @@ impl<D: Db> RoundService<D> {
             .await
             .map_err(PawnError::Database)?;
 
-        let status = RoundStatus::from_str(&round.status);
+        let status = round.status.parse().unwrap_or(RoundStatus::Planned);
 
         Ok(RoundDetails {
             round,
@@ -191,7 +193,10 @@ impl<D: Db> RoundService<D> {
             tournament.total_rounds
         );
 
-        let pairing_method = PairingMethod::from_str(&request.pairing_method);
+        let pairing_method = request
+            .pairing_method
+            .parse()
+            .unwrap_or(PairingMethod::Manual);
 
         // Get players for the tournament
         let players = self
@@ -450,10 +455,7 @@ impl<D: Db> RoundService<D> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::pawn::{
-        common::error::PawnError,
-        domain::model::{Game, Player, Tournament},
-    };
+    use crate::pawn::domain::model::Player;
 
     // Unit tests for business logic validation (no database dependencies)
 
@@ -462,14 +464,14 @@ mod tests {
         use crate::pawn::domain::model::RoundStatus;
 
         // Test valid transitions
-        assert!(RoundStatus::Scheduled.can_transition_to(&RoundStatus::Published));
+        assert!(RoundStatus::Planned.can_transition_to(&RoundStatus::Published));
         assert!(RoundStatus::Published.can_transition_to(&RoundStatus::InProgress));
         assert!(RoundStatus::InProgress.can_transition_to(&RoundStatus::Completed));
 
         // Test invalid transitions
-        assert!(!RoundStatus::Completed.can_transition_to(&RoundStatus::Scheduled));
-        assert!(!RoundStatus::InProgress.can_transition_to(&RoundStatus::Scheduled));
-        assert!(!RoundStatus::Published.can_transition_to(&RoundStatus::Scheduled));
+        assert!(!RoundStatus::Completed.can_transition_to(&RoundStatus::Planned));
+        assert!(!RoundStatus::InProgress.can_transition_to(&RoundStatus::Planned));
+        assert!(!RoundStatus::Published.can_transition_to(&RoundStatus::Planned));
     }
 
     #[test]
@@ -506,10 +508,12 @@ mod tests {
             Pairing {
                 white_player: player1.clone(),
                 black_player: Some(player2.clone()),
+                board_number: 1,
             },
             Pairing {
                 white_player: player1, // Duplicate - should be caught
                 black_player: Some(player2),
+                board_number: 2,
             },
         ];
 

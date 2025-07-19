@@ -8,21 +8,12 @@ use crate::pawn::domain::dto::{
 use crate::pawn::domain::model::{Player, PlayerCategory, PlayerCategoryAssignment, RatingHistory};
 use std::sync::Arc;
 
-#[derive(Debug, Clone)]
-pub struct PlayerStatistics {
-    pub total_players: i32,
-    pub active_players: i32,
-    pub withdrawn_players: i32,
-    pub late_entries: i32,
-    pub bye_requests: i32,
-    pub average_rating: f64,
-    pub titled_players: i32,
-}
-
+#[allow(dead_code)]
 pub struct PlayerService<D> {
     db: Arc<D>,
 }
 
+#[allow(dead_code)]
 impl<D: Db> PlayerService<D> {
     pub fn new(db: Arc<D>) -> Self {
         Self { db }
@@ -351,60 +342,15 @@ impl<D: Db> PlayerService<D> {
             .await
     }
 
-    pub async fn get_player_statistics(
-        &self,
-        tournament_id: i32,
-    ) -> Result<PlayerStatistics, PawnError> {
-        let players = self
-            .db
-            .get_players_by_tournament(tournament_id)
-            .await
-            .map_err(PawnError::from)?;
-
-        let total_players = players.len() as i32;
-        let active_players = players.iter().filter(|p| p.status == "active").count() as i32;
-        let withdrawn_players = players.iter().filter(|p| p.status == "withdrawn").count() as i32;
-        let late_entries = players.iter().filter(|p| p.status == "late_entry").count() as i32;
-        let bye_requests = players
-            .iter()
-            .filter(|p| p.status == "bye_requested")
-            .count() as i32;
-
-        let average_rating = if players.is_empty() {
-            0.0
-        } else {
-            let rated_players: Vec<&Player> =
-                players.iter().filter(|p| p.rating.is_some()).collect();
-            if rated_players.is_empty() {
-                0.0
-            } else {
-                let sum: i32 = rated_players.iter().map(|p| p.rating.unwrap_or(0)).sum();
-                sum as f64 / rated_players.len() as f64
-            }
-        };
-
-        let titled_players = players
-            .iter()
-            .filter(|p| p.title.is_some() && !p.title.as_ref().unwrap().is_empty())
-            .count() as i32;
-
-        Ok(PlayerStatistics {
-            total_players,
-            active_players,
-            withdrawn_players,
-            late_entries,
-            bye_requests,
-            average_rating,
-            titled_players,
-        })
-    }
+    // Note: This method is now implemented in the command layer
+    // to avoid circular dependencies with the PlayerStatistics type.
+    // The command layer handles the statistics calculation directly.
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::pawn::domain::dto::*;
-    use crate::pawn::domain::model::*;
 
     fn create_test_create_player() -> CreatePlayer {
         CreatePlayer {
@@ -432,7 +378,7 @@ mod tests {
             }
 
             if let Some(rating) = data.rating {
-                if rating < 0 || rating > 4000 {
+                if !(0..=4000).contains(&rating) {
                     return Err(PawnError::InvalidInput(
                         "Rating must be between 0 and 4000".to_string(),
                     ));
@@ -557,32 +503,8 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    #[test]
-    fn test_player_statistics_calculation() {
-        let stats = PlayerStatistics {
-            total_players: 10,
-            active_players: 8,
-            withdrawn_players: 1,
-            late_entries: 0,
-            bye_requests: 1,
-            average_rating: 1650.0,
-            titled_players: 2,
-        };
-
-        // Test that statistics are properly structured
-        assert_eq!(stats.total_players, 10);
-        assert_eq!(stats.active_players, 8);
-        assert_eq!(stats.withdrawn_players, 1);
-        assert_eq!(stats.bye_requests, 1);
-        assert_eq!(stats.average_rating, 1650.0);
-        assert_eq!(stats.titled_players, 2);
-
-        // Test that the sum makes sense
-        assert_eq!(
-            stats.active_players + stats.withdrawn_players + stats.bye_requests,
-            10
-        );
-    }
+    // PlayerStatistics tests are now in the command module
+    // since that's where the type is defined
 
     #[test]
     fn test_bulk_import_result_structure() {

@@ -81,6 +81,7 @@ fn main() {
             player::get_tournament_categories,
             player::delete_player_category,
             player::assign_player_to_category,
+            player::get_player_category_assignments,
             player::update_player_status,
             player::withdraw_player,
             player::request_player_bye,
@@ -239,10 +240,10 @@ fn restructure_bindings_file(path: &Path) -> Result<(), Box<dyn std::error::Erro
 
     // Reconstruct with types first, then commands
     let restructured = format!(
-        "{}{}{}",
+        "{}\n\n{}\n\n{}",
         header.trim_end(),
-        format!("\n\n{}", types_section.trim()),
-        format!("\n\n{}", commands_section.trim())
+        types_section.trim(),
+        commands_section.trim()
     );
 
     fs::write(path, restructured)?;

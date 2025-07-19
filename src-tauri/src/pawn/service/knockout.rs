@@ -4,8 +4,10 @@ use crate::pawn::domain::model::{
 };
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 pub struct KnockoutService;
 
+#[allow(dead_code)]
 impl KnockoutService {
     /// Calculate the number of rounds needed for a knockout tournament
     pub fn calculate_rounds(player_count: i32) -> i32 {
@@ -28,6 +30,7 @@ impl KnockoutService {
     }
 
     /// Generate a single elimination bracket
+    #[allow(dead_code)]
     pub fn generate_single_elimination_bracket(
         tournament_id: i32,
         players: Vec<Player>,

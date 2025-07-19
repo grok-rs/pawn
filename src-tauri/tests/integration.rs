@@ -150,16 +150,14 @@ async fn test_migration_idempotency() {
     let first_migration = sqlx::migrate!("./migrations").run(&pool).await;
     assert!(
         first_migration.is_ok(),
-        "First migration failed: {:?}",
-        first_migration
+        "First migration failed: {first_migration:?}"
     );
 
     // Apply migrations second time (should be idempotent)
     let second_migration = sqlx::migrate!("./migrations").run(&pool).await;
     assert!(
         second_migration.is_ok(),
-        "Second migration failed: {:?}",
-        second_migration
+        "Second migration failed: {second_migration:?}"
     );
 
     // Verify migration records
@@ -313,7 +311,7 @@ async fn test_concurrent_access() {
         let handle = tokio::spawn(async move {
             sqlx::query("INSERT INTO players (tournament_id, name, rating) VALUES (?, ?, ?)")
                 .bind(tournament_id)
-                .bind(format!("Concurrent Player {}", i))
+                .bind(format!("Concurrent Player {i}"))
                 .bind(1500 + i * 10)
                 .execute(&pool)
                 .await
@@ -469,7 +467,7 @@ async fn test_team_membership_operations() {
         let player_insert =
             sqlx::query("INSERT INTO players (tournament_id, name, rating) VALUES (?, ?, ?)")
                 .bind(tournament_id)
-                .bind(format!("Player {}", i))
+                .bind(format!("Player {i}"))
                 .bind(1500 + i * 50)
                 .execute(&test_db.pool)
                 .await
@@ -504,9 +502,9 @@ async fn test_team_membership_operations() {
 
     assert_eq!(memberships.len(), 4);
     assert_eq!(memberships[0].get::<i32, _>("board_number"), 1);
-    assert_eq!(memberships[0].get::<bool, _>("is_captain"), true);
+    assert!(memberships[0].get::<bool, _>("is_captain"));
     assert_eq!(memberships[1].get::<i32, _>("board_number"), 2);
-    assert_eq!(memberships[1].get::<bool, _>("is_captain"), false);
+    assert!(!memberships[1].get::<bool, _>("is_captain"));
 
     // Test unique constraints
     let duplicate_board_result = sqlx::query("INSERT INTO team_memberships (team_id, player_id, board_number, is_captain) VALUES (?, ?, ?, ?)")
@@ -676,7 +674,7 @@ async fn test_team_lineup_operations() {
         let player_insert =
             sqlx::query("INSERT INTO players (tournament_id, name, rating) VALUES (?, ?, ?)")
                 .bind(tournament_id)
-                .bind(format!("Player {}", i))
+                .bind(format!("Player {i}"))
                 .bind(1500 + i * 50)
                 .execute(&test_db.pool)
                 .await
@@ -686,12 +684,12 @@ async fn test_team_lineup_operations() {
     }
 
     // Test team lineup creation for round 1
-    for i in 0..4 {
-        let lineup_insert = sqlx::query("INSERT INTO team_lineups (team_id, round_number, board_number, player_id, submission_deadline, submitted_by) VALUES (?, ?, ?, ?, ?, ?)")
+    for (i, &player_id) in player_ids.iter().enumerate().take(4) {
+        let _lineup_insert = sqlx::query("INSERT INTO team_lineups (team_id, round_number, board_number, player_id, submission_deadline, submitted_by) VALUES (?, ?, ?, ?, ?, ?)")
             .bind(team_id)
             .bind(1)
             .bind((i + 1) as i32)
-            .bind(player_ids[i])
+            .bind(player_id)
             .bind("2024-01-01 09:00:00")
             .bind("Captain Gamma")
             .execute(&test_db.pool)
@@ -716,7 +714,7 @@ async fn test_team_lineup_operations() {
     assert_eq!(lineups[3].get::<i32, _>("board_number"), 4);
 
     // Test substitution for round 2
-    let substitution_insert = sqlx::query("INSERT INTO team_lineups (team_id, round_number, board_number, player_id, is_substitute, substituted_player_id, notes, submitted_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+    let _substitution_insert = sqlx::query("INSERT INTO team_lineups (team_id, round_number, board_number, player_id, is_substitute, substituted_player_id, notes, submitted_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
         .bind(team_id)
         .bind(2)
         .bind(2)
@@ -739,7 +737,7 @@ async fn test_team_lineup_operations() {
     .await
     .expect("Failed to fetch substitution");
 
-    assert_eq!(substitution.get::<bool, _>("is_substitute"), true);
+    assert!(substitution.get::<bool, _>("is_substitute"));
     assert_eq!(
         substitution.get::<i64, _>("substituted_player_id"),
         player_ids[1]
@@ -812,8 +810,8 @@ async fn test_team_tournament_settings() {
     assert_eq!(settings.get::<i32, _>("match_points_draw"), 1);
     assert_eq!(settings.get::<i32, _>("match_points_loss"), 0);
     assert_eq!(settings.get::<String, _>("board_weight_system"), "equal");
-    assert_eq!(settings.get::<bool, _>("require_board_order"), true);
-    assert_eq!(settings.get::<bool, _>("allow_late_entries"), false);
+    assert!(settings.get::<bool, _>("require_board_order"));
+    assert!(!settings.get::<bool, _>("allow_late_entries"));
     assert_eq!(settings.get::<String, _>("team_pairing_method"), "swiss");
     assert_eq!(settings.get::<String, _>("color_allocation"), "balanced");
 
@@ -929,8 +927,8 @@ async fn test_team_performance_with_large_dataset() {
         let team_insert =
             sqlx::query("INSERT INTO teams (tournament_id, name, captain) VALUES (?, ?, ?)")
                 .bind(tournament_id)
-                .bind(format!("Team {}", team_num))
-                .bind(format!("Captain {}", team_num))
+                .bind(format!("Team {team_num}"))
+                .bind(format!("Captain {team_num}"))
                 .execute(&test_db.pool)
                 .await
                 .expect("Failed to create team");
@@ -942,7 +940,7 @@ async fn test_team_performance_with_large_dataset() {
             let player_insert =
                 sqlx::query("INSERT INTO players (tournament_id, name, rating) VALUES (?, ?, ?)")
                     .bind(tournament_id)
-                    .bind(format!("Team {} Player {}", team_num, player_num))
+                    .bind(format!("Team {team_num} Player {player_num}"))
                     .bind(1500 + player_num * 50)
                     .execute(&test_db.pool)
                     .await
@@ -954,7 +952,7 @@ async fn test_team_performance_with_large_dataset() {
             sqlx::query("INSERT INTO team_memberships (team_id, player_id, board_number, rating_at_assignment) VALUES (?, ?, ?, ?)")
                 .bind(team_id)
                 .bind(player_id)
-                .bind(player_num as i32)
+                .bind(player_num)
                 .bind(1500 + player_num * 50)
                 .execute(&test_db.pool)
                 .await

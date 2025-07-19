@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use specta::Type as SpectaType;
 use sqlx::{FromRow, prelude::Type};
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct Tournament {
     pub id: i32,
@@ -29,6 +30,7 @@ pub struct Tournament {
     pub max_teams: Option<i32>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, serde::Deserialize, FromRow, SpectaType, Clone)]
 pub struct Player {
     pub id: i32,
@@ -50,6 +52,7 @@ pub struct Player {
     pub updated_at: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct Game {
     pub id: i32,
@@ -66,6 +69,7 @@ pub struct Game {
     pub created_at: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, SpectaType, Clone)]
 pub struct PlayerResult {
     pub player: Player,
@@ -76,6 +80,7 @@ pub struct PlayerResult {
     pub losses: i32,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, SpectaType, Clone)]
 pub struct GameResult {
     pub game: Game,
@@ -83,6 +88,7 @@ pub struct GameResult {
     pub black_player: Player,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, SpectaType, Clone)]
 pub struct TournamentDetails {
     pub tournament: Tournament,
@@ -90,6 +96,7 @@ pub struct TournamentDetails {
     pub games: Vec<GameResult>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct Round {
     pub id: i32,
@@ -100,6 +107,7 @@ pub struct Round {
     pub completed_at: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, SpectaType, Clone)]
 pub struct RoundDetails {
     pub round: Round,
@@ -107,6 +115,7 @@ pub struct RoundDetails {
     pub status: RoundStatus,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, serde::Deserialize, SpectaType, Clone)]
 pub struct Pairing {
     pub white_player: Player,
@@ -114,6 +123,7 @@ pub struct Pairing {
     pub board_number: i32,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Debug, Type, SpectaType)]
 pub enum TournamentStatus {
     NotStarted,
@@ -121,6 +131,7 @@ pub enum TournamentStatus {
     Finished,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum RoundStatus {
     Planned,    // Round scheduled but not started
@@ -132,6 +143,7 @@ pub enum RoundStatus {
     Verified,   // Results confirmed by arbiter
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum TournamentType {
     Swiss,
@@ -141,6 +153,7 @@ pub enum TournamentType {
     Arena,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum PairingMethod {
     Manual,
@@ -150,6 +163,7 @@ pub enum PairingMethod {
     Scheveningen,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct GameResultAudit {
     pub id: i32,
@@ -166,6 +180,7 @@ pub struct GameResultAudit {
     pub approved_at: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, SpectaType, Clone)]
 pub struct EnhancedGameResult {
     pub game: Game,
@@ -175,6 +190,7 @@ pub struct EnhancedGameResult {
     pub requires_approval: bool,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum GameResultType {
     WhiteWins,     // 1-0
@@ -191,9 +207,11 @@ pub enum GameResultType {
     Cancelled,     // Game cancelled
 }
 
-impl GameResultType {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl std::str::FromStr for GameResultType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "1-0" => GameResultType::WhiteWins,
             "0-1" => GameResultType::BlackWins,
             "1/2-1/2" => GameResultType::Draw,
@@ -207,9 +225,12 @@ impl GameResultType {
             "0-0" | "double_forfeit" => GameResultType::DoubleForfeit,
             "CANC" | "cancelled" => GameResultType::Cancelled,
             _ => GameResultType::Ongoing,
-        }
+        })
     }
+}
 
+#[allow(dead_code)]
+impl GameResultType {
     pub fn to_str(&self) -> &'static str {
         match self {
             GameResultType::WhiteWins => "1-0",
@@ -260,9 +281,11 @@ impl GameResultType {
     }
 }
 
-impl RoundStatus {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl std::str::FromStr for RoundStatus {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "planned" => RoundStatus::Planned,
             "pairing" => RoundStatus::Pairing,
             "published" => RoundStatus::Published,
@@ -273,9 +296,12 @@ impl RoundStatus {
             // Backward compatibility
             "upcoming" => RoundStatus::Planned,
             _ => RoundStatus::Planned,
-        }
+        })
     }
+}
 
+#[allow(dead_code)]
+impl RoundStatus {
     pub fn to_str(&self) -> &'static str {
         match self {
             RoundStatus::Planned => "planned",
@@ -338,18 +364,23 @@ impl RoundStatus {
     }
 }
 
-impl TournamentType {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl std::str::FromStr for TournamentType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "swiss" => TournamentType::Swiss,
             "round_robin" => TournamentType::RoundRobin,
             "knockout" => TournamentType::Knockout,
             "scheveningen" => TournamentType::Scheveningen,
             "arena" => TournamentType::Arena,
             _ => TournamentType::Swiss,
-        }
+        })
     }
+}
 
+#[allow(dead_code)]
+impl TournamentType {
     pub fn to_str(&self) -> &'static str {
         match self {
             TournamentType::Swiss => "swiss",
@@ -379,18 +410,23 @@ impl TournamentType {
     }
 }
 
-impl PairingMethod {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl std::str::FromStr for PairingMethod {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "manual" => PairingMethod::Manual,
             "swiss" => PairingMethod::Swiss,
             "round_robin" => PairingMethod::RoundRobin,
             "knockout" => PairingMethod::Knockout,
             "scheveningen" => PairingMethod::Scheveningen,
             _ => PairingMethod::Manual,
-        }
+        })
     }
+}
 
+#[allow(dead_code)]
+impl PairingMethod {
     pub fn to_str(&self) -> &'static str {
         match self {
             PairingMethod::Manual => "manual",
@@ -404,6 +440,7 @@ impl PairingMethod {
 
 // Enhanced Player Management Models
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct RatingHistory {
     pub id: i32,
@@ -415,6 +452,7 @@ pub struct RatingHistory {
     pub created_at: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct PlayerCategory {
     pub id: i32,
@@ -429,6 +467,7 @@ pub struct PlayerCategory {
     pub created_at: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct PlayerCategoryAssignment {
     pub id: i32,
@@ -437,6 +476,7 @@ pub struct PlayerCategoryAssignment {
     pub assigned_at: String,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum PlayerStatus {
     Active,
@@ -445,6 +485,7 @@ pub enum PlayerStatus {
     ByeRequested,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum RatingType {
     Fide,
@@ -454,6 +495,7 @@ pub enum RatingType {
     Blitz,
 }
 
+#[allow(dead_code, clippy::upper_case_acronyms)]
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum ChessTitle {
     GM,  // Grandmaster
@@ -467,17 +509,22 @@ pub enum ChessTitle {
     None,
 }
 
-impl PlayerStatus {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl std::str::FromStr for PlayerStatus {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "active" => PlayerStatus::Active,
             "late_entry" => PlayerStatus::LateEntry,
             "withdrawn" => PlayerStatus::Withdrawn,
             "bye_requested" => PlayerStatus::ByeRequested,
             _ => PlayerStatus::Active,
-        }
+        })
     }
+}
 
+#[allow(dead_code)]
+impl PlayerStatus {
     pub fn to_str(&self) -> &'static str {
         match self {
             PlayerStatus::Active => "active",
@@ -488,18 +535,23 @@ impl PlayerStatus {
     }
 }
 
-impl RatingType {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl std::str::FromStr for RatingType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "fide" => RatingType::Fide,
             "national" => RatingType::National,
             "club" => RatingType::Club,
             "rapid" => RatingType::Rapid,
             "blitz" => RatingType::Blitz,
             _ => RatingType::Fide,
-        }
+        })
     }
+}
 
+#[allow(dead_code)]
+impl RatingType {
     pub fn to_str(&self) -> &'static str {
         match self {
             RatingType::Fide => "fide",
@@ -511,9 +563,11 @@ impl RatingType {
     }
 }
 
-impl ChessTitle {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl std::str::FromStr for ChessTitle {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "GM" => ChessTitle::GM,
             "IM" => ChessTitle::IM,
             "FM" => ChessTitle::FM,
@@ -523,9 +577,12 @@ impl ChessTitle {
             "WFM" => ChessTitle::WFM,
             "WCM" => ChessTitle::WCM,
             _ => ChessTitle::None,
-        }
+        })
     }
+}
 
+#[allow(dead_code)]
+impl ChessTitle {
     pub fn to_str(&self) -> &'static str {
         match self {
             ChessTitle::GM => "GM",
@@ -543,6 +600,7 @@ impl ChessTitle {
 
 // Seeding and Ranking Models
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct TournamentSeedingSettings {
     pub id: i32,
@@ -555,6 +613,7 @@ pub struct TournamentSeedingSettings {
     pub updated_at: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum SeedingMethod {
     Rating,        // Automatic seeding by rating (highest to lowest)
@@ -563,17 +622,22 @@ pub enum SeedingMethod {
     CategoryBased, // Seeding within player categories
 }
 
-impl SeedingMethod {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl std::str::FromStr for SeedingMethod {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "rating" => SeedingMethod::Rating,
             "manual" => SeedingMethod::Manual,
             "random" => SeedingMethod::Random,
             "category_based" => SeedingMethod::CategoryBased,
             _ => SeedingMethod::Rating,
-        }
+        })
     }
+}
 
+#[allow(dead_code)]
+impl SeedingMethod {
     pub fn to_str(&self) -> &'static str {
         match self {
             SeedingMethod::Rating => "rating",
@@ -586,6 +650,7 @@ impl SeedingMethod {
 
 // Time Control Models
 
+#[allow(dead_code)]
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum TimeControlType {
     Classical,
@@ -598,6 +663,7 @@ pub enum TimeControlType {
     Custom,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct TimeControl {
     pub id: i32,
@@ -613,6 +679,7 @@ pub struct TimeControl {
     pub created_at: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, SpectaType, Clone)]
 pub struct TimeControlTemplate {
     pub id: i32,
@@ -626,9 +693,11 @@ pub struct TimeControlTemplate {
     pub description: Option<String>,
 }
 
-impl TimeControlType {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl std::str::FromStr for TimeControlType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "classical" => TimeControlType::Classical,
             "rapid" => TimeControlType::Rapid,
             "blitz" => TimeControlType::Blitz,
@@ -638,9 +707,12 @@ impl TimeControlType {
             "bronstein" => TimeControlType::Bronstein,
             "custom" => TimeControlType::Custom,
             _ => TimeControlType::Classical,
-        }
+        })
     }
+}
 
+#[allow(dead_code)]
+impl TimeControlType {
     pub fn to_str(&self) -> &'static str {
         match self {
             TimeControlType::Classical => "classical",
@@ -691,6 +763,7 @@ impl TimeControlType {
 
 // Knockout Tournament Models
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct KnockoutBracket {
     pub id: i32,
@@ -700,6 +773,7 @@ pub struct KnockoutBracket {
     pub created_at: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct BracketPosition {
     pub id: i32,
@@ -712,6 +786,7 @@ pub struct BracketPosition {
     pub created_at: String,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum BracketType {
     SingleElimination,
@@ -719,6 +794,7 @@ pub enum BracketType {
     ThirdPlacePlayoff,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum BracketPositionStatus {
     Waiting,    // Waiting for opponent or previous match
@@ -728,16 +804,21 @@ pub enum BracketPositionStatus {
     Advanced,   // Player advanced to next round
 }
 
-impl BracketType {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl std::str::FromStr for BracketType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "single_elimination" => BracketType::SingleElimination,
             "double_elimination" => BracketType::DoubleElimination,
             "third_place_playoff" => BracketType::ThirdPlacePlayoff,
             _ => BracketType::SingleElimination,
-        }
+        })
     }
+}
 
+#[allow(dead_code)]
+impl BracketType {
     pub fn to_str(&self) -> &'static str {
         match self {
             BracketType::SingleElimination => "single_elimination",
@@ -747,18 +828,23 @@ impl BracketType {
     }
 }
 
-impl BracketPositionStatus {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl std::str::FromStr for BracketPositionStatus {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "waiting" => BracketPositionStatus::Waiting,
             "ready" => BracketPositionStatus::Ready,
             "bye" => BracketPositionStatus::Bye,
             "eliminated" => BracketPositionStatus::Eliminated,
             "advanced" => BracketPositionStatus::Advanced,
             _ => BracketPositionStatus::Waiting,
-        }
+        })
     }
+}
 
+#[allow(dead_code)]
+impl BracketPositionStatus {
     pub fn to_str(&self) -> &'static str {
         match self {
             BracketPositionStatus::Waiting => "waiting",
@@ -771,6 +857,7 @@ impl BracketPositionStatus {
 }
 
 // Scheveningen (Team-based) Tournament Models
+#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct Team {
     pub id: i32,
@@ -788,6 +875,7 @@ pub struct Team {
     pub updated_at: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct TeamMembership {
     pub id: i32,
@@ -802,6 +890,7 @@ pub struct TeamMembership {
     pub created_at: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, SpectaType, Clone)]
 pub struct TeamStanding {
     pub team: Team,
@@ -815,6 +904,7 @@ pub struct TeamStanding {
     pub players: Vec<Player>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, SpectaType, Clone)]
 pub struct SchevenigenenMatch {
     pub round_number: i32,
@@ -824,6 +914,7 @@ pub struct SchevenigenenMatch {
     pub status: String, // "scheduled", "in_progress", "completed"
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, SpectaType, Clone)]
 pub struct BoardPairing {
     pub board_number: i32,
@@ -835,6 +926,7 @@ pub struct BoardPairing {
 }
 
 // Tournament Template System
+#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct TournamentTemplate {
     pub id: i32,
@@ -855,6 +947,7 @@ pub struct TournamentTemplate {
     pub updated_at: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, SpectaType, Clone)]
 pub struct TournamentTemplateWithTimeControl {
     pub template: TournamentTemplate,
@@ -863,6 +956,7 @@ pub struct TournamentTemplateWithTimeControl {
 
 // Extended Team Tournament Models for comprehensive team management
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct TeamMatch {
     pub id: i32,
@@ -886,6 +980,7 @@ pub struct TeamMatch {
     pub updated_at: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct TeamLineup {
     pub id: i32,
@@ -902,6 +997,7 @@ pub struct TeamLineup {
     pub created_at: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct TeamTournamentSettings {
     pub id: i32,
@@ -921,6 +1017,7 @@ pub struct TeamTournamentSettings {
     pub updated_at: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct TeamBoardRules {
     pub id: i32,
@@ -937,6 +1034,7 @@ pub struct TeamBoardRules {
 
 // Application Settings Models
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct ApplicationSetting {
     pub id: i32,
@@ -954,6 +1052,7 @@ pub struct ApplicationSetting {
     pub updated_at: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct UserPreference {
     pub id: i32,
@@ -966,6 +1065,7 @@ pub struct UserPreference {
     pub updated_at: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct SettingsTemplate {
     pub id: i32,
@@ -979,6 +1079,7 @@ pub struct SettingsTemplate {
     pub updated_at: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct SettingsBackupHistory {
     pub id: i32,
@@ -992,6 +1093,7 @@ pub struct SettingsBackupHistory {
     pub is_active: bool,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct SettingsAuditLog {
     pub id: i32,
@@ -1007,6 +1109,7 @@ pub struct SettingsAuditLog {
     pub created_at: String,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum SettingType {
     String,
@@ -1017,6 +1120,7 @@ pub enum SettingType {
     Array,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum SettingCategory {
     General,
@@ -1028,6 +1132,7 @@ pub enum SettingCategory {
     Data,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum BackupType {
     Manual,
@@ -1036,6 +1141,7 @@ pub enum BackupType {
     Template,
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum ChangeType {
     Create,
@@ -1046,6 +1152,7 @@ pub enum ChangeType {
     Restore,
 }
 
+#[allow(dead_code, clippy::upper_case_acronyms)]
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum ChangeSource {
     UI,
@@ -1056,9 +1163,11 @@ pub enum ChangeSource {
     System,
 }
 
-impl SettingType {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl std::str::FromStr for SettingType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "string" => SettingType::String,
             "integer" => SettingType::Integer,
             "float" => SettingType::Float,
@@ -1066,9 +1175,12 @@ impl SettingType {
             "json" => SettingType::Json,
             "array" => SettingType::Array,
             _ => SettingType::String,
-        }
+        })
     }
+}
 
+#[allow(dead_code)]
+impl SettingType {
     pub fn to_str(&self) -> &'static str {
         match self {
             SettingType::String => "string",
@@ -1081,9 +1193,11 @@ impl SettingType {
     }
 }
 
-impl SettingCategory {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl std::str::FromStr for SettingCategory {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "general" => SettingCategory::General,
             "display" => SettingCategory::Display,
             "tournament" => SettingCategory::Tournament,
@@ -1092,9 +1206,12 @@ impl SettingCategory {
             "security" => SettingCategory::Security,
             "data" => SettingCategory::Data,
             _ => SettingCategory::General,
-        }
+        })
     }
+}
 
+#[allow(dead_code)]
+impl SettingCategory {
     pub fn to_str(&self) -> &'static str {
         match self {
             SettingCategory::General => "general",
@@ -1108,17 +1225,22 @@ impl SettingCategory {
     }
 }
 
-impl BackupType {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl std::str::FromStr for BackupType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "manual" => BackupType::Manual,
             "automatic" => BackupType::Automatic,
             "migration" => BackupType::Migration,
             "template" => BackupType::Template,
             _ => BackupType::Manual,
-        }
+        })
     }
+}
 
+#[allow(dead_code)]
+impl BackupType {
     pub fn to_str(&self) -> &'static str {
         match self {
             BackupType::Manual => "manual",
@@ -1129,9 +1251,11 @@ impl BackupType {
     }
 }
 
-impl ChangeType {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl std::str::FromStr for ChangeType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "create" => ChangeType::Create,
             "update" => ChangeType::Update,
             "delete" => ChangeType::Delete,
@@ -1139,9 +1263,12 @@ impl ChangeType {
             "import" => ChangeType::Import,
             "restore" => ChangeType::Restore,
             _ => ChangeType::Update,
-        }
+        })
     }
+}
 
+#[allow(dead_code)]
+impl ChangeType {
     pub fn to_str(&self) -> &'static str {
         match self {
             ChangeType::Create => "create",
@@ -1154,9 +1281,11 @@ impl ChangeType {
     }
 }
 
-impl ChangeSource {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl std::str::FromStr for ChangeSource {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "ui" => ChangeSource::UI,
             "api" => ChangeSource::API,
             "migration" => ChangeSource::Migration,
@@ -1164,9 +1293,12 @@ impl ChangeSource {
             "backup_restore" => ChangeSource::BackupRestore,
             "system" => ChangeSource::System,
             _ => ChangeSource::UI,
-        }
+        })
     }
+}
 
+#[allow(dead_code)]
+impl ChangeSource {
     pub fn to_str(&self) -> &'static str {
         match self {
             ChangeSource::UI => "ui",

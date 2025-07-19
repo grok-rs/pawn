@@ -5,8 +5,10 @@ use crate::pawn::{
 use std::collections::{HashMap, HashSet};
 
 /// Manual pairing control system for tournament directors
+#[allow(dead_code)]
 pub struct ManualPairingController;
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct PairingConstraint {
     pub constraint_type: ConstraintType,
@@ -17,6 +19,7 @@ pub struct PairingConstraint {
     pub round_number: Option<i32>, // None = applies to all rounds
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConstraintType {
     ForceMatch,  // Force these two players to play each other
@@ -27,6 +30,7 @@ pub enum ConstraintType {
     FixedBoard,  // Force pairing to a specific board number
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ConstraintPriority {
     Low,      // Can be overridden if necessary
@@ -35,6 +39,7 @@ pub enum ConstraintPriority {
     Critical, // Absolute requirement, cannot be violated
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ColorConstraint {
     pub player_id: i32,
@@ -43,12 +48,14 @@ pub struct ColorConstraint {
     pub priority: ConstraintPriority,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Color {
     White,
     Black,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ManualPairingRequest {
     pub tournament_id: i32,
@@ -59,6 +66,7 @@ pub struct ManualPairingRequest {
     pub apply_to_remaining: bool, // Apply automatic pairing to remaining players
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ForcedPairing {
     pub white_player_id: i32,
@@ -66,6 +74,7 @@ pub struct ForcedPairing {
     pub board_number: Option<i32>,    // None for auto-assignment
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct PairingValidationResult {
     pub is_valid: bool,
@@ -74,6 +83,7 @@ pub struct PairingValidationResult {
     pub suggestions: Vec<ValidationSuggestion>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ValidationError {
     pub error_type: ValidationErrorType,
@@ -82,6 +92,7 @@ pub struct ValidationError {
     pub severity: ErrorSeverity,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum ValidationErrorType {
     PlayerPairedTwice,
@@ -93,6 +104,7 @@ pub enum ValidationErrorType {
     InvalidColorAssignment,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum ErrorSeverity {
     Critical, // Pairing cannot proceed
@@ -100,6 +112,7 @@ pub enum ErrorSeverity {
     Minor,    // Cosmetic issue
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ValidationWarning {
     pub warning_type: WarningType,
@@ -107,6 +120,7 @@ pub struct ValidationWarning {
     pub affected_players: Vec<i32>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum WarningType {
     SuboptimalColorBalance,
@@ -115,6 +129,7 @@ pub enum WarningType {
     FloatImbalance,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ValidationSuggestion {
     pub suggestion_type: SuggestionType,
@@ -122,12 +137,19 @@ pub struct ValidationSuggestion {
     pub alternative_pairing: Option<Pairing>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum SuggestionType {
     ColorSwap,
     PlayerSwap,
     BoardReassignment,
     ByeReassignment,
+}
+
+impl Default for ManualPairingController {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ManualPairingController {
@@ -226,7 +248,7 @@ impl ManualPairingController {
                         && !pairing
                             .black_player
                             .as_ref()
-                            .map_or(false, |p| used_players.contains(&p.id))
+                            .is_some_and(|p| used_players.contains(&p.id))
                 })
                 .collect();
 
@@ -567,7 +589,7 @@ impl ManualPairingController {
         &self,
         pairings: &[Pairing],
         game_history: &[GameResult],
-        _errors: &mut Vec<ValidationError>,
+        _errors: &mut [ValidationError],
         warnings: &mut Vec<ValidationWarning>,
     ) {
         // Build opponent history
@@ -609,7 +631,7 @@ impl ManualPairingController {
         &self,
         _pairings: &[Pairing],
         _game_history: &[GameResult],
-        _warnings: &mut Vec<ValidationWarning>,
+        _warnings: &mut [ValidationWarning],
     ) {
         // TODO: Implement color balance validation
         // Check if players have reasonable color distribution
@@ -620,7 +642,7 @@ impl ManualPairingController {
         &self,
         _pairings: &[Pairing],
         _constraints: &[PairingConstraint],
-        _errors: &mut Vec<ValidationError>,
+        _errors: &mut [ValidationError],
     ) {
         // TODO: Implement constraint validation
         // Check that all high/critical priority constraints are met
@@ -646,7 +668,7 @@ impl ManualPairingController {
     fn generate_improvement_suggestions(
         &self,
         _pairings: &[Pairing],
-        _suggestions: &mut Vec<ValidationSuggestion>,
+        _suggestions: &mut [ValidationSuggestion],
     ) {
         // TODO: Implement suggestion generation
         // Suggest color swaps, player swaps, etc. for better balance

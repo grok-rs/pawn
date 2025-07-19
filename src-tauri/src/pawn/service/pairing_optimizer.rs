@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::pawn::{
     common::error::PawnError,
     domain::model::{Game, GameResult, Pairing, Player, PlayerResult},
@@ -21,22 +23,67 @@ pub struct OptimizationConfig {
     pub use_heuristic_pruning: bool,
 }
 
+/// Parameters for large tournament pairing generation
+struct LargeTournamentParams<'a> {
+    players: &'a [Player],
+    player_results: &'a [PlayerResult],
+    game_history: &'a [GameResult],
+    round_number: i32,
+    config: &'a OptimizationConfig,
+    cache_hits: &'a mut usize,
+    cache_misses: &'a mut usize,
+    warnings: &'a mut Vec<String>,
+}
+
+/// Parameters for processing a score batch
+struct ScoreBatchParams<'a> {
+    batch: &'a [Player],
+    indexed_data: &'a IndexedTournamentData,
+    round_number: i32,
+    board_number: &'a mut i32,
+    config: &'a OptimizationConfig,
+    cache_hits: &'a mut usize,
+    cache_misses: &'a mut usize,
+}
+
+/// Parameters for processing a score batch with global tracking
+struct ScoreBatchWithTrackingParams<'a> {
+    batch: &'a [Player],
+    indexed_data: &'a IndexedTournamentData,
+    round_number: i32,
+    board_number: &'a mut i32,
+    config: &'a OptimizationConfig,
+    cache_hits: &'a mut usize,
+    cache_misses: &'a mut usize,
+    global_paired_players: &'a mut HashSet<i32>,
+}
+
 #[derive(Debug)]
 pub struct PerformanceMetrics {
     pub total_duration_ms: u128,
+
     pub pairing_generation_ms: u128,
+
     pub validation_duration_ms: u128,
+
     pub players_processed: usize,
+
     pub pairings_generated: usize,
+
     pub cache_hits: usize,
+
     pub cache_misses: usize,
+
     pub algorithm_used: String,
 }
 
 #[derive(Debug)]
+
 pub struct OptimizedPairingResult {
     pub pairings: Vec<Pairing>,
+
     pub metrics: PerformanceMetrics,
+
     pub warnings: Vec<String>,
 }
 
@@ -50,6 +97,12 @@ impl Default for OptimizationConfig {
             cache_opponent_history: true,
             use_heuristic_pruning: true,
         }
+    }
+}
+
+impl Default for PairingOptimizer {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -99,16 +152,16 @@ impl PairingOptimizer {
             (result.pairings, "Dutch System (Basic)".to_string())
         } else {
             // Use optimized algorithm for large tournaments
-            self.generate_large_tournament_pairings(
-                &players,
-                &player_results,
-                &game_history,
+            self.generate_large_tournament_pairings(LargeTournamentParams {
+                players: &players,
+                player_results: &player_results,
+                game_history: &game_history,
                 round_number,
-                &config,
-                &mut cache_hits,
-                &mut cache_misses,
-                &mut warnings,
-            )?
+                config: &config,
+                cache_hits: &mut cache_hits,
+                cache_misses: &mut cache_misses,
+                warnings: &mut warnings,
+            })?
         };
 
         let total_duration = start_time.elapsed();
@@ -144,29 +197,23 @@ impl PairingOptimizer {
     }
 
     /// Generate pairings optimized for large tournaments (500+ players)
+    #[allow(unused_mut)]
     fn generate_large_tournament_pairings(
         &self,
-        players: &[Player],
-        player_results: &[PlayerResult],
-        game_history: &[GameResult],
-        round_number: i32,
-        config: &OptimizationConfig,
-        cache_hits: &mut usize,
-        cache_misses: &mut usize,
-        warnings: &mut Vec<String>,
+        mut params: LargeTournamentParams<'_>,
     ) -> Result<(Vec<Pairing>, String), PawnError> {
         tracing::info!(
             "Using large tournament optimization for {} players",
-            players.len()
+            params.players.len()
         );
 
         // Step 1: Pre-process and index data for fast access
         let start_preprocessing = Instant::now();
         let indexed_data = self.preprocess_tournament_data(
-            players,
-            player_results,
-            game_history,
-            config.cache_opponent_history,
+            params.players,
+            params.player_results,
+            params.game_history,
+            params.config.cache_opponent_history,
         )?;
         let preprocessing_time = start_preprocessing.elapsed();
 
@@ -175,7 +222,7 @@ impl PairingOptimizer {
         // Step 2: Divide players into manageable batches
         let batches = self.create_score_based_batches(
             &indexed_data.players_by_score,
-            config.batch_size_for_large_tournaments,
+            params.config.batch_size_for_large_tournaments,
         );
 
         tracing::debug!("Created {} batches for processing", batches.len());
@@ -188,16 +235,17 @@ impl PairingOptimizer {
         for (batch_idx, batch) in batches.iter().enumerate() {
             let batch_start = Instant::now();
 
-            let batch_pairings = self.process_score_batch_with_global_tracking(
-                batch,
-                &indexed_data,
-                round_number,
-                &mut board_number,
-                config,
-                cache_hits,
-                cache_misses,
-                &mut global_paired_players,
-            )?;
+            let batch_pairings =
+                self.process_score_batch_with_global_tracking(ScoreBatchWithTrackingParams {
+                    batch,
+                    indexed_data: &indexed_data,
+                    round_number: params.round_number,
+                    board_number: &mut board_number,
+                    config: params.config,
+                    cache_hits: params.cache_hits,
+                    cache_misses: params.cache_misses,
+                    global_paired_players: &mut global_paired_players,
+                })?;
 
             let batch_time = batch_start.elapsed();
             tracing::debug!(
@@ -211,8 +259,8 @@ impl PairingOptimizer {
             all_pairings.extend(batch_pairings);
 
             // Check timeout
-            if preprocessing_time.as_secs() > config.timeout_seconds {
-                warnings.push(
+            if preprocessing_time.as_secs() > params.config.timeout_seconds {
+                params.warnings.push(
                     "Pairing generation approaching timeout, may have incomplete optimization"
                         .to_string(),
                 );
@@ -223,7 +271,7 @@ impl PairingOptimizer {
         // Step 4: Handle any remaining unpaired players
         let remaining_players = self.handle_remaining_players(&indexed_data, &all_pairings)?;
         if !remaining_players.is_empty() {
-            warnings.push(format!(
+            params.warnings.push(format!(
                 "{} players remained unpaired",
                 remaining_players.len()
             ));
@@ -324,55 +372,39 @@ impl PairingOptimizer {
     }
 
     /// Process a batch of players with similar scores
-    fn process_score_batch(
-        &self,
-        batch: &[Player],
-        indexed_data: &IndexedTournamentData,
-        round_number: i32,
-        board_number: &mut i32,
-        config: &OptimizationConfig,
-        cache_hits: &mut usize,
-        cache_misses: &mut usize,
-    ) -> Result<Vec<Pairing>, PawnError> {
+    fn process_score_batch(&self, params: ScoreBatchParams<'_>) -> Result<Vec<Pairing>, PawnError> {
         let mut global_paired_players = HashSet::new();
-        self.process_score_batch_with_global_tracking(
-            batch,
-            indexed_data,
-            round_number,
-            board_number,
-            config,
-            cache_hits,
-            cache_misses,
-            &mut global_paired_players,
-        )
+        self.process_score_batch_with_global_tracking(ScoreBatchWithTrackingParams {
+            batch: params.batch,
+            indexed_data: params.indexed_data,
+            round_number: params.round_number,
+            board_number: params.board_number,
+            config: params.config,
+            cache_hits: params.cache_hits,
+            cache_misses: params.cache_misses,
+            global_paired_players: &mut global_paired_players,
+        })
     }
 
     /// Process a batch of players with similar scores, tracking globally paired players
     fn process_score_batch_with_global_tracking(
         &self,
-        batch: &[Player],
-        indexed_data: &IndexedTournamentData,
-        round_number: i32,
-        board_number: &mut i32,
-        config: &OptimizationConfig,
-        cache_hits: &mut usize,
-        cache_misses: &mut usize,
-        global_paired_players: &mut HashSet<i32>,
+        params: ScoreBatchWithTrackingParams<'_>,
     ) -> Result<Vec<Pairing>, PawnError> {
-        if batch.len() < 2 {
+        if params.batch.len() < 2 {
             return Ok(vec![]);
         }
 
         let mut pairings = Vec::new();
 
         // Sort batch by rating for optimal pairing
-        let mut sorted_batch = batch.to_vec();
+        let mut sorted_batch = params.batch.to_vec();
         sorted_batch.sort_by(|a, b| b.rating.unwrap_or(0).cmp(&a.rating.unwrap_or(0)));
 
         // Pair players using optimized algorithm
         let mut i = 0;
         while i < sorted_batch.len() {
-            if global_paired_players.contains(&sorted_batch[i].id) {
+            if params.global_paired_players.contains(&sorted_batch[i].id) {
                 i += 1;
                 continue;
             }
@@ -382,30 +414,28 @@ impl PairingOptimizer {
             let mut best_opponent_idx = None;
             let mut best_score = f64::NEG_INFINITY;
 
-            for j in (i + 1)..sorted_batch.len() {
-                if global_paired_players.contains(&sorted_batch[j].id) {
+            for (j, player2) in sorted_batch.iter().enumerate().skip(i + 1) {
+                if params.global_paired_players.contains(&player2.id) {
                     continue;
                 }
 
-                let player2 = &sorted_batch[j];
-
                 // Quick check using cache
-                if config.cache_opponent_history {
-                    if let Some(opponents) = indexed_data.opponent_cache.get(&player1.id) {
+                if params.config.cache_opponent_history {
+                    if let Some(opponents) = params.indexed_data.opponent_cache.get(&player1.id) {
                         if opponents.contains(&player2.id) {
-                            *cache_hits += 1;
+                            *params.cache_hits += 1;
                             continue; // Skip rematches
                         }
                         // Cache hit but no rematch found
-                        *cache_hits += 1;
+                        *params.cache_hits += 1;
                     } else {
-                        *cache_misses += 1;
+                        *params.cache_misses += 1;
                     }
                 }
 
                 // Calculate pairing score
                 let pairing_score =
-                    self.calculate_fast_pairing_score(player1, player2, indexed_data);
+                    self.calculate_fast_pairing_score(player1, player2, params.indexed_data);
 
                 if pairing_score > best_score {
                     best_score = pairing_score;
@@ -413,7 +443,7 @@ impl PairingOptimizer {
                 }
 
                 // Heuristic pruning for very large batches
-                if config.use_heuristic_pruning && j - i > 20 && best_score > 0.0 {
+                if params.config.use_heuristic_pruning && j - i > 20 && best_score > 0.0 {
                     break; // Good enough match found
                 }
             }
@@ -423,7 +453,7 @@ impl PairingOptimizer {
                 let player2 = &sorted_batch[j];
 
                 // Simple color assignment (can be enhanced)
-                let (white_player, black_player) = if round_number % 2 == 0 {
+                let (white_player, black_player) = if params.round_number % 2 == 0 {
                     (player1.clone(), player2.clone())
                 } else {
                     (player2.clone(), player1.clone())
@@ -432,12 +462,12 @@ impl PairingOptimizer {
                 pairings.push(Pairing {
                     white_player,
                     black_player: Some(black_player),
-                    board_number: *board_number,
+                    board_number: *params.board_number,
                 });
 
-                global_paired_players.insert(sorted_batch[i].id);
-                global_paired_players.insert(sorted_batch[j].id);
-                *board_number += 1;
+                params.global_paired_players.insert(sorted_batch[i].id);
+                params.global_paired_players.insert(sorted_batch[j].id);
+                *params.board_number += 1;
             }
 
             i += 1;
@@ -508,7 +538,7 @@ impl PairingOptimizer {
 
         // Check that all players are accounted for (allowing for byes)
         let total_paired = seen_players.len();
-        if players.len() > 0 && total_paired < players.len() - 1 {
+        if !players.is_empty() && total_paired < players.len() - 1 {
             // Allow for 1 bye
             tracing::warn!(
                 "Only {} of {} players were paired",
@@ -688,18 +718,24 @@ impl PairingOptimizer {
 }
 
 #[derive(Debug)]
+
 struct IndexedTournamentData {
     players_by_score: HashMap<String, Vec<Player>>,
     player_points: HashMap<i32, f64>,
     opponent_cache: HashMap<i32, HashSet<i32>>,
+
     total_players: usize,
 }
 
 #[derive(Debug)]
+
 pub struct BenchmarkResult {
     pub player_count: usize,
+
     pub duration_ms: u128,
+
     pub pairings_generated: usize,
+
     pub algorithm_used: String,
 }
 
@@ -741,12 +777,14 @@ mod tests {
     }
 
     #[test]
+
     fn test_optimizer_creation() {
-        let optimizer = PairingOptimizer::new();
-        assert!(true); // Just test that it creates successfully
+        let _optimizer = PairingOptimizer::new();
+        // Just test that it creates successfully without panicking
     }
 
     #[test]
+
     fn test_default_optimization_config() {
         let config = OptimizationConfig::default();
         assert_eq!(config.max_players_for_basic_algorithm, 100);
@@ -758,6 +796,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_small_tournament_optimization() {
         let optimizer = PairingOptimizer::new();
         let players = vec![
@@ -790,6 +829,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_large_tournament_optimization() {
         let optimizer = PairingOptimizer::new();
 
@@ -803,8 +843,10 @@ mod tests {
             .map(|p| create_test_result(p.clone(), 0.5))
             .collect();
 
-        let mut config = OptimizationConfig::default();
-        config.max_players_for_basic_algorithm = 100; // Force optimized algorithm
+        let config = OptimizationConfig {
+            max_players_for_basic_algorithm: 100, // Force optimized algorithm
+            ..Default::default()
+        };
 
         let result = optimizer
             .generate_optimized_pairings(players, results, vec![], 2, Some(config))
@@ -818,6 +860,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_performance_metrics_tracking() {
         let optimizer = PairingOptimizer::new();
         let players = vec![
@@ -841,7 +884,7 @@ mod tests {
             .unwrap();
 
         let metrics = result.metrics;
-        assert!(metrics.total_duration_ms >= 0);
+        // Duration metrics are unsigned, always >= 0
         assert!(metrics.pairing_generation_ms <= metrics.total_duration_ms);
         assert!(metrics.validation_duration_ms <= metrics.total_duration_ms);
         assert_eq!(metrics.players_processed, 2);
@@ -850,6 +893,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_cache_functionality() {
         let optimizer = PairingOptimizer::new();
         let players = vec![
@@ -884,9 +928,11 @@ mod tests {
             black_player: players[1].clone(),
         }];
 
-        let mut config = OptimizationConfig::default();
-        config.cache_opponent_history = true;
-        config.max_players_for_basic_algorithm = 2; // Force optimized algorithm
+        let config = OptimizationConfig {
+            cache_opponent_history: true,
+            max_players_for_basic_algorithm: 2, // Force optimized algorithm
+            ..Default::default()
+        };
 
         let result = optimizer
             .generate_optimized_pairings(players, results, history, 2, Some(config))
@@ -897,6 +943,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_benchmark_performance() {
         let optimizer = PairingOptimizer::new();
 
@@ -905,7 +952,7 @@ mod tests {
         let mut results = Vec::new();
 
         for &count in &player_counts {
-            println!("Testing with {} players", count);
+            println!("Testing with {count} players");
 
             // Generate mock data
             let players = optimizer.generate_mock_players(count);
@@ -936,13 +983,14 @@ mod tests {
 
         for (i, result) in results.iter().enumerate() {
             assert_eq!(result.player_count, player_counts[i]);
-            assert!(result.duration_ms >= 0);
+            // Duration metrics are unsigned, always >= 0
             assert!(result.pairings_generated > 0);
             assert!(!result.algorithm_used.is_empty());
         }
     }
 
     #[test]
+
     fn test_batch_processing() {
         let optimizer = PairingOptimizer::new();
 
@@ -956,9 +1004,11 @@ mod tests {
             .map(|p| create_test_result(p.clone(), 0.5))
             .collect();
 
-        let mut config = OptimizationConfig::default();
-        config.batch_size_for_large_tournaments = 10; // Small batch size for testing
-        config.max_players_for_basic_algorithm = 20; // Force optimized algorithm
+        let config = OptimizationConfig {
+            batch_size_for_large_tournaments: 10, // Small batch size for testing
+            max_players_for_basic_algorithm: 20,  // Force optimized algorithm
+            ..Default::default()
+        };
 
         let result = optimizer
             .generate_optimized_pairings(players, results, vec![], 2, Some(config))
@@ -970,6 +1020,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_timeout_configuration() {
         let optimizer = PairingOptimizer::new();
         let players = vec![
@@ -982,8 +1033,10 @@ mod tests {
             .map(|p| create_test_result(p.clone(), 0.5))
             .collect();
 
-        let mut config = OptimizationConfig::default();
-        config.timeout_seconds = 1; // Very short timeout
+        let config = OptimizationConfig {
+            timeout_seconds: 1, // Very short timeout
+            ..Default::default()
+        };
 
         let result =
             optimizer.generate_optimized_pairings(players, results, vec![], 2, Some(config));
@@ -993,6 +1046,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_parallel_processing_config() {
         let optimizer = PairingOptimizer::new();
         let players = vec![
@@ -1008,8 +1062,10 @@ mod tests {
             .collect();
 
         // Test with parallel processing enabled
-        let mut config = OptimizationConfig::default();
-        config.use_parallel_processing = true;
+        let config = OptimizationConfig {
+            use_parallel_processing: true,
+            ..Default::default()
+        };
 
         let result1 = optimizer
             .generate_optimized_pairings(
@@ -1022,10 +1078,13 @@ mod tests {
             .unwrap();
 
         // Test with parallel processing disabled
-        config.use_parallel_processing = false;
+        let config2 = OptimizationConfig {
+            use_parallel_processing: false,
+            ..Default::default()
+        };
 
         let result2 = optimizer
-            .generate_optimized_pairings(players, results, vec![], 2, Some(config))
+            .generate_optimized_pairings(players, results, vec![], 2, Some(config2))
             .unwrap();
 
         // Both should produce valid pairings
@@ -1034,6 +1093,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_heuristic_pruning() {
         let optimizer = PairingOptimizer::new();
         let players = vec![
@@ -1048,8 +1108,10 @@ mod tests {
             .map(|p| create_test_result(p.clone(), 0.5))
             .collect();
 
-        let mut config = OptimizationConfig::default();
-        config.use_heuristic_pruning = true;
+        let config = OptimizationConfig {
+            use_heuristic_pruning: true,
+            ..Default::default()
+        };
 
         let result = optimizer
             .generate_optimized_pairings(players, results, vec![], 2, Some(config))
@@ -1058,10 +1120,11 @@ mod tests {
         // Should generate pairings with heuristic pruning
         assert_eq!(result.pairings.len(), 2);
         // Duration can be 0 on very fast systems
-        assert!(result.metrics.total_duration_ms >= 0);
+        // Duration metrics are unsigned, always >= 0
     }
 
     #[test]
+
     fn test_empty_tournament() {
         let optimizer = PairingOptimizer::new();
 
@@ -1081,6 +1144,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_single_player_tournament() {
         let optimizer = PairingOptimizer::new();
         let player = create_test_player(1, "Player 1", Some(1500));
@@ -1103,6 +1167,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_mock_data_generation() {
         let optimizer = PairingOptimizer::new();
 
@@ -1131,6 +1196,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_optimization_warnings() {
         let optimizer = PairingOptimizer::new();
 

@@ -143,7 +143,7 @@ pub async fn get_export_preview(
 
     if result.success {
         if let Some(file_path) = result.file_path {
-            let content = std::fs::read_to_string(&file_path).map_err(|e| PawnError::Io(e))?;
+            let content = std::fs::read_to_string(&file_path).map_err(PawnError::Io)?;
 
             // Clean up the preview file
             if let Err(e) = std::fs::remove_file(&file_path) {

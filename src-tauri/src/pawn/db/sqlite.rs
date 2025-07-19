@@ -311,7 +311,7 @@ impl Db for SqliteDb {
         let black_player = self.get_player(game.black_player_id).await?;
         let audit_trail = self.get_game_audit_trail(game_id).await?;
 
-        let result_type = GameResultType::from_str(&game.result);
+        let result_type = game.result.parse().unwrap_or(GameResultType::Ongoing);
         let requires_approval =
             result_type.requires_arbiter_approval() && game.approved_by.is_none();
 
@@ -550,9 +550,10 @@ impl Db for SqliteDb {
             }
             None => {
                 // Return default config if no settings exist
-                let mut config = TournamentTiebreakConfig::default();
-                config.tournament_id = tournament_id;
-                Ok(Some(config))
+                Ok(Some(TournamentTiebreakConfig {
+                    tournament_id,
+                    ..Default::default()
+                }))
             }
         }
     }
@@ -1199,7 +1200,7 @@ impl Db for SqliteDb {
                 "SELECT * FROM teams WHERE tournament_id = ? AND name LIKE ? ORDER BY name",
             )
             .bind(filters.tournament_id)
-            .bind(format!("%{}%", name))
+            .bind(format!("%{name}%"))
             .fetch_all(&self.pool)
             .await?
         } else {

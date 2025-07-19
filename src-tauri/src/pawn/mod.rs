@@ -82,6 +82,7 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
             command::player::get_tournament_categories,
             command::player::delete_player_category,
             command::player::assign_player_to_category,
+            command::player::get_player_category_assignments,
             command::player::update_player_status,
             command::player::withdraw_player,
             command::player::request_player_bye,

@@ -8,12 +8,12 @@ use specta::{
 };
 use thiserror::Error;
 
+#[allow(dead_code)]
 #[derive(Debug, Error)]
 /// Global error for all Pawn operations.
 ///
 /// **Note** that [`serde::Serialize`] is manually implemented for this enum, so
 /// the output data might be different from what you expected.
-#[allow(dead_code)]
 pub enum PawnError {
     #[error(transparent)]
     /// Represents all sqlx related errors.

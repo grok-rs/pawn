@@ -176,11 +176,10 @@ pub async fn get_tournament_standings(
     // Load config from database or use defaults
     let config = match state.db.get_tournament_settings(tournament_id).await? {
         Some(config) => config,
-        None => {
-            let mut config = TournamentTiebreakConfig::default();
-            config.tournament_id = tournament_id;
-            config
-        }
+        None => TournamentTiebreakConfig {
+            tournament_id,
+            ..Default::default()
+        },
     };
 
     state
@@ -282,11 +281,10 @@ pub async fn get_tournament_settings(
 ) -> CommandResult<TournamentTiebreakConfig> {
     match state.db.get_tournament_settings(tournament_id).await? {
         Some(config) => Ok(config),
-        None => {
-            let mut config = TournamentTiebreakConfig::default();
-            config.tournament_id = tournament_id;
-            Ok(config)
-        }
+        None => Ok(TournamentTiebreakConfig {
+            tournament_id,
+            ..Default::default()
+        }),
     }
 }
 

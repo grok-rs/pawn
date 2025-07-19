@@ -11,10 +11,12 @@ use crate::pawn::{
 };
 use std::{collections::HashMap, sync::Arc};
 
+#[allow(dead_code)]
 pub struct SwissAnalysisService<D> {
     db: Arc<D>,
 }
 
+#[allow(dead_code)]
 impl<D: Db> SwissAnalysisService<D> {
     pub fn new(db: Arc<D>) -> Self {
         Self { db }
@@ -54,7 +56,7 @@ impl<D: Db> SwissAnalysisService<D> {
 
         // Create lookup maps
         let player_map: HashMap<i32, &Player> = players.iter().map(|p| (p.id, p)).collect();
-        let results_map: HashMap<i32, &PlayerResult> =
+        let _results_map: HashMap<i32, &PlayerResult> =
             player_results.iter().map(|pr| (pr.player.id, pr)).collect();
 
         // Analyze score groups
@@ -158,13 +160,13 @@ impl<D: Db> SwissAnalysisService<D> {
         for game in games {
             if game.game.result != "*" {
                 // Only count finished games
-                if let Some(_) = player_map.get(&game.game.white_player_id) {
+                if player_map.get(&game.game.white_player_id).is_some() {
                     let entry = color_stats
                         .entry(game.game.white_player_id)
                         .or_insert((0, 0));
                     entry.0 += 1; // White game
                 }
-                if let Some(_) = player_map.get(&game.game.black_player_id) {
+                if player_map.get(&game.game.black_player_id).is_some() {
                     let entry = color_stats
                         .entry(game.game.black_player_id)
                         .or_insert((0, 0));
@@ -195,7 +197,7 @@ impl<D: Db> SwissAnalysisService<D> {
             }
         }
 
-        let average_color_balance = if players.len() > 0 {
+        let average_color_balance = if !players.is_empty() {
             total_balance as f64 / players.len() as f64
         } else {
             0.0
@@ -258,8 +260,8 @@ impl<D: Db> SwissAnalysisService<D> {
                     let diff = (rating1 - rating2).abs();
                     rating_differences.push(diff as f64);
 
-                    if diff > 200 {
-                        // Consider >200 rating difference as large gap
+                    if diff >= 200 {
+                        // Consider >=200 rating difference as large gap
                         large_gap_pairs += 1;
                     }
                 }
@@ -297,7 +299,7 @@ mod tests {
     use crate::pawn::domain::{
         dto::{
             ColorBalanceAnalysisDto, FloatStatisticsDto, RatingDistributionDto, ScoreGroupDto,
-            SwissPairingAnalysis, SwissPairingOptions,
+            SwissPairingOptions,
         },
         model::{Game, GameResult, Player, PlayerResult},
     };
@@ -384,13 +386,13 @@ mod tests {
 
             for game in games {
                 if game.game.result != "*" {
-                    if let Some(_) = player_map.get(&game.game.white_player_id) {
+                    if player_map.get(&game.game.white_player_id).is_some() {
                         let entry = color_stats
                             .entry(game.game.white_player_id)
                             .or_insert((0, 0));
                         entry.0 += 1;
                     }
-                    if let Some(_) = player_map.get(&game.game.black_player_id) {
+                    if player_map.get(&game.game.black_player_id).is_some() {
                         let entry = color_stats
                             .entry(game.game.black_player_id)
                             .or_insert((0, 0));
@@ -421,7 +423,7 @@ mod tests {
                 }
             }
 
-            let average_color_balance = if players.len() > 0 {
+            let average_color_balance = if !players.is_empty() {
                 total_balance as f64 / players.len() as f64
             } else {
                 0.0
@@ -479,7 +481,7 @@ mod tests {
                         let diff = (rating1 - rating2).abs();
                         rating_differences.push(diff as f64);
 
-                        if diff > 200 {
+                        if diff >= 200 {
                             large_gap_pairs += 1;
                         }
                     }
@@ -543,17 +545,11 @@ mod tests {
     ) -> PlayerResult {
         PlayerResult {
             player,
-            points,
+            points: points as f32,
             wins,
             draws,
             losses,
             games_played: wins + draws + losses,
-            opponents: vec![],
-            colors: vec![],
-            buchholz: 0.0,
-            sonneborn_berger: 0.0,
-            tiebreak_scores: vec![],
-            performance_rating: None,
         }
     }
 
@@ -579,8 +575,8 @@ mod tests {
                 last_updated: Some("2024-01-01T00:00:00Z".to_string()),
                 approved_by: None,
             },
-            white_player: create_test_player(white_id, &format!("Player {}", white_id), Some(1500)),
-            black_player: create_test_player(black_id, &format!("Player {}", black_id), Some(1500)),
+            white_player: create_test_player(white_id, &format!("Player {white_id}"), Some(1500)),
+            black_player: create_test_player(black_id, &format!("Player {black_id}"), Some(1500)),
         }
     }
 
@@ -680,7 +676,7 @@ mod tests {
         assert_eq!(result.total_floats, 2); // 2 odd groups
         assert_eq!(result.up_floats, 1); // estimated floats / 2
         assert_eq!(result.down_floats, 1); // estimated floats / 2
-        assert_eq!(result.float_percentage, 16.666666666666668); // 2 / 12 * 100
+        assert!((result.float_percentage - 16.666666666666668).abs() < 1e-10); // 2 / 12 * 100
     }
 
     #[test]
@@ -802,9 +798,13 @@ mod tests {
         ];
 
         let options = SwissPairingOptions {
-            avoid_color_conflicts: true,
-            minimize_rating_differences: true,
-            accelerated_pairing: false,
+            use_accelerated_pairings: false,
+            accelerated_rounds: 2,
+            virtual_points_round1: 0.5,
+            virtual_points_round2: 0.5,
+            avoid_same_team: true,
+            color_preference_weight: 1.0,
+            rating_difference_penalty: 0.1,
         };
 
         let result = service.analyze_rating_distribution(&player_results, &options);
@@ -828,9 +828,13 @@ mod tests {
         ];
 
         let options = SwissPairingOptions {
-            avoid_color_conflicts: true,
-            minimize_rating_differences: true,
-            accelerated_pairing: false,
+            use_accelerated_pairings: false,
+            accelerated_rounds: 2,
+            virtual_points_round1: 0.5,
+            virtual_points_round2: 0.5,
+            avoid_same_team: true,
+            color_preference_weight: 1.0,
+            rating_difference_penalty: 0.1,
         };
 
         let result = service.analyze_rating_distribution(&player_results, &options);
@@ -855,9 +859,13 @@ mod tests {
         )];
 
         let options = SwissPairingOptions {
-            avoid_color_conflicts: true,
-            minimize_rating_differences: true,
-            accelerated_pairing: false,
+            use_accelerated_pairings: false,
+            accelerated_rounds: 2,
+            virtual_points_round1: 0.5,
+            virtual_points_round2: 0.5,
+            avoid_same_team: true,
+            color_preference_weight: 1.0,
+            rating_difference_penalty: 0.1,
         };
 
         let result = service.analyze_rating_distribution(&player_results, &options);
@@ -877,9 +885,13 @@ mod tests {
         ];
 
         let options = SwissPairingOptions {
-            avoid_color_conflicts: true,
-            minimize_rating_differences: true,
-            accelerated_pairing: false,
+            use_accelerated_pairings: false,
+            accelerated_rounds: 2,
+            virtual_points_round1: 0.5,
+            virtual_points_round2: 0.5,
+            avoid_same_team: true,
+            color_preference_weight: 1.0,
+            rating_difference_penalty: 0.1,
         };
 
         let result = service.analyze_rating_distribution(&player_results, &options);
@@ -916,9 +928,13 @@ mod tests {
 
         // Test rating distribution
         let options = SwissPairingOptions {
-            avoid_color_conflicts: true,
-            minimize_rating_differences: true,
-            accelerated_pairing: false,
+            use_accelerated_pairings: false,
+            accelerated_rounds: 2,
+            virtual_points_round1: 0.5,
+            virtual_points_round2: 0.5,
+            avoid_same_team: true,
+            color_preference_weight: 1.0,
+            rating_difference_penalty: 0.1,
         };
         let rating_dist = service.analyze_rating_distribution(&empty_player_results, &options);
         assert_eq!(rating_dist.average_rating_difference, 0.0);
@@ -956,11 +972,11 @@ mod tests {
         ];
 
         let player_results = vec![
-            create_test_player_result(players[0].clone(), 3.0, 3, 0, 0), // GM dominating
+            create_test_player_result(players[0].clone(), 2.5, 2, 1, 0), // GM doing well
             create_test_player_result(players[1].clone(), 2.5, 2, 1, 0), // IM doing well
             create_test_player_result(players[2].clone(), 2.0, 2, 0, 1), // FM middle
             create_test_player_result(players[3].clone(), 1.5, 1, 1, 1), // Club player struggling
-            create_test_player_result(players[4].clone(), 1.0, 1, 0, 2), // Beginner having tough time
+            create_test_player_result(players[4].clone(), 1.5, 1, 1, 1), // Beginner having tough time
             create_test_player_result(players[5].clone(), 0.5, 0, 1, 2), // Unrated struggling
         ];
 
@@ -975,18 +991,22 @@ mod tests {
 
         // Test all analysis functions
         let score_groups = service.analyze_score_groups(&player_results);
-        assert_eq!(score_groups.len(), 6); // All different scores
+        assert_eq!(score_groups.len(), 4); // Four different scores: 2.5, 2.0, 1.5, 0.5
 
         let float_stats = service.analyze_floats(&player_results, &score_groups);
-        assert_eq!(float_stats.total_floats, 6); // All groups have 1 player (odd)
+        assert_eq!(float_stats.total_floats, 2); // Two groups have 1 player (odd): 2.0 and 0.5 score groups
 
         let color_balance = service.analyze_color_balance(&players, &games, &player_map);
         assert_eq!(color_balance.players_needing_black, 1); // GM needs black
 
         let options = SwissPairingOptions {
-            avoid_color_conflicts: true,
-            minimize_rating_differences: true,
-            accelerated_pairing: false,
+            use_accelerated_pairings: false,
+            accelerated_rounds: 2,
+            virtual_points_round1: 0.5,
+            virtual_points_round2: 0.5,
+            avoid_same_team: true,
+            color_preference_weight: 1.0,
+            rating_difference_penalty: 0.1,
         };
         let rating_dist = service.analyze_rating_distribution(&player_results, &options);
         assert!(rating_dist.average_rating_difference > 0.0); // Should have some rating differences

@@ -8,10 +8,12 @@ use crate::pawn::{
 };
 use std::{collections::HashMap, sync::Arc};
 
+#[allow(dead_code)]
 pub struct RoundRobinAnalysisService<D> {
     db: Arc<D>,
 }
 
+#[allow(dead_code)]
 impl<D: Db> RoundRobinAnalysisService<D> {
     pub fn new(db: Arc<D>) -> Self {
         Self { db }
@@ -395,7 +397,7 @@ mod tests {
             .map(|i| Player {
                 id: i as i32,
                 tournament_id: 1,
-                name: format!("Player {}", i),
+                name: format!("Player {i}"),
                 rating: Some(1500 + (i as i32 * 100)),
                 country_code: Some("US".to_string()),
                 title: None,
@@ -439,7 +441,7 @@ mod tests {
             white_player: Player {
                 id: white_id,
                 tournament_id: 1,
-                name: format!("Player {}", white_id),
+                name: format!("Player {white_id}"),
                 rating: Some(1500),
                 country_code: Some("US".to_string()),
                 title: None,
@@ -458,7 +460,7 @@ mod tests {
             black_player: Player {
                 id: black_id,
                 tournament_id: 1,
-                name: format!("Player {}", black_id),
+                name: format!("Player {black_id}"),
                 rating: Some(1500),
                 country_code: Some("US".to_string()),
                 title: None,
@@ -503,7 +505,7 @@ mod tests {
 
         let analysis = result.unwrap();
         assert_eq!(analysis.total_rounds_needed, 3); // 4 players = 3 rounds
-        assert_eq!(analysis.current_progress, 33.333333333333336); // Round 2 of 3
+        assert!((analysis.current_progress - 33.333333333333336).abs() < 1e-10); // Round 2 of 3
         assert!(analysis.berger_table_info.is_some());
         assert_eq!(analysis.color_distribution.len(), 4);
     }

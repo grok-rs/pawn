@@ -173,8 +173,7 @@ pub async fn validate_prize_distribution(
 
     if grand_total > 100.0 {
         errors.push(format!(
-            "Total prize distribution ({:.1}%) exceeds 100%",
-            grand_total
+            "Total prize distribution ({grand_total:.1}%) exceeds 100%"
         ));
     }
 
@@ -254,13 +253,11 @@ pub async fn export_norms_report(
             Ok(csv)
         }
         "json" => {
-            let json =
-                serde_json::to_string_pretty(&summary).map_err(|e| PawnError::SerdeError(e))?;
+            let json = serde_json::to_string_pretty(&summary).map_err(PawnError::SerdeError)?;
             Ok(json)
         }
         _ => Err(PawnError::InvalidInput(format!(
-            "Unsupported format: {}",
-            format
+            "Unsupported format: {format}"
         ))),
     }
 }

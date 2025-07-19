@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::pawn::{
     common::error::PawnError,
     domain::model::{Pairing, Player},
@@ -42,6 +44,12 @@ pub struct RoundInfo {
     pub total_rounds: i32,
     pub tournament_type: RoundRobinType,
     pub color_balance_achieved: bool,
+}
+
+impl Default for RoundRobinEngine {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl RoundRobinEngine {
@@ -313,19 +321,17 @@ impl RoundRobinEngine {
             let first_cycle_pairings = berger_table.pairings_matrix[round].clone();
             let mut second_cycle_pairings = Vec::new();
 
-            for pairing in first_cycle_pairings {
-                if let Some((white_pos, black_pos)) = pairing {
-                    // Reverse colors for second cycle
-                    second_cycle_pairings.push(Some((black_pos, white_pos)));
+            for (white_pos, black_pos) in first_cycle_pairings.into_iter().flatten() {
+                // Reverse colors for second cycle
+                second_cycle_pairings.push(Some((black_pos, white_pos)));
 
-                    // Update color assignments
-                    berger_table
-                        .color_assignments
-                        .insert((white_pos, black_pos), false);
-                    berger_table
-                        .color_assignments
-                        .insert((black_pos, white_pos), true);
-                }
+                // Update color assignments
+                berger_table
+                    .color_assignments
+                    .insert((white_pos, black_pos), false);
+                berger_table
+                    .color_assignments
+                    .insert((black_pos, white_pos), true);
             }
 
             berger_table.pairings_matrix[single_rounds + round] = second_cycle_pairings;
@@ -400,7 +406,7 @@ impl RoundRobinEngine {
         let mut pairings = Vec::new();
         let team_size = team_a.len();
 
-        for board in 0..team_size {
+        for (board, player_a) in team_a.iter().enumerate().take(team_size) {
             // Calculate opponent for this round using rotation
             let opponent_index = (board + (round_number - 1) as usize) % team_size;
 
@@ -412,9 +418,9 @@ impl RoundRobinEngine {
             };
 
             let (white_player, black_player) = if team_a_white {
-                (team_a[board].clone(), team_b[opponent_index].clone())
+                (player_a.clone(), team_b[opponent_index].clone())
             } else {
-                (team_b[opponent_index].clone(), team_a[board].clone())
+                (team_b[opponent_index].clone(), player_a.clone())
             };
 
             pairings.push(Pairing {
@@ -459,14 +465,12 @@ impl RoundRobinEngine {
         let mut color_counts: HashMap<usize, (i32, i32)> = HashMap::new(); // (whites, blacks)
 
         for round_pairings in &berger_table.pairings_matrix {
-            for pairing_opt in round_pairings {
-                if let Some((white_pos, black_pos)) = pairing_opt {
-                    let white_entry = color_counts.entry(*white_pos).or_insert((0, 0));
-                    white_entry.0 += 1;
+            for (white_pos, black_pos) in round_pairings.iter().flatten() {
+                let white_entry = color_counts.entry(*white_pos).or_insert((0, 0));
+                white_entry.0 += 1;
 
-                    let black_entry = color_counts.entry(*black_pos).or_insert((0, 0));
-                    black_entry.1 += 1;
-                }
+                let black_entry = color_counts.entry(*black_pos).or_insert((0, 0));
+                black_entry.1 += 1;
             }
         }
 
@@ -769,9 +773,9 @@ mod tests {
         };
 
         // This should have reasonable color balance (may not be perfect due to algorithm)
-        let has_good_balance = engine.check_color_balance(&berger_table);
+        let _has_good_balance = engine.check_color_balance(&berger_table);
         // For this simple case, just check that the function runs without error
-        assert!(has_good_balance || !has_good_balance); // Always true, just testing the function works
+        // Function execution reached here without panic - test passes
 
         // Create an imbalanced table
         berger_table.pairings_matrix = vec![

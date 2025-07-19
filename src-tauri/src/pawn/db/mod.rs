@@ -16,236 +16,338 @@ pub mod sqlite;
 
 pub trait Db: Send + Sync {
     // Tournament operations
-    async fn get_tournaments(&self) -> Result<Vec<Tournament>, sqlx::Error>;
-    async fn get_tournament(&self, id: i32) -> Result<Tournament, sqlx::Error>;
-    async fn create_tournament(&self, data: CreateTournament) -> Result<Tournament, sqlx::Error>;
-    async fn get_tournament_details(&self, id: i32) -> Result<TournamentDetails, sqlx::Error>;
-    async fn delete_tournament(&self, id: i32) -> Result<(), sqlx::Error>;
-    async fn update_tournament_status(
+    fn get_tournaments(
+        &self,
+    ) -> impl std::future::Future<Output = Result<Vec<Tournament>, sqlx::Error>> + Send;
+    fn get_tournament(
+        &self,
+        id: i32,
+    ) -> impl std::future::Future<Output = Result<Tournament, sqlx::Error>> + Send;
+    fn create_tournament(
+        &self,
+        data: CreateTournament,
+    ) -> impl std::future::Future<Output = Result<Tournament, sqlx::Error>> + Send;
+    fn get_tournament_details(
+        &self,
+        id: i32,
+    ) -> impl std::future::Future<Output = Result<TournamentDetails, sqlx::Error>> + Send;
+    fn delete_tournament(
+        &self,
+        id: i32,
+    ) -> impl std::future::Future<Output = Result<(), sqlx::Error>> + Send;
+    fn update_tournament_status(
         &self,
         tournament_id: i32,
         status: &str,
-    ) -> Result<Tournament, sqlx::Error>;
+    ) -> impl std::future::Future<Output = Result<Tournament, sqlx::Error>> + Send;
 
     // Player operations
-    async fn get_players_by_tournament(
+    fn get_players_by_tournament(
         &self,
         tournament_id: i32,
-    ) -> Result<Vec<Player>, sqlx::Error>;
-    async fn create_player(&self, data: CreatePlayer) -> Result<Player, sqlx::Error>;
-    async fn update_player(&self, data: UpdatePlayer) -> Result<Player, sqlx::Error>;
-    async fn delete_player(&self, player_id: i32) -> Result<(), sqlx::Error>;
+    ) -> impl std::future::Future<Output = Result<Vec<Player>, sqlx::Error>> + Send;
+    fn create_player(
+        &self,
+        data: CreatePlayer,
+    ) -> impl std::future::Future<Output = Result<Player, sqlx::Error>> + Send;
+    fn update_player(
+        &self,
+        data: UpdatePlayer,
+    ) -> impl std::future::Future<Output = Result<Player, sqlx::Error>> + Send;
+    fn delete_player(
+        &self,
+        player_id: i32,
+    ) -> impl std::future::Future<Output = Result<(), sqlx::Error>> + Send;
 
     // Game operations
-    async fn get_games_by_tournament(&self, tournament_id: i32) -> Result<Vec<Game>, sqlx::Error>;
-    async fn get_game(&self, game_id: i32) -> Result<Game, sqlx::Error>;
-    async fn get_player(&self, player_id: i32) -> Result<Player, sqlx::Error>;
-    async fn create_game(&self, data: CreateGame) -> Result<Game, sqlx::Error>;
-    async fn update_game_result(&self, data: UpdateGameResult) -> Result<Game, sqlx::Error>;
-    async fn get_enhanced_game_result(
+    fn get_games_by_tournament(
+        &self,
+        tournament_id: i32,
+    ) -> impl std::future::Future<Output = Result<Vec<Game>, sqlx::Error>> + Send;
+    fn get_game(
         &self,
         game_id: i32,
-    ) -> Result<EnhancedGameResult, sqlx::Error>;
+    ) -> impl std::future::Future<Output = Result<Game, sqlx::Error>> + Send;
+    fn get_player(
+        &self,
+        player_id: i32,
+    ) -> impl std::future::Future<Output = Result<Player, sqlx::Error>> + Send;
+    fn create_game(
+        &self,
+        data: CreateGame,
+    ) -> impl std::future::Future<Output = Result<Game, sqlx::Error>> + Send;
+    fn update_game_result(
+        &self,
+        data: UpdateGameResult,
+    ) -> impl std::future::Future<Output = Result<Game, sqlx::Error>> + Send;
+    fn get_enhanced_game_result(
+        &self,
+        game_id: i32,
+    ) -> impl std::future::Future<Output = Result<EnhancedGameResult, sqlx::Error>> + Send;
 
     // Game result audit operations
-    async fn get_game_audit_trail(&self, game_id: i32)
-    -> Result<Vec<GameResultAudit>, sqlx::Error>;
-    async fn approve_game_result(&self, data: ApproveGameResult) -> Result<(), sqlx::Error>;
-    async fn get_pending_approvals(
+    fn get_game_audit_trail(
+        &self,
+        game_id: i32,
+    ) -> impl std::future::Future<Output = Result<Vec<GameResultAudit>, sqlx::Error>> + Send;
+    fn approve_game_result(
+        &self,
+        data: ApproveGameResult,
+    ) -> impl std::future::Future<Output = Result<(), sqlx::Error>> + Send;
+    fn get_pending_approvals(
         &self,
         tournament_id: i32,
-    ) -> Result<Vec<EnhancedGameResult>, sqlx::Error>;
+    ) -> impl std::future::Future<Output = Result<Vec<EnhancedGameResult>, sqlx::Error>> + Send;
 
     // Round operations extended
-    async fn get_round_by_number(
+    #[allow(dead_code)]
+    fn get_round_by_number(
         &self,
         tournament_id: i32,
         round_number: i32,
-    ) -> Result<Round, sqlx::Error>;
+    ) -> impl std::future::Future<Output = Result<Round, sqlx::Error>> + Send;
 
     // Statistics
-    async fn get_player_results(
+    fn get_player_results(
         &self,
         tournament_id: i32,
-    ) -> Result<Vec<PlayerResult>, sqlx::Error>;
-    async fn get_game_results(&self, tournament_id: i32) -> Result<Vec<GameResult>, sqlx::Error>;
+    ) -> impl std::future::Future<Output = Result<Vec<PlayerResult>, sqlx::Error>> + Send;
+    fn get_game_results(
+        &self,
+        tournament_id: i32,
+    ) -> impl std::future::Future<Output = Result<Vec<GameResult>, sqlx::Error>> + Send;
 
     // Tournament settings
-    async fn get_tournament_settings(
+    fn get_tournament_settings(
         &self,
         tournament_id: i32,
-    ) -> Result<Option<TournamentTiebreakConfig>, sqlx::Error>;
-    async fn upsert_tournament_settings(
+    ) -> impl std::future::Future<Output = Result<Option<TournamentTiebreakConfig>, sqlx::Error>> + Send;
+    fn upsert_tournament_settings(
         &self,
         settings: &UpdateTournamentSettings,
-    ) -> Result<(), sqlx::Error>;
+    ) -> impl std::future::Future<Output = Result<(), sqlx::Error>> + Send;
 
     // Round operations
-    async fn get_rounds_by_tournament(&self, tournament_id: i32)
-    -> Result<Vec<Round>, sqlx::Error>;
-    async fn get_current_round(&self, tournament_id: i32) -> Result<Option<Round>, sqlx::Error>;
-    async fn get_round(&self, round_id: i32) -> Result<Round, sqlx::Error>;
-    async fn create_round(&self, data: CreateRound) -> Result<Round, sqlx::Error>;
-    async fn update_round_status(&self, round_id: i32, status: &str) -> Result<Round, sqlx::Error>;
-    async fn get_games_by_round(
+    fn get_rounds_by_tournament(
+        &self,
+        tournament_id: i32,
+    ) -> impl std::future::Future<Output = Result<Vec<Round>, sqlx::Error>> + Send;
+    fn get_current_round(
+        &self,
+        tournament_id: i32,
+    ) -> impl std::future::Future<Output = Result<Option<Round>, sqlx::Error>> + Send;
+    fn get_round(
+        &self,
+        round_id: i32,
+    ) -> impl std::future::Future<Output = Result<Round, sqlx::Error>> + Send;
+    fn create_round(
+        &self,
+        data: CreateRound,
+    ) -> impl std::future::Future<Output = Result<Round, sqlx::Error>> + Send;
+    fn update_round_status(
+        &self,
+        round_id: i32,
+        status: &str,
+    ) -> impl std::future::Future<Output = Result<Round, sqlx::Error>> + Send;
+    fn get_games_by_round(
         &self,
         tournament_id: i32,
         round_number: i32,
-    ) -> Result<Vec<GameResult>, sqlx::Error>;
+    ) -> impl std::future::Future<Output = Result<Vec<GameResult>, sqlx::Error>> + Send;
 
     // Player category operations
-    async fn get_tournament_categories(
+    fn get_tournament_categories(
         &self,
         tournament_id: i32,
-    ) -> Result<Vec<PlayerCategory>, sqlx::Error>;
-    async fn create_player_category(
+    ) -> impl std::future::Future<Output = Result<Vec<PlayerCategory>, sqlx::Error>> + Send;
+    fn create_player_category(
         &self,
         data: CreatePlayerCategory,
-    ) -> Result<PlayerCategory, sqlx::Error>;
-    async fn delete_player_category(&self, category_id: i32) -> Result<(), sqlx::Error>;
-    async fn assign_player_to_category(
+    ) -> impl std::future::Future<Output = Result<PlayerCategory, sqlx::Error>> + Send;
+    fn delete_player_category(
+        &self,
+        category_id: i32,
+    ) -> impl std::future::Future<Output = Result<(), sqlx::Error>> + Send;
+    fn assign_player_to_category(
         &self,
         data: AssignPlayerToCategory,
-    ) -> Result<PlayerCategoryAssignment, sqlx::Error>;
-    async fn get_player_category_assignments(
+    ) -> impl std::future::Future<Output = Result<PlayerCategoryAssignment, sqlx::Error>> + Send;
+    fn get_player_category_assignments(
         &self,
         tournament_id: i32,
-    ) -> Result<Vec<PlayerCategoryAssignment>, sqlx::Error>;
+    ) -> impl std::future::Future<Output = Result<Vec<PlayerCategoryAssignment>, sqlx::Error>> + Send;
 
     // Knockout tournament operations
-    async fn create_knockout_bracket(
+    fn create_knockout_bracket(
         &self,
         bracket: KnockoutBracket,
-    ) -> Result<KnockoutBracket, sqlx::Error>;
-    async fn get_knockout_bracket(
+    ) -> impl std::future::Future<Output = Result<KnockoutBracket, sqlx::Error>> + Send;
+    fn get_knockout_bracket(
         &self,
         tournament_id: i32,
-    ) -> Result<Option<KnockoutBracket>, sqlx::Error>;
-    async fn get_knockout_bracket_by_id(
+    ) -> impl std::future::Future<Output = Result<Option<KnockoutBracket>, sqlx::Error>> + Send;
+    fn get_knockout_bracket_by_id(
         &self,
         bracket_id: i32,
-    ) -> Result<Option<KnockoutBracket>, sqlx::Error>;
-    async fn create_bracket_position(
+    ) -> impl std::future::Future<Output = Result<Option<KnockoutBracket>, sqlx::Error>> + Send;
+    fn create_bracket_position(
         &self,
         position: BracketPosition,
-    ) -> Result<BracketPosition, sqlx::Error>;
-    async fn get_bracket_positions(
+    ) -> impl std::future::Future<Output = Result<BracketPosition, sqlx::Error>> + Send;
+    fn get_bracket_positions(
         &self,
         bracket_id: i32,
-    ) -> Result<Vec<BracketPosition>, sqlx::Error>;
-    async fn get_bracket_positions_by_round(
+    ) -> impl std::future::Future<Output = Result<Vec<BracketPosition>, sqlx::Error>> + Send;
+    fn get_bracket_positions_by_round(
         &self,
         bracket_id: i32,
         round_number: i32,
-    ) -> Result<Vec<BracketPosition>, sqlx::Error>;
-    async fn update_bracket_position(
+    ) -> impl std::future::Future<Output = Result<Vec<BracketPosition>, sqlx::Error>> + Send;
+    #[allow(dead_code)]
+    fn update_bracket_position(
         &self,
         position_id: i32,
         player_id: Option<i32>,
         status: String,
-    ) -> Result<(), sqlx::Error>;
+    ) -> impl std::future::Future<Output = Result<(), sqlx::Error>> + Send;
 
     // Time control operations
-    async fn get_time_controls(&self) -> Result<Vec<TimeControl>, sqlx::Error>;
-    async fn get_time_control(&self, id: i32) -> Result<TimeControl, sqlx::Error>;
-    async fn create_time_control(
+    fn get_time_controls(
+        &self,
+    ) -> impl std::future::Future<Output = Result<Vec<TimeControl>, sqlx::Error>> + Send;
+    fn get_time_control(
+        &self,
+        id: i32,
+    ) -> impl std::future::Future<Output = Result<TimeControl, sqlx::Error>> + Send;
+    fn create_time_control(
         &self,
         time_control: TimeControl,
-    ) -> Result<TimeControl, sqlx::Error>;
-    async fn update_time_control(
+    ) -> impl std::future::Future<Output = Result<TimeControl, sqlx::Error>> + Send;
+    fn update_time_control(
         &self,
         data: UpdateTimeControl,
-    ) -> Result<TimeControl, sqlx::Error>;
-    async fn delete_time_control(&self, id: i32) -> Result<(), sqlx::Error>;
-    async fn get_tournaments_using_time_control(
+    ) -> impl std::future::Future<Output = Result<TimeControl, sqlx::Error>> + Send;
+    fn delete_time_control(
+        &self,
+        id: i32,
+    ) -> impl std::future::Future<Output = Result<(), sqlx::Error>> + Send;
+    fn get_tournaments_using_time_control(
         &self,
         time_control_id: i32,
-    ) -> Result<Vec<Tournament>, sqlx::Error>;
-    async fn unset_default_time_controls(&self, time_control_type: &str)
-    -> Result<(), sqlx::Error>;
+    ) -> impl std::future::Future<Output = Result<Vec<Tournament>, sqlx::Error>> + Send;
+    #[allow(dead_code)]
+    fn unset_default_time_controls(
+        &self,
+        time_control_type: &str,
+    ) -> impl std::future::Future<Output = Result<(), sqlx::Error>> + Send;
 
     // Team management operations
-    async fn create_team(
+    fn create_team(
         &self,
         data: super::domain::dto::CreateTeam,
-    ) -> Result<super::domain::model::Team, sqlx::Error>;
-    async fn update_team(
+    ) -> impl std::future::Future<Output = Result<super::domain::model::Team, sqlx::Error>> + Send;
+    fn update_team(
         &self,
         data: super::domain::dto::UpdateTeam,
-    ) -> Result<super::domain::model::Team, sqlx::Error>;
-    async fn delete_team(&self, team_id: i32) -> Result<(), sqlx::Error>;
-    async fn get_team_by_id(&self, team_id: i32)
-    -> Result<super::domain::model::Team, sqlx::Error>;
-    async fn get_teams_by_tournament(
-        &self,
-        tournament_id: i32,
-    ) -> Result<Vec<super::domain::model::Team>, sqlx::Error>;
-    async fn search_teams(
-        &self,
-        filters: super::domain::dto::TeamSearchFilters,
-    ) -> Result<Vec<super::domain::model::Team>, sqlx::Error>;
-    async fn get_tournament_by_id(&self, tournament_id: i32) -> Result<Tournament, sqlx::Error>;
-
-    // Team membership operations
-    async fn add_player_to_team(
-        &self,
-        data: super::domain::dto::AddPlayerToTeam,
-    ) -> Result<super::domain::model::TeamMembership, sqlx::Error>;
-    async fn remove_player_from_team(
-        &self,
-        data: super::domain::dto::RemovePlayerFromTeam,
-    ) -> Result<(), sqlx::Error>;
-    async fn get_team_memberships(
+    ) -> impl std::future::Future<Output = Result<super::domain::model::Team, sqlx::Error>> + Send;
+    fn delete_team(
         &self,
         team_id: i32,
-    ) -> Result<Vec<super::domain::model::TeamMembership>, sqlx::Error>;
-    async fn get_all_team_memberships(
+    ) -> impl std::future::Future<Output = Result<(), sqlx::Error>> + Send;
+    fn get_team_by_id(
+        &self,
+        team_id: i32,
+    ) -> impl std::future::Future<Output = Result<super::domain::model::Team, sqlx::Error>> + Send;
+    fn get_teams_by_tournament(
         &self,
         tournament_id: i32,
-    ) -> Result<Vec<super::domain::model::TeamMembership>, sqlx::Error>;
-    async fn get_player_by_id(&self, player_id: i32) -> Result<Player, sqlx::Error>;
+    ) -> impl std::future::Future<Output = Result<Vec<super::domain::model::Team>, sqlx::Error>> + Send;
+    fn search_teams(
+        &self,
+        filters: super::domain::dto::TeamSearchFilters,
+    ) -> impl std::future::Future<Output = Result<Vec<super::domain::model::Team>, sqlx::Error>> + Send;
+    fn get_tournament_by_id(
+        &self,
+        tournament_id: i32,
+    ) -> impl std::future::Future<Output = Result<Tournament, sqlx::Error>> + Send;
+
+    // Team membership operations
+    fn add_player_to_team(
+        &self,
+        data: super::domain::dto::AddPlayerToTeam,
+    ) -> impl std::future::Future<Output = Result<super::domain::model::TeamMembership, sqlx::Error>>
+    + Send;
+    fn remove_player_from_team(
+        &self,
+        data: super::domain::dto::RemovePlayerFromTeam,
+    ) -> impl std::future::Future<Output = Result<(), sqlx::Error>> + Send;
+    fn get_team_memberships(
+        &self,
+        team_id: i32,
+    ) -> impl std::future::Future<
+        Output = Result<Vec<super::domain::model::TeamMembership>, sqlx::Error>,
+    > + Send;
+    fn get_all_team_memberships(
+        &self,
+        tournament_id: i32,
+    ) -> impl std::future::Future<
+        Output = Result<Vec<super::domain::model::TeamMembership>, sqlx::Error>,
+    > + Send;
+    fn get_player_by_id(
+        &self,
+        player_id: i32,
+    ) -> impl std::future::Future<Output = Result<Player, sqlx::Error>> + Send;
 
     // Team match operations
-    async fn create_team_match(
+    fn create_team_match(
         &self,
         data: super::domain::dto::CreateTeamMatch,
-    ) -> Result<super::domain::model::TeamMatch, sqlx::Error>;
-    async fn update_team_match(
+    ) -> impl std::future::Future<Output = Result<super::domain::model::TeamMatch, sqlx::Error>> + Send;
+    fn update_team_match(
         &self,
         data: super::domain::dto::UpdateTeamMatch,
-    ) -> Result<super::domain::model::TeamMatch, sqlx::Error>;
-    async fn get_team_match_by_id(
+    ) -> impl std::future::Future<Output = Result<super::domain::model::TeamMatch, sqlx::Error>> + Send;
+    fn get_team_match_by_id(
         &self,
         match_id: i32,
-    ) -> Result<super::domain::model::TeamMatch, sqlx::Error>;
-    async fn get_team_matches(
+    ) -> impl std::future::Future<Output = Result<super::domain::model::TeamMatch, sqlx::Error>> + Send;
+    fn get_team_matches(
         &self,
         tournament_id: i32,
         round_number: Option<i32>,
-    ) -> Result<Vec<super::domain::model::TeamMatch>, sqlx::Error>;
+    ) -> impl std::future::Future<Output = Result<Vec<super::domain::model::TeamMatch>, sqlx::Error>>
+    + Send;
 
     // Team lineup operations
-    async fn create_team_lineup(
+    fn create_team_lineup(
         &self,
         data: super::domain::dto::CreateTeamLineup,
-    ) -> Result<super::domain::model::TeamLineup, sqlx::Error>;
-    async fn get_team_lineups(
+    ) -> impl std::future::Future<Output = Result<super::domain::model::TeamLineup, sqlx::Error>> + Send;
+    fn get_team_lineups(
         &self,
         team_id: i32,
         round_number: i32,
-    ) -> Result<Vec<super::domain::model::TeamLineup>, sqlx::Error>;
+    ) -> impl std::future::Future<
+        Output = Result<Vec<super::domain::model::TeamLineup>, sqlx::Error>,
+    > + Send;
 
     // Team tournament settings operations
-    async fn create_team_tournament_settings(
+    fn create_team_tournament_settings(
         &self,
         data: super::domain::dto::CreateTeamTournamentSettings,
-    ) -> Result<super::domain::model::TeamTournamentSettings, sqlx::Error>;
-    async fn update_team_tournament_settings(
+    ) -> impl std::future::Future<
+        Output = Result<super::domain::model::TeamTournamentSettings, sqlx::Error>,
+    > + Send;
+    fn update_team_tournament_settings(
         &self,
         data: super::domain::dto::UpdateTeamTournamentSettings,
-    ) -> Result<super::domain::model::TeamTournamentSettings, sqlx::Error>;
-    async fn get_team_tournament_settings(
+    ) -> impl std::future::Future<
+        Output = Result<super::domain::model::TeamTournamentSettings, sqlx::Error>,
+    > + Send;
+    fn get_team_tournament_settings(
         &self,
         tournament_id: i32,
-    ) -> Result<super::domain::model::TeamTournamentSettings, sqlx::Error>;
+    ) -> impl std::future::Future<
+        Output = Result<super::domain::model::TeamTournamentSettings, sqlx::Error>,
+    > + Send;
 }

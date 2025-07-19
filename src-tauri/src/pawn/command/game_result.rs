@@ -296,7 +296,7 @@ pub async fn import_results_csv(
                 errors: vec![CsvImportError {
                     row_number: 0,
                     field: None,
-                    message: format!("Failed to parse CSV headers: {}", e),
+                    message: format!("Failed to parse CSV headers: {e}"),
                     row_data: "".to_string(),
                 }],
                 warnings,
@@ -389,7 +389,7 @@ pub async fn import_results_csv(
                 errors.push(CsvImportError {
                     row_number,
                     field: None,
-                    message: format!("Failed to parse CSV row: {}", e),
+                    message: format!("Failed to parse CSV row: {e}"),
                     row_data: "".to_string(),
                 });
             }
@@ -442,13 +442,16 @@ pub async fn import_results_csv(
                     result: csv_row.result.clone(),
                     result_type: csv_row.result_type.clone(),
                     result_reason: csv_row.result_reason.clone(),
-                    arbiter_notes: Some(format!("Imported from CSV row {}", csv_row.row_number)),
+                    arbiter_notes: Some(format!(
+                        "Imported from CSV row {row}",
+                        row = csv_row.row_number
+                    )),
                     changed_by: data.changed_by.clone(),
                 });
             }
             None => {
                 let match_info = if let Some(board) = csv_row.board_number {
-                    format!("board {}", board)
+                    format!("board {board}")
                 } else if csv_row.white_player.is_some() || csv_row.black_player.is_some() {
                     format!(
                         "players {} vs {}",
@@ -462,8 +465,8 @@ pub async fn import_results_csv(
                 errors.push(CsvImportError {
                     row_number: csv_row.row_number,
                     field: None,
-                    message: format!("No matching game found for {}", match_info),
-                    row_data: format!("result: {}", csv_row.result),
+                    message: format!("No matching game found for {match_info}"),
+                    row_data: format!("result: {result}", result = csv_row.result),
                 });
             }
         }
@@ -491,7 +494,10 @@ pub async fn import_results_csv(
                                         row_number: csv_row.row_number,
                                         field: None,
                                         message: error,
-                                        row_data: format!("result: {}", csv_row.result),
+                                        row_data: format!(
+                                            "result: {result}",
+                                            result = csv_row.result
+                                        ),
                                     });
                                 }
                             }
@@ -503,7 +509,7 @@ pub async fn import_results_csv(
                 errors.push(CsvImportError {
                     row_number: 0,
                     field: None,
-                    message: format!("Batch update failed: {}", e),
+                    message: format!("Batch update failed: {e}"),
                     row_data: "".to_string(),
                 });
             }
@@ -569,7 +575,7 @@ fn find_matching_game<'a>(
 
     // If no board number or no match, try to match by player names
     if csv_row.white_player.is_some() || csv_row.black_player.is_some() {
-        for game in games {
+        for _game in games {
             // This would require additional database lookup to get player names
             // For now, we'll rely on board number matching
             // TODO: Implement player name matching by fetching player details

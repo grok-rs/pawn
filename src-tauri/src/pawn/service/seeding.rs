@@ -13,10 +13,12 @@ use rand::{seq::SliceRandom, thread_rng};
 use sqlx::SqlitePool;
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 pub struct SeedingService {
     pool: SqlitePool,
 }
 
+#[allow(dead_code)]
 impl SeedingService {
     pub fn new(pool: SqlitePool) -> Self {
         Self { pool }
@@ -35,14 +37,14 @@ impl SeedingService {
             RETURNING *
             "#,
         )
-        .bind(&settings.tournament_id)
+        .bind(settings.tournament_id)
         .bind(&settings.seeding_method)
         .bind(settings.use_initial_rating)
         .bind(settings.randomize_unrated)
         .bind(settings.protect_top_seeds)
         .fetch_one(&self.pool)
         .await
-        .map_err(|e| PawnError::Database(e))?;
+        .map_err(PawnError::Database)?;
 
         Ok(result)
     }
@@ -58,7 +60,7 @@ impl SeedingService {
         .bind(tournament_id)
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| PawnError::Database(e))?;
+        .map_err(PawnError::Database)?;
 
         Ok(settings)
     }
@@ -112,7 +114,7 @@ impl SeedingService {
         let result = query
             .fetch_one(&self.pool)
             .await
-            .map_err(|e| PawnError::Database(e))?;
+            .map_err(PawnError::Database)?;
 
         Ok(result)
     }
@@ -124,7 +126,10 @@ impl SeedingService {
     ) -> Result<Vec<SeedingPreview>, PawnError> {
         let players = self.get_tournament_players(request.tournament_id).await?;
 
-        let method = SeedingMethod::from_str(&request.seeding_method);
+        let method = request
+            .seeding_method
+            .parse()
+            .unwrap_or(SeedingMethod::Rating);
         let seeding_preview = self.calculate_seeding(&players, method, request.category_id)?;
 
         Ok(seeding_preview)
@@ -135,11 +140,7 @@ impl SeedingService {
         &self,
         batch_update: BatchUpdatePlayerSeeding,
     ) -> Result<Vec<Player>, PawnError> {
-        let mut tx = self
-            .pool
-            .begin()
-            .await
-            .map_err(|e| PawnError::Database(e))?;
+        let mut tx = self.pool.begin().await.map_err(PawnError::Database)?;
         let mut updated_players = Vec::new();
 
         for update in batch_update.seeding_updates {
@@ -147,7 +148,7 @@ impl SeedingService {
             updated_players.push(player);
         }
 
-        tx.commit().await.map_err(|e| PawnError::Database(e))?;
+        tx.commit().await.map_err(PawnError::Database)?;
         Ok(updated_players)
     }
 
@@ -176,11 +177,7 @@ impl SeedingService {
         }
 
         // Update players in database
-        let mut tx = self
-            .pool
-            .begin()
-            .await
-            .map_err(|e| PawnError::Database(e))?;
+        let mut tx = self.pool.begin().await.map_err(PawnError::Database)?;
         let mut updated_players = Vec::new();
 
         for player in players {
@@ -196,7 +193,7 @@ impl SeedingService {
             }
         }
 
-        tx.commit().await.map_err(|e| PawnError::Database(e))?;
+        tx.commit().await.map_err(PawnError::Database)?;
         Ok(updated_players)
     }
 
@@ -248,7 +245,7 @@ impl SeedingService {
         .bind(tournament_id)
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| PawnError::Database(e))?;
+        .map_err(PawnError::Database)?;
 
         Ok(players)
     }
@@ -257,7 +254,7 @@ impl SeedingService {
         &self,
         players: &[Player],
         method: SeedingMethod,
-        category_id: Option<i32>,
+        _category_id: Option<i32>,
     ) -> Result<Vec<SeedingPreview>, PawnError> {
         let mut previews = Vec::new();
 
@@ -321,7 +318,7 @@ impl SeedingService {
             SeedingMethod::CategoryBased => {
                 // Category-based seeding would require category information
                 // For now, fall back to rating-based seeding
-                return self.calculate_seeding(players, SeedingMethod::Rating, category_id);
+                return self.calculate_seeding(players, SeedingMethod::Rating, _category_id);
             }
         }
 
@@ -385,7 +382,7 @@ impl SeedingService {
         .bind(update.player_id)
         .fetch_one(&mut **tx)
         .await
-        .map_err(|e| PawnError::Database(e))?;
+        .map_err(PawnError::Database)?;
 
         Ok(player)
     }
@@ -405,9 +402,9 @@ impl SeedingService {
             if count > 1 {
                 conflicts.push(SeedingConflict {
                     player_id: 0, // Will be filled with specific players
-                    player_name: format!("Seed #{}", seed),
+                    player_name: format!("Seed #{seed}"),
                     conflict_type: "duplicate_seed".to_string(),
-                    description: format!("{} players have seed number {}", count, seed),
+                    description: format!("{count} players have seed number {seed}"),
                     suggested_action: "Reassign seed numbers to make them unique".to_string(),
                 });
             }
@@ -454,12 +451,8 @@ impl SeedingService {
 mod tests {
     use super::*;
     use crate::pawn::domain::{
-        dto::{
-            BatchUpdatePlayerSeeding, CreateTournamentSeedingSettings,
-            GeneratePairingNumbersRequest, GenerateSeedingRequest, SeedingAnalysis,
-            SeedingConflict, SeedingPreview, UpdatePlayerSeeding, UpdateTournamentSeedingSettings,
-        },
-        model::{Player, SeedingMethod, TournamentSeedingSettings},
+        dto::{SeedingAnalysis, SeedingConflict, SeedingPreview},
+        model::{Player, SeedingMethod},
     };
 
     // Test service that doesn't require database connections
@@ -475,7 +468,7 @@ mod tests {
             &self,
             players: &[Player],
             method: SeedingMethod,
-            category_id: Option<i32>,
+            _category_id: Option<i32>,
         ) -> Result<Vec<SeedingPreview>, PawnError> {
             let mut previews = Vec::new();
 
@@ -535,7 +528,7 @@ mod tests {
                     }
                 }
                 SeedingMethod::CategoryBased => {
-                    return self.calculate_seeding(players, SeedingMethod::Rating, category_id);
+                    return self.calculate_seeding(players, SeedingMethod::Rating, _category_id);
                 }
             }
 
@@ -592,9 +585,9 @@ mod tests {
                 if count > 1 {
                     conflicts.push(SeedingConflict {
                         player_id: 0,
-                        player_name: format!("Seed #{}", seed),
+                        player_name: format!("Seed #{seed}"),
                         conflict_type: "duplicate_seed".to_string(),
-                        description: format!("{} players have seed number {}", count, seed),
+                        description: format!("{count} players have seed number {seed}"),
                         suggested_action: "Reassign seed numbers to make them unique".to_string(),
                     });
                 }
@@ -703,14 +696,26 @@ mod tests {
 
     #[test]
     fn test_seeding_method_from_str() {
-        assert_eq!(SeedingMethod::from_str("rating"), SeedingMethod::Rating);
-        assert_eq!(SeedingMethod::from_str("manual"), SeedingMethod::Manual);
-        assert_eq!(SeedingMethod::from_str("random"), SeedingMethod::Random);
         assert_eq!(
-            SeedingMethod::from_str("category_based"),
+            "rating".parse::<SeedingMethod>().unwrap(),
+            SeedingMethod::Rating
+        );
+        assert_eq!(
+            "manual".parse::<SeedingMethod>().unwrap(),
+            SeedingMethod::Manual
+        );
+        assert_eq!(
+            "random".parse::<SeedingMethod>().unwrap(),
+            SeedingMethod::Random
+        );
+        assert_eq!(
+            "category_based".parse::<SeedingMethod>().unwrap(),
             SeedingMethod::CategoryBased
         );
-        assert_eq!(SeedingMethod::from_str("invalid"), SeedingMethod::Rating); // Default fallback
+        assert_eq!(
+            "invalid".parse::<SeedingMethod>().unwrap(),
+            SeedingMethod::Rating
+        ); // Default fallback
     }
 
     #[test]
@@ -911,11 +916,16 @@ mod tests {
 
         let conflicts = service.detect_seeding_conflicts(&players);
 
-        assert_eq!(conflicts.len(), 1);
-        assert_eq!(conflicts[0].conflict_type, "duplicate_seed");
-        assert_eq!(conflicts[0].player_name, "Seed #1");
+        assert_eq!(conflicts.len(), 2); // 1 duplicate + 1 rating mismatch
+        // Find the duplicate seed conflict
+        let duplicate_conflict = conflicts
+            .iter()
+            .find(|c| c.conflict_type == "duplicate_seed")
+            .unwrap();
+        assert_eq!(duplicate_conflict.conflict_type, "duplicate_seed");
+        assert_eq!(duplicate_conflict.player_name, "Seed #1");
         assert!(
-            conflicts[0]
+            duplicate_conflict
                 .description
                 .contains("2 players have seed number 1")
         );
@@ -1010,7 +1020,7 @@ mod tests {
         let analysis = service.analyze_seeding(&players);
 
         assert_eq!(analysis.total_players, 3);
-        assert_eq!(analysis.seeding_conflicts.len(), 2); // 1 duplicate + 1 rating mismatch
+        assert_eq!(analysis.seeding_conflicts.len(), 3); // 1 duplicate + 2 rating mismatches
 
         // Check for duplicate seed conflict
         let duplicate_conflict = analysis

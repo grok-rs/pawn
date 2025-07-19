@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use specta::Type as SpectaType;
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum TiebreakType {
@@ -90,6 +91,7 @@ impl TiebreakType {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct TiebreakScore {
     pub tiebreak_type: TiebreakType,
@@ -97,6 +99,7 @@ pub struct TiebreakScore {
     pub display_value: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct TiebreakBreakdown {
     pub tiebreak_type: TiebreakType,
@@ -107,6 +110,7 @@ pub struct TiebreakBreakdown {
     pub opponents_involved: Vec<OpponentContribution>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct TiebreakCalculationStep {
     pub step_number: i32,
@@ -115,6 +119,7 @@ pub struct TiebreakCalculationStep {
     pub intermediate_result: f64,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct OpponentContribution {
     pub opponent_id: i32,
@@ -125,6 +130,7 @@ pub struct OpponentContribution {
     pub explanation: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct TournamentTiebreakConfig {
     pub tournament_id: i32,
@@ -170,6 +176,7 @@ impl Default for TournamentTiebreakConfig {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, SpectaType)]
 pub struct PlayerStanding {
     pub player: crate::pawn::domain::model::Player,
@@ -184,6 +191,7 @@ pub struct PlayerStanding {
     pub rating_change: Option<i32>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, SpectaType)]
 pub struct StandingsCalculationResult {
     pub standings: Vec<PlayerStanding>,
@@ -191,6 +199,7 @@ pub struct StandingsCalculationResult {
     pub tiebreak_config: TournamentTiebreakConfig,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, SpectaType)]
 pub struct CrossTableEntry {
     pub player_id: i32,
@@ -200,6 +209,7 @@ pub struct CrossTableEntry {
     pub round: Option<i32>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, SpectaType)]
 pub struct CrossTableRow {
     pub player: crate::pawn::domain::model::Player,
@@ -208,6 +218,7 @@ pub struct CrossTableRow {
     pub games_played: i32,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, SpectaType)]
 pub struct CrossTable {
     pub tournament_id: i32,
@@ -216,6 +227,7 @@ pub struct CrossTable {
     pub last_updated: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, SpectaType)]
 pub struct StandingsUpdateEvent {
     pub tournament_id: i32,
@@ -225,6 +237,7 @@ pub struct StandingsUpdateEvent {
     pub standings: Vec<PlayerStanding>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, SpectaType)]
 pub enum StandingsEventType {
     GameResultUpdated,
@@ -236,6 +249,7 @@ pub enum StandingsEventType {
     Manual, // Manual recalculation requested
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, SpectaType)]
 pub struct RealTimeStandingsConfig {
     pub auto_update_enabled: bool,
@@ -255,6 +269,7 @@ impl Default for RealTimeStandingsConfig {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct ExportRequest {
     pub tournament_id: i32,
@@ -268,6 +283,7 @@ pub struct ExportRequest {
     pub template_options: Option<ExportTemplateOptions>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub enum ExportType {
     Standings,
@@ -278,6 +294,7 @@ pub enum ExportType {
     Complete, // All data
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub enum ExportFormat {
     Csv,
@@ -288,6 +305,7 @@ pub enum ExportFormat {
     Txt,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct ExportTemplateOptions {
     pub include_header: bool,
@@ -299,6 +317,7 @@ pub struct ExportTemplateOptions {
     pub color_scheme: ColorScheme,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub enum PaperSize {
     A4,
@@ -307,12 +326,14 @@ pub enum PaperSize {
     Legal,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub enum PageOrientation {
     Portrait,
     Landscape,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub enum FontSize {
     Small,
@@ -320,6 +341,7 @@ pub enum FontSize {
     Large,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub enum ColorScheme {
     Default,
@@ -342,6 +364,7 @@ impl Default for ExportTemplateOptions {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct NormCalculationRequest {
     pub tournament_id: i32,
@@ -353,6 +376,7 @@ pub struct NormCalculationRequest {
     pub performance_rating: Option<i32>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub enum NormType {
     Grandmaster,              // GM norm
@@ -379,6 +403,7 @@ impl NormType {
         }
     }
 
+    #[allow(dead_code)]
     pub fn short_name(&self) -> &'static str {
         match self {
             NormType::Grandmaster => "GM",
@@ -428,6 +453,7 @@ impl NormType {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct NormCalculationResult {
     pub norm_type: NormType,
@@ -445,6 +471,7 @@ pub struct NormCalculationResult {
     pub additional_info: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct NormRequirements {
     pub performance_rating_met: bool,
@@ -454,6 +481,7 @@ pub struct NormRequirements {
     pub opponent_diversity_met: bool, // Need opponents from different federations
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct PrizeDistributionRequest {
     pub tournament_id: i32,
@@ -464,6 +492,7 @@ pub struct PrizeDistributionRequest {
     pub special_prizes: Vec<SpecialPrize>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct PrizeStructure {
     pub first_place_percentage: f64,
@@ -474,6 +503,7 @@ pub struct PrizeStructure {
     pub rating_group_prizes: Vec<RatingGroupPrize>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct PrizePlace {
     pub place: i32,
@@ -481,6 +511,7 @@ pub struct PrizePlace {
     pub description: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct AgeGroupPrize {
     pub age_group: String, // "U18", "U16", "U14", "U12", "U10", "U8", "50+", "65+"
@@ -488,6 +519,7 @@ pub struct AgeGroupPrize {
     pub description: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct RatingGroupPrize {
     pub rating_group: String, // "U2200", "U2000", "U1800", "U1600", "U1400", "U1200", "Unrated"
@@ -495,6 +527,7 @@ pub struct RatingGroupPrize {
     pub description: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct SpecialPrize {
     pub prize_type: SpecialPrizeType,
@@ -503,6 +536,7 @@ pub struct SpecialPrize {
     pub criteria: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub enum SpecialPrizeType {
     BestWoman,
@@ -517,6 +551,7 @@ pub enum SpecialPrizeType {
     Custom(String),
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub enum DistributionMethod {
     TiedPlayersShareEqually,
@@ -526,6 +561,7 @@ pub enum DistributionMethod {
     TiebreakDeterminesWinner,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct PrizeDistributionResult {
     pub tournament_id: i32,
@@ -536,6 +572,7 @@ pub struct PrizeDistributionResult {
     pub special_awards: Vec<SpecialAward>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct PrizeAward {
     pub player: crate::pawn::domain::model::Player,
@@ -547,6 +584,7 @@ pub struct PrizeAward {
     pub prize_categories: Vec<String>, // "Overall", "U18", "U2000", etc.
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct SpecialAward {
     pub award_type: SpecialPrizeType,
@@ -590,6 +628,7 @@ impl Default for PrizeStructure {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub struct ExportResult {
     pub success: bool,
@@ -649,7 +688,6 @@ mod tests {
         let _direct = TiebreakType::DirectEncounter;
         let _wins = TiebreakType::NumberOfWins;
 
-        // This test passes if all variants compile
-        assert!(true);
+        // This test passes if all variants compile without error
     }
 }
