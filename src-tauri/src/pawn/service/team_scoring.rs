@@ -1,11 +1,11 @@
 use crate::pawn::{
     common::error::PawnError,
     db::Db,
-    domain::model::{Game, Player, Team, TeamMatch, TeamMembership, TeamStanding},
+    domain::model::{Game, Player, Team, TeamMatch, TeamMembership},
 };
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{info, instrument, warn};
+use tracing::{info, instrument};
 
 /// Team scoring service that handles match points, board points, and tiebreaks
 pub struct TeamScoringService<D> {

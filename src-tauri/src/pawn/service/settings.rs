@@ -1,7 +1,6 @@
 use crate::pawn::common::error::PawnError;
 use crate::pawn::domain::dto::*;
 use crate::pawn::domain::model::*;
-use chrono::{DateTime, Utc};
 use serde_json;
 use sqlx::{Row, SqlitePool};
 use std::collections::HashMap;
@@ -1060,7 +1059,7 @@ mod tests {
             .expect("Failed to connect to test database");
 
         // Apply migrations
-        sqlx::migrate!("../migrations")
+        sqlx::migrate!("./migrations")
             .run(&pool)
             .await
             .expect("Failed to run migrations");

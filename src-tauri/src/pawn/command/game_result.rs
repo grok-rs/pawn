@@ -282,7 +282,7 @@ pub async fn import_results_csv(
     let mut csv_reader = csv::Reader::from_reader(data.csv_content.as_bytes());
     let mut csv_rows = Vec::new();
     let mut errors = Vec::new();
-    let mut warnings = Vec::new();
+    let warnings = Vec::new();
 
     // Parse headers
     let headers = match csv_reader.headers() {

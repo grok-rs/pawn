@@ -1442,9 +1442,17 @@ mod tests {
                 rounds_played: data.rounds_played,
                 total_rounds: data.total_rounds,
                 country_code: data.country_code,
-                status: "created".to_string(),
-                created_at: "2024-01-01T00:00:00Z".to_string(),
-                updated_at: Some("2024-01-01T00:00:00Z".to_string()),
+                status: Some("created".to_string()),
+                start_time: None,
+                end_time: None,
+                description: None,
+                website_url: None,
+                contact_email: None,
+                entry_fee: None,
+                currency: None,
+                is_team_tournament: None,
+                team_size: None,
+                max_teams: None,
             })
         }
 
@@ -1466,7 +1474,7 @@ mod tests {
             status: &str,
         ) -> Result<Tournament, sqlx::Error> {
             let mut tournament = self.get_tournament(id).await?;
-            tournament.status = status.to_string();
+            tournament.status = Some(status.to_string());
             Ok(tournament)
         }
 
@@ -1540,7 +1548,7 @@ mod tests {
             Ok(self
                 .player_results
                 .iter()
-                .filter(|pr| pr.tournament_id == tournament_id)
+                .filter(|pr| pr.player.tournament_id == tournament_id)
                 .cloned()
                 .collect())
         }
@@ -1786,9 +1794,17 @@ mod tests {
             rounds_played: 0,
             total_rounds: 7,
             country_code: "US".to_string(),
-            status: "created".to_string(),
-            created_at: "2024-01-01T00:00:00Z".to_string(),
-            updated_at: Some("2024-01-01T00:00:00Z".to_string()),
+            status: Some("created".to_string()),
+            start_time: None,
+            end_time: None,
+            description: None,
+            website_url: None,
+            contact_email: None,
+            entry_fee: None,
+            currency: None,
+            is_team_tournament: None,
+            team_size: None,
+            max_teams: None,
         }
     }
 
@@ -1952,7 +1968,7 @@ mod tests {
         assert!(result.is_ok());
         let tournament = result.unwrap();
         assert_eq!(tournament.name, "New Tournament");
-        assert_eq!(tournament.status, "created");
+        assert_eq!(tournament.status, Some("created".to_string()));
     }
 
     #[tokio::test]
@@ -2138,7 +2154,7 @@ mod tests {
 
         assert!(result.is_ok());
         let updated_tournament = result.unwrap();
-        assert_eq!(updated_tournament.status, "ongoing");
+        assert_eq!(updated_tournament.status, Some("ongoing".to_string()));
     }
 
     #[tokio::test]

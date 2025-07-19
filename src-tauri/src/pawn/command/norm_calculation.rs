@@ -3,7 +3,6 @@ use tracing::{info, instrument};
 
 use crate::pawn::{
     common::error::PawnError,
-    db::Db,
     domain::tiebreak::{
         NormCalculationRequest, NormCalculationResult, NormType, PrizeDistributionRequest,
         PrizeDistributionResult,

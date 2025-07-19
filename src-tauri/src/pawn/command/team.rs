@@ -20,8 +20,7 @@ use crate::pawn::{
             TeamPairingMethod,
         },
         team_scoring::{
-            ExtendedTeamStanding, TeamScoringConfig, TeamScoringService, TeamScoringSystem,
-            TeamStandingsResult, TeamTiebreakCriterion,
+            TeamScoringConfig, TeamScoringService, TeamScoringSystem, TeamTiebreakCriterion,
         },
     },
     state::PawnState,
@@ -419,11 +418,11 @@ pub async fn generate_team_pairings(
     Ok(dto_result)
 }
 
-#[instrument(ret, skip(state))]
+#[instrument(ret, skip(_state))]
 #[tauri::command]
 #[specta::specta]
 pub async fn get_team_pairing_config_default(
-    state: State<'_, PawnState>,
+    _state: State<'_, PawnState>,
 ) -> CommandResult<TeamPairingConfigDto> {
     let default_config = TeamPairingConfigDto {
         pairing_method: "swiss".to_string(),
@@ -438,11 +437,11 @@ pub async fn get_team_pairing_config_default(
     Ok(default_config)
 }
 
-#[instrument(ret, skip(state))]
+#[instrument(ret, skip(_state))]
 #[tauri::command]
 #[specta::specta]
 pub async fn validate_team_pairing_config(
-    state: State<'_, PawnState>,
+    _state: State<'_, PawnState>,
     config: TeamPairingConfigDto,
 ) -> CommandResult<bool> {
     // Validate pairing method
@@ -626,11 +625,11 @@ pub async fn calculate_team_standings(
     Ok(dto_result)
 }
 
-#[instrument(ret, skip(state))]
+#[instrument(ret, skip(_state))]
 #[tauri::command]
 #[specta::specta]
 pub async fn get_team_scoring_config_default(
-    state: State<'_, PawnState>,
+    _state: State<'_, PawnState>,
 ) -> CommandResult<TeamScoringConfigDto> {
     let default_config = TeamScoringConfigDto {
         scoring_system: "olympic_points".to_string(),
@@ -651,11 +650,11 @@ pub async fn get_team_scoring_config_default(
     Ok(default_config)
 }
 
-#[instrument(ret, skip(state))]
+#[instrument(ret, skip(_state))]
 #[tauri::command]
 #[specta::specta]
 pub async fn validate_team_scoring_config(
-    state: State<'_, PawnState>,
+    _state: State<'_, PawnState>,
     config: TeamScoringConfigDto,
 ) -> CommandResult<bool> {
     // Validate scoring system
@@ -725,10 +724,7 @@ pub async fn validate_team_scoring_config(
 mod tests {
     use super::*;
     use crate::pawn::db::sqlite::SqliteDb;
-    use crate::pawn::service::team::TeamService;
-    use mockall::mock;
     use sqlx::SqlitePool;
-    use std::sync::Arc;
     use tempfile::TempDir;
 
     async fn setup_test_state() -> PawnState {
@@ -740,14 +736,14 @@ mod tests {
 
         sqlx::migrate!("./migrations").run(&pool).await.unwrap();
 
-        let db = Arc::new(SqliteDb::new(pool));
+        let db = Arc::new(SqliteDb::new(pool.clone()));
 
         use crate::pawn::service::{
             export::ExportService, norm_calculation::NormCalculationService, player::PlayerService,
             realtime_standings::RealTimeStandingsService, round::RoundService,
-            round_robin_analysis::RoundRobinAnalysisService, swiss_analysis::SwissAnalysisService,
-            team::TeamService, tiebreak::TiebreakCalculator, time_control::TimeControlService,
-            tournament::TournamentService,
+            round_robin_analysis::RoundRobinAnalysisService, settings::SettingsService,
+            swiss_analysis::SwissAnalysisService, team::TeamService, tiebreak::TiebreakCalculator,
+            time_control::TimeControlService, tournament::TournamentService,
         };
         use crate::pawn::state::State;
         use std::sync::Arc;
@@ -774,6 +770,7 @@ mod tests {
             Arc::clone(&tiebreak_calculator),
         ));
         let team_service = Arc::new(TeamService::new(Arc::clone(&db)));
+        let settings_service = Arc::new(SettingsService::new(Arc::new(pool)));
 
         State {
             app_data_dir: temp_dir.path().to_path_buf(),
@@ -789,6 +786,7 @@ mod tests {
             export_service,
             norm_calculation_service,
             team_service,
+            settings_service,
         }
     }
 

@@ -9,8 +9,7 @@ use crate::pawn::{
         model::{Game, Player, PlayerResult},
         tiebreak::{
             CrossTable, CrossTableEntry, CrossTableRow, OpponentContribution, PlayerStanding,
-            RealTimeStandingsConfig, StandingsCalculationResult, StandingsEventType,
-            StandingsUpdateEvent, TiebreakBreakdown, TiebreakCalculationStep, TiebreakScore,
+            StandingsCalculationResult, TiebreakBreakdown, TiebreakCalculationStep, TiebreakScore,
             TiebreakType, TournamentTiebreakConfig,
         },
     },

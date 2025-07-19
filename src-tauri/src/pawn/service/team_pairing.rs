@@ -1,11 +1,11 @@
 use crate::pawn::{
     common::error::PawnError,
     db::Db,
-    domain::model::{Pairing, Player, Team, TeamLineup, TeamMatch},
+    domain::model::{Pairing, Player, Team, TeamMatch},
 };
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
-use tracing::{info, instrument, warn};
+use tracing::{info, instrument};
 
 /// Enhanced team pairing engine with multiple algorithms
 pub struct TeamPairingEngine<D> {

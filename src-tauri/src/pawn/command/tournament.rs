@@ -11,8 +11,7 @@ use crate::pawn::{
         },
         model::{Game, GameResult, Player, PlayerResult, Tournament, TournamentDetails},
         tiebreak::{
-            StandingsCalculationResult, StandingsUpdateEvent, TiebreakBreakdown, TiebreakType,
-            TournamentTiebreakConfig,
+            StandingsCalculationResult, TiebreakBreakdown, TiebreakType, TournamentTiebreakConfig,
         },
     },
     state::PawnState,
@@ -323,14 +322,14 @@ mod tests {
 
         sqlx::migrate!("./migrations").run(&pool).await.unwrap();
 
-        let db = Arc::new(SqliteDb::new(pool));
+        let db = Arc::new(SqliteDb::new(pool.clone()));
 
         use crate::pawn::service::{
             export::ExportService, norm_calculation::NormCalculationService, player::PlayerService,
             realtime_standings::RealTimeStandingsService, round::RoundService,
-            round_robin_analysis::RoundRobinAnalysisService, swiss_analysis::SwissAnalysisService,
-            team::TeamService, tiebreak::TiebreakCalculator, time_control::TimeControlService,
-            tournament::TournamentService,
+            round_robin_analysis::RoundRobinAnalysisService, settings::SettingsService,
+            swiss_analysis::SwissAnalysisService, team::TeamService, tiebreak::TiebreakCalculator,
+            time_control::TimeControlService, tournament::TournamentService,
         };
         use crate::pawn::state::State;
         use std::sync::Arc;
@@ -357,6 +356,7 @@ mod tests {
             Arc::clone(&tiebreak_calculator),
         ));
         let team_service = Arc::new(TeamService::new(Arc::clone(&db)));
+        let settings_service = Arc::new(SettingsService::new(Arc::new(pool)));
 
         State {
             app_data_dir: temp_dir.path().to_path_buf(),
@@ -372,6 +372,7 @@ mod tests {
             export_service,
             norm_calculation_service,
             team_service,
+            settings_service,
         }
     }
 
