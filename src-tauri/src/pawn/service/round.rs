@@ -451,21 +451,21 @@ impl<D: Db> RoundService<D> {
 mod tests {
     use super::*;
     use crate::pawn::{
-        domain::model::{Game, Player, Tournament},
         common::error::PawnError,
+        domain::model::{Game, Player, Tournament},
     };
 
     // Unit tests for business logic validation (no database dependencies)
-    
+
     #[test]
     fn test_round_status_transitions() {
         use crate::pawn::domain::model::RoundStatus;
-        
+
         // Test valid transitions
         assert!(RoundStatus::Scheduled.can_transition_to(&RoundStatus::Published));
         assert!(RoundStatus::Published.can_transition_to(&RoundStatus::InProgress));
         assert!(RoundStatus::InProgress.can_transition_to(&RoundStatus::Completed));
-        
+
         // Test invalid transitions
         assert!(!RoundStatus::Completed.can_transition_to(&RoundStatus::Scheduled));
         assert!(!RoundStatus::InProgress.can_transition_to(&RoundStatus::Scheduled));
@@ -516,7 +516,7 @@ mod tests {
         // This should fail validation - testing the logic that would be used
         let mut used_white_players = std::collections::HashSet::new();
         let mut validation_error = None;
-        
+
         for pairing in &pairings {
             if used_white_players.contains(&pairing.white_player.id) {
                 validation_error = Some(format!(
@@ -529,7 +529,11 @@ mod tests {
         }
 
         assert!(validation_error.is_some());
-        assert!(validation_error.unwrap().contains("Player Player 1 (1) is assigned as white in multiple games"));
+        assert!(
+            validation_error
+                .unwrap()
+                .contains("Player Player 1 (1) is assigned as white in multiple games")
+        );
     }
 
     #[test]
@@ -540,8 +544,8 @@ mod tests {
 
         // Invalid round number should fail validation
         assert!(invalid_round_number <= 0);
-        
-        // Valid round number should pass validation  
+
+        // Valid round number should pass validation
         assert!(valid_round_number > 0);
     }
 
@@ -553,7 +557,7 @@ mod tests {
 
         // Should not be able to create round beyond total
         assert!(next_round_number > total_rounds);
-        
+
         // Should be able to create round within total
         let valid_next_round = 6;
         assert!(valid_next_round <= total_rounds);
@@ -565,11 +569,11 @@ mod tests {
         let tournament_id = 1;
         let round_number = 3;
         let bye_player_id = -(tournament_id * 1000 + round_number);
-        
+
         // Should be negative and unique per tournament/round combination
         assert!(bye_player_id < 0);
         assert_eq!(bye_player_id, -1003);
-        
+
         // Different rounds should generate different IDs
         let different_round = 4;
         let different_bye_id = -(tournament_id * 1000 + different_round);
@@ -582,17 +586,17 @@ mod tests {
         // This is a simple integration test to verify the service can be instantiated
         use crate::pawn::db::sqlite::SqliteDb;
         use sqlx::SqlitePool;
-        
+
         // This test would normally use a real database connection, but for TDD compliance
         // we'll create a minimal test to verify the service structure is correct
-        
+
         // Mock a minimal database URL (this won't actually connect)
         let pool_result = SqlitePool::connect("sqlite::memory:").await;
-        
+
         if let Ok(pool) = pool_result {
             let db = SqliteDb::new(pool);
             let service = RoundService::new(Arc::new(db));
-            
+
             // Verify the service was created (basic structure test)
             // In a real TDD environment, this would test actual functionality
             assert!(std::ptr::addr_of!(service) as usize != 0);

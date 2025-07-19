@@ -195,16 +195,28 @@ mod tests {
 
     // Since the full Db trait is very large, we'll create a simple trait just for testing
     trait TestDb: Send + Sync {
-        async fn get_players_by_tournament(&self, tournament_id: i32) -> Result<Vec<Player>, sqlx::Error>;
-        async fn get_game_results(&self, tournament_id: i32) -> Result<Vec<GameResult>, sqlx::Error>;
+        async fn get_players_by_tournament(
+            &self,
+            tournament_id: i32,
+        ) -> Result<Vec<Player>, sqlx::Error>;
+        async fn get_game_results(
+            &self,
+            tournament_id: i32,
+        ) -> Result<Vec<GameResult>, sqlx::Error>;
     }
 
     impl TestDb for MockDb {
-        async fn get_players_by_tournament(&self, _tournament_id: i32) -> Result<Vec<Player>, sqlx::Error> {
+        async fn get_players_by_tournament(
+            &self,
+            _tournament_id: i32,
+        ) -> Result<Vec<Player>, sqlx::Error> {
             Ok(self.players.clone())
         }
 
-        async fn get_game_results(&self, _tournament_id: i32) -> Result<Vec<GameResult>, sqlx::Error> {
+        async fn get_game_results(
+            &self,
+            _tournament_id: i32,
+        ) -> Result<Vec<GameResult>, sqlx::Error> {
             Ok(self.game_results.clone())
         }
     }
@@ -309,7 +321,11 @@ mod tests {
             }
         }
 
-        fn generate_berger_table_info(&self, players: &[Player], options: &RoundRobinOptions) -> BergerTableInfoDto {
+        fn generate_berger_table_info(
+            &self,
+            players: &[Player],
+            options: &RoundRobinOptions,
+        ) -> BergerTableInfoDto {
             let player_count = players.len();
             let table_size = if player_count % 2 == 0 {
                 player_count
@@ -337,7 +353,11 @@ mod tests {
             }
         }
 
-        fn analyze_color_distribution(&self, players: &[Player], games: &[GameResult]) -> Vec<PlayerColorStatsDto> {
+        fn analyze_color_distribution(
+            &self,
+            players: &[Player],
+            games: &[GameResult],
+        ) -> Vec<PlayerColorStatsDto> {
             let mut color_stats: HashMap<i32, (String, i32, i32)> = HashMap::new();
 
             for player in players {
@@ -357,13 +377,15 @@ mod tests {
 
             color_stats
                 .into_iter()
-                .map(|(player_id, (player_name, white_games, black_games))| PlayerColorStatsDto {
-                    player_id,
-                    player_name,
-                    white_games,
-                    black_games,
-                    color_balance: white_games - black_games,
-                })
+                .map(
+                    |(player_id, (player_name, white_games, black_games))| PlayerColorStatsDto {
+                        player_id,
+                        player_name,
+                        white_games,
+                        black_games,
+                        color_balance: white_games - black_games,
+                    },
+                )
                 .collect()
         }
     }
@@ -392,7 +414,13 @@ mod tests {
             .collect()
     }
 
-    fn create_test_game(game_id: i32, white_id: i32, black_id: i32, round: i32, result: &str) -> GameResult {
+    fn create_test_game(
+        game_id: i32,
+        white_id: i32,
+        black_id: i32,
+        round: i32,
+        result: &str,
+    ) -> GameResult {
         GameResult {
             game: Game {
                 id: game_id,
@@ -695,7 +723,10 @@ mod tests {
 
         let result = service.generate_berger_table_info(&players, &options);
         assert_eq!(result.table_size, 6); // 5 players + 1 bye
-        assert_eq!(result.rotation_pattern, "Double round-robin with color reversal");
+        assert_eq!(
+            result.rotation_pattern,
+            "Double round-robin with color reversal"
+        );
         assert_eq!(result.bye_player_position, Some(5)); // Last position
     }
 
@@ -727,37 +758,37 @@ mod tests {
         }));
         let players = create_test_players(4);
         let games = vec![
-            create_test_game(1, 1, 2, 1, "1-0"),   // Player 1 white, Player 2 black
-            create_test_game(2, 3, 4, 1, "0-1"),   // Player 3 white, Player 4 black
+            create_test_game(1, 1, 2, 1, "1-0"), // Player 1 white, Player 2 black
+            create_test_game(2, 3, 4, 1, "0-1"), // Player 3 white, Player 4 black
             create_test_game(3, 2, 3, 2, "1/2-1/2"), // Player 2 white, Player 3 black
-            create_test_game(4, 4, 1, 2, "*"),     // Ongoing game - shouldn't count
+            create_test_game(4, 4, 1, 2, "*"),   // Ongoing game - shouldn't count
         ];
 
         let result = service.analyze_color_distribution(&players, &games);
-        
+
         assert_eq!(result.len(), 4);
-        
+
         // Find player stats
         let player1_stats = result.iter().find(|p| p.player_id == 1).unwrap();
         let player2_stats = result.iter().find(|p| p.player_id == 2).unwrap();
         let player3_stats = result.iter().find(|p| p.player_id == 3).unwrap();
         let player4_stats = result.iter().find(|p| p.player_id == 4).unwrap();
-        
+
         // Player 1: 1 white, 0 black (from finished games)
         assert_eq!(player1_stats.white_games, 1);
         assert_eq!(player1_stats.black_games, 0);
         assert_eq!(player1_stats.color_balance, 1);
-        
+
         // Player 2: 1 white, 1 black
         assert_eq!(player2_stats.white_games, 1);
         assert_eq!(player2_stats.black_games, 1);
         assert_eq!(player2_stats.color_balance, 0);
-        
+
         // Player 3: 1 white, 1 black
         assert_eq!(player3_stats.white_games, 1);
         assert_eq!(player3_stats.black_games, 1);
         assert_eq!(player3_stats.color_balance, 0);
-        
+
         // Player 4: 0 white, 1 black (ongoing game not counted)
         assert_eq!(player4_stats.white_games, 0);
         assert_eq!(player4_stats.black_games, 1);
@@ -774,7 +805,7 @@ mod tests {
         let games = vec![];
 
         let result = service.analyze_color_distribution(&players, &games);
-        
+
         assert_eq!(result.len(), 3);
         for player_stats in result {
             assert_eq!(player_stats.white_games, 0);
@@ -791,11 +822,11 @@ mod tests {
         }));
         let players = create_test_players(2);
         let games = vec![
-            create_test_game(1, 1, 2, 1, "*"),     // Ongoing game
+            create_test_game(1, 1, 2, 1, "*"), // Ongoing game
         ];
 
         let result = service.analyze_color_distribution(&players, &games);
-        
+
         assert_eq!(result.len(), 2);
         for player_stats in result {
             assert_eq!(player_stats.white_games, 0);

@@ -455,9 +455,9 @@ mod tests {
     use super::*;
     use crate::pawn::domain::{
         dto::{
-            BatchUpdatePlayerSeeding, CreateTournamentSeedingSettings, GeneratePairingNumbersRequest,
-            GenerateSeedingRequest, SeedingAnalysis, SeedingConflict, SeedingPreview,
-            UpdatePlayerSeeding, UpdateTournamentSeedingSettings,
+            BatchUpdatePlayerSeeding, CreateTournamentSeedingSettings,
+            GeneratePairingNumbersRequest, GenerateSeedingRequest, SeedingAnalysis,
+            SeedingConflict, SeedingPreview, UpdatePlayerSeeding, UpdateTournamentSeedingSettings,
         },
         model::{Player, SeedingMethod, TournamentSeedingSettings},
     };
@@ -563,7 +563,8 @@ mod tests {
         }
 
         fn generate_random_pairing_numbers(&self, players: &mut [Player], start_number: i32) {
-            let mut numbers: Vec<i32> = (start_number..start_number + players.len() as i32).collect();
+            let mut numbers: Vec<i32> =
+                (start_number..start_number + players.len() as i32).collect();
             numbers.shuffle(&mut thread_rng());
 
             for (player, &number) in players.iter_mut().zip(numbers.iter()) {
@@ -672,7 +673,13 @@ mod tests {
         }
     }
 
-    fn create_test_player(id: i32, name: &str, rating: Option<i32>, title: Option<String>, seed: Option<i32>) -> Player {
+    fn create_test_player(
+        id: i32,
+        name: &str,
+        rating: Option<i32>,
+        title: Option<String>,
+        seed: Option<i32>,
+    ) -> Player {
         Player {
             id,
             tournament_id: 1,
@@ -699,14 +706,17 @@ mod tests {
         assert_eq!(SeedingMethod::from_str("rating"), SeedingMethod::Rating);
         assert_eq!(SeedingMethod::from_str("manual"), SeedingMethod::Manual);
         assert_eq!(SeedingMethod::from_str("random"), SeedingMethod::Random);
-        assert_eq!(SeedingMethod::from_str("category_based"), SeedingMethod::CategoryBased);
+        assert_eq!(
+            SeedingMethod::from_str("category_based"),
+            SeedingMethod::CategoryBased
+        );
         assert_eq!(SeedingMethod::from_str("invalid"), SeedingMethod::Rating); // Default fallback
     }
 
     #[test]
     fn test_title_strength() {
         let service = TestSeedingService::new();
-        
+
         assert_eq!(service.title_strength(&Some("GM".to_string())), 8);
         assert_eq!(service.title_strength(&Some("IM".to_string())), 7);
         assert_eq!(service.title_strength(&Some("FM".to_string())), 6);
@@ -729,10 +739,12 @@ mod tests {
             create_test_player(4, "Player D", None, None, None), // Unrated
         ];
 
-        let result = service.calculate_seeding(&players, SeedingMethod::Rating, None).unwrap();
-        
+        let result = service
+            .calculate_seeding(&players, SeedingMethod::Rating, None)
+            .unwrap();
+
         assert_eq!(result.len(), 4);
-        
+
         // Should be sorted by rating (highest first)
         assert_eq!(result[0].player_name, "Player B"); // 1800 rating
         assert_eq!(result[0].proposed_seed, 1);
@@ -753,10 +765,12 @@ mod tests {
             create_test_player(3, "No Title", Some(1500), None, None),
         ];
 
-        let result = service.calculate_seeding(&players, SeedingMethod::Rating, None).unwrap();
-        
+        let result = service
+            .calculate_seeding(&players, SeedingMethod::Rating, None)
+            .unwrap();
+
         assert_eq!(result.len(), 3);
-        
+
         // Same rating, but IM should be seeded higher than FM
         assert_eq!(result[0].player_name, "IM Player");
         assert_eq!(result[0].proposed_seed, 1);
@@ -775,10 +789,12 @@ mod tests {
             create_test_player(3, "Player C", Some(1500), None, None),
         ];
 
-        let result = service.calculate_seeding(&players, SeedingMethod::Manual, None).unwrap();
-        
+        let result = service
+            .calculate_seeding(&players, SeedingMethod::Manual, None)
+            .unwrap();
+
         assert_eq!(result.len(), 3);
-        
+
         // Manual seeding should preserve current seeds
         assert_eq!(result[0].current_seed, Some(3));
         assert_eq!(result[0].proposed_seed, 3);
@@ -797,10 +813,12 @@ mod tests {
             create_test_player(3, "Player C", Some(1500), None, None),
         ];
 
-        let result = service.calculate_seeding(&players, SeedingMethod::Random, None).unwrap();
-        
+        let result = service
+            .calculate_seeding(&players, SeedingMethod::Random, None)
+            .unwrap();
+
         assert_eq!(result.len(), 3);
-        
+
         // All players should have seeds 1, 2, 3 (in some order)
         let mut proposed_seeds: Vec<i32> = result.iter().map(|p| p.proposed_seed).collect();
         proposed_seeds.sort();
@@ -816,8 +834,10 @@ mod tests {
         ];
 
         // Category-based should fall back to rating-based
-        let result = service.calculate_seeding(&players, SeedingMethod::CategoryBased, Some(1)).unwrap();
-        
+        let result = service
+            .calculate_seeding(&players, SeedingMethod::CategoryBased, Some(1))
+            .unwrap();
+
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].player_name, "Player B"); // Higher rating first
         assert_eq!(result[1].player_name, "Player A");
@@ -851,9 +871,8 @@ mod tests {
         service.generate_random_pairing_numbers(&mut players, 1);
 
         // All players should have pairing numbers 1, 2, 3 (in some order)
-        let mut pairing_numbers: Vec<i32> = players.iter()
-            .filter_map(|p| p.pairing_number)
-            .collect();
+        let mut pairing_numbers: Vec<i32> =
+            players.iter().filter_map(|p| p.pairing_number).collect();
         pairing_numbers.sort();
         assert_eq!(pairing_numbers, vec![1, 2, 3]);
     }
@@ -871,7 +890,7 @@ mod tests {
 
         // Players should be sorted by seed and assigned sequential pairing numbers
         // Player B (seed 1) should get pairing number 1
-        // Player C (seed 2) should get pairing number 2  
+        // Player C (seed 2) should get pairing number 2
         // Player A (seed 3) should get pairing number 3
         assert_eq!(players[0].seed_number, Some(1));
         assert_eq!(players[0].pairing_number, Some(1));
@@ -891,11 +910,15 @@ mod tests {
         ];
 
         let conflicts = service.detect_seeding_conflicts(&players);
-        
+
         assert_eq!(conflicts.len(), 1);
         assert_eq!(conflicts[0].conflict_type, "duplicate_seed");
         assert_eq!(conflicts[0].player_name, "Seed #1");
-        assert!(conflicts[0].description.contains("2 players have seed number 1"));
+        assert!(
+            conflicts[0]
+                .description
+                .contains("2 players have seed number 1")
+        );
     }
 
     #[test]
@@ -907,12 +930,20 @@ mod tests {
         ];
 
         let conflicts = service.detect_seeding_conflicts(&players);
-        
+
         assert_eq!(conflicts.len(), 1);
         assert_eq!(conflicts[0].conflict_type, "rating_mismatch");
         assert_eq!(conflicts[0].player_name, "Player A");
-        assert!(conflicts[0].description.contains("Player A (seed 1, rating 1200)"));
-        assert!(conflicts[0].description.contains("Player B (seed 2, rating 1800)"));
+        assert!(
+            conflicts[0]
+                .description
+                .contains("Player A (seed 1, rating 1200)")
+        );
+        assert!(
+            conflicts[0]
+                .description
+                .contains("Player B (seed 2, rating 1800)")
+        );
     }
 
     #[test]
@@ -939,7 +970,7 @@ mod tests {
         ];
 
         let analysis = service.analyze_seeding(&players);
-        
+
         assert_eq!(analysis.total_players, 4);
         assert_eq!(analysis.rated_players, 3);
         assert_eq!(analysis.unrated_players, 1);
@@ -958,7 +989,7 @@ mod tests {
         ];
 
         let analysis = service.analyze_seeding(&players);
-        
+
         assert_eq!(analysis.total_players, 2);
         assert_eq!(analysis.rated_players, 0);
         assert_eq!(analysis.unrated_players, 2);
@@ -977,17 +1008,21 @@ mod tests {
         ];
 
         let analysis = service.analyze_seeding(&players);
-        
+
         assert_eq!(analysis.total_players, 3);
         assert_eq!(analysis.seeding_conflicts.len(), 2); // 1 duplicate + 1 rating mismatch
-        
+
         // Check for duplicate seed conflict
-        let duplicate_conflict = analysis.seeding_conflicts.iter()
+        let duplicate_conflict = analysis
+            .seeding_conflicts
+            .iter()
             .find(|c| c.conflict_type == "duplicate_seed");
         assert!(duplicate_conflict.is_some());
-        
+
         // Check for rating mismatch conflict
-        let rating_conflict = analysis.seeding_conflicts.iter()
+        let rating_conflict = analysis
+            .seeding_conflicts
+            .iter()
             .find(|c| c.conflict_type == "rating_mismatch");
         assert!(rating_conflict.is_some());
     }
@@ -997,7 +1032,9 @@ mod tests {
         let service = TestSeedingService::new();
         let players = vec![];
 
-        let result = service.calculate_seeding(&players, SeedingMethod::Rating, None).unwrap();
+        let result = service
+            .calculate_seeding(&players, SeedingMethod::Rating, None)
+            .unwrap();
         assert_eq!(result.len(), 0);
 
         let conflicts = service.detect_seeding_conflicts(&players);
@@ -1015,11 +1052,17 @@ mod tests {
     #[test]
     fn test_single_player() {
         let service = TestSeedingService::new();
-        let players = vec![
-            create_test_player(1, "Solo Player", Some(1500), Some("FM".to_string()), Some(1)),
-        ];
+        let players = vec![create_test_player(
+            1,
+            "Solo Player",
+            Some(1500),
+            Some("FM".to_string()),
+            Some(1),
+        )];
 
-        let result = service.calculate_seeding(&players, SeedingMethod::Rating, None).unwrap();
+        let result = service
+            .calculate_seeding(&players, SeedingMethod::Rating, None)
+            .unwrap();
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].proposed_seed, 1);
 

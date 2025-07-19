@@ -1379,17 +1379,39 @@ mod tests {
     trait TestDb: Send + Sync {
         async fn get_tournaments(&self) -> Result<Vec<Tournament>, sqlx::Error>;
         async fn get_tournament(&self, id: i32) -> Result<Tournament, sqlx::Error>;
-        async fn create_tournament(&self, data: CreateTournament) -> Result<Tournament, sqlx::Error>;
+        async fn create_tournament(
+            &self,
+            data: CreateTournament,
+        ) -> Result<Tournament, sqlx::Error>;
         async fn get_tournament_details(&self, id: i32) -> Result<TournamentDetails, sqlx::Error>;
         async fn delete_tournament(&self, id: i32) -> Result<(), sqlx::Error>;
-        async fn update_tournament_status(&self, id: i32, status: &str) -> Result<Tournament, sqlx::Error>;
-        async fn get_players_by_tournament(&self, tournament_id: i32) -> Result<Vec<Player>, sqlx::Error>;
+        async fn update_tournament_status(
+            &self,
+            id: i32,
+            status: &str,
+        ) -> Result<Tournament, sqlx::Error>;
+        async fn get_players_by_tournament(
+            &self,
+            tournament_id: i32,
+        ) -> Result<Vec<Player>, sqlx::Error>;
         async fn create_player(&self, data: CreatePlayer) -> Result<Player, sqlx::Error>;
-        async fn get_games_by_tournament(&self, tournament_id: i32) -> Result<Vec<Game>, sqlx::Error>;
+        async fn get_games_by_tournament(
+            &self,
+            tournament_id: i32,
+        ) -> Result<Vec<Game>, sqlx::Error>;
         async fn create_game(&self, data: CreateGame) -> Result<Game, sqlx::Error>;
-        async fn get_player_results(&self, tournament_id: i32) -> Result<Vec<PlayerResult>, sqlx::Error>;
-        async fn get_game_results(&self, tournament_id: i32) -> Result<Vec<GameResult>, sqlx::Error>;
-        async fn get_rounds_by_tournament(&self, tournament_id: i32) -> Result<Vec<Round>, sqlx::Error>;
+        async fn get_player_results(
+            &self,
+            tournament_id: i32,
+        ) -> Result<Vec<PlayerResult>, sqlx::Error>;
+        async fn get_game_results(
+            &self,
+            tournament_id: i32,
+        ) -> Result<Vec<GameResult>, sqlx::Error>;
+        async fn get_rounds_by_tournament(
+            &self,
+            tournament_id: i32,
+        ) -> Result<Vec<Round>, sqlx::Error>;
     }
 
     impl TestDb for MockDb {
@@ -1405,7 +1427,10 @@ mod tests {
                 .ok_or_else(|| sqlx::Error::RowNotFound)
         }
 
-        async fn create_tournament(&self, data: CreateTournament) -> Result<Tournament, sqlx::Error> {
+        async fn create_tournament(
+            &self,
+            data: CreateTournament,
+        ) -> Result<Tournament, sqlx::Error> {
             Ok(Tournament {
                 id: self.tournaments.len() as i32 + 1,
                 name: data.name,
@@ -1435,14 +1460,23 @@ mod tests {
             Ok(())
         }
 
-        async fn update_tournament_status(&self, id: i32, status: &str) -> Result<Tournament, sqlx::Error> {
+        async fn update_tournament_status(
+            &self,
+            id: i32,
+            status: &str,
+        ) -> Result<Tournament, sqlx::Error> {
             let mut tournament = self.get_tournament(id).await?;
             tournament.status = status.to_string();
             Ok(tournament)
         }
 
-        async fn get_players_by_tournament(&self, tournament_id: i32) -> Result<Vec<Player>, sqlx::Error> {
-            Ok(self.players.iter()
+        async fn get_players_by_tournament(
+            &self,
+            tournament_id: i32,
+        ) -> Result<Vec<Player>, sqlx::Error> {
+            Ok(self
+                .players
+                .iter()
                 .filter(|p| p.tournament_id == tournament_id)
                 .cloned()
                 .collect())
@@ -1470,8 +1504,13 @@ mod tests {
             })
         }
 
-        async fn get_games_by_tournament(&self, tournament_id: i32) -> Result<Vec<Game>, sqlx::Error> {
-            Ok(self.games.iter()
+        async fn get_games_by_tournament(
+            &self,
+            tournament_id: i32,
+        ) -> Result<Vec<Game>, sqlx::Error> {
+            Ok(self
+                .games
+                .iter()
                 .filter(|g| g.tournament_id == tournament_id)
                 .cloned()
                 .collect())
@@ -1494,22 +1533,37 @@ mod tests {
             })
         }
 
-        async fn get_player_results(&self, tournament_id: i32) -> Result<Vec<PlayerResult>, sqlx::Error> {
-            Ok(self.player_results.iter()
+        async fn get_player_results(
+            &self,
+            tournament_id: i32,
+        ) -> Result<Vec<PlayerResult>, sqlx::Error> {
+            Ok(self
+                .player_results
+                .iter()
                 .filter(|pr| pr.tournament_id == tournament_id)
                 .cloned()
                 .collect())
         }
 
-        async fn get_game_results(&self, tournament_id: i32) -> Result<Vec<GameResult>, sqlx::Error> {
-            Ok(self.game_results.iter()
+        async fn get_game_results(
+            &self,
+            tournament_id: i32,
+        ) -> Result<Vec<GameResult>, sqlx::Error> {
+            Ok(self
+                .game_results
+                .iter()
                 .filter(|gr| gr.game.tournament_id == tournament_id)
                 .cloned()
                 .collect())
         }
 
-        async fn get_rounds_by_tournament(&self, tournament_id: i32) -> Result<Vec<Round>, sqlx::Error> {
-            Ok(self.rounds.iter()
+        async fn get_rounds_by_tournament(
+            &self,
+            tournament_id: i32,
+        ) -> Result<Vec<Round>, sqlx::Error> {
+            Ok(self
+                .rounds
+                .iter()
                 .filter(|r| r.tournament_id == tournament_id)
                 .cloned()
                 .collect())
@@ -1531,7 +1585,10 @@ mod tests {
         }
 
         async fn get_tournament(&self, id: i32) -> Result<Tournament, PawnError> {
-            self.db.get_tournament(id).await.map_err(PawnError::Database)
+            self.db
+                .get_tournament(id)
+                .await
+                .map_err(PawnError::Database)
         }
 
         async fn create_tournament(&self, data: CreateTournament) -> Result<Tournament, PawnError> {
@@ -1562,18 +1619,30 @@ mod tests {
                 ));
             }
 
-            self.db.create_tournament(data).await.map_err(PawnError::Database)
+            self.db
+                .create_tournament(data)
+                .await
+                .map_err(PawnError::Database)
         }
 
         async fn get_tournament_details(&self, id: i32) -> Result<TournamentDetails, PawnError> {
-            self.db.get_tournament_details(id).await.map_err(PawnError::Database)
+            self.db
+                .get_tournament_details(id)
+                .await
+                .map_err(PawnError::Database)
         }
 
         async fn delete_tournament(&self, id: i32) -> Result<(), PawnError> {
-            self.db.delete_tournament(id).await.map_err(PawnError::Database)
+            self.db
+                .delete_tournament(id)
+                .await
+                .map_err(PawnError::Database)
         }
 
-        async fn update_tournament_status(&self, data: UpdateTournamentStatus) -> Result<Tournament, PawnError> {
+        async fn update_tournament_status(
+            &self,
+            data: UpdateTournamentStatus,
+        ) -> Result<Tournament, PawnError> {
             // Validate tournament status
             let valid_statuses = vec!["created", "ongoing", "paused", "completed", "cancelled"];
             if !valid_statuses.contains(&data.status.as_str()) {
@@ -1587,8 +1656,16 @@ mod tests {
             // Special validation for completing a tournament
             if data.status == "completed" {
                 // Check if all rounds are completed
-                let rounds = self.db.get_rounds_by_tournament(data.tournament_id).await.map_err(PawnError::Database)?;
-                let tournament = self.db.get_tournament(data.tournament_id).await.map_err(PawnError::Database)?;
+                let rounds = self
+                    .db
+                    .get_rounds_by_tournament(data.tournament_id)
+                    .await
+                    .map_err(PawnError::Database)?;
+                let tournament = self
+                    .db
+                    .get_tournament(data.tournament_id)
+                    .await
+                    .map_err(PawnError::Database)?;
 
                 let completed_rounds = rounds.iter().filter(|r| r.status == "completed").count();
                 if completed_rounds < tournament.total_rounds as usize {
@@ -1600,7 +1677,11 @@ mod tests {
                 }
 
                 // Check if all games have results
-                let games = self.db.get_games_by_tournament(data.tournament_id).await.map_err(PawnError::Database)?;
+                let games = self
+                    .db
+                    .get_games_by_tournament(data.tournament_id)
+                    .await
+                    .map_err(PawnError::Database)?;
                 let incomplete_games = games.iter().filter(|game| game.result == "*").count();
                 if incomplete_games > 0 {
                     return Err(PawnError::InvalidInput(format!(
@@ -1609,11 +1690,20 @@ mod tests {
                 }
             }
 
-            self.db.update_tournament_status(data.tournament_id, &data.status).await.map_err(PawnError::Database)
+            self.db
+                .update_tournament_status(data.tournament_id, &data.status)
+                .await
+                .map_err(PawnError::Database)
         }
 
-        async fn get_players_by_tournament(&self, tournament_id: i32) -> Result<Vec<Player>, PawnError> {
-            self.db.get_players_by_tournament(tournament_id).await.map_err(PawnError::Database)
+        async fn get_players_by_tournament(
+            &self,
+            tournament_id: i32,
+        ) -> Result<Vec<Player>, PawnError> {
+            self.db
+                .get_players_by_tournament(tournament_id)
+                .await
+                .map_err(PawnError::Database)
         }
 
         async fn create_player(&self, data: CreatePlayer) -> Result<Player, PawnError> {
@@ -1631,11 +1721,20 @@ mod tests {
                 }
             }
 
-            self.db.create_player(data).await.map_err(PawnError::Database)
+            self.db
+                .create_player(data)
+                .await
+                .map_err(PawnError::Database)
         }
 
-        async fn get_games_by_tournament(&self, tournament_id: i32) -> Result<Vec<Game>, PawnError> {
-            self.db.get_games_by_tournament(tournament_id).await.map_err(PawnError::Database)
+        async fn get_games_by_tournament(
+            &self,
+            tournament_id: i32,
+        ) -> Result<Vec<Game>, PawnError> {
+            self.db
+                .get_games_by_tournament(tournament_id)
+                .await
+                .map_err(PawnError::Database)
         }
 
         async fn create_game(&self, data: CreateGame) -> Result<Game, PawnError> {
@@ -1657,12 +1756,21 @@ mod tests {
             self.db.create_game(data).await.map_err(PawnError::Database)
         }
 
-        async fn get_player_results(&self, tournament_id: i32) -> Result<Vec<PlayerResult>, PawnError> {
-            self.db.get_player_results(tournament_id).await.map_err(PawnError::Database)
+        async fn get_player_results(
+            &self,
+            tournament_id: i32,
+        ) -> Result<Vec<PlayerResult>, PawnError> {
+            self.db
+                .get_player_results(tournament_id)
+                .await
+                .map_err(PawnError::Database)
         }
 
         async fn get_game_results(&self, tournament_id: i32) -> Result<Vec<GameResult>, PawnError> {
-            self.db.get_game_results(tournament_id).await.map_err(PawnError::Database)
+            self.db
+                .get_game_results(tournament_id)
+                .await
+                .map_err(PawnError::Database)
         }
     }
 
@@ -1706,7 +1814,14 @@ mod tests {
         }
     }
 
-    fn create_test_game(id: i32, tournament_id: i32, round_number: i32, white_id: i32, black_id: i32, result: &str) -> Game {
+    fn create_test_game(
+        id: i32,
+        tournament_id: i32,
+        round_number: i32,
+        white_id: i32,
+        black_id: i32,
+        result: &str,
+    ) -> Game {
         Game {
             id,
             tournament_id,
@@ -1971,7 +2086,9 @@ mod tests {
 
         assert!(result.is_err());
         match result.unwrap_err() {
-            PawnError::InvalidInput(msg) => assert_eq!(msg, "Rounds played cannot exceed total rounds"),
+            PawnError::InvalidInput(msg) => {
+                assert_eq!(msg, "Rounds played cannot exceed total rounds")
+            }
             _ => panic!("Expected InvalidInput error"),
         }
     }
@@ -2056,7 +2173,7 @@ mod tests {
     async fn test_update_tournament_status_complete_with_incomplete_rounds() {
         let mut tournament = create_test_tournament(1, "Test Tournament");
         tournament.total_rounds = 3;
-        
+
         let mock_db = MockDb {
             tournaments: vec![tournament],
             players: vec![],
@@ -2080,7 +2197,9 @@ mod tests {
 
         assert!(result.is_err());
         match result.unwrap_err() {
-            PawnError::InvalidInput(msg) => assert!(msg.contains("TOURNAMENT_INCOMPLETE_ROUNDS_ERROR")),
+            PawnError::InvalidInput(msg) => {
+                assert!(msg.contains("TOURNAMENT_INCOMPLETE_ROUNDS_ERROR"))
+            }
             _ => panic!("Expected InvalidInput error"),
         }
     }
@@ -2095,9 +2214,7 @@ mod tests {
                 create_test_game(1, 1, 1, 1, 2, "1-0"),
                 create_test_game(2, 1, 1, 3, 4, "*"), // Incomplete game
             ],
-            rounds: vec![
-                create_test_round(1, 1, 1, "completed"),
-            ],
+            rounds: vec![create_test_round(1, 1, 1, "completed")],
             tournament_details: vec![],
             player_results: vec![],
             game_results: vec![],
@@ -2113,7 +2230,9 @@ mod tests {
 
         assert!(result.is_err());
         match result.unwrap_err() {
-            PawnError::InvalidInput(msg) => assert!(msg.contains("TOURNAMENT_INCOMPLETE_GAMES_ERROR")),
+            PawnError::InvalidInput(msg) => {
+                assert!(msg.contains("TOURNAMENT_INCOMPLETE_GAMES_ERROR"))
+            }
             _ => panic!("Expected InvalidInput error"),
         }
     }
@@ -2372,7 +2491,9 @@ mod tests {
 
         assert!(result.is_err());
         match result.unwrap_err() {
-            PawnError::InvalidInput(msg) => assert_eq!(msg, "Players cannot play against themselves"),
+            PawnError::InvalidInput(msg) => {
+                assert_eq!(msg, "Players cannot play against themselves")
+            }
             _ => panic!("Expected InvalidInput error"),
         }
     }
@@ -2441,7 +2562,7 @@ mod tests {
     #[tokio::test]
     async fn test_create_game_valid_results() {
         let valid_results = vec!["1-0", "0-1", "1/2-1/2", "*"];
-        
+
         for result in valid_results {
             let mock_db = MockDb {
                 tournaments: vec![],
@@ -2471,21 +2592,19 @@ mod tests {
     // Statistics Tests
     #[tokio::test]
     async fn test_get_player_results_success() {
-        let player_results = vec![
-            PlayerResult {
-                tournament_id: 1,
-                player_id: 1,
-                player_name: "Player 1".to_string(),
-                total_score: 5.0,
-                performance_rating: Some(2100),
-                buchholz_score: Some(18.5),
-                sonneborn_berger_score: Some(12.25),
-                games_played: 7,
-                wins: 5,
-                draws: 0,
-                losses: 2,
-            },
-        ];
+        let player_results = vec![PlayerResult {
+            tournament_id: 1,
+            player_id: 1,
+            player_name: "Player 1".to_string(),
+            total_score: 5.0,
+            performance_rating: Some(2100),
+            buchholz_score: Some(18.5),
+            sonneborn_berger_score: Some(12.25),
+            games_played: 7,
+            wins: 5,
+            draws: 0,
+            losses: 2,
+        }];
 
         let mock_db = MockDb {
             tournaments: vec![],
@@ -2513,13 +2632,11 @@ mod tests {
         let player2 = create_test_player(2, 1, "Player 2", Some(1950));
         let game = create_test_game(1, 1, 1, 1, 2, "1-0");
 
-        let game_results = vec![
-            GameResult {
-                game: game.clone(),
-                white_player: player1.clone(),
-                black_player: player2.clone(),
-            },
-        ];
+        let game_results = vec![GameResult {
+            game: game.clone(),
+            white_player: player1.clone(),
+            black_player: player2.clone(),
+        }];
 
         let mock_db = MockDb {
             tournaments: vec![],

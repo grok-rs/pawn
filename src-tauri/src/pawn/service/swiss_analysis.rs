@@ -326,7 +326,8 @@ mod tests {
                     let player_count = results.len();
 
                     let total_rating: i32 = results.iter().filter_map(|r| r.player.rating).sum();
-                    let rated_players = results.iter().filter(|r| r.player.rating.is_some()).count();
+                    let rated_players =
+                        results.iter().filter(|r| r.player.rating.is_some()).count();
                     let average_rating = if rated_players > 0 {
                         total_rating as f64 / rated_players as f64
                     } else {
@@ -491,7 +492,8 @@ mod tests {
                 0.0
             };
 
-            let max_rating_difference = rating_differences.iter().fold(0.0f64, |acc, &x| acc.max(x));
+            let max_rating_difference =
+                rating_differences.iter().fold(0.0f64, |acc, &x| acc.max(x));
 
             let min_rating_difference = rating_differences
                 .iter()
@@ -532,7 +534,13 @@ mod tests {
         }
     }
 
-    fn create_test_player_result(player: Player, points: f64, wins: i32, draws: i32, losses: i32) -> PlayerResult {
+    fn create_test_player_result(
+        player: Player,
+        points: f64,
+        wins: i32,
+        draws: i32,
+        losses: i32,
+    ) -> PlayerResult {
         PlayerResult {
             player,
             points,
@@ -549,7 +557,13 @@ mod tests {
         }
     }
 
-    fn create_test_game(game_id: i32, white_id: i32, black_id: i32, round: i32, result: &str) -> GameResult {
+    fn create_test_game(
+        game_id: i32,
+        white_id: i32,
+        black_id: i32,
+        round: i32,
+        result: &str,
+    ) -> GameResult {
         GameResult {
             game: Game {
                 id: game_id,
@@ -619,9 +633,13 @@ mod tests {
     #[test]
     fn test_analyze_score_groups_single_player() {
         let service = TestSwissAnalysisService::new();
-        let player_results = vec![
-            create_test_player_result(create_test_player(1, "Solo Player", Some(1500)), 1.5, 1, 1, 1),
-        ];
+        let player_results = vec![create_test_player_result(
+            create_test_player(1, "Solo Player", Some(1500)),
+            1.5,
+            1,
+            1,
+            1,
+        )];
 
         let result = service.analyze_score_groups(&player_results);
         assert_eq!(result.len(), 1);
@@ -706,12 +724,12 @@ mod tests {
         let player_map: HashMap<i32, &Player> = players.iter().map(|p| (p.id, p)).collect();
 
         let games = vec![
-            create_test_game(1, 1, 2, 1, "1-0"),     // Player 1 white, Player 2 black
-            create_test_game(2, 3, 4, 1, "0-1"),     // Player 3 white, Player 4 black
+            create_test_game(1, 1, 2, 1, "1-0"), // Player 1 white, Player 2 black
+            create_test_game(2, 3, 4, 1, "0-1"), // Player 3 white, Player 4 black
             create_test_game(3, 2, 3, 2, "1/2-1/2"), // Player 2 white, Player 3 black
-            create_test_game(4, 4, 1, 2, "0-1"),     // Player 4 white, Player 1 black
-            create_test_game(5, 1, 3, 3, "1-0"),     // Player 1 white, Player 3 black
-            create_test_game(6, 2, 4, 3, "*"),       // Ongoing game - shouldn't count
+            create_test_game(4, 4, 1, 2, "0-1"), // Player 4 white, Player 1 black
+            create_test_game(5, 1, 3, 3, "1-0"), // Player 1 white, Player 3 black
+            create_test_game(6, 2, 4, 3, "*"),   // Ongoing game - shouldn't count
         ];
 
         let result = service.analyze_color_balance(&players, &games, &player_map);
@@ -828,9 +846,13 @@ mod tests {
     #[test]
     fn test_analyze_rating_distribution_insufficient_players() {
         let service = TestSwissAnalysisService::new();
-        let player_results = vec![
-            create_test_player_result(create_test_player(1, "Player A", Some(1800)), 2.0, 2, 0, 1),
-        ];
+        let player_results = vec![create_test_player_result(
+            create_test_player(1, "Player A", Some(1800)),
+            2.0,
+            2,
+            0,
+            1,
+        )];
 
         let options = SwissPairingOptions {
             avoid_color_conflicts: true,
@@ -887,7 +909,8 @@ mod tests {
         assert_eq!(float_stats.float_percentage, 0.0);
 
         // Test color balance
-        let color_balance = service.analyze_color_balance(&empty_players, &empty_games, &empty_player_map);
+        let color_balance =
+            service.analyze_color_balance(&empty_players, &empty_games, &empty_player_map);
         assert_eq!(color_balance.players_with_color_imbalance, 0);
         assert_eq!(color_balance.average_color_balance, 0.0);
 
@@ -921,7 +944,7 @@ mod tests {
     #[test]
     fn test_complex_swiss_analysis_scenario() {
         let service = TestSwissAnalysisService::new();
-        
+
         // Create a realistic Swiss tournament scenario
         let players = vec![
             create_test_player(1, "GM Strong", Some(2400)),
