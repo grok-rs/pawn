@@ -40,7 +40,7 @@ import {
   History,
 } from '@mui/icons-material';
 import { commands } from '@dto/bindings';
-import type { Player } from '@dto/bindings';
+import type { Player, TournamentDetails } from '@dto/bindings';
 import AddPlayerForm from './AddPlayerForm';
 import BulkImportDialog from './BulkImportDialog';
 import PlayerCategoryManagement from './PlayerCategoryManagement';
@@ -51,7 +51,7 @@ import RatingHistoryDialog from './RatingHistoryDialog';
 interface PlayerManagementProps {
   tournamentId: number;
   players: Player[];
-  tournamentDetails?: any; // Add tournament details to check if tournament has started
+  tournamentDetails?: TournamentDetails; // Add tournament details to check if tournament has started
   onPlayersUpdated: () => void;
 }
 
@@ -162,7 +162,16 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
     setError(null);
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (
+    status: string
+  ):
+    | 'default'
+    | 'primary'
+    | 'secondary'
+    | 'error'
+    | 'info'
+    | 'success'
+    | 'warning' => {
     switch (status) {
       case 'active':
         return 'success';
@@ -264,7 +273,7 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                 {t('importPlayers')}
               </Button>
               {/* Show Late Entry button if tournament has started */}
-              {tournamentDetails?.tournament?.rounds_played > 0 && (
+              {(tournamentDetails?.tournament?.rounds_played || 0) > 0 && (
                 <Button
                   variant="outlined"
                   color="warning"
@@ -409,7 +418,7 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
                           player.status
                         )}
                         size="small"
-                        color={getStatusColor(player.status) as any}
+                        color={getStatusColor(player.status)}
                         variant="outlined"
                       />
                     </TableCell>
@@ -521,7 +530,7 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
           onPlayersUpdated();
         }}
         tournamentId={tournamentId}
-        tournamentDetails={tournamentDetails}
+        tournamentDetails={tournamentDetails || null}
       />
 
       {/* Player Withdrawal Dialog */}

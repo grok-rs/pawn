@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Paper,
@@ -40,7 +40,7 @@ import {
   Refresh,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import { commands } from '@dto/bindings';
+import { commands as _commands } from '@dto/bindings';
 
 // Types for team standings
 interface TeamStanding {
@@ -107,7 +107,7 @@ const TeamStandings: React.FC<TeamStandingsProps> = ({
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Load team standings
-  const loadStandings = async () => {
+  const loadStandings = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -211,12 +211,12 @@ const TeamStandings: React.FC<TeamStandingsProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [tournamentId]);
 
   // Initial load
   useEffect(() => {
     loadStandings();
-  }, [tournamentId]);
+  }, [loadStandings]);
 
   // Auto-refresh
   useEffect(() => {
@@ -224,7 +224,7 @@ const TeamStandings: React.FC<TeamStandingsProps> = ({
       const interval = setInterval(loadStandings, refreshInterval);
       return () => clearInterval(interval);
     }
-  }, [refreshInterval]);
+  }, [refreshInterval, loadStandings]);
 
   const handleShowTeamDetails = (team: TeamStanding) => {
     setSelectedTeam(team);
@@ -483,7 +483,7 @@ const TeamStandings: React.FC<TeamStandingsProps> = ({
       <Dialog
         open={detailsDialogOpen}
         onClose={() => setDetailsDialogOpen(false)}
-        maxWidth="md"
+        maxWidth={false}
         fullWidth
       >
         <DialogTitle>
@@ -508,7 +508,7 @@ const TeamStandings: React.FC<TeamStandingsProps> = ({
         <DialogContent>
           {selectedTeam && (
             <Grid container spacing={3}>
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ mobile: 12, tablet: 6 }}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -599,7 +599,7 @@ const TeamStandings: React.FC<TeamStandingsProps> = ({
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ mobile: 12, tablet: 6 }}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>

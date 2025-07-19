@@ -22,9 +22,9 @@ import {
   TableRow,
   Paper,
   LinearProgress,
-  Grid,
   IconButton,
   Tooltip,
+  Grid2 as Grid,
 } from '@mui/material';
 import {
   Upload as UploadIcon,
@@ -36,7 +36,7 @@ import {
   Error as ErrorIcon,
 } from '@mui/icons-material';
 import { commands } from '@dto/bindings';
-import type { CsvResultImport, CsvImportResult } from '@dto/bindings';
+import type { CsvImportResult } from '@dto/bindings';
 
 interface CsvImportDialogProps {
   open: boolean;
@@ -188,7 +188,7 @@ export const CsvImportDialog: React.FC<CsvImportDialogProps> = ({
 
             <Box my={3}>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ mobile: 12, tablet: 6 }}>
                   <Button
                     variant="outlined"
                     component="label"
@@ -206,7 +206,7 @@ export const CsvImportDialog: React.FC<CsvImportDialogProps> = ({
                     />
                   </Button>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ mobile: 12, tablet: 6 }}>
                   <Button
                     variant="outlined"
                     onClick={handleUseSample}
@@ -295,7 +295,7 @@ export const CsvImportDialog: React.FC<CsvImportDialogProps> = ({
             {validationResult && (
               <Box>
                 <Grid container spacing={2} my={2}>
-                  <Grid item xs={6} sm={3}>
+                  <Grid size={{ mobile: 6, tablet: 3 }}>
                     <Card>
                       <CardContent sx={{ textAlign: 'center' }}>
                         <Typography variant="h4" color="primary">
@@ -305,7 +305,7 @@ export const CsvImportDialog: React.FC<CsvImportDialogProps> = ({
                       </CardContent>
                     </Card>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
+                  <Grid size={{ mobile: 6, tablet: 3 }}>
                     <Card>
                       <CardContent sx={{ textAlign: 'center' }}>
                         <Typography variant="h4" color="success.main">
@@ -315,7 +315,7 @@ export const CsvImportDialog: React.FC<CsvImportDialogProps> = ({
                       </CardContent>
                     </Card>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
+                  <Grid size={{ mobile: 6, tablet: 3 }}>
                     <Card>
                       <CardContent sx={{ textAlign: 'center' }}>
                         <Typography variant="h4" color="error.main">
@@ -325,7 +325,7 @@ export const CsvImportDialog: React.FC<CsvImportDialogProps> = ({
                       </CardContent>
                     </Card>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
+                  <Grid size={{ mobile: 6, tablet: 3 }}>
                     <Card>
                       <CardContent sx={{ textAlign: 'center' }}>
                         <Typography variant="h4" color="warning.main">
@@ -428,7 +428,7 @@ export const CsvImportDialog: React.FC<CsvImportDialogProps> = ({
                 </Alert>
 
                 <Grid container spacing={2}>
-                  <Grid item xs={6} sm={3}>
+                  <Grid size={{ mobile: 6, tablet: 3 }}>
                     <Card>
                       <CardContent sx={{ textAlign: 'center' }}>
                         <Typography variant="h4" color="primary">
@@ -438,7 +438,7 @@ export const CsvImportDialog: React.FC<CsvImportDialogProps> = ({
                       </CardContent>
                     </Card>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
+                  <Grid size={{ mobile: 6, tablet: 3 }}>
                     <Card>
                       <CardContent sx={{ textAlign: 'center' }}>
                         <Typography variant="h4" color="success.main">
@@ -448,7 +448,7 @@ export const CsvImportDialog: React.FC<CsvImportDialogProps> = ({
                       </CardContent>
                     </Card>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
+                  <Grid size={{ mobile: 6, tablet: 3 }}>
                     <Card>
                       <CardContent sx={{ textAlign: 'center' }}>
                         <Typography variant="h4" color="error.main">
@@ -458,7 +458,7 @@ export const CsvImportDialog: React.FC<CsvImportDialogProps> = ({
                       </CardContent>
                     </Card>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
+                  <Grid size={{ mobile: 6, tablet: 3 }}>
                     <Card>
                       <CardContent sx={{ textAlign: 'center' }}>
                         <Typography variant="h4" color="warning.main">
@@ -523,7 +523,7 @@ export const CsvImportDialog: React.FC<CsvImportDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth={false} fullWidth>
       <DialogTitle>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           CSV Import Results

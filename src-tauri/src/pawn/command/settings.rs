@@ -1,9 +1,9 @@
+use crate::pawn::common::error::PawnError;
 use crate::pawn::domain::dto::*;
 use crate::pawn::domain::model::*;
-use crate::pawn::common::error::PawnError;
 use crate::pawn::state::PawnState;
-use tauri::State;
 use std::collections::HashMap;
+use tauri::State;
 
 type TxError = PawnError;
 
@@ -13,7 +13,10 @@ pub async fn get_application_settings(
     filter: Option<SettingsFilter>,
     state: State<'_, PawnState>,
 ) -> Result<Vec<ApplicationSetting>, TxError> {
-    state.settings_service.get_application_settings(filter).await
+    state
+        .settings_service
+        .get_application_settings(filter)
+        .await
 }
 
 #[tauri::command]
@@ -23,7 +26,10 @@ pub async fn get_application_setting(
     setting_key: String,
     state: State<'_, PawnState>,
 ) -> Result<Option<ApplicationSetting>, TxError> {
-    state.settings_service.get_application_setting(&category, &setting_key).await
+    state
+        .settings_service
+        .get_application_setting(&category, &setting_key)
+        .await
 }
 
 #[tauri::command]
@@ -33,7 +39,10 @@ pub async fn get_effective_settings(
     category: Option<String>,
     state: State<'_, PawnState>,
 ) -> Result<HashMap<String, String>, TxError> {
-    state.settings_service.get_effective_settings(&user_id, category.as_deref()).await
+    state
+        .settings_service
+        .get_effective_settings(&user_id, category.as_deref())
+        .await
 }
 
 #[tauri::command]
@@ -44,7 +53,10 @@ pub async fn get_effective_setting(
     setting_key: String,
     state: State<'_, PawnState>,
 ) -> Result<Option<String>, TxError> {
-    state.settings_service.get_effective_setting(&user_id, &category, &setting_key).await
+    state
+        .settings_service
+        .get_effective_setting(&user_id, &category, &setting_key)
+        .await
 }
 
 #[tauri::command]
@@ -62,9 +74,12 @@ pub async fn get_language_setting(
     user_id: String,
     state: State<'_, PawnState>,
 ) -> Result<String, TxError> {
-    let language = state.settings_service.get_effective_setting(&user_id, "general", "language").await?
+    let language = state
+        .settings_service
+        .get_effective_setting(&user_id, "general", "language")
+        .await?
         .unwrap_or_else(|| "\"en\"".to_string());
-    
+
     // Remove quotes if present
     let language = language.trim_matches('"');
     Ok(language.to_string())
@@ -83,8 +98,11 @@ pub async fn set_language_setting(
         setting_key: "language".to_string(),
         setting_value: Some(format!("\"{}\"", language)),
     };
-    
-    state.settings_service.create_user_preference(preference_data).await?;
+
+    state
+        .settings_service
+        .create_user_preference(preference_data)
+        .await?;
     Ok(())
 }
 
@@ -94,9 +112,12 @@ pub async fn get_theme_setting(
     user_id: String,
     state: State<'_, PawnState>,
 ) -> Result<String, TxError> {
-    let theme = state.settings_service.get_effective_setting(&user_id, "display", "theme").await?
+    let theme = state
+        .settings_service
+        .get_effective_setting(&user_id, "display", "theme")
+        .await?
         .unwrap_or_else(|| "\"light\"".to_string());
-    
+
     // Remove quotes if present
     let theme = theme.trim_matches('"');
     Ok(theme.to_string())
@@ -115,8 +136,11 @@ pub async fn set_theme_setting(
         setting_key: "theme".to_string(),
         setting_value: Some(format!("\"{}\"", theme)),
     };
-    
-    state.settings_service.create_user_preference(preference_data).await?;
+
+    state
+        .settings_service
+        .create_user_preference(preference_data)
+        .await?;
     Ok(())
 }
 
@@ -135,7 +159,10 @@ pub async fn get_settings_templates(
     category: Option<String>,
     state: State<'_, PawnState>,
 ) -> Result<Vec<SettingsTemplate>, TxError> {
-    state.settings_service.get_settings_templates(category.as_deref()).await
+    state
+        .settings_service
+        .get_settings_templates(category.as_deref())
+        .await
 }
 
 #[tauri::command]
@@ -207,7 +234,10 @@ pub async fn apply_settings_template(
     request: ApplySettingsTemplateRequest,
     state: State<'_, PawnState>,
 ) -> Result<SettingsTemplateResult, TxError> {
-    state.settings_service.apply_settings_template(request).await
+    state
+        .settings_service
+        .apply_settings_template(request)
+        .await
 }
 
 #[tauri::command]
@@ -216,7 +246,10 @@ pub async fn get_settings_requiring_restart(
     user_id: String,
     state: State<'_, PawnState>,
 ) -> Result<Vec<String>, TxError> {
-    state.settings_service.get_settings_requiring_restart(&user_id).await
+    state
+        .settings_service
+        .get_settings_requiring_restart(&user_id)
+        .await
 }
 
 #[tauri::command]
@@ -225,5 +258,8 @@ pub async fn get_settings_backup_history(
     user_id: String,
     state: State<'_, PawnState>,
 ) -> Result<Vec<SettingsBackupHistory>, TxError> {
-    state.settings_service.get_settings_backup_history(&user_id).await
+    state
+        .settings_service
+        .get_settings_backup_history(&user_id)
+        .await
 }

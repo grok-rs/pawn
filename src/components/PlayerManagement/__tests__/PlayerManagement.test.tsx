@@ -130,9 +130,41 @@ describe('PlayerManagement', () => {
 
   test('renders with tournament details', () => {
     const mockTournamentDetails = {
-      id: 1,
-      name: 'Test Tournament',
-      status: 'active',
+      tournament: {
+        id: 1,
+        name: 'Test Tournament',
+        status: 'active',
+        date: '2024-01-01',
+        location: 'Test Location',
+        total_rounds: 5,
+        rounds_played: 0,
+        pairing_system: 'swiss',
+        time_type: 'classical',
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01',
+        tournament_type: 'individual',
+        player_count: 2,
+        country_code: 'US',
+        start_time: null,
+        end_time: null,
+        description: null,
+        website_url: null,
+        contact_email: null,
+        entry_fee: null,
+        currency: null,
+        is_team_tournament: false,
+        team_size: null,
+        max_teams: null,
+      },
+      players: mockPlayers.map(player => ({
+        player,
+        points: 0,
+        games_played: 0,
+        wins: 0,
+        draws: 0,
+        losses: 0,
+      })),
+      games: [],
     };
 
     render(

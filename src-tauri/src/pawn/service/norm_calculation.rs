@@ -9,9 +9,9 @@ use crate::pawn::{
     domain::{
         model::{Game, Player},
         tiebreak::{
-            NormCalculationRequest, NormCalculationResult, NormRequirements, NormType,
-            PrizeDistributionRequest, PrizeDistributionResult, PrizeAward, SpecialAward,
-            DistributionMethod, StandingsCalculationResult,
+            DistributionMethod, NormCalculationRequest, NormCalculationResult, NormRequirements,
+            NormType, PrizeAward, PrizeDistributionRequest, PrizeDistributionResult, SpecialAward,
+            StandingsCalculationResult,
         },
     },
     service::tiebreak::TiebreakCalculator,
@@ -36,31 +36,45 @@ impl<D: Db> NormCalculationService<D> {
         &self,
         request: NormCalculationRequest,
     ) -> Result<NormCalculationResult, PawnError> {
-        info!("Calculating {} norm for player {} in tournament {}", 
-              request.norm_type.display_name(), request.player_id, request.tournament_id);
+        info!(
+            "Calculating {} norm for player {} in tournament {}",
+            request.norm_type.display_name(),
+            request.player_id,
+            request.tournament_id
+        );
 
         // Get player and tournament data
         let player = self.db.get_player(request.player_id).await?;
         let _tournament = self.db.get_tournament(request.tournament_id).await?;
-        let games = self.db.get_games_by_tournament(request.tournament_id).await?;
-        let all_players = self.db.get_players_by_tournament(request.tournament_id).await?;
+        let games = self
+            .db
+            .get_games_by_tournament(request.tournament_id)
+            .await?;
+        let all_players = self
+            .db
+            .get_players_by_tournament(request.tournament_id)
+            .await?;
 
         // Filter games for this specific player
-        let player_games: Vec<&Game> = games.iter()
-            .filter(|g| g.white_player_id == request.player_id || g.black_player_id == request.player_id)
+        let player_games: Vec<&Game> = games
+            .iter()
+            .filter(|g| {
+                g.white_player_id == request.player_id || g.black_player_id == request.player_id
+            })
             .collect();
 
         // Calculate performance rating if not provided
         let performance_rating = if let Some(pr) = request.performance_rating {
             pr
         } else {
-            self.calculate_performance_rating(&player, &player_games, &all_players).await?
+            self.calculate_performance_rating(&player, &player_games, &all_players)
+                .await?
         };
 
         // Calculate tournament category (average rating of participants)
-        let tournament_category = request.tournament_category.unwrap_or_else(|| {
-            self.calculate_tournament_category(&all_players)
-        });
+        let tournament_category = request
+            .tournament_category
+            .unwrap_or_else(|| self.calculate_tournament_category(&all_players));
 
         // Calculate actual values
         let games_played = player_games.len() as i32;
@@ -72,15 +86,17 @@ impl<D: Db> NormCalculationService<D> {
         };
 
         // Check all requirements
-        let requirements_met = self.check_norm_requirements(
-            &request.norm_type,
-            performance_rating,
-            games_played,
-            score_percentage,
-            tournament_category,
-            &player_games,
-            &all_players,
-        ).await?;
+        let requirements_met = self
+            .check_norm_requirements(
+                &request.norm_type,
+                performance_rating,
+                games_played,
+                score_percentage,
+                tournament_category,
+                &player_games,
+                &all_players,
+            )
+            .await?;
 
         // Generate missing requirements list
         let missing_requirements = self.generate_missing_requirements_list(
@@ -92,19 +108,21 @@ impl<D: Db> NormCalculationService<D> {
         );
 
         // Check if norm is achieved
-        let achieved = requirements_met.performance_rating_met &&
-                      requirements_met.minimum_games_met &&
-                      requirements_met.minimum_score_met &&
-                      requirements_met.tournament_category_adequate &&
-                      requirements_met.opponent_diversity_met;
+        let achieved = requirements_met.performance_rating_met
+            && requirements_met.minimum_games_met
+            && requirements_met.minimum_score_met
+            && requirements_met.tournament_category_adequate
+            && requirements_met.opponent_diversity_met;
 
-        let additional_info = self.generate_additional_info(
-            &request.norm_type,
-            &requirements_met,
-            tournament_category,
-            &player_games,
-            &all_players,
-        ).await?;
+        let additional_info = self
+            .generate_additional_info(
+                &request.norm_type,
+                &requirements_met,
+                tournament_category,
+                &player_games,
+                &all_players,
+            )
+            .await?;
 
         Ok(NormCalculationResult {
             norm_type: request.norm_type.clone(),
@@ -130,7 +148,10 @@ impl<D: Db> NormCalculationService<D> {
         tournament_id: i32,
         player_id: i32,
     ) -> Result<Vec<NormCalculationResult>, PawnError> {
-        info!("Calculating available norms for player {} in tournament {}", player_id, tournament_id);
+        info!(
+            "Calculating available norms for player {} in tournament {}",
+            player_id, tournament_id
+        );
 
         let norm_types = vec![
             NormType::Grandmaster,
@@ -151,8 +172,8 @@ impl<D: Db> NormCalculationService<D> {
                 player_id,
                 norm_type,
                 tournament_category: None,
-                games_played: 0, // Will be calculated
-                points_scored: 0.0, // Will be calculated
+                games_played: 0,          // Will be calculated
+                points_scored: 0.0,       // Will be calculated
                 performance_rating: None, // Will be calculated
             };
 
@@ -166,8 +187,10 @@ impl<D: Db> NormCalculationService<D> {
 
         // Sort by achievement status and then by norm level
         results.sort_by(|a, b| {
-            b.achieved.cmp(&a.achieved)
-                .then_with(|| b.required_performance_rating.cmp(&a.required_performance_rating))
+            b.achieved.cmp(&a.achieved).then_with(|| {
+                b.required_performance_rating
+                    .cmp(&a.required_performance_rating)
+            })
         });
 
         Ok(results)
@@ -179,32 +202,43 @@ impl<D: Db> NormCalculationService<D> {
         &self,
         request: PrizeDistributionRequest,
     ) -> Result<PrizeDistributionResult, PawnError> {
-        info!("Calculating prize distribution for tournament {}", request.tournament_id);
+        info!(
+            "Calculating prize distribution for tournament {}",
+            request.tournament_id
+        );
 
         // Get tournament standings
         let config = self.get_tournament_config(request.tournament_id).await?;
-        let standings = self.tiebreak_calculator.calculate_standings(request.tournament_id, &config).await?;
+        let standings = self
+            .tiebreak_calculator
+            .calculate_standings(request.tournament_id, &config)
+            .await?;
 
         // Calculate main prize awards
         let mut prize_awards = self.calculate_main_prizes(&standings, &request).await?;
 
         // Calculate age group prizes
-        let age_group_awards = self.calculate_age_group_prizes(&standings, &request).await?;
+        let age_group_awards = self
+            .calculate_age_group_prizes(&standings, &request)
+            .await?;
         prize_awards.extend(age_group_awards);
 
         // Calculate rating group prizes
-        let rating_group_awards = self.calculate_rating_group_prizes(&standings, &request).await?;
+        let rating_group_awards = self
+            .calculate_rating_group_prizes(&standings, &request)
+            .await?;
         prize_awards.extend(rating_group_awards);
 
         // Calculate special awards
         let special_awards = self.calculate_special_awards(&standings, &request).await?;
 
         // Calculate total distributed
-        let total_distributed = prize_awards.iter().map(|p| p.prize_amount).sum::<f64>() +
-                               special_awards.iter().map(|s| s.amount).sum::<f64>();
+        let total_distributed = prize_awards.iter().map(|p| p.prize_amount).sum::<f64>()
+            + special_awards.iter().map(|s| s.amount).sum::<f64>();
 
         // Generate distribution summary
-        let distribution_summary = self.generate_distribution_summary(&prize_awards, &special_awards, &request);
+        let distribution_summary =
+            self.generate_distribution_summary(&prize_awards, &special_awards, &request);
 
         Ok(PrizeDistributionResult {
             tournament_id: request.tournament_id,
@@ -232,16 +266,20 @@ impl<D: Db> NormCalculationService<D> {
         let mut game_count = 0;
 
         // Create player lookup map
-        let player_map: HashMap<i32, &Player> = all_players.iter()
-            .map(|p| (p.id, p))
-            .collect();
+        let player_map: HashMap<i32, &Player> = all_players.iter().map(|p| (p.id, p)).collect();
 
         for game in games {
             if !game.result.is_empty() {
                 let (opponent_id, score) = if game.white_player_id == player.id {
-                    (game.black_player_id, self.parse_game_result_for_white(&game.result))
+                    (
+                        game.black_player_id,
+                        self.parse_game_result_for_white(&game.result),
+                    )
                 } else {
-                    (game.white_player_id, self.parse_game_result_for_black(&game.result))
+                    (
+                        game.white_player_id,
+                        self.parse_game_result_for_black(&game.result),
+                    )
                 };
 
                 if let Some(opponent) = player_map.get(&opponent_id) {
@@ -277,9 +315,7 @@ impl<D: Db> NormCalculationService<D> {
 
     /// Calculate tournament category (average rating)
     fn calculate_tournament_category(&self, players: &[Player]) -> i32 {
-        let rated_players: Vec<i32> = players.iter()
-            .filter_map(|p| p.rating)
-            .collect();
+        let rated_players: Vec<i32> = players.iter().filter_map(|p| p.rating).collect();
 
         if rated_players.is_empty() {
             return 1500; // Default category
@@ -341,7 +377,7 @@ impl<D: Db> NormCalculationService<D> {
         let performance_rating_met = performance_rating >= norm_type.required_performance_rating();
         let minimum_games_met = games_played >= norm_type.minimum_games();
         let minimum_score_met = score_percentage >= norm_type.minimum_score_percentage();
-        
+
         // Tournament category should be adequate for the norm
         let tournament_category_adequate = match norm_type {
             NormType::Grandmaster => tournament_category >= 2380,
@@ -355,7 +391,9 @@ impl<D: Db> NormCalculationService<D> {
         };
 
         // Check opponent diversity (simplified - in real implementation would check federations)
-        let opponent_diversity_met = self.check_opponent_diversity(player_games, all_players).await?;
+        let opponent_diversity_met = self
+            .check_opponent_diversity(player_games, all_players)
+            .await?;
 
         Ok(NormRequirements {
             performance_rating_met,
@@ -480,9 +518,12 @@ impl<D: Db> NormCalculationService<D> {
         }
 
         // Calculate prize amounts
-        let first_place_amount = request.total_prize_fund * (request.prize_structure.first_place_percentage / 100.0);
-        let second_place_amount = request.total_prize_fund * (request.prize_structure.second_place_percentage / 100.0);
-        let third_place_amount = request.total_prize_fund * (request.prize_structure.third_place_percentage / 100.0);
+        let first_place_amount =
+            request.total_prize_fund * (request.prize_structure.first_place_percentage / 100.0);
+        let second_place_amount =
+            request.total_prize_fund * (request.prize_structure.second_place_percentage / 100.0);
+        let third_place_amount =
+            request.total_prize_fund * (request.prize_structure.third_place_percentage / 100.0);
 
         // Handle tied players based on distribution method
         let tied_groups = self.group_players_by_rank(&standings.standings);
@@ -494,7 +535,10 @@ impl<D: Db> NormCalculationService<D> {
                 3 => third_place_amount,
                 _ => {
                     // Find additional place prize
-                    request.prize_structure.additional_places.iter()
+                    request
+                        .prize_structure
+                        .additional_places
+                        .iter()
                         .find(|p| p.place == rank)
                         .map(|p| request.total_prize_fund * (p.percentage / 100.0))
                         .unwrap_or(0.0)
@@ -507,23 +551,32 @@ impl<D: Db> NormCalculationService<D> {
                 &request.distribution_method,
             );
 
-            let shared_with = if players.len() > 1 { 
-                players.iter().map(|p| p.player.id).collect() 
-            } else { 
-                vec![] 
+            let shared_with = if players.len() > 1 {
+                players.iter().map(|p| p.player.id).collect()
+            } else {
+                vec![]
             };
-            
+
             let is_tied = players.len() > 1;
-            
+
             for player in &players {
                 awards.push(PrizeAward {
                     player: player.player.clone(),
                     rank,
                     points: player.points,
                     prize_amount: distributed_amount,
-                    prize_description: format!("{}{}{}place", 
-                        rank, 
-                        if rank == 1 { "st" } else if rank == 2 { "nd" } else if rank == 3 { "rd" } else { "th" },
+                    prize_description: format!(
+                        "{}{}{}place",
+                        rank,
+                        if rank == 1 {
+                            "st"
+                        } else if rank == 2 {
+                            "nd"
+                        } else if rank == 3 {
+                            "rd"
+                        } else {
+                            "th"
+                        },
                         if is_tied { " (tied)" } else { "" }
                     ),
                     shared_with: shared_with.clone(),
@@ -566,11 +619,17 @@ impl<D: Db> NormCalculationService<D> {
     }
 
     /// Group players by rank handling ties
-    fn group_players_by_rank<'a>(&self, standings: &'a [crate::pawn::domain::tiebreak::PlayerStanding]) -> HashMap<i32, Vec<&'a crate::pawn::domain::tiebreak::PlayerStanding>> {
+    fn group_players_by_rank<'a>(
+        &self,
+        standings: &'a [crate::pawn::domain::tiebreak::PlayerStanding],
+    ) -> HashMap<i32, Vec<&'a crate::pawn::domain::tiebreak::PlayerStanding>> {
         let mut groups = HashMap::new();
 
         for standing in standings {
-            groups.entry(standing.rank).or_insert_with(Vec::new).push(standing);
+            groups
+                .entry(standing.rank)
+                .or_insert_with(Vec::new)
+                .push(standing);
         }
 
         groups
@@ -590,7 +649,11 @@ impl<D: Db> NormCalculationService<D> {
             DistributionMethod::TiedPlayersGetLowestPrize => prize_amount,
             DistributionMethod::TiebreakDeterminesWinner => {
                 // First player gets full prize (assuming tiebreak already resolved)
-                if players.is_empty() { 0.0 } else { prize_amount }
+                if players.is_empty() {
+                    0.0
+                } else {
+                    prize_amount
+                }
             }
         }
     }
@@ -604,8 +667,8 @@ impl<D: Db> NormCalculationService<D> {
     ) -> String {
         let main_prizes = prize_awards.len();
         let special_prizes = special_awards.len();
-        let total_amount = prize_awards.iter().map(|p| p.prize_amount).sum::<f64>() +
-                          special_awards.iter().map(|s| s.amount).sum::<f64>();
+        let total_amount = prize_awards.iter().map(|p| p.prize_amount).sum::<f64>()
+            + special_awards.iter().map(|s| s.amount).sum::<f64>();
 
         format!(
             "Distributed {} main prizes and {} special awards totaling {:.2} {}",
@@ -614,7 +677,10 @@ impl<D: Db> NormCalculationService<D> {
     }
 
     /// Get tournament tiebreak configuration
-    async fn get_tournament_config(&self, tournament_id: i32) -> Result<crate::pawn::domain::tiebreak::TournamentTiebreakConfig, PawnError> {
+    async fn get_tournament_config(
+        &self,
+        tournament_id: i32,
+    ) -> Result<crate::pawn::domain::tiebreak::TournamentTiebreakConfig, PawnError> {
         match self.db.get_tournament_settings(tournament_id).await? {
             Some(config) => Ok(config),
             None => {
@@ -632,22 +698,25 @@ impl<D: Db> NormCalculationService<D> {
     ) -> Result<Vec<(i32, String, Vec<NormCalculationResult>)>, PawnError> {
         // Get all players in the tournament
         let players = self.db.get_players_by_tournament(tournament_id).await?;
-        
+
         let mut results = Vec::new();
-        
+
         for player in players {
-            let norms = self.calculate_available_norms(tournament_id, player.id).await?;
-            
+            let norms = self
+                .calculate_available_norms(tournament_id, player.id)
+                .await?;
+
             // Only include players who have achieved or are close to achieving norms
-            let relevant_norms: Vec<_> = norms.into_iter()
+            let relevant_norms: Vec<_> = norms
+                .into_iter()
                 .filter(|n| n.achieved || n.requirements_met.performance_rating_met)
                 .collect();
-            
+
             if !relevant_norms.is_empty() {
                 results.push((player.id, player.name.clone(), relevant_norms));
             }
         }
-        
+
         Ok(results)
     }
 }

@@ -91,6 +91,9 @@ const mockTournaments: Tournament[] = [
     contact_email: 'contact@example.com',
     entry_fee: 50,
     currency: 'USD',
+    is_team_tournament: false,
+    team_size: null,
+    max_teams: null,
   },
   {
     id: 2,
@@ -111,6 +114,9 @@ const mockTournaments: Tournament[] = [
     contact_email: null,
     entry_fee: null,
     currency: null,
+    is_team_tournament: false,
+    team_size: null,
+    max_teams: null,
   },
 ];
 
@@ -264,6 +270,9 @@ describe('TournamentList', () => {
         contact_email: null,
         entry_fee: null,
         currency: null,
+        is_team_tournament: false,
+        team_size: null,
+        max_teams: null,
       },
     ];
 
@@ -351,6 +360,9 @@ describe('TournamentList', () => {
         contact_email: null,
         entry_fee: null,
         currency: null,
+        is_team_tournament: false,
+        team_size: null,
+        max_teams: null,
       })
     );
 

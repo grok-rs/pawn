@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -52,7 +52,7 @@ import {
   PlayCircleOutline,
   Assignment,
 } from '@mui/icons-material';
-import { commands } from '@dto/bindings';
+import { commands, GameResult } from '@dto/bindings';
 import type {
   TournamentDetails,
   StandingsCalculationResult,
@@ -134,7 +134,7 @@ const TournamentInfoPage: React.FC = () => {
     setAnchorEl(null);
   };
 
-  const fetchTournamentDetails = async () => {
+  const fetchTournamentDetails = useCallback(async () => {
     if (!id) {
       setError(t('tournamentIdNotProvided'));
       setLoading(false);
@@ -161,7 +161,7 @@ const TournamentInfoPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, t]);
 
   const fetchStandings = async (tournamentId: number) => {
     setLoadingStandings(true);
@@ -196,7 +196,7 @@ const TournamentInfoPage: React.FC = () => {
 
   const fetchActualTournamentStats = async (
     tournamentId: number,
-    gamesList?: any[]
+    gamesList?: GameResult[]
   ) => {
     try {
       // Fetch rounds to calculate actual rounds played
@@ -209,7 +209,7 @@ const TournamentInfoPage: React.FC = () => {
       // For completed games count, use the provided games data
       if (gamesList) {
         setCompletedGamesCount(
-          gamesList.filter(game => game.result !== null).length
+          gamesList.filter(game => game.game.result !== null).length
         );
       }
     } catch (err) {
@@ -290,7 +290,7 @@ const TournamentInfoPage: React.FC = () => {
 
   useEffect(() => {
     fetchTournamentDetails();
-  }, [id]);
+  }, [fetchTournamentDetails]);
 
   const formatDate = (dateString: string) => {
     try {
@@ -628,7 +628,7 @@ const TournamentInfoPage: React.FC = () => {
               <StandingsTable
                 standings={standings.standings}
                 loading={loadingStandings}
-                onPlayerClick={playerId => {
+                onPlayerClick={_playerId => {
                   // Player clicked: playerId
                 }}
                 onExportCsv={handleExportCsv}

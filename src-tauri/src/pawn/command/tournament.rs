@@ -5,9 +5,15 @@ use crate::pawn::{
     common::types::CommandResult,
     db::Db,
     domain::{
-        dto::{CreateGame, CreatePlayer, CreateTournament, UpdateTournamentSettings, UpdateTournamentStatus},
+        dto::{
+            CreateGame, CreatePlayer, CreateTournament, UpdateTournamentSettings,
+            UpdateTournamentStatus,
+        },
         model::{Game, GameResult, Player, PlayerResult, Tournament, TournamentDetails},
-        tiebreak::{StandingsCalculationResult, StandingsUpdateEvent, TiebreakBreakdown, TiebreakType, TournamentTiebreakConfig},
+        tiebreak::{
+            StandingsCalculationResult, StandingsUpdateEvent, TiebreakBreakdown, TiebreakType,
+            TournamentTiebreakConfig,
+        },
     },
     state::PawnState,
 };
@@ -61,7 +67,10 @@ pub async fn update_tournament_status(
     state: State<'_, PawnState>,
     data: UpdateTournamentStatus,
 ) -> CommandResult<Tournament> {
-    state.tournament_service.update_tournament_status(data).await
+    state
+        .tournament_service
+        .update_tournament_status(data)
+        .await
 }
 
 // Player operations
@@ -192,23 +201,33 @@ pub async fn get_tiebreak_breakdown(
     tiebreak_type: TiebreakType,
 ) -> CommandResult<TiebreakBreakdown> {
     // Get tournament data
-    let players = state.player_service.get_players_by_tournament(tournament_id).await?;
-    let games = state.tournament_service.get_games_by_tournament(tournament_id).await?;
-    let player_results = state.tournament_service.get_player_results(tournament_id).await?;
-    
+    let players = state
+        .player_service
+        .get_players_by_tournament(tournament_id)
+        .await?;
+    let games = state
+        .tournament_service
+        .get_games_by_tournament(tournament_id)
+        .await?;
+    let player_results = state
+        .tournament_service
+        .get_player_results(tournament_id)
+        .await?;
+
     // Convert player results to HashMap for efficient lookup
     let mut results_map = std::collections::HashMap::new();
     for result in player_results {
         results_map.insert(result.player.id, result);
     }
-    
+
     // Find the specific player
-    let player = players.iter()
-        .find(|p| p.id == player_id)
-        .ok_or_else(|| crate::pawn::common::error::PawnError::NotFound("Player not found".to_string()))?;
-    
+    let player = players.iter().find(|p| p.id == player_id).ok_or_else(|| {
+        crate::pawn::common::error::PawnError::NotFound("Player not found".to_string())
+    })?;
+
     // Generate breakdown
-    state.tiebreak_calculator
+    state
+        .tiebreak_calculator
         .generate_tiebreak_breakdown(player, tiebreak_type, &games, &players, &results_map)
         .await
 }
@@ -221,7 +240,8 @@ pub async fn get_realtime_standings(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<StandingsCalculationResult> {
-    state.realtime_standings_service
+    state
+        .realtime_standings_service
         .get_realtime_standings(tournament_id)
         .await
 }
@@ -233,7 +253,8 @@ pub async fn force_recalculate_standings(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<StandingsCalculationResult> {
-    state.realtime_standings_service
+    state
+        .realtime_standings_service
         .force_recalculate_standings(tournament_id)
         .await
 }
@@ -245,7 +266,8 @@ pub async fn clear_standings_cache(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<()> {
-    state.realtime_standings_service
+    state
+        .realtime_standings_service
         .clear_cache(tournament_id)
         .await;
     Ok(())
@@ -294,36 +316,48 @@ mod tests {
 
     async fn setup_test_state() -> PawnState {
         let temp_dir = TempDir::new().unwrap();
-        
+
         // Use in-memory SQLite for testing
         let database_url = "sqlite::memory:";
         let pool = SqlitePool::connect(database_url).await.unwrap();
-        
+
         sqlx::migrate!("./migrations").run(&pool).await.unwrap();
-        
+
         let db = Arc::new(SqliteDb::new(pool));
-        
+
         use crate::pawn::service::{
-            export::ExportService, norm_calculation::NormCalculationService, player::PlayerService, 
-            realtime_standings::RealTimeStandingsService, round::RoundService, 
-            round_robin_analysis::RoundRobinAnalysisService, swiss_analysis::SwissAnalysisService, 
-            team::TeamService, tiebreak::TiebreakCalculator, time_control::TimeControlService, tournament::TournamentService,
+            export::ExportService, norm_calculation::NormCalculationService, player::PlayerService,
+            realtime_standings::RealTimeStandingsService, round::RoundService,
+            round_robin_analysis::RoundRobinAnalysisService, swiss_analysis::SwissAnalysisService,
+            team::TeamService, tiebreak::TiebreakCalculator, time_control::TimeControlService,
+            tournament::TournamentService,
         };
         use crate::pawn::state::State;
         use std::sync::Arc;
-        
+
         let tournament_service = Arc::new(TournamentService::new(Arc::clone(&db)));
         let tiebreak_calculator = Arc::new(TiebreakCalculator::new(Arc::clone(&db)));
-        let realtime_standings_service = Arc::new(RealTimeStandingsService::new(Arc::clone(&db), Arc::clone(&tiebreak_calculator)));
+        let realtime_standings_service = Arc::new(RealTimeStandingsService::new(
+            Arc::clone(&db),
+            Arc::clone(&tiebreak_calculator),
+        ));
         let round_service = Arc::new(RoundService::new(Arc::clone(&db)));
         let player_service = Arc::new(PlayerService::new(Arc::clone(&db)));
         let time_control_service = Arc::new(TimeControlService::new(Arc::clone(&db)));
         let swiss_analysis_service = Arc::new(SwissAnalysisService::new(Arc::clone(&db)));
-        let round_robin_analysis_service = Arc::new(RoundRobinAnalysisService::new(Arc::clone(&db)));
-        let export_service = Arc::new(ExportService::new(Arc::clone(&db), Arc::clone(&tiebreak_calculator), temp_dir.path().join("exports")));
-        let norm_calculation_service = Arc::new(NormCalculationService::new(Arc::clone(&db), Arc::clone(&tiebreak_calculator)));
+        let round_robin_analysis_service =
+            Arc::new(RoundRobinAnalysisService::new(Arc::clone(&db)));
+        let export_service = Arc::new(ExportService::new(
+            Arc::clone(&db),
+            Arc::clone(&tiebreak_calculator),
+            temp_dir.path().join("exports"),
+        ));
+        let norm_calculation_service = Arc::new(NormCalculationService::new(
+            Arc::clone(&db),
+            Arc::clone(&tiebreak_calculator),
+        ));
         let team_service = Arc::new(TeamService::new(Arc::clone(&db)));
-        
+
         State {
             app_data_dir: temp_dir.path().to_path_buf(),
             db,
@@ -344,7 +378,7 @@ mod tests {
     #[tokio::test]
     async fn command_get_tournaments_contract() {
         let state = setup_test_state().await;
-        
+
         // Test the underlying service directly to validate the command contract
         let result = state.tournament_service.get_tournaments().await;
         assert!(result.is_ok());
@@ -354,7 +388,7 @@ mod tests {
     #[tokio::test]
     async fn command_create_tournament_contract() {
         let state = setup_test_state().await;
-        
+
         let create_data = CreateTournament {
             name: "Test Tournament".to_string(),
             location: "Test Location".to_string(),
@@ -368,9 +402,12 @@ mod tests {
         };
 
         // Test the underlying service directly to validate the command contract
-        let result = state.tournament_service.create_tournament(create_data).await;
+        let result = state
+            .tournament_service
+            .create_tournament(create_data)
+            .await;
         assert!(result.is_ok());
-        
+
         let tournament = result.unwrap();
         assert_eq!(tournament.name, "Test Tournament");
         assert_eq!(tournament.tournament_type, Some("Swiss".to_string()));
@@ -379,7 +416,7 @@ mod tests {
     #[tokio::test]
     async fn command_get_tournament_contract() {
         let state = setup_test_state().await;
-        
+
         // Create a tournament first
         let create_data = CreateTournament {
             name: "Test Tournament".to_string(),
@@ -392,13 +429,17 @@ mod tests {
             total_rounds: 5,
             country_code: "USA".to_string(),
         };
-        
-        let created = state.tournament_service.create_tournament(create_data).await.unwrap();
-        
+
+        let created = state
+            .tournament_service
+            .create_tournament(create_data)
+            .await
+            .unwrap();
+
         // Test getting the tournament
         let result = state.tournament_service.get_tournament(created.id).await;
         assert!(result.is_ok());
-        
+
         let tournament = result.unwrap();
         assert_eq!(tournament.id, created.id);
         assert_eq!(tournament.name, "Test Tournament");
@@ -407,7 +448,7 @@ mod tests {
     #[tokio::test]
     async fn command_delete_tournament_contract() {
         let state = setup_test_state().await;
-        
+
         // Create a tournament first
         let create_data = CreateTournament {
             name: "Test Tournament".to_string(),
@@ -420,13 +461,17 @@ mod tests {
             total_rounds: 5,
             country_code: "USA".to_string(),
         };
-        
-        let created = state.tournament_service.create_tournament(create_data).await.unwrap();
-        
+
+        let created = state
+            .tournament_service
+            .create_tournament(create_data)
+            .await
+            .unwrap();
+
         // Test deleting the tournament
         let result = state.tournament_service.delete_tournament(created.id).await;
         assert!(result.is_ok());
-        
+
         // Verify it's gone
         let get_result = state.tournament_service.get_tournament(created.id).await;
         assert!(get_result.is_err());
@@ -435,7 +480,7 @@ mod tests {
     #[tokio::test]
     async fn command_get_tournament_settings_contract() {
         let state = setup_test_state().await;
-        
+
         // Create a tournament first
         let create_data = CreateTournament {
             name: "Test Tournament".to_string(),
@@ -448,13 +493,17 @@ mod tests {
             total_rounds: 5,
             country_code: "USA".to_string(),
         };
-        
-        let created = state.tournament_service.create_tournament(create_data).await.unwrap();
-        
+
+        let created = state
+            .tournament_service
+            .create_tournament(create_data)
+            .await
+            .unwrap();
+
         // Test getting settings - this should return default settings for a new tournament
         let result = state.db.get_tournament_settings(created.id).await;
         assert!(result.is_ok());
-        
+
         // For a new tournament, settings may be None (using defaults)
         let settings = result.unwrap();
         assert!(settings.is_none() || settings.is_some());

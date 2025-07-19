@@ -3,8 +3,15 @@ import { listen } from '@tauri-apps/api/event';
 import { commands } from '@dto/bindings';
 import type {
   StandingsCalculationResult,
-  StandingsUpdateEvent,
+  // StandingsUpdateEvent, // Commented out until available in bindings
 } from '@dto/bindings';
+
+// Temporary interface until bindings are updated
+interface StandingsUpdateEvent {
+  tournament_id: number;
+  standings: StandingsCalculationResult;
+  timestamp: string;
+}
 
 interface UseRealTimeStandingsOptions {
   tournamentId: number;
@@ -40,7 +47,7 @@ export const useRealTimeStandings = ({
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const unlistenRef = useRef<(() => void) | null>(null);
 
   const fetchStandings = useCallback(
@@ -117,7 +124,7 @@ export const useRealTimeStandings = ({
 
               // Update standings with the new data
               const result: StandingsCalculationResult = {
-                standings: updateEvent.standings,
+                standings: updateEvent.standings.standings || [],
                 last_updated: updateEvent.timestamp,
                 tiebreak_config: standings?.tiebreak_config || {
                   tournament_id: tournamentId,

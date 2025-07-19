@@ -355,14 +355,14 @@ pub struct NormCalculationRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize, SpectaType)]
 pub enum NormType {
-    Grandmaster,    // GM norm
-    InternationalMaster,  // IM norm
-    FideMaster,     // FM norm
-    CandidateMaster, // CM norm
-    WomanGrandmaster, // WGM norm
+    Grandmaster,              // GM norm
+    InternationalMaster,      // IM norm
+    FideMaster,               // FM norm
+    CandidateMaster,          // CM norm
+    WomanGrandmaster,         // WGM norm
     WomanInternationalMaster, // WIM norm
-    WomanFideMaster, // WFM norm
-    WomanCandidateMaster, // WCM norm
+    WomanFideMaster,          // WFM norm
+    WomanCandidateMaster,     // WCM norm
 }
 
 impl NormType {
@@ -543,7 +543,7 @@ pub struct PrizeAward {
     pub points: f64,
     pub prize_amount: f64,
     pub prize_description: String,
-    pub shared_with: Vec<i32>, // Player IDs if prize is shared
+    pub shared_with: Vec<i32>,         // Player IDs if prize is shared
     pub prize_categories: Vec<String>, // "Overall", "U18", "U2000", etc.
 }
 

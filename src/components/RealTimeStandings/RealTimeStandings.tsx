@@ -71,7 +71,7 @@ const RealTimeStandings: React.FC<RealTimeStandingsProps> = ({
     onError: error => {
       console.error('Real-time standings error:', error);
     },
-    onUpdate: standings => {
+    onUpdate: _standings => {
       // Standings updated
       setSuccessMessage(t('standingsUpdated'));
       setShowSuccessMessage(true);

@@ -1,4 +1,4 @@
-import { useFormStepperContext } from '../FormStepperContext';
+import { useFormStepperContext } from '../hooks/useFormStepperContext';
 
 const FormStepperContent = () => {
   const { activeStep, steps, onSubmit, onCancel, handleDisableSubmitButton } =

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tokio::sync::{broadcast, RwLock};
+use tokio::sync::{RwLock, broadcast};
 use tracing::{debug, error, info, instrument, warn};
 
 use crate::pawn::{
@@ -32,7 +32,7 @@ struct CachedStandings {
 impl<D: Db> RealTimeStandingsService<D> {
     pub fn new(db: Arc<D>, tiebreak_calculator: Arc<TiebreakCalculator<D>>) -> Self {
         let (event_sender, _) = broadcast::channel(1000);
-        
+
         Self {
             db,
             tiebreak_calculator,
@@ -55,7 +55,9 @@ impl<D: Db> RealTimeStandingsService<D> {
     ) -> Result<StandingsCalculationResult, PawnError> {
         // Check cache first
         if let Some(cached) = self.get_cached_standings(tournament_id).await {
-            if cached.last_updated.elapsed() < Duration::from_secs(self.config.cache_duration_seconds) {
+            if cached.last_updated.elapsed()
+                < Duration::from_secs(self.config.cache_duration_seconds)
+            {
                 debug!("Serving cached standings for tournament {}", tournament_id);
                 return Ok(StandingsCalculationResult {
                     standings: cached.standings,
@@ -75,18 +77,22 @@ impl<D: Db> RealTimeStandingsService<D> {
         &self,
         tournament_id: i32,
     ) -> Result<StandingsCalculationResult, PawnError> {
-        info!("Force recalculating standings for tournament {}", tournament_id);
-        
+        info!(
+            "Force recalculating standings for tournament {}",
+            tournament_id
+        );
+
         let result = self.calculate_and_cache_standings(tournament_id).await?;
-        
+
         // Broadcast update event
         self.broadcast_standings_update(
             tournament_id,
             StandingsEventType::Manual,
             vec![],
             &result.standings,
-        ).await;
-        
+        )
+        .await;
+
         Ok(result)
     }
 
@@ -97,8 +103,11 @@ impl<D: Db> RealTimeStandingsService<D> {
         tournament_id: i32,
         affected_players: Vec<i32>,
     ) -> Result<(), PawnError> {
-        info!("Handling game result update for tournament {}", tournament_id);
-        
+        info!(
+            "Handling game result update for tournament {}",
+            tournament_id
+        );
+
         if !self.config.auto_update_enabled {
             debug!("Auto-update disabled, skipping standings recalculation");
             return Ok(());
@@ -106,15 +115,16 @@ impl<D: Db> RealTimeStandingsService<D> {
 
         // Recalculate standings
         let result = self.calculate_and_cache_standings(tournament_id).await?;
-        
+
         // Broadcast update event
         self.broadcast_standings_update(
             tournament_id,
             StandingsEventType::GameResultUpdated,
             affected_players,
             &result.standings,
-        ).await;
-        
+        )
+        .await;
+
         Ok(())
     }
 
@@ -126,8 +136,11 @@ impl<D: Db> RealTimeStandingsService<D> {
         player_id: i32,
         event_type: StandingsEventType,
     ) -> Result<(), PawnError> {
-        info!("Handling player update for tournament {}: player {}", tournament_id, player_id);
-        
+        info!(
+            "Handling player update for tournament {}: player {}",
+            tournament_id, player_id
+        );
+
         if !self.config.auto_update_enabled {
             debug!("Auto-update disabled, skipping standings recalculation");
             return Ok(());
@@ -135,15 +148,16 @@ impl<D: Db> RealTimeStandingsService<D> {
 
         // Recalculate standings
         let result = self.calculate_and_cache_standings(tournament_id).await?;
-        
+
         // Broadcast update event
         self.broadcast_standings_update(
             tournament_id,
             event_type,
             vec![player_id],
             &result.standings,
-        ).await;
-        
+        )
+        .await;
+
         Ok(())
     }
 
@@ -154,19 +168,23 @@ impl<D: Db> RealTimeStandingsService<D> {
         tournament_id: i32,
         round_number: i32,
     ) -> Result<(), PawnError> {
-        info!("Handling round completion for tournament {}, round {}", tournament_id, round_number);
-        
+        info!(
+            "Handling round completion for tournament {}, round {}",
+            tournament_id, round_number
+        );
+
         // Always recalculate after round completion
         let result = self.calculate_and_cache_standings(tournament_id).await?;
-        
+
         // Broadcast update event
         self.broadcast_standings_update(
             tournament_id,
             StandingsEventType::RoundCompleted,
             vec![],
             &result.standings,
-        ).await;
-        
+        )
+        .await;
+
         Ok(())
     }
 
@@ -177,16 +195,19 @@ impl<D: Db> RealTimeStandingsService<D> {
 
     /// Get performance metrics for standings calculation
     #[instrument(skip(self))]
-    pub async fn get_performance_metrics(&self, tournament_id: i32) -> Option<StandingsPerformanceMetrics> {
+    pub async fn get_performance_metrics(
+        &self,
+        tournament_id: i32,
+    ) -> Option<StandingsPerformanceMetrics> {
         let cache = self.standings_cache.read().await;
-        cache.get(&tournament_id).map(|cached| {
-            StandingsPerformanceMetrics {
+        cache
+            .get(&tournament_id)
+            .map(|cached| StandingsPerformanceMetrics {
                 tournament_id,
                 last_calculation_time_ms: cached.calculation_time_ms,
                 cache_age_seconds: cached.last_updated.elapsed().as_secs(),
                 player_count: cached.standings.len() as i32,
-            }
-        })
+            })
     }
 
     /// Internal method to calculate and cache standings
@@ -195,34 +216,37 @@ impl<D: Db> RealTimeStandingsService<D> {
         tournament_id: i32,
     ) -> Result<StandingsCalculationResult, PawnError> {
         let start_time = Instant::now();
-        
+
         // Get tournament config
         let config = self.get_tournament_config(tournament_id).await?;
-        
+
         // Calculate standings
-        let result = self.tiebreak_calculator.calculate_standings(tournament_id, &config).await?;
-        
+        let result = self
+            .tiebreak_calculator
+            .calculate_standings(tournament_id, &config)
+            .await?;
+
         let calculation_time = start_time.elapsed();
-        
+
         // Cache the result
         let cached = CachedStandings {
             standings: result.standings.clone(),
             last_updated: Instant::now(),
             calculation_time_ms: calculation_time.as_millis() as u64,
         };
-        
+
         {
             let mut cache = self.standings_cache.write().await;
             cache.insert(tournament_id, cached);
         }
-        
+
         info!(
             "Calculated standings for tournament {} in {}ms ({} players)",
             tournament_id,
             calculation_time.as_millis(),
             result.standings.len()
         );
-        
+
         // Check if calculation time exceeds threshold
         if calculation_time > Duration::from_millis(1000) {
             warn!(
@@ -231,7 +255,7 @@ impl<D: Db> RealTimeStandingsService<D> {
                 tournament_id
             );
         }
-        
+
         Ok(result)
     }
 
@@ -242,7 +266,10 @@ impl<D: Db> RealTimeStandingsService<D> {
     }
 
     /// Get tournament tiebreak configuration
-    async fn get_tournament_config(&self, tournament_id: i32) -> Result<TournamentTiebreakConfig, PawnError> {
+    async fn get_tournament_config(
+        &self,
+        tournament_id: i32,
+    ) -> Result<TournamentTiebreakConfig, PawnError> {
         match self.db.get_tournament_settings(tournament_id).await? {
             Some(config) => Ok(config),
             None => {
@@ -276,7 +303,10 @@ impl<D: Db> RealTimeStandingsService<D> {
         if let Err(e) = self.event_sender.send(event) {
             error!("Failed to broadcast standings update: {}", e);
         } else {
-            debug!("Broadcasted standings update for tournament {}", tournament_id);
+            debug!(
+                "Broadcasted standings update for tournament {}",
+                tournament_id
+            );
         }
     }
 
@@ -314,7 +344,11 @@ impl<D: Db> RealTimeStandingsService<D> {
             cached_tournaments: cache.len() as i32,
             total_cached_players: total_players as i32,
             oldest_cache_age_seconds: oldest_cache_age,
-            newest_cache_age_seconds: if newest_cache_age == u64::MAX { 0 } else { newest_cache_age },
+            newest_cache_age_seconds: if newest_cache_age == u64::MAX {
+                0
+            } else {
+                newest_cache_age
+            },
         }
     }
 }
@@ -339,22 +373,22 @@ pub struct CacheStatistics {
 mod tests {
     use super::*;
     use std::sync::Arc;
-    use tokio::time::{sleep, Duration};
+    use tokio::time::{Duration, sleep};
 
     #[tokio::test]
     async fn test_realtime_standings_service() {
         // Mock implementation - in real tests, you'd use a mock database
         // This is a placeholder for the test structure
-        
+
         // let db = Arc::new(MockDb::new());
         // let tiebreak_calculator = Arc::new(TiebreakCalculator::new(Arc::clone(&db)));
         // let service = RealTimeStandingsService::new(db, tiebreak_calculator);
-        
+
         // Test caching behavior
         // Test event broadcasting
         // Test performance metrics
         // Test cache invalidation
-        
+
         assert!(true); // Placeholder
     }
 

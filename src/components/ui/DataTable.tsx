@@ -18,7 +18,7 @@ interface Column<T> {
   id: keyof T | string;
   label: string;
   align?: 'left' | 'center' | 'right';
-  format?: (value: any, row: T) => ReactNode;
+  format?: (value: unknown, row: T) => ReactNode;
   width?: string | number;
 }
 
@@ -34,7 +34,7 @@ interface DataTableProps<T> {
   hideColumnsOnTablet?: string[]; // Column IDs to hide on tablet
 }
 
-function DataTable<T extends Record<string, any>>({
+function DataTable<T extends Record<string, unknown>>({
   columns,
   data,
   loading = false,
@@ -164,7 +164,10 @@ function DataTable<T extends Record<string, any>>({
                   const value = columnId.includes('.')
                     ? columnId
                         .split('.')
-                        .reduce((obj, key) => obj?.[key], row as any)
+                        .reduce((obj: unknown, key: string) => {
+                          const record = obj as Record<string, unknown> | null;
+                          return record?.[key];
+                        }, row)
                     : row[column.id as keyof T];
 
                   return (
@@ -176,7 +179,9 @@ function DataTable<T extends Record<string, any>>({
                         padding: { mobile: '8px 12px', tablet: '16px' },
                       }}
                     >
-                      {column.format ? column.format(value, row) : value}
+                      {column.format
+                        ? column.format(value, row)
+                        : (value as ReactNode)}
                     </TableCell>
                   );
                 })}

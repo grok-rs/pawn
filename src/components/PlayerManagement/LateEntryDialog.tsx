@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -100,11 +100,21 @@ const LateEntryDialog: React.FC<LateEntryDialogProps> = ({
   const applyPenalties = watch('apply_penalties');
   const startFromRound = watch('start_from_round');
 
+  const fetchRounds = useCallback(async () => {
+    try {
+      const roundsData = await commands.getRoundsByTournament(tournamentId);
+      setRounds(roundsData);
+    } catch (err) {
+      console.error('Failed to fetch rounds:', err);
+      setError(t('failedToLoadRounds'));
+    }
+  }, [tournamentId, t]);
+
   useEffect(() => {
     if (open && tournamentId) {
       fetchRounds();
     }
-  }, [open, tournamentId]);
+  }, [open, tournamentId, fetchRounds]);
 
   useEffect(() => {
     if (rounds.length > 0) {
@@ -115,16 +125,6 @@ const LateEntryDialog: React.FC<LateEntryDialogProps> = ({
       }
     }
   }, [rounds, reset]);
-
-  const fetchRounds = async () => {
-    try {
-      const roundsData = await commands.getRoundsByTournament(tournamentId);
-      setRounds(roundsData);
-    } catch (err) {
-      console.error('Failed to fetch rounds:', err);
-      setError(t('failedToLoadRounds'));
-    }
-  };
 
   const onSubmit = async (data: LateEntryFormData) => {
     setLoading(true);

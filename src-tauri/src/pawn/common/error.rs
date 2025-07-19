@@ -46,11 +46,11 @@ pub enum PawnError {
     #[error("Validation error: {0}")]
     /// Represents validation errors for game results.
     ValidationError(String),
-    
+
     #[error("PDF generation error: {0}")]
     /// Represents PDF generation errors.
     PdfError(String),
-    
+
     #[error("Excel generation error: {0}")]
     /// Represents Excel generation errors.
     ExcelError(String),

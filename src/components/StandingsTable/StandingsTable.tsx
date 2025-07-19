@@ -210,7 +210,7 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
           {params.value}
         </Typography>
       ),
-      valueFormatter: (value: any) => (value as number).toFixed(1),
+      valueFormatter: (value: number) => value.toFixed(1),
     },
     {
       field: 'games_played',
@@ -295,7 +295,7 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
             width: 120,
             align: 'center',
             headerAlign: 'center',
-            valueGetter: (_value: any, row: any) =>
+            valueGetter: (_value: unknown, row: PlayerStanding) =>
               row.tiebreak_scores[index]?.display_value || '-',
             renderCell: (params: GridRenderCellParams) => (
               <Box

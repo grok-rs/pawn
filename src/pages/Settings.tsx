@@ -6,7 +6,6 @@ import {
   Tabs,
   Tab,
   Paper,
-  Grid,
   Card,
   CardContent,
   CardHeader,
@@ -27,6 +26,7 @@ import {
   Chip,
   CircularProgress,
   Badge,
+  Grid2 as Grid,
 } from '@mui/material';
 import {
   Settings as SettingsIcon,
@@ -174,7 +174,7 @@ const Settings: React.FC = () => {
     setLoading(false);
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
 
@@ -377,7 +377,7 @@ const Settings: React.FC = () => {
     try {
       setSaving(true);
       const result = await commands.resetSettings({
-        category,
+        category: category ?? null,
         setting_key: null,
         user_id: userId,
         create_backup: true,
@@ -447,7 +447,7 @@ const Settings: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth={false} sx={{ py: 4 }}>
         <Box
           display="flex"
           justifyContent="center"
@@ -461,7 +461,7 @@ const Settings: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth={false} sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom>
         <SettingsIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
         {t('settings')}
@@ -512,7 +512,7 @@ const Settings: React.FC = () => {
           <Grid container spacing={3}>
             {settingsOverview && (
               <>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ mobile: 12, laptop: 6 }}>
                   <Card>
                     <CardHeader title="Settings Summary" />
                     <CardContent>
@@ -529,7 +529,7 @@ const Settings: React.FC = () => {
                     </CardContent>
                   </Card>
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ mobile: 12, laptop: 6 }}>
                   <Card>
                     <CardHeader title="Quick Actions" />
                     <CardContent>
@@ -577,13 +577,16 @@ const Settings: React.FC = () => {
             )}
 
             {/* Settings Categories */}
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Card>
                 <CardHeader title="Settings Categories" />
                 <CardContent>
                   <Grid container spacing={2}>
                     {settingsOverview?.categories.map(category => (
-                      <Grid item xs={12} sm={6} md={4} key={category.category}>
+                      <Grid
+                        size={{ mobile: 12, tablet: 6, laptop: 4 }}
+                        key={category.category}
+                      >
                         <Box
                           sx={{
                             p: 2,
@@ -618,13 +621,16 @@ const Settings: React.FC = () => {
             </Grid>
 
             {/* Templates */}
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Card>
                 <CardHeader title="Settings Templates" />
                 <CardContent>
                   <Grid container spacing={2}>
                     {templates.map(template => (
-                      <Grid item xs={12} sm={6} md={4} key={template.id}>
+                      <Grid
+                        size={{ mobile: 12, tablet: 6, laptop: 4 }}
+                        key={template.id}
+                      >
                         <Box
                           sx={{
                             p: 2,
@@ -669,7 +675,7 @@ const Settings: React.FC = () => {
         {/* General Tab */}
         <TabPanel value={activeTab} index={1}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ mobile: 12, laptop: 6 }}>
               <Card>
                 <CardHeader title="Language & Localization" />
                 <CardContent>
@@ -737,7 +743,7 @@ const Settings: React.FC = () => {
         {/* Display Tab */}
         <TabPanel value={activeTab} index={2}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ mobile: 12, laptop: 6 }}>
               <Card>
                 <CardHeader title="Appearance" />
                 <CardContent>
@@ -816,7 +822,7 @@ const Settings: React.FC = () => {
         {/* Tournament Tab */}
         <TabPanel value={activeTab} index={3}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ mobile: 12, laptop: 6 }}>
               <Card>
                 <CardHeader title="Tournament Defaults" />
                 <CardContent>
@@ -909,7 +915,7 @@ const Settings: React.FC = () => {
         {/* Performance Tab */}
         <TabPanel value={activeTab} index={4}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ mobile: 12, laptop: 6 }}>
               <Card>
                 <CardHeader title="Performance Settings" />
                 <CardContent>
@@ -998,7 +1004,7 @@ const Settings: React.FC = () => {
         {/* Privacy Tab */}
         <TabPanel value={activeTab} index={5}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ mobile: 12, laptop: 6 }}>
               <Card>
                 <CardHeader title="Privacy Settings" />
                 <CardContent>
@@ -1072,7 +1078,7 @@ const Settings: React.FC = () => {
         {/* Data Tab */}
         <TabPanel value={activeTab} index={6}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ mobile: 12, laptop: 6 }}>
               <Card>
                 <CardHeader title="Data Management" />
                 <CardContent>
@@ -1137,7 +1143,7 @@ const Settings: React.FC = () => {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ mobile: 12, laptop: 6 }}>
               <Card>
                 <CardHeader title="Recent Backups" />
                 <CardContent>

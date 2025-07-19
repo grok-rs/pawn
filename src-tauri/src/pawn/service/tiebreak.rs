@@ -8,9 +8,9 @@ use crate::pawn::{
     domain::{
         model::{Game, Player, PlayerResult},
         tiebreak::{
-            CrossTable, CrossTableEntry, CrossTableRow, OpponentContribution, PlayerStanding, 
-            RealTimeStandingsConfig, StandingsCalculationResult, StandingsEventType, 
-            StandingsUpdateEvent, TiebreakBreakdown, TiebreakCalculationStep, TiebreakScore, 
+            CrossTable, CrossTableEntry, CrossTableRow, OpponentContribution, PlayerStanding,
+            RealTimeStandingsConfig, StandingsCalculationResult, StandingsEventType,
+            StandingsUpdateEvent, TiebreakBreakdown, TiebreakCalculationStep, TiebreakScore,
             TiebreakType, TournamentTiebreakConfig,
         },
     },
@@ -211,30 +211,18 @@ impl<D: Db> TiebreakCalculator<D> {
             TiebreakType::BuchholzMedian => {
                 self.calculate_buchholz_median(player, all_games, all_results)?
             }
-            TiebreakType::CumulativeScore => {
-                self.calculate_cumulative_score(player, all_games)?
-            }
+            TiebreakType::CumulativeScore => self.calculate_cumulative_score(player, all_games)?,
             TiebreakType::TournamentPerformanceRating => {
                 self.calculate_tournament_performance_rating(player, all_games, all_players)? as f64
             }
             TiebreakType::KoyaSystem => {
                 self.calculate_koya_system(player, all_games, all_results)?
             }
-            TiebreakType::ArocCut1 => {
-                self.calculate_aroc_cut1(player, all_games, all_players)?
-            }
-            TiebreakType::ArocCut2 => {
-                self.calculate_aroc_cut2(player, all_games, all_players)?
-            }
-            TiebreakType::MatchPoints => {
-                self.calculate_match_points(player, all_games)?
-            }
-            TiebreakType::GamePoints => {
-                self.calculate_game_points(player, all_games)?
-            }
-            TiebreakType::BoardPoints => {
-                self.calculate_board_points(player, all_games)?
-            }
+            TiebreakType::ArocCut1 => self.calculate_aroc_cut1(player, all_games, all_players)?,
+            TiebreakType::ArocCut2 => self.calculate_aroc_cut2(player, all_games, all_players)?,
+            TiebreakType::MatchPoints => self.calculate_match_points(player, all_games)?,
+            TiebreakType::GamePoints => self.calculate_game_points(player, all_games)?,
+            TiebreakType::BoardPoints => self.calculate_board_points(player, all_games)?,
             _ => 0.0, // Fallback for unimplemented types
         };
 
@@ -403,27 +391,27 @@ impl<D: Db> TiebreakCalculator<D> {
         // Get the player's result to find tied players
         let player_result = results.get(&player.id).unwrap();
         let player_points = player_result.points as f64;
-        
+
         // Find all players tied on the same points
         let tied_players: Vec<i32> = results
             .iter()
             .filter(|(_, result)| result.points as f64 == player_points)
             .map(|(id, _)| *id)
             .collect();
-        
+
         if tied_players.len() <= 1 {
             return Ok(0.0); // No one tied, direct encounter doesn't apply
         }
-        
+
         // Calculate score in games against tied players only
         let mut direct_score = 0.0;
         let mut games_against_tied = 0;
-        
+
         for game in games {
             if game.result == "*" {
                 continue;
             }
-            
+
             let (opponent_id, game_score) = if game.white_player_id == player.id {
                 (
                     game.black_player_id,
@@ -445,14 +433,14 @@ impl<D: Db> TiebreakCalculator<D> {
             } else {
                 continue;
             };
-            
+
             // Only count games against tied players
             if tied_players.contains(&opponent_id) && opponent_id != player.id {
                 direct_score += game_score;
                 games_against_tied += 1;
             }
         }
-        
+
         // Return the total score against tied players
         // This can be used for sorting - higher is better
         Ok(direct_score)
@@ -874,11 +862,7 @@ impl<D: Db> TiebreakCalculator<D> {
         Ok(ratings.iter().sum::<i32>() as f64 / ratings.len() as f64)
     }
 
-    fn calculate_match_points(
-        &self,
-        player: &Player,
-        games: &[Game],
-    ) -> Result<f64, PawnError> {
+    fn calculate_match_points(&self, player: &Player, games: &[Game]) -> Result<f64, PawnError> {
         let mut match_points = 0.0;
 
         for game in games {
@@ -904,21 +888,13 @@ impl<D: Db> TiebreakCalculator<D> {
         Ok(match_points)
     }
 
-    fn calculate_game_points(
-        &self,
-        player: &Player,
-        games: &[Game],
-    ) -> Result<f64, PawnError> {
+    fn calculate_game_points(&self, player: &Player, games: &[Game]) -> Result<f64, PawnError> {
         // For team tournaments, this would sum individual game points
         // For now, it's equivalent to match points
         self.calculate_match_points(player, games)
     }
 
-    fn calculate_board_points(
-        &self,
-        player: &Player,
-        games: &[Game],
-    ) -> Result<f64, PawnError> {
+    fn calculate_board_points(&self, player: &Player, games: &[Game]) -> Result<f64, PawnError> {
         // For team tournaments, this would consider board-specific scoring
         // For now, it's equivalent to match points
         self.calculate_match_points(player, games)
@@ -971,7 +947,7 @@ impl<D: Db> TiebreakCalculator<D> {
                     // Calculate expected score using ELO formula
                     let rating_diff = opponent_rating - player_rating;
                     let expected_score = 1.0 / (1.0 + 10.0_f64.powf(rating_diff as f64 / 400.0));
-                    
+
                     total_expected += expected_score;
                     total_actual += actual_score;
                     rated_games += 1;
@@ -985,10 +961,10 @@ impl<D: Db> TiebreakCalculator<D> {
 
         // Calculate K-factor based on player rating and games played
         let k_factor = self.calculate_k_factor(player_rating, rated_games);
-        
+
         // Calculate rating change
         let rating_change = k_factor * (total_actual - total_expected);
-        
+
         Ok(Some(rating_change.round() as i32))
     }
 
@@ -1004,14 +980,19 @@ impl<D: Db> TiebreakCalculator<D> {
     }
 
     /// Generate cross-table showing all player vs player results
-    pub async fn generate_cross_table(&self, tournament_id: i32, players: Vec<Player>, games: Vec<Game>) -> Result<CrossTable, PawnError> {
+    pub async fn generate_cross_table(
+        &self,
+        tournament_id: i32,
+        players: Vec<Player>,
+        games: Vec<Game>,
+    ) -> Result<CrossTable, PawnError> {
         let mut cross_table_rows = Vec::new();
-        
+
         for player in &players {
             let mut results = Vec::new();
             let mut total_points = 0.0;
             let mut games_played = 0;
-            
+
             for opponent in &players {
                 if player.id == opponent.id {
                     // Player vs themselves - no entry
@@ -1024,13 +1005,13 @@ impl<D: Db> TiebreakCalculator<D> {
                     });
                     continue;
                 }
-                
+
                 // Find game between these players
                 let game = games.iter().find(|g| {
-                    (g.white_player_id == player.id && g.black_player_id == opponent.id) ||
-                    (g.white_player_id == opponent.id && g.black_player_id == player.id)
+                    (g.white_player_id == player.id && g.black_player_id == opponent.id)
+                        || (g.white_player_id == opponent.id && g.black_player_id == player.id)
                 });
-                
+
                 if let Some(game) = game {
                     let (result, color) = if game.white_player_id == player.id {
                         // Player was white
@@ -1051,12 +1032,12 @@ impl<D: Db> TiebreakCalculator<D> {
                         };
                         (result, Some("black".to_string()))
                     };
-                    
+
                     if let Some(points) = result {
                         total_points += points;
                         games_played += 1;
                     }
-                    
+
                     results.push(CrossTableEntry {
                         player_id: player.id,
                         opponent_id: opponent.id,
@@ -1075,7 +1056,7 @@ impl<D: Db> TiebreakCalculator<D> {
                     });
                 }
             }
-            
+
             cross_table_rows.push(CrossTableRow {
                 player: player.clone(),
                 results,
@@ -1083,7 +1064,7 @@ impl<D: Db> TiebreakCalculator<D> {
                 games_played,
             });
         }
-        
+
         Ok(CrossTable {
             tournament_id,
             players,
@@ -1110,35 +1091,49 @@ impl<D: Db> TiebreakCalculator<D> {
             draws: 0,
             losses: 0,
         };
-        
-        let tiebreak_score = self.calculate_tiebreak_score(player, &player_result, &tiebreak_type, all_players, games, results)?;
+
+        let tiebreak_score = self.calculate_tiebreak_score(
+            player,
+            &player_result,
+            &tiebreak_type,
+            all_players,
+            games,
+            results,
+        )?;
         let value = tiebreak_score.value;
-        
+
         let (explanation, calculation_details, opponents_involved) = match tiebreak_type {
             TiebreakType::BuchholzFull => {
-                self.generate_buchholz_breakdown(player, games, all_players, results, false).await?
+                self.generate_buchholz_breakdown(player, games, all_players, results, false)
+                    .await?
             }
             TiebreakType::BuchholzCut1 => {
-                self.generate_buchholz_breakdown(player, games, all_players, results, true).await?
+                self.generate_buchholz_breakdown(player, games, all_players, results, true)
+                    .await?
             }
             TiebreakType::SonnebornBerger => {
-                self.generate_sonneborn_berger_breakdown(player, games, all_players, results).await?
+                self.generate_sonneborn_berger_breakdown(player, games, all_players, results)
+                    .await?
             }
             TiebreakType::DirectEncounter => {
-                self.generate_direct_encounter_breakdown(player, games, all_players, results).await?
+                self.generate_direct_encounter_breakdown(player, games, all_players, results)
+                    .await?
             }
             TiebreakType::AverageRatingOfOpponents => {
-                self.generate_aro_breakdown(player, games, all_players).await?
+                self.generate_aro_breakdown(player, games, all_players)
+                    .await?
             }
             TiebreakType::TournamentPerformanceRating => {
-                self.generate_tpr_breakdown(player, games, all_players, results).await?
+                self.generate_tpr_breakdown(player, games, all_players, results)
+                    .await?
             }
             TiebreakType::NumberOfWins => {
                 self.generate_wins_breakdown(player, games, results).await?
             }
             _ => {
                 // Generic breakdown for other tiebreak types
-                let explanation = format!("Calculated using {} formula", tiebreak_type.display_name());
+                let explanation =
+                    format!("Calculated using {} formula", tiebreak_type.display_name());
                 let calculation_details = vec![TiebreakCalculationStep {
                     step_number: 1,
                     description: "Direct calculation".to_string(),
@@ -1167,7 +1162,14 @@ impl<D: Db> TiebreakCalculator<D> {
         all_players: &[Player],
         results: &HashMap<i32, PlayerResult>,
         cut_lowest: bool,
-    ) -> Result<(String, Vec<TiebreakCalculationStep>, Vec<OpponentContribution>), PawnError> {
+    ) -> Result<
+        (
+            String,
+            Vec<TiebreakCalculationStep>,
+            Vec<OpponentContribution>,
+        ),
+        PawnError,
+    > {
         let opponent_ids = self.get_opponent_ids(player, games);
         let mut opponents_involved = Vec::new();
         let mut calculation_details = Vec::new();
@@ -1189,7 +1191,7 @@ impl<D: Db> TiebreakCalculator<D> {
                 if let Some(opponent_player) = all_players.iter().find(|p| p.id == opponent_id) {
                     let points = opponent_result.points as f64;
                     total_points += points;
-                    
+
                     opponents_involved.push(OpponentContribution {
                         opponent_id,
                         opponent_name: opponent_player.name.clone(),
@@ -1213,30 +1215,42 @@ impl<D: Db> TiebreakCalculator<D> {
         // Step 3: Apply cut if needed
         let final_score = if cut_lowest && opponents_involved.len() > 1 {
             // Find and remove lowest score
-            let min_score = opponents_involved.iter()
+            let min_score = opponents_involved
+                .iter()
                 .map(|o| o.contribution_value)
                 .min_by(|a, b| a.partial_cmp(b).unwrap())
                 .unwrap_or(0.0);
-            
+
             let adjusted_total = total_points - min_score;
-            
+
             calculation_details.push(TiebreakCalculationStep {
                 step_number,
                 description: "Remove lowest opponent score".to_string(),
-                calculation: format!("{:.1} - {:.1} = {:.1}", total_points, min_score, adjusted_total),
+                calculation: format!(
+                    "{:.1} - {:.1} = {:.1}",
+                    total_points, min_score, adjusted_total
+                ),
                 intermediate_result: adjusted_total,
             });
-            
+
             adjusted_total
         } else {
             total_points
         };
 
-        let tiebreak_name = if cut_lowest { "Buchholz Cut-1" } else { "Buchholz" };
+        let tiebreak_name = if cut_lowest {
+            "Buchholz Cut-1"
+        } else {
+            "Buchholz"
+        };
         let explanation = format!(
             "{} sums the total points scored by all opponents you played against{}",
             tiebreak_name,
-            if cut_lowest { ", excluding the lowest scoring opponent" } else { "" }
+            if cut_lowest {
+                ", excluding the lowest scoring opponent"
+            } else {
+                ""
+            }
         );
 
         Ok((explanation, calculation_details, opponents_involved))
@@ -1249,7 +1263,14 @@ impl<D: Db> TiebreakCalculator<D> {
         games: &[Game],
         all_players: &[Player],
         results: &HashMap<i32, PlayerResult>,
-    ) -> Result<(String, Vec<TiebreakCalculationStep>, Vec<OpponentContribution>), PawnError> {
+    ) -> Result<
+        (
+            String,
+            Vec<TiebreakCalculationStep>,
+            Vec<OpponentContribution>,
+        ),
+        PawnError,
+    > {
         let mut opponents_involved = Vec::new();
         let mut calculation_details = Vec::new();
         let mut total_sb = 0.0;
@@ -1269,17 +1290,23 @@ impl<D: Db> TiebreakCalculator<D> {
             }
 
             let (opponent_id, game_points) = if game.white_player_id == player.id {
-                (game.black_player_id, match game.result.as_str() {
-                    "1-0" => 1.0,
-                    "1/2-1/2" => 0.5,
-                    _ => 0.0,
-                })
+                (
+                    game.black_player_id,
+                    match game.result.as_str() {
+                        "1-0" => 1.0,
+                        "1/2-1/2" => 0.5,
+                        _ => 0.0,
+                    },
+                )
             } else if game.black_player_id == player.id {
-                (game.white_player_id, match game.result.as_str() {
-                    "0-1" => 1.0,
-                    "1/2-1/2" => 0.5,
-                    _ => 0.0,
-                })
+                (
+                    game.white_player_id,
+                    match game.result.as_str() {
+                        "0-1" => 1.0,
+                        "1/2-1/2" => 0.5,
+                        _ => 0.0,
+                    },
+                )
             } else {
                 continue;
             };
@@ -1296,13 +1323,19 @@ impl<D: Db> TiebreakCalculator<D> {
                         opponent_rating: opponent_player.rating,
                         contribution_value: sb_contribution,
                         game_result: Some(game.result.clone()),
-                        explanation: format!("{:.1} × {:.1} = {:.1}", game_points, opponent_total, sb_contribution),
+                        explanation: format!(
+                            "{:.1} × {:.1} = {:.1}",
+                            game_points, opponent_total, sb_contribution
+                        ),
                     });
 
                     calculation_details.push(TiebreakCalculationStep {
                         step_number,
                         description: format!("vs {}", opponent_player.name),
-                        calculation: format!("{:.1} × {:.1} = {:.1}", game_points, opponent_total, sb_contribution),
+                        calculation: format!(
+                            "{:.1} × {:.1} = {:.1}",
+                            game_points, opponent_total, sb_contribution
+                        ),
                         intermediate_result: sb_contribution,
                     });
                     step_number += 1;
@@ -1329,15 +1362,26 @@ impl<D: Db> TiebreakCalculator<D> {
         games: &[Game],
         all_players: &[Player],
         results: &HashMap<i32, PlayerResult>,
-    ) -> Result<(String, Vec<TiebreakCalculationStep>, Vec<OpponentContribution>), PawnError> {
+    ) -> Result<
+        (
+            String,
+            Vec<TiebreakCalculationStep>,
+            Vec<OpponentContribution>,
+        ),
+        PawnError,
+    > {
         let mut opponents_involved = Vec::new();
         let mut calculation_details = Vec::new();
         let mut total_de = 0.0;
         let mut step_number = 1;
 
         // Find players tied on same points
-        let player_points = results.get(&player.id).map(|r| r.points as f64).unwrap_or(0.0);
-        let tied_players: Vec<i32> = results.iter()
+        let player_points = results
+            .get(&player.id)
+            .map(|r| r.points as f64)
+            .unwrap_or(0.0);
+        let tied_players: Vec<i32> = results
+            .iter()
             .filter(|(_, result)| (result.points as f64 - player_points).abs() < 0.01)
             .map(|(id, _)| *id)
             .collect();
@@ -1345,7 +1389,11 @@ impl<D: Db> TiebreakCalculator<D> {
         calculation_details.push(TiebreakCalculationStep {
             step_number,
             description: "Identify players tied on same points".to_string(),
-            calculation: format!("{} players tied with {:.1} points", tied_players.len(), player_points),
+            calculation: format!(
+                "{} players tied with {:.1} points",
+                tied_players.len(),
+                player_points
+            ),
             intermediate_result: tied_players.len() as f64,
         });
         step_number += 1;
@@ -1357,17 +1405,23 @@ impl<D: Db> TiebreakCalculator<D> {
             }
 
             let (opponent_id, game_points) = if game.white_player_id == player.id {
-                (game.black_player_id, match game.result.as_str() {
-                    "1-0" => 1.0,
-                    "1/2-1/2" => 0.5,
-                    _ => 0.0,
-                })
+                (
+                    game.black_player_id,
+                    match game.result.as_str() {
+                        "1-0" => 1.0,
+                        "1/2-1/2" => 0.5,
+                        _ => 0.0,
+                    },
+                )
             } else if game.black_player_id == player.id {
-                (game.white_player_id, match game.result.as_str() {
-                    "0-1" => 1.0,
-                    "1/2-1/2" => 0.5,
-                    _ => 0.0,
-                })
+                (
+                    game.white_player_id,
+                    match game.result.as_str() {
+                        "0-1" => 1.0,
+                        "1/2-1/2" => 0.5,
+                        _ => 0.0,
+                    },
+                )
             } else {
                 continue;
             };
@@ -1415,7 +1469,14 @@ impl<D: Db> TiebreakCalculator<D> {
         player: &Player,
         games: &[Game],
         all_players: &[Player],
-    ) -> Result<(String, Vec<TiebreakCalculationStep>, Vec<OpponentContribution>), PawnError> {
+    ) -> Result<
+        (
+            String,
+            Vec<TiebreakCalculationStep>,
+            Vec<OpponentContribution>,
+        ),
+        PawnError,
+    > {
         let opponent_ids = self.get_opponent_ids(player, games);
         let mut opponents_involved = Vec::new();
         let mut calculation_details = Vec::new();
@@ -1458,7 +1519,10 @@ impl<D: Db> TiebreakCalculator<D> {
         calculation_details.push(TiebreakCalculationStep {
             step_number,
             description: "Calculate average rating".to_string(),
-            calculation: format!("{} ÷ {} = {:.0}", total_rating, rated_opponents, average_rating),
+            calculation: format!(
+                "{} ÷ {} = {:.0}",
+                total_rating, rated_opponents, average_rating
+            ),
             intermediate_result: average_rating,
         });
 
@@ -1474,7 +1538,14 @@ impl<D: Db> TiebreakCalculator<D> {
         games: &[Game],
         all_players: &[Player],
         results: &HashMap<i32, PlayerResult>,
-    ) -> Result<(String, Vec<TiebreakCalculationStep>, Vec<OpponentContribution>), PawnError> {
+    ) -> Result<
+        (
+            String,
+            Vec<TiebreakCalculationStep>,
+            Vec<OpponentContribution>,
+        ),
+        PawnError,
+    > {
         let mut opponents_involved = Vec::new();
         let mut calculation_details = Vec::new();
         let mut total_rating = 0;
@@ -1496,17 +1567,23 @@ impl<D: Db> TiebreakCalculator<D> {
             }
 
             let (opponent_id, game_score) = if game.white_player_id == player.id {
-                (game.black_player_id, match game.result.as_str() {
-                    "1-0" => 1.0,
-                    "1/2-1/2" => 0.5,
-                    _ => 0.0,
-                })
+                (
+                    game.black_player_id,
+                    match game.result.as_str() {
+                        "1-0" => 1.0,
+                        "1/2-1/2" => 0.5,
+                        _ => 0.0,
+                    },
+                )
             } else if game.black_player_id == player.id {
-                (game.white_player_id, match game.result.as_str() {
-                    "0-1" => 1.0,
-                    "1/2-1/2" => 0.5,
-                    _ => 0.0,
-                })
+                (
+                    game.white_player_id,
+                    match game.result.as_str() {
+                        "0-1" => 1.0,
+                        "1/2-1/2" => 0.5,
+                        _ => 0.0,
+                    },
+                )
             } else {
                 continue;
             };
@@ -1536,7 +1613,10 @@ impl<D: Db> TiebreakCalculator<D> {
             calculation_details.push(TiebreakCalculationStep {
                 step_number,
                 description: "Calculate average opponent rating".to_string(),
-                calculation: format!("{} ÷ {} = {:.0}", total_rating, games_count, avg_opponent_rating),
+                calculation: format!(
+                    "{} ÷ {} = {:.0}",
+                    total_rating, games_count, avg_opponent_rating
+                ),
                 intermediate_result: avg_opponent_rating,
             });
             step_number += 1;
@@ -1544,7 +1624,12 @@ impl<D: Db> TiebreakCalculator<D> {
             calculation_details.push(TiebreakCalculationStep {
                 step_number,
                 description: "Calculate performance percentage".to_string(),
-                calculation: format!("{:.1} ÷ {} = {:.1}%", total_score, games_count, percentage * 100.0),
+                calculation: format!(
+                    "{:.1} ÷ {} = {:.1}%",
+                    total_score,
+                    games_count,
+                    percentage * 100.0
+                ),
                 intermediate_result: percentage,
             });
             step_number += 1;
@@ -1578,7 +1663,14 @@ impl<D: Db> TiebreakCalculator<D> {
         player: &Player,
         games: &[Game],
         _results: &HashMap<i32, PlayerResult>,
-    ) -> Result<(String, Vec<TiebreakCalculationStep>, Vec<OpponentContribution>), PawnError> {
+    ) -> Result<
+        (
+            String,
+            Vec<TiebreakCalculationStep>,
+            Vec<OpponentContribution>,
+        ),
+        PawnError,
+    > {
         let mut calculation_details = Vec::new();
         let mut wins = 0;
         let mut step_number = 1;
@@ -1619,16 +1711,23 @@ impl<D: Db> TiebreakCalculator<D> {
             intermediate_result: wins as f64,
         });
 
-        let explanation = "Number of Wins counts your decisive victories (excludes draws and losses)".to_string();
+        let explanation =
+            "Number of Wins counts your decisive victories (excludes draws and losses)".to_string();
 
         Ok((explanation, calculation_details, Vec::new()))
     }
 
     /// Helper method to get game result against specific opponent
-    fn get_game_result_against(&self, player: &Player, opponent: &Player, games: &[Game]) -> Option<String> {
+    fn get_game_result_against(
+        &self,
+        player: &Player,
+        opponent: &Player,
+        games: &[Game],
+    ) -> Option<String> {
         for game in games {
-            if (game.white_player_id == player.id && game.black_player_id == opponent.id) ||
-               (game.white_player_id == opponent.id && game.black_player_id == player.id) {
+            if (game.white_player_id == player.id && game.black_player_id == opponent.id)
+                || (game.white_player_id == opponent.id && game.black_player_id == player.id)
+            {
                 return Some(game.result.clone());
             }
         }
@@ -2030,57 +2129,69 @@ mod tests {
 
         let mut results = HashMap::new();
         // Create results for opponents with various scores
-        results.insert(2, PlayerResult {
-            player: create_test_player(2, "Opponent 1", Some(2100)),
-            points: 1.0,
-            games_played: 4,
-            wins: 1,
-            draws: 0,
-            losses: 3,
-        });
-        results.insert(3, PlayerResult {
-            player: create_test_player(3, "Opponent 2", Some(2200)),
-            points: 3.0,
-            games_played: 4,
-            wins: 3,
-            draws: 0,
-            losses: 1,
-        });
-        results.insert(4, PlayerResult {
-            player: create_test_player(4, "Opponent 3", Some(2300)),
-            points: 2.0,
-            games_played: 4,
-            wins: 2,
-            draws: 0,
-            losses: 2,
-        });
-        results.insert(5, PlayerResult {
-            player: create_test_player(5, "Opponent 4", Some(2400)),
-            points: 2.5,
-            games_played: 4,
-            wins: 2,
-            draws: 1,
-            losses: 1,
-        });
+        results.insert(
+            2,
+            PlayerResult {
+                player: create_test_player(2, "Opponent 1", Some(2100)),
+                points: 1.0,
+                games_played: 4,
+                wins: 1,
+                draws: 0,
+                losses: 3,
+            },
+        );
+        results.insert(
+            3,
+            PlayerResult {
+                player: create_test_player(3, "Opponent 2", Some(2200)),
+                points: 3.0,
+                games_played: 4,
+                wins: 3,
+                draws: 0,
+                losses: 1,
+            },
+        );
+        results.insert(
+            4,
+            PlayerResult {
+                player: create_test_player(4, "Opponent 3", Some(2300)),
+                points: 2.0,
+                games_played: 4,
+                wins: 2,
+                draws: 0,
+                losses: 2,
+            },
+        );
+        results.insert(
+            5,
+            PlayerResult {
+                player: create_test_player(5, "Opponent 4", Some(2400)),
+                points: 2.5,
+                games_played: 4,
+                wins: 2,
+                draws: 1,
+                losses: 1,
+            },
+        );
 
         // Opponent scores: 1.0, 3.0, 2.0, 2.5
         // After removing highest (3.0) and lowest (1.0): 2.0, 2.5
         // Median of [2.0, 2.5] = 2.25
         // Buchholz median = 2.25 * 2 = 4.5
         let expected_median = 4.5;
-        
+
         // This test verifies the median calculation logic
         let scores = vec![1.0, 3.0, 2.0, 2.5];
         let mut sorted_scores = scores.clone();
         sorted_scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        
+
         // Remove highest and lowest
         sorted_scores.remove(0); // Remove 1.0
         sorted_scores.pop(); // Remove 3.0
-        
+
         let median = (sorted_scores[0] + sorted_scores[1]) / 2.0;
         let buchholz_median = median * sorted_scores.len() as f64;
-        
+
         assert_eq!(buchholz_median, expected_median);
     }
 
@@ -2096,23 +2207,23 @@ mod tests {
         // Calculate cumulative score manually
         let mut cumulative_total = 0.0;
         let mut current_score = 0.0;
-        
+
         // Round 1: 1.0 points
         current_score += 1.0;
         cumulative_total += current_score; // 1.0
-        
+
         // Round 2: 0.5 points
         current_score += 0.5;
         cumulative_total += current_score; // 1.0 + 1.5 = 2.5
-        
+
         // Round 3: 1.0 points
         current_score += 1.0;
         cumulative_total += current_score; // 2.5 + 2.5 = 5.0
-        
+
         // Round 4: 0.0 points
         current_score += 0.0;
         cumulative_total += current_score; // 5.0 + 2.5 = 7.5
-        
+
         assert_eq!(cumulative_total, 7.5);
     }
 
@@ -2126,42 +2237,54 @@ mod tests {
 
         let mut results = HashMap::new();
         // Player 1 has 1.5 points total
-        results.insert(1, PlayerResult {
-            player: create_test_player(1, "Player 1", Some(2000)),
-            points: 1.5,
-            games_played: 3,
-            wins: 1,
-            draws: 1,
-            losses: 1,
-        });
-        
+        results.insert(
+            1,
+            PlayerResult {
+                player: create_test_player(1, "Player 1", Some(2000)),
+                points: 1.5,
+                games_played: 3,
+                wins: 1,
+                draws: 1,
+                losses: 1,
+            },
+        );
+
         // Opponents
-        results.insert(2, PlayerResult {
-            player: create_test_player(2, "Opponent 1", Some(2100)),
-            points: 2.0, // >= 1.5, so counts
-            games_played: 3,
-            wins: 2,
-            draws: 0,
-            losses: 1,
-        });
-        
-        results.insert(3, PlayerResult {
-            player: create_test_player(3, "Opponent 2", Some(2200)),
-            points: 1.0, // < 1.5, so doesn't count
-            games_played: 3,
-            wins: 1,
-            draws: 0,
-            losses: 2,
-        });
-        
-        results.insert(4, PlayerResult {
-            player: create_test_player(4, "Opponent 3", Some(2300)),
-            points: 2.0, // >= 1.5, so counts
-            games_played: 3,
-            wins: 2,
-            draws: 0,
-            losses: 1,
-        });
+        results.insert(
+            2,
+            PlayerResult {
+                player: create_test_player(2, "Opponent 1", Some(2100)),
+                points: 2.0, // >= 1.5, so counts
+                games_played: 3,
+                wins: 2,
+                draws: 0,
+                losses: 1,
+            },
+        );
+
+        results.insert(
+            3,
+            PlayerResult {
+                player: create_test_player(3, "Opponent 2", Some(2200)),
+                points: 1.0, // < 1.5, so doesn't count
+                games_played: 3,
+                wins: 1,
+                draws: 0,
+                losses: 2,
+            },
+        );
+
+        results.insert(
+            4,
+            PlayerResult {
+                player: create_test_player(4, "Opponent 3", Some(2300)),
+                points: 2.0, // >= 1.5, so counts
+                games_played: 3,
+                wins: 2,
+                draws: 0,
+                losses: 1,
+            },
+        );
 
         // Koya score = points against opponents with >= 1.5 points
         // Win vs opponent 2 (2.0 points) = 1.0
@@ -2169,7 +2292,7 @@ mod tests {
         // Draw vs opponent 4 (2.0 points) = 0.5
         // Total Koya = 1.0 + 0.5 = 1.5
         let expected_koya = 1.5;
-        
+
         let koya_score = 1.0 + 0.5; // Win vs opponent 2 + Draw vs opponent 4
         assert_eq!(koya_score, expected_koya);
     }
@@ -2223,9 +2346,9 @@ mod tests {
     fn test_tournament_performance_rating() {
         // Test TPR calculation with various scenarios
         let scenarios = vec![
-            (1.0, 2000, 800),   // 100% score vs 2000 avg = ~2800 TPR
-            (0.5, 2000, 2000),  // 50% score vs 2000 avg = ~2000 TPR
-            (0.0, 2000, 1200),  // 0% score vs 2000 avg = ~1200 TPR
+            (1.0, 2000, 800),  // 100% score vs 2000 avg = ~2800 TPR
+            (0.5, 2000, 2000), // 50% score vs 2000 avg = ~2000 TPR
+            (0.0, 2000, 1200), // 0% score vs 2000 avg = ~1200 TPR
         ];
 
         for (percentage, avg_rating, expected_tpr_approx) in scenarios {
@@ -2238,10 +2361,15 @@ mod tests {
             };
 
             let tpr = (avg_rating as f64 + dp) as i32;
-            
+
             // Allow for reasonable approximation
             let diff = (tpr - expected_tpr_approx).abs();
-            assert!(diff < 100, "TPR calculation too far off: {} vs {}", tpr, expected_tpr_approx);
+            assert!(
+                diff < 100,
+                "TPR calculation too far off: {} vs {}",
+                tpr,
+                expected_tpr_approx
+            );
         }
     }
 
@@ -2249,82 +2377,94 @@ mod tests {
     fn test_enhanced_direct_encounter() {
         // Test scenario: 3 players tied on 2.0 points
         let games = vec![
-            create_test_game(1, 1, 1, 2, "1-0"),     // Player 1 beats Player 2
+            create_test_game(1, 1, 1, 2, "1-0"), // Player 1 beats Player 2
             create_test_game(2, 2, 2, 3, "1/2-1/2"), // Player 2 draws Player 3
-            create_test_game(3, 3, 3, 1, "0-1"),     // Player 1 beats Player 3
-            create_test_game(4, 4, 1, 4, "1-0"),     // Player 1 beats Player 4 (not tied)
+            create_test_game(3, 3, 3, 1, "0-1"), // Player 1 beats Player 3
+            create_test_game(4, 4, 1, 4, "1-0"), // Player 1 beats Player 4 (not tied)
             create_test_game(5, 5, 2, 4, "1/2-1/2"), // Player 2 draws Player 4 (not tied)
             create_test_game(6, 6, 3, 4, "1/2-1/2"), // Player 3 draws Player 4 (not tied)
         ];
 
         let mut results = HashMap::new();
-        
+
         // Players 1, 2, 3 are tied on 2.0 points
-        results.insert(1, PlayerResult {
-            player: create_test_player(1, "Player 1", Some(2000)),
-            points: 2.0,
-            games_played: 3,
-            wins: 2,
-            draws: 0,
-            losses: 1,
-        });
-        
-        results.insert(2, PlayerResult {
-            player: create_test_player(2, "Player 2", Some(2100)),
-            points: 2.0,
-            games_played: 3,
-            wins: 1,
-            draws: 2,
-            losses: 0,
-        });
-        
-        results.insert(3, PlayerResult {
-            player: create_test_player(3, "Player 3", Some(2200)),
-            points: 2.0,
-            games_played: 3,
-            wins: 1,
-            draws: 2,
-            losses: 0,
-        });
-        
+        results.insert(
+            1,
+            PlayerResult {
+                player: create_test_player(1, "Player 1", Some(2000)),
+                points: 2.0,
+                games_played: 3,
+                wins: 2,
+                draws: 0,
+                losses: 1,
+            },
+        );
+
+        results.insert(
+            2,
+            PlayerResult {
+                player: create_test_player(2, "Player 2", Some(2100)),
+                points: 2.0,
+                games_played: 3,
+                wins: 1,
+                draws: 2,
+                losses: 0,
+            },
+        );
+
+        results.insert(
+            3,
+            PlayerResult {
+                player: create_test_player(3, "Player 3", Some(2200)),
+                points: 2.0,
+                games_played: 3,
+                wins: 1,
+                draws: 2,
+                losses: 0,
+            },
+        );
+
         // Player 4 is not tied (1.5 points)
-        results.insert(4, PlayerResult {
-            player: create_test_player(4, "Player 4", Some(2300)),
-            points: 1.5,
-            games_played: 3,
-            wins: 0,
-            draws: 3,
-            losses: 0,
-        });
+        results.insert(
+            4,
+            PlayerResult {
+                player: create_test_player(4, "Player 4", Some(2300)),
+                points: 1.5,
+                games_played: 3,
+                wins: 0,
+                draws: 3,
+                losses: 0,
+            },
+        );
 
         // Calculate direct encounter scores
         // Player 1 vs tied players: Win vs 2 (1.0) + Win vs 3 (1.0) = 2.0
         // Player 2 vs tied players: Loss vs 1 (0.0) + Draw vs 3 (0.5) = 0.5
         // Player 3 vs tied players: Loss vs 1 (0.0) + Draw vs 2 (0.5) = 0.5
-        
+
         let tied_players = vec![1, 2, 3];
-        
+
         // Verify tied players are identified correctly
         let actual_tied: Vec<i32> = results
             .iter()
             .filter(|(_, result)| result.points as f64 == 2.0)
             .map(|(id, _)| *id)
             .collect();
-        
+
         assert_eq!(actual_tied.len(), 3);
         assert!(actual_tied.contains(&1));
         assert!(actual_tied.contains(&2));
         assert!(actual_tied.contains(&3));
-        
+
         // Calculate expected direct encounter scores
         let player1_de = 2.0; // 2 wins against tied players
         let player2_de = 0.5; // 1 draw against tied players
         let player3_de = 0.5; // 1 draw against tied players
-        
+
         assert_eq!(player1_de, 2.0);
         assert_eq!(player2_de, 0.5);
         assert_eq!(player3_de, 0.5);
-        
+
         // Player 1 should have the best direct encounter score
         assert!(player1_de > player2_de);
         assert!(player1_de > player3_de);
@@ -2333,62 +2473,65 @@ mod tests {
     #[tokio::test]
     async fn test_generate_cross_table() {
         let db = Arc::new(crate::pawn::db::sqlite::SqliteDb::new(
-            sqlx::SqlitePool::connect(":memory:").await.unwrap()
+            sqlx::SqlitePool::connect(":memory:").await.unwrap(),
         ));
         let calculator = TiebreakCalculator::new(db);
-        
+
         let players = vec![
             create_test_player(1, "Alice", Some(1800)),
             create_test_player(2, "Bob", Some(1750)),
             create_test_player(3, "Charlie", Some(1900)),
         ];
-        
+
         let games = vec![
             // Round 1: Alice (white) vs Bob (black) - Alice wins
             create_test_game(1, 1, 1, 2, "1-0"),
-            // Round 2: Charlie (white) vs Alice (black) - Draw  
+            // Round 2: Charlie (white) vs Alice (black) - Draw
             create_test_game(2, 2, 3, 1, "1/2-1/2"),
             // Round 3: Bob (white) vs Charlie (black) - Charlie wins
             create_test_game(3, 3, 2, 3, "0-1"),
         ];
-        
-        let cross_table = calculator.generate_cross_table(1, players.clone(), games).await.unwrap();
-        
+
+        let cross_table = calculator
+            .generate_cross_table(1, players.clone(), games)
+            .await
+            .unwrap();
+
         assert_eq!(cross_table.tournament_id, 1);
         assert_eq!(cross_table.players.len(), 3);
         assert_eq!(cross_table.rows.len(), 3);
-        
+
         // Check Alice's row (player 1)
         let alice_row = &cross_table.rows[0];
         assert_eq!(alice_row.player.id, 1);
         assert_eq!(alice_row.total_points, 1.5); // 1 win + 1 draw = 1.5 points
         assert_eq!(alice_row.games_played, 2);
-        
+
         // Check Alice's results
         assert_eq!(alice_row.results.len(), 3);
-        
+
         // Alice vs Alice (no game)
         assert_eq!(alice_row.results[0].opponent_id, 1);
         assert_eq!(alice_row.results[0].result, None);
-        
+
         // Alice vs Bob (Alice won as white)
         assert_eq!(alice_row.results[1].opponent_id, 2);
         assert_eq!(alice_row.results[1].result, Some(1.0));
         assert_eq!(alice_row.results[1].color, Some("white".to_string()));
         assert_eq!(alice_row.results[1].round, Some(1));
-        
+
         // Alice vs Charlie (draw as black)
         assert_eq!(alice_row.results[2].opponent_id, 3);
         assert_eq!(alice_row.results[2].result, Some(0.5));
         assert_eq!(alice_row.results[2].color, Some("black".to_string()));
         assert_eq!(alice_row.results[2].round, Some(2));
-        
+
         // Check Bob's row (player 2)
         let bob_row = &cross_table.rows[1];
         assert_eq!(bob_row.player.id, 2);
         assert_eq!(bob_row.total_points, 0.0); // 2 losses = 0 points
         assert_eq!(bob_row.games_played, 2);
-        
+
         // Check Charlie's row (player 3)
         let charlie_row = &cross_table.rows[2];
         assert_eq!(charlie_row.player.id, 3);
@@ -2399,99 +2542,124 @@ mod tests {
     #[tokio::test]
     async fn test_generate_tiebreak_breakdown() {
         let db = Arc::new(crate::pawn::db::sqlite::SqliteDb::new(
-            sqlx::SqlitePool::connect(":memory:").await.unwrap()
+            sqlx::SqlitePool::connect(":memory:").await.unwrap(),
         ));
         let calculator = TiebreakCalculator::new(db);
-        
+
         let players = vec![
             create_test_player(1, "Alice", Some(1800)),
             create_test_player(2, "Bob", Some(1750)),
             create_test_player(3, "Charlie", Some(1900)),
         ];
-        
+
         let games = vec![
-            create_test_game(1, 1, 1, 2, "1-0"), // Alice beats Bob
+            create_test_game(1, 1, 1, 2, "1-0"),     // Alice beats Bob
             create_test_game(2, 2, 3, 1, "1/2-1/2"), // Charlie draws with Alice
-            create_test_game(3, 3, 2, 3, "0-1"), // Charlie beats Bob
+            create_test_game(3, 3, 2, 3, "0-1"),     // Charlie beats Bob
         ];
-        
+
         let mut results = HashMap::new();
-        results.insert(1, PlayerResult {
-            player: players[0].clone(),
-            points: 1.5,
-            games_played: 2,
-            wins: 1,
-            draws: 1,
-            losses: 0,
-        });
-        results.insert(2, PlayerResult {
-            player: players[1].clone(),
-            points: 0.0,
-            games_played: 2,
-            wins: 0,
-            draws: 0,
-            losses: 2,
-        });
-        results.insert(3, PlayerResult {
-            player: players[2].clone(),
-            points: 1.5,
-            games_played: 2,
-            wins: 1,
-            draws: 1,
-            losses: 0,
-        });
-        
+        results.insert(
+            1,
+            PlayerResult {
+                player: players[0].clone(),
+                points: 1.5,
+                games_played: 2,
+                wins: 1,
+                draws: 1,
+                losses: 0,
+            },
+        );
+        results.insert(
+            2,
+            PlayerResult {
+                player: players[1].clone(),
+                points: 0.0,
+                games_played: 2,
+                wins: 0,
+                draws: 0,
+                losses: 2,
+            },
+        );
+        results.insert(
+            3,
+            PlayerResult {
+                player: players[2].clone(),
+                points: 1.5,
+                games_played: 2,
+                wins: 1,
+                draws: 1,
+                losses: 0,
+            },
+        );
+
         // Test Buchholz breakdown for Alice
-        let buchholz_breakdown = calculator.generate_tiebreak_breakdown(
-            &players[0],
-            TiebreakType::BuchholzFull,
-            &games,
-            &players,
-            &results,
-        ).await.unwrap();
-        
+        let buchholz_breakdown = calculator
+            .generate_tiebreak_breakdown(
+                &players[0],
+                TiebreakType::BuchholzFull,
+                &games,
+                &players,
+                &results,
+            )
+            .await
+            .unwrap();
+
         assert_eq!(buchholz_breakdown.tiebreak_type, TiebreakType::BuchholzFull);
         assert_eq!(buchholz_breakdown.value, 1.5); // Bob (0.0) + Charlie (1.5) = 1.5
         assert!(buchholz_breakdown.explanation.contains("Buchholz"));
         assert!(!buchholz_breakdown.calculation_details.is_empty());
         assert_eq!(buchholz_breakdown.opponents_involved.len(), 2);
-        
+
         // Test Number of Wins breakdown for Alice
-        let wins_breakdown = calculator.generate_tiebreak_breakdown(
-            &players[0],
-            TiebreakType::NumberOfWins,
-            &games,
-            &players,
-            &results,
-        ).await.unwrap();
-        
+        let wins_breakdown = calculator
+            .generate_tiebreak_breakdown(
+                &players[0],
+                TiebreakType::NumberOfWins,
+                &games,
+                &players,
+                &results,
+            )
+            .await
+            .unwrap();
+
         assert_eq!(wins_breakdown.tiebreak_type, TiebreakType::NumberOfWins);
         assert_eq!(wins_breakdown.value, 1.0); // Alice has 1 win
         assert!(wins_breakdown.explanation.contains("Number of Wins"));
         assert!(!wins_breakdown.calculation_details.is_empty());
-        
+
         // Test ARO breakdown for Alice
-        let aro_breakdown = calculator.generate_tiebreak_breakdown(
-            &players[0],
-            TiebreakType::AverageRatingOfOpponents,
-            &games,
-            &players,
-            &results,
-        ).await.unwrap();
-        
-        assert_eq!(aro_breakdown.tiebreak_type, TiebreakType::AverageRatingOfOpponents);
+        let aro_breakdown = calculator
+            .generate_tiebreak_breakdown(
+                &players[0],
+                TiebreakType::AverageRatingOfOpponents,
+                &games,
+                &players,
+                &results,
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(
+            aro_breakdown.tiebreak_type,
+            TiebreakType::AverageRatingOfOpponents
+        );
         assert_eq!(aro_breakdown.value, 1825.0); // (1750 + 1900) / 2 = 1825
         assert!(aro_breakdown.explanation.contains("Average Rating"));
         assert_eq!(aro_breakdown.opponents_involved.len(), 2);
-        
+
         // Verify opponent contributions
-        let bob_contribution = aro_breakdown.opponents_involved.iter()
+        let bob_contribution = aro_breakdown
+            .opponents_involved
+            .iter()
             .find(|o| o.opponent_name == "Bob")
             .unwrap();
         assert_eq!(bob_contribution.contribution_value, 1750.0);
         assert_eq!(bob_contribution.opponent_rating, Some(1750));
-        
-        let charlie_contribution = aro_breakdown.opponents_involved.iter()
+
+        let charlie_contribution = aro_breakdown
+            .opponents_involved
+            .iter()
             .find(|o| o.opponent_name == "Charlie")
             .unwrap();
         assert_eq!(charlie_contribution.contribution_value, 1900.0);

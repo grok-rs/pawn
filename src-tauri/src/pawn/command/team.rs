@@ -5,18 +5,24 @@ use crate::pawn::{
     common::types::CommandResult,
     domain::{
         dto::{
-            CreateTeam, UpdateTeam, AddPlayerToTeam, RemovePlayerFromTeam, TeamSearchFilters,
-            CreateTeamMatch, UpdateTeamMatch, CreateTeamLineup, CreateTeamTournamentSettings,
-            UpdateTeamTournamentSettings,
+            AddPlayerToTeam, CreateTeam, CreateTeamLineup, CreateTeamMatch,
+            CreateTeamTournamentSettings, RemovePlayerFromTeam, TeamSearchFilters, UpdateTeam,
+            UpdateTeamMatch, UpdateTeamTournamentSettings,
         },
         model::{
-            Team, TeamMembership, TeamMatch, TeamLineup, TeamTournamentSettings, TeamStanding,
+            Team, TeamLineup, TeamMatch, TeamMembership, TeamStanding, TeamTournamentSettings,
         },
     },
     service::{
         team::TeamStatistics,
-        team_pairing::{TeamPairingEngine, TeamPairingConfig, TeamPairingMethod, ColorAllocation, BoardOrderPolicy},
-        team_scoring::{TeamScoringService, TeamScoringConfig, TeamScoringSystem, TeamTiebreakCriterion, TeamStandingsResult, ExtendedTeamStanding},
+        team_pairing::{
+            BoardOrderPolicy, ColorAllocation, TeamPairingConfig, TeamPairingEngine,
+            TeamPairingMethod,
+        },
+        team_scoring::{
+            ExtendedTeamStanding, TeamScoringConfig, TeamScoringService, TeamScoringSystem,
+            TeamStandingsResult, TeamTiebreakCriterion,
+        },
     },
     state::PawnState,
 };
@@ -28,20 +34,14 @@ use crate::pawn::{
 #[instrument(ret, skip(state))]
 #[tauri::command]
 #[specta::specta]
-pub async fn create_team(
-    state: State<'_, PawnState>,
-    data: CreateTeam,
-) -> CommandResult<Team> {
+pub async fn create_team(state: State<'_, PawnState>, data: CreateTeam) -> CommandResult<Team> {
     state.team_service.create_team(data).await
 }
 
 #[instrument(ret, skip(state))]
 #[tauri::command]
 #[specta::specta]
-pub async fn get_team_by_id(
-    state: State<'_, PawnState>,
-    team_id: i32,
-) -> CommandResult<Team> {
+pub async fn get_team_by_id(state: State<'_, PawnState>, team_id: i32) -> CommandResult<Team> {
     state.team_service.get_team_by_id(team_id).await
 }
 
@@ -52,26 +52,23 @@ pub async fn get_teams_by_tournament(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<Vec<Team>> {
-    state.team_service.get_teams_by_tournament(tournament_id).await
+    state
+        .team_service
+        .get_teams_by_tournament(tournament_id)
+        .await
 }
 
 #[instrument(ret, skip(state))]
 #[tauri::command]
 #[specta::specta]
-pub async fn update_team(
-    state: State<'_, PawnState>,
-    data: UpdateTeam,
-) -> CommandResult<Team> {
+pub async fn update_team(state: State<'_, PawnState>, data: UpdateTeam) -> CommandResult<Team> {
     state.team_service.update_team(data).await
 }
 
 #[instrument(ret, skip(state))]
 #[tauri::command]
 #[specta::specta]
-pub async fn delete_team(
-    state: State<'_, PawnState>,
-    team_id: i32,
-) -> CommandResult<()> {
+pub async fn delete_team(state: State<'_, PawnState>, team_id: i32) -> CommandResult<()> {
     state.team_service.delete_team(team_id).await
 }
 
@@ -126,7 +123,10 @@ pub async fn get_all_team_memberships(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<Vec<TeamMembership>> {
-    state.team_service.get_all_team_memberships(tournament_id).await
+    state
+        .team_service
+        .get_all_team_memberships(tournament_id)
+        .await
 }
 
 // =====================================================
@@ -171,7 +171,10 @@ pub async fn get_team_matches(
     tournament_id: i32,
     round_number: Option<i32>,
 ) -> CommandResult<Vec<TeamMatch>> {
-    state.team_service.get_team_matches(tournament_id, round_number).await
+    state
+        .team_service
+        .get_team_matches(tournament_id, round_number)
+        .await
 }
 
 // =====================================================
@@ -196,7 +199,10 @@ pub async fn get_team_lineups(
     team_id: i32,
     round_number: i32,
 ) -> CommandResult<Vec<TeamLineup>> {
-    state.team_service.get_team_lineups(team_id, round_number).await
+    state
+        .team_service
+        .get_team_lineups(team_id, round_number)
+        .await
 }
 
 // =====================================================
@@ -210,7 +216,10 @@ pub async fn create_team_tournament_settings(
     state: State<'_, PawnState>,
     data: CreateTeamTournamentSettings,
 ) -> CommandResult<TeamTournamentSettings> {
-    state.team_service.create_team_tournament_settings(data).await
+    state
+        .team_service
+        .create_team_tournament_settings(data)
+        .await
 }
 
 #[instrument(ret, skip(state))]
@@ -220,7 +229,10 @@ pub async fn update_team_tournament_settings(
     state: State<'_, PawnState>,
     data: UpdateTeamTournamentSettings,
 ) -> CommandResult<TeamTournamentSettings> {
-    state.team_service.update_team_tournament_settings(data).await
+    state
+        .team_service
+        .update_team_tournament_settings(data)
+        .await
 }
 
 #[instrument(ret, skip(state))]
@@ -230,7 +242,10 @@ pub async fn get_team_tournament_settings(
     state: State<'_, PawnState>,
     tournament_id: i32,
 ) -> CommandResult<TeamTournamentSettings> {
-    state.team_service.get_team_tournament_settings(tournament_id).await
+    state
+        .team_service
+        .get_team_tournament_settings(tournament_id)
+        .await
 }
 
 // =====================================================
@@ -269,7 +284,10 @@ pub async fn validate_team_lineup(
     team_id: i32,
     round_number: i32,
 ) -> CommandResult<bool> {
-    state.team_service.validate_team_lineup(team_id, round_number).await
+    state
+        .team_service
+        .validate_team_lineup(team_id, round_number)
+        .await
 }
 
 #[instrument(ret, skip(state))]
@@ -280,7 +298,10 @@ pub async fn validate_team_board_order(
     team_id: i32,
     round_number: i32,
 ) -> CommandResult<bool> {
-    state.team_service.validate_team_board_order(team_id, round_number).await
+    state
+        .team_service
+        .validate_team_board_order(team_id, round_number)
+        .await
 }
 
 // =====================================================
@@ -290,9 +311,9 @@ pub async fn validate_team_board_order(
 /// Team pairing configuration for commands
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 pub struct TeamPairingConfigDto {
-    pub pairing_method: String,        // "swiss", "round_robin", "scheveningen", "knockout", "double_round_robin"
-    pub color_allocation: String,      // "alternating_boards", "alternating_rounds", "balanced_rotation", "fixed_boards"
-    pub board_order_policy: String,    // "rating_descending", "rating_ascending", "captain_choice", "flexible"
+    pub pairing_method: String, // "swiss", "round_robin", "scheveningen", "knockout", "double_round_robin"
+    pub color_allocation: String, // "alternating_boards", "alternating_rounds", "balanced_rotation", "fixed_boards"
+    pub board_order_policy: String, // "rating_descending", "rating_ascending", "captain_choice", "flexible"
     pub allow_team_vs_team: bool,
     pub prevent_early_rematches: bool,
     pub max_score_difference: Option<f32>,
@@ -333,9 +354,11 @@ pub async fn generate_team_pairings(
         "scheveningen" => TeamPairingMethod::Scheveningen,
         "knockout" => TeamPairingMethod::Knockout,
         "double_round_robin" => TeamPairingMethod::DoubleRoundRobin,
-        _ => return Err(crate::pawn::common::error::PawnError::InvalidInput(
-            "Invalid pairing method".to_string()
-        )),
+        _ => {
+            return Err(crate::pawn::common::error::PawnError::InvalidInput(
+                "Invalid pairing method".to_string(),
+            ));
+        }
     };
 
     let color_allocation = match config.color_allocation.as_str() {
@@ -343,9 +366,11 @@ pub async fn generate_team_pairings(
         "alternating_rounds" => ColorAllocation::AlternatingRounds,
         "balanced_rotation" => ColorAllocation::BalancedRotation,
         "fixed_boards" => ColorAllocation::FixedBoards,
-        _ => return Err(crate::pawn::common::error::PawnError::InvalidInput(
-            "Invalid color allocation".to_string()
-        )),
+        _ => {
+            return Err(crate::pawn::common::error::PawnError::InvalidInput(
+                "Invalid color allocation".to_string(),
+            ));
+        }
     };
 
     let board_order_policy = match config.board_order_policy.as_str() {
@@ -353,9 +378,11 @@ pub async fn generate_team_pairings(
         "rating_ascending" => BoardOrderPolicy::RatingAscending,
         "captain_choice" => BoardOrderPolicy::CaptainChoice,
         "flexible" => BoardOrderPolicy::Flexible,
-        _ => return Err(crate::pawn::common::error::PawnError::InvalidInput(
-            "Invalid board order policy".to_string()
-        )),
+        _ => {
+            return Err(crate::pawn::common::error::PawnError::InvalidInput(
+                "Invalid board order policy".to_string(),
+            ));
+        }
     };
 
     let internal_config = TeamPairingConfig {
@@ -370,7 +397,7 @@ pub async fn generate_team_pairings(
 
     // Create team pairing engine
     let team_pairing_engine = TeamPairingEngine::new(state.team_service.get_db().clone());
-    
+
     // Generate pairings
     let result = team_pairing_engine
         .generate_team_pairings(tournament_id, round_number, internal_config)
@@ -420,33 +447,39 @@ pub async fn validate_team_pairing_config(
 ) -> CommandResult<bool> {
     // Validate pairing method
     match config.pairing_method.as_str() {
-        "swiss" | "round_robin" | "scheveningen" | "knockout" | "double_round_robin" => {},
-        _ => return Err(crate::pawn::common::error::PawnError::InvalidInput(
-            "Invalid pairing method".to_string()
-        )),
+        "swiss" | "round_robin" | "scheveningen" | "knockout" | "double_round_robin" => {}
+        _ => {
+            return Err(crate::pawn::common::error::PawnError::InvalidInput(
+                "Invalid pairing method".to_string(),
+            ));
+        }
     }
 
     // Validate color allocation
     match config.color_allocation.as_str() {
-        "alternating_boards" | "alternating_rounds" | "balanced_rotation" | "fixed_boards" => {},
-        _ => return Err(crate::pawn::common::error::PawnError::InvalidInput(
-            "Invalid color allocation".to_string()
-        )),
+        "alternating_boards" | "alternating_rounds" | "balanced_rotation" | "fixed_boards" => {}
+        _ => {
+            return Err(crate::pawn::common::error::PawnError::InvalidInput(
+                "Invalid color allocation".to_string(),
+            ));
+        }
     }
 
     // Validate board order policy
     match config.board_order_policy.as_str() {
-        "rating_descending" | "rating_ascending" | "captain_choice" | "flexible" => {},
-        _ => return Err(crate::pawn::common::error::PawnError::InvalidInput(
-            "Invalid board order policy".to_string()
-        )),
+        "rating_descending" | "rating_ascending" | "captain_choice" | "flexible" => {}
+        _ => {
+            return Err(crate::pawn::common::error::PawnError::InvalidInput(
+                "Invalid board order policy".to_string(),
+            ));
+        }
     }
 
     // Validate score difference
     if let Some(diff) = config.max_score_difference {
         if diff < 0.0 || diff > 10.0 {
             return Err(crate::pawn::common::error::PawnError::InvalidInput(
-                "Max score difference must be between 0.0 and 10.0".to_string()
+                "Max score difference must be between 0.0 and 10.0".to_string(),
             ));
         }
     }
@@ -461,11 +494,11 @@ pub async fn validate_team_pairing_config(
 /// Team scoring configuration for commands
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 pub struct TeamScoringConfigDto {
-    pub scoring_system: String,         // "match_points", "board_points", "olympic_points", "custom_points"
+    pub scoring_system: String, // "match_points", "board_points", "olympic_points", "custom_points"
     pub match_points_win: f64,
     pub match_points_draw: f64,
     pub match_points_loss: f64,
-    pub board_weight_system: String,    // "equal", "descending", "ascending"
+    pub board_weight_system: String, // "equal", "descending", "ascending"
     pub tiebreak_criteria: Vec<String>, // ["match_points", "board_points", "direct_encounter", etc.]
     pub olympic_scoring: bool,
     pub minimum_games_for_board_points: i32,
@@ -508,18 +541,22 @@ pub async fn calculate_team_standings(
         "board_points" => TeamScoringSystem::BoardPoints,
         "olympic_points" => TeamScoringSystem::OlympicPoints,
         "custom_points" => TeamScoringSystem::CustomPoints,
-        _ => return Err(crate::pawn::common::error::PawnError::InvalidInput(
-            "Invalid scoring system".to_string()
-        )),
+        _ => {
+            return Err(crate::pawn::common::error::PawnError::InvalidInput(
+                "Invalid scoring system".to_string(),
+            ));
+        }
     };
 
     let board_weight_system = match config.board_weight_system.as_str() {
         "equal" => crate::pawn::service::team_scoring::BoardWeightSystem::Equal,
         "descending" => crate::pawn::service::team_scoring::BoardWeightSystem::Descending,
         "ascending" => crate::pawn::service::team_scoring::BoardWeightSystem::Ascending,
-        _ => return Err(crate::pawn::common::error::PawnError::InvalidInput(
-            "Invalid board weight system".to_string()
-        )),
+        _ => {
+            return Err(crate::pawn::common::error::PawnError::InvalidInput(
+                "Invalid board weight system".to_string(),
+            ));
+        }
     };
 
     let mut tiebreak_criteria = Vec::new();
@@ -534,9 +571,11 @@ pub async fn calculate_team_standings(
             "captain_board" => TeamTiebreakCriterion::CaptainBoard,
             "match_wins" => TeamTiebreakCriterion::MatchWins,
             "draw_count" => TeamTiebreakCriterion::DrawCount,
-            _ => return Err(crate::pawn::common::error::PawnError::InvalidInput(
-                format!("Invalid tiebreak criterion: {}", criterion_str)
-            )),
+            _ => {
+                return Err(crate::pawn::common::error::PawnError::InvalidInput(
+                    format!("Invalid tiebreak criterion: {}", criterion_str),
+                ));
+            }
         };
         tiebreak_criteria.push(criterion);
     }
@@ -554,14 +593,15 @@ pub async fn calculate_team_standings(
 
     // Create team scoring service
     let team_scoring_service = TeamScoringService::new(state.team_service.get_db().clone());
-    
+
     // Calculate standings
     let result = team_scoring_service
         .calculate_team_standings(tournament_id, internal_config)
         .await?;
 
     // Convert result to DTO
-    let standings_dto: Vec<ExtendedTeamStandingDto> = result.standings
+    let standings_dto: Vec<ExtendedTeamStandingDto> = result
+        .standings
         .into_iter()
         .map(|standing| ExtendedTeamStandingDto {
             team: standing.team,
@@ -620,42 +660,57 @@ pub async fn validate_team_scoring_config(
 ) -> CommandResult<bool> {
     // Validate scoring system
     match config.scoring_system.as_str() {
-        "match_points" | "board_points" | "olympic_points" | "custom_points" => {},
-        _ => return Err(crate::pawn::common::error::PawnError::InvalidInput(
-            "Invalid scoring system".to_string()
-        )),
+        "match_points" | "board_points" | "olympic_points" | "custom_points" => {}
+        _ => {
+            return Err(crate::pawn::common::error::PawnError::InvalidInput(
+                "Invalid scoring system".to_string(),
+            ));
+        }
     }
 
     // Validate board weight system
     match config.board_weight_system.as_str() {
-        "equal" | "descending" | "ascending" => {},
-        _ => return Err(crate::pawn::common::error::PawnError::InvalidInput(
-            "Invalid board weight system".to_string()
-        )),
+        "equal" | "descending" | "ascending" => {}
+        _ => {
+            return Err(crate::pawn::common::error::PawnError::InvalidInput(
+                "Invalid board weight system".to_string(),
+            ));
+        }
     }
 
     // Validate tiebreak criteria
     for criterion in &config.tiebreak_criteria {
         match criterion.as_str() {
-            "match_points" | "board_points" | "direct_encounter" | "sonneborn_berger" 
-            | "average_opponent_rating" | "board_count_tiebreak" | "captain_board" 
-            | "match_wins" | "draw_count" => {},
-            _ => return Err(crate::pawn::common::error::PawnError::InvalidInput(
-                format!("Invalid tiebreak criterion: {}", criterion)
-            )),
+            "match_points"
+            | "board_points"
+            | "direct_encounter"
+            | "sonneborn_berger"
+            | "average_opponent_rating"
+            | "board_count_tiebreak"
+            | "captain_board"
+            | "match_wins"
+            | "draw_count" => {}
+            _ => {
+                return Err(crate::pawn::common::error::PawnError::InvalidInput(
+                    format!("Invalid tiebreak criterion: {}", criterion),
+                ));
+            }
         }
     }
 
     // Validate point values
-    if config.match_points_win < 0.0 || config.match_points_draw < 0.0 || config.match_points_loss < 0.0 {
+    if config.match_points_win < 0.0
+        || config.match_points_draw < 0.0
+        || config.match_points_loss < 0.0
+    {
         return Err(crate::pawn::common::error::PawnError::InvalidInput(
-            "Match points must be non-negative".to_string()
+            "Match points must be non-negative".to_string(),
         ));
     }
 
     if config.minimum_games_for_board_points < 0 {
         return Err(crate::pawn::common::error::PawnError::InvalidInput(
-            "Minimum games for board points must be non-negative".to_string()
+            "Minimum games for board points must be non-negative".to_string(),
         ));
     }
 
@@ -669,45 +724,57 @@ pub async fn validate_team_scoring_config(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::pawn::db::sqlite::SqliteDb;
     use crate::pawn::service::team::TeamService;
     use mockall::mock;
+    use sqlx::SqlitePool;
     use std::sync::Arc;
     use tempfile::TempDir;
-    use sqlx::SqlitePool;
-    use crate::pawn::db::sqlite::SqliteDb;
 
     async fn setup_test_state() -> PawnState {
         let temp_dir = TempDir::new().unwrap();
-        
+
         // Use in-memory SQLite for testing
         let database_url = "sqlite::memory:";
         let pool = SqlitePool::connect(database_url).await.unwrap();
-        
+
         sqlx::migrate!("./migrations").run(&pool).await.unwrap();
-        
+
         let db = Arc::new(SqliteDb::new(pool));
-        
+
         use crate::pawn::service::{
-            export::ExportService, norm_calculation::NormCalculationService, player::PlayerService, 
-            realtime_standings::RealTimeStandingsService, round::RoundService, 
-            round_robin_analysis::RoundRobinAnalysisService, swiss_analysis::SwissAnalysisService, 
-            team::TeamService, tiebreak::TiebreakCalculator, time_control::TimeControlService, tournament::TournamentService,
+            export::ExportService, norm_calculation::NormCalculationService, player::PlayerService,
+            realtime_standings::RealTimeStandingsService, round::RoundService,
+            round_robin_analysis::RoundRobinAnalysisService, swiss_analysis::SwissAnalysisService,
+            team::TeamService, tiebreak::TiebreakCalculator, time_control::TimeControlService,
+            tournament::TournamentService,
         };
         use crate::pawn::state::State;
         use std::sync::Arc;
-        
+
         let tournament_service = Arc::new(TournamentService::new(Arc::clone(&db)));
         let tiebreak_calculator = Arc::new(TiebreakCalculator::new(Arc::clone(&db)));
-        let realtime_standings_service = Arc::new(RealTimeStandingsService::new(Arc::clone(&db), Arc::clone(&tiebreak_calculator)));
+        let realtime_standings_service = Arc::new(RealTimeStandingsService::new(
+            Arc::clone(&db),
+            Arc::clone(&tiebreak_calculator),
+        ));
         let round_service = Arc::new(RoundService::new(Arc::clone(&db)));
         let player_service = Arc::new(PlayerService::new(Arc::clone(&db)));
         let time_control_service = Arc::new(TimeControlService::new(Arc::clone(&db)));
         let swiss_analysis_service = Arc::new(SwissAnalysisService::new(Arc::clone(&db)));
-        let round_robin_analysis_service = Arc::new(RoundRobinAnalysisService::new(Arc::clone(&db)));
-        let export_service = Arc::new(ExportService::new(Arc::clone(&db), Arc::clone(&tiebreak_calculator), temp_dir.path().join("exports")));
-        let norm_calculation_service = Arc::new(NormCalculationService::new(Arc::clone(&db), Arc::clone(&tiebreak_calculator)));
+        let round_robin_analysis_service =
+            Arc::new(RoundRobinAnalysisService::new(Arc::clone(&db)));
+        let export_service = Arc::new(ExportService::new(
+            Arc::clone(&db),
+            Arc::clone(&tiebreak_calculator),
+            temp_dir.path().join("exports"),
+        ));
+        let norm_calculation_service = Arc::new(NormCalculationService::new(
+            Arc::clone(&db),
+            Arc::clone(&tiebreak_calculator),
+        ));
         let team_service = Arc::new(TeamService::new(Arc::clone(&db)));
-        
+
         State {
             app_data_dir: temp_dir.path().to_path_buf(),
             db,
@@ -728,7 +795,7 @@ mod tests {
     #[tokio::test]
     async fn command_create_team_contract() {
         let state = setup_test_state().await;
-        
+
         // Test the underlying service directly to validate the command contract
         let create_data = CreateTeam {
             tournament_id: 1,
@@ -741,7 +808,7 @@ mod tests {
             contact_phone: Some("123-456-7890".to_string()),
             max_board_count: 4,
         };
-        
+
         // Note: This will fail because tournament doesn't exist, but tests the contract
         let result = state.team_service.create_team(create_data).await;
         assert!(result.is_err()); // Expected to fail due to missing tournament
@@ -750,7 +817,7 @@ mod tests {
     #[tokio::test]
     async fn command_get_teams_by_tournament_contract() {
         let state = setup_test_state().await;
-        
+
         // Test the underlying service directly to validate the command contract
         let result = state.team_service.get_teams_by_tournament(1).await;
         assert!(result.is_ok());
@@ -760,7 +827,7 @@ mod tests {
     #[tokio::test]
     async fn command_search_teams_contract() {
         let state = setup_test_state().await;
-        
+
         let filters = TeamSearchFilters {
             tournament_id: 1,
             name: Some("Test".to_string()),
@@ -773,7 +840,7 @@ mod tests {
             limit: Some(10),
             offset: Some(0),
         };
-        
+
         let result = state.team_service.search_teams(filters).await;
         assert!(result.is_ok());
         assert!(result.unwrap().is_empty());
@@ -782,7 +849,7 @@ mod tests {
     #[tokio::test]
     async fn command_get_team_by_id_contract() {
         let state = setup_test_state().await;
-        
+
         // Test the underlying service directly to validate the command contract
         let result = state.team_service.get_team_by_id(999).await;
         assert!(result.is_err()); // Expected to fail due to missing team
@@ -791,7 +858,7 @@ mod tests {
     #[tokio::test]
     async fn command_get_team_memberships_contract() {
         let state = setup_test_state().await;
-        
+
         // Test the underlying service directly to validate the command contract
         let result = state.team_service.get_team_memberships(1).await;
         assert!(result.is_ok());
@@ -801,7 +868,7 @@ mod tests {
     #[tokio::test]
     async fn command_get_team_matches_contract() {
         let state = setup_test_state().await;
-        
+
         // Test the underlying service directly to validate the command contract
         let result = state.team_service.get_team_matches(1, None).await;
         assert!(result.is_ok());
@@ -811,7 +878,7 @@ mod tests {
     #[tokio::test]
     async fn command_get_team_lineups_contract() {
         let state = setup_test_state().await;
-        
+
         // Test the underlying service directly to validate the command contract
         let result = state.team_service.get_team_lineups(1, 1).await;
         assert!(result.is_ok());

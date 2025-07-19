@@ -5,7 +5,7 @@ import {
   CardContent,
   Typography,
   Button,
-  Grid,
+  Grid2 as Grid,
   Chip,
   IconButton,
   TextField,
@@ -138,7 +138,7 @@ export const MobileResultEntry: React.FC<MobileResultEntryProps> = ({
           const validation = await commands.validateGameResult({
             game_id: gameId,
             result,
-            result_type: resultType,
+            result_type: resultType || null,
             tournament_id: tournamentId,
             changed_by: 'current_user',
           });
@@ -261,8 +261,8 @@ export const MobileResultEntry: React.FC<MobileResultEntryProps> = ({
       {/* Game Information */}
       <Card sx={{ m: 2, mb: 1 }}>
         <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={5}>
+          <Grid container spacing={2} sx={{ alignItems: 'center' }}>
+            <Grid size={{ mobile: 12, tablet: 5 }}>
               <Typography variant="h6" align="center">
                 {currentGame.white_player.name}
               </Typography>
@@ -270,12 +270,12 @@ export const MobileResultEntry: React.FC<MobileResultEntryProps> = ({
                 White
               </Typography>
             </Grid>
-            <Grid item xs={2}>
+            <Grid size={{ mobile: 12, tablet: 2 }}>
               <Typography variant="h4" align="center" color="primary">
                 vs
               </Typography>
             </Grid>
-            <Grid item xs={5}>
+            <Grid size={{ mobile: 12, tablet: 5 }}>
               <Typography variant="h6" align="center">
                 {currentGame.black_player.name}
               </Typography>
@@ -316,9 +316,9 @@ export const MobileResultEntry: React.FC<MobileResultEntryProps> = ({
           </Typography>
 
           {/* Standard Results */}
-          <Grid container spacing={1} mb={2}>
+          <Grid container spacing={1} sx={{ mb: 2 }}>
             {RESULT_BUTTONS.map(button => (
-              <Grid item xs={6} sm={3} key={button.value}>
+              <Grid size={{ mobile: 6, tablet: 3 }} key={button.value}>
                 <Button
                   fullWidth
                   variant={
@@ -361,9 +361,9 @@ export const MobileResultEntry: React.FC<MobileResultEntryProps> = ({
             mountOnEnter
             unmountOnExit
           >
-            <Grid container spacing={1} mt={1}>
+            <Grid container spacing={1} sx={{ mt: 1 }}>
               {SPECIAL_RESULTS.map(result => (
-                <Grid item xs={6} sm={4} key={result.value}>
+                <Grid size={{ mobile: 6, tablet: 4 }} key={result.value}>
                   <Button
                     fullWidth
                     variant={
@@ -434,8 +434,8 @@ export const MobileResultEntry: React.FC<MobileResultEntryProps> = ({
           borderColor: 'divider',
         }}
       >
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={3}>
+        <Grid container spacing={2} sx={{ alignItems: 'center' }}>
+          <Grid size={{ mobile: 12, tablet: 3 }}>
             <Button
               fullWidth
               variant="outlined"
@@ -447,7 +447,7 @@ export const MobileResultEntry: React.FC<MobileResultEntryProps> = ({
             </Button>
           </Grid>
 
-          <Grid item xs={6}>
+          <Grid size={{ mobile: 12, tablet: 6 }}>
             <Button
               fullWidth
               variant="contained"
@@ -462,7 +462,7 @@ export const MobileResultEntry: React.FC<MobileResultEntryProps> = ({
             </Button>
           </Grid>
 
-          <Grid item xs={3}>
+          <Grid size={{ mobile: 12, tablet: 3 }}>
             <Button
               fullWidth
               variant="outlined"

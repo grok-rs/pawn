@@ -16,7 +16,7 @@ import {
   Button,
   Typography,
   Alert,
-  Grid,
+  Grid2 as Grid,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -162,7 +162,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
   const tableRef = useRef<HTMLDivElement>(null);
 
   const theme = useTheme();
-  const isMobileScreen = useMediaQuery(theme.breakpoints.down('lg'));
+  const isMobileScreen = useMediaQuery(theme.breakpoints.down('laptop'));
 
   // Initialize result entries from games
   useEffect(() => {
@@ -211,7 +211,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
         const validation = await commands.validateGameResult({
           game_id: gameId,
           result,
-          result_type: resultType,
+          result_type: resultType || null,
           tournament_id: tournamentId,
           changed_by: 'current_user', // This should come from user context
         });
@@ -592,8 +592,8 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
 
   return (
     <Box>
-      <Grid container spacing={2} alignItems="center" mb={2}>
-        <Grid item>
+      <Grid container spacing={2} sx={{ alignItems: 'center', mb: 2 }}>
+        <Grid>
           <Typography variant="h6" color="primary" fontWeight={600}>
             {t('gameResults.title')}{' '}
             {roundNumber
@@ -603,7 +603,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
         </Grid>
         {!readOnly && (
           <>
-            <Grid item>
+            <Grid>
               <Button
                 variant="outlined"
                 onClick={batchValidate}
@@ -612,7 +612,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                 {t('gameResults.buttons.validateAll')} ({modifiedCount})
               </Button>
             </Grid>
-            <Grid item>
+            <Grid>
               <Button
                 variant="contained"
                 startIcon={<SaveIcon />}
@@ -623,7 +623,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                 {t('gameResults.buttons.saveAll')} ({modifiedCount})
               </Button>
             </Grid>
-            <Grid item>
+            <Grid>
               <Button
                 variant="outlined"
                 startIcon={<BulkIcon />}
@@ -702,7 +702,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                 </MenuItem>
               </Menu>
             </Grid>
-            <Grid item>
+            <Grid>
               <Button
                 variant="outlined"
                 onClick={() => setShowKeyboardHelp(!showKeyboardHelp)}
@@ -711,7 +711,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                 {t('gameResults.buttons.shortcuts')} (Ctrl+?)
               </Button>
             </Grid>
-            <Grid item>
+            <Grid>
               <FormControl>
                 <Button
                   variant={keyboardShortcutsEnabled ? 'contained' : 'outlined'}
@@ -727,7 +727,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                 </Button>
               </FormControl>
             </Grid>
-            <Grid item>
+            <Grid>
               <Button
                 variant={showMobileView ? 'contained' : 'outlined'}
                 onClick={() => setShowMobileView(!showMobileView)}
@@ -757,7 +757,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
               {t('gameResults.shortcuts.title')}
             </Typography>
             <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ mobile: 12, tablet: 6 }}>
                 <Typography variant="subtitle2" gutterBottom>
                   {t('gameResults.shortcuts.resultEntry')}
                 </Typography>
@@ -772,7 +772,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                   <br />
                 </Typography>
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ mobile: 12, tablet: 6 }}>
                 <Typography variant="subtitle2" gutterBottom>
                   {t('gameResults.shortcuts.specialResults')}
                 </Typography>
@@ -792,7 +792,7 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
                   <br />
                 </Typography>
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ mobile: 12, tablet: 6 }}>
                 <Typography variant="subtitle2" gutterBottom>
                   {t('gameResults.shortcuts.navigation')}
                 </Typography>

@@ -465,7 +465,7 @@ impl SwissPairingEngine {
 
         // Validate FIDE compliance before returning result
         let mut validation_errors = vec![];
-        
+
         // FIDE C.04.1.3: Float limit validation
         if let Err(e) = self.validate_fide_float_limits(
             float_count,
@@ -561,7 +561,8 @@ impl SwissPairingEngine {
         if round_number > 2 && float_count > (total_players / 6) {
             return Err(PawnError::InvalidInput(format!(
                 "FIDE C.04.1.3 violation: After round 2, maximum {} floats allowed for {} players",
-                total_players / 6, total_players
+                total_players / 6,
+                total_players
             )));
         }
 
@@ -586,21 +587,33 @@ impl SwissPairingEngine {
 
                 if let (Some(white), Some(black)) = (white_swiss, black_swiss) {
                     // FIDE C.04.2.2.1: No player should have more than 3 consecutive games with same color
-                    if let Err(e) = self.validate_consecutive_color_limit(&white.color_history, Color::White, round_number) {
+                    if let Err(e) = self.validate_consecutive_color_limit(
+                        &white.color_history,
+                        Color::White,
+                        round_number,
+                    ) {
                         validation_errors.push(format!("Player {}: {}", white_player.name, e));
                     }
 
-                    if let Err(e) = self.validate_consecutive_color_limit(&black.color_history, Color::Black, round_number) {
+                    if let Err(e) = self.validate_consecutive_color_limit(
+                        &black.color_history,
+                        Color::Black,
+                        round_number,
+                    ) {
                         validation_errors.push(format!("Player {}: {}", black_player.name, e));
                     }
 
                     // FIDE C.04.2.2.2: Color balance should not exceed ±2 in tournaments of 9+ rounds
                     if round_number >= 9 {
-                        if let Err(e) = self.validate_color_balance_limit(&white.color_history, round_number) {
+                        if let Err(e) =
+                            self.validate_color_balance_limit(&white.color_history, round_number)
+                        {
                             validation_errors.push(format!("Player {}: {}", white_player.name, e));
                         }
 
-                        if let Err(e) = self.validate_color_balance_limit(&black.color_history, round_number) {
+                        if let Err(e) =
+                            self.validate_color_balance_limit(&black.color_history, round_number)
+                        {
                             validation_errors.push(format!("Player {}: {}", black_player.name, e));
                         }
                     }
@@ -608,14 +621,14 @@ impl SwissPairingEngine {
                     // FIDE C.04.2.2.3: Absolute color preferences must be respected
                     if !self.respects_absolute_color_preference(white, Color::White) {
                         validation_errors.push(format!(
-                            "Player {} has absolute color preference violated", 
+                            "Player {} has absolute color preference violated",
                             white_player.name
                         ));
                     }
 
                     if !self.respects_absolute_color_preference(black, Color::Black) {
                         validation_errors.push(format!(
-                            "Player {} has absolute color preference violated", 
+                            "Player {} has absolute color preference violated",
                             black_player.name
                         ));
                     }
@@ -625,8 +638,11 @@ impl SwissPairingEngine {
                 if let Some(white_swiss) = players.iter().find(|p| p.player.id == white_player.id) {
                     // For byes, we don't assign colors, so only validate existing color balance
                     if round_number >= 9 {
-                        if let Err(e) = self.validate_color_balance_limit(&white_swiss.color_history, round_number) {
-                            validation_errors.push(format!("Player {} (bye): {}", white_player.name, e));
+                        if let Err(e) = self
+                            .validate_color_balance_limit(&white_swiss.color_history, round_number)
+                        {
+                            validation_errors
+                                .push(format!("Player {} (bye): {}", white_player.name, e));
                         }
                     }
                 }
@@ -668,7 +684,11 @@ impl SwissPairingEngine {
             return Err(PawnError::InvalidInput(format!(
                 "FIDE C.04.2.2.1 violation: {} consecutive {} games exceeds maximum of 3",
                 consecutive,
-                if assigned_color == Color::White { "white" } else { "black" }
+                if assigned_color == Color::White {
+                    "white"
+                } else {
+                    "black"
+                }
             )));
         }
 
@@ -677,7 +697,11 @@ impl SwissPairingEngine {
             return Err(PawnError::InvalidInput(format!(
                 "Excessive consecutive colors: {} consecutive {} games exceeds reasonable limit",
                 consecutive,
-                if assigned_color == Color::White { "white" } else { "black" }
+                if assigned_color == Color::White {
+                    "white"
+                } else {
+                    "black"
+                }
             )));
         }
 
@@ -714,7 +738,11 @@ impl SwissPairingEngine {
     }
 
     /// Check if assigned color respects absolute color preference (FIDE C.04.2.2.3)
-    fn respects_absolute_color_preference(&self, player: &SwissPlayer, assigned_color: Color) -> bool {
+    fn respects_absolute_color_preference(
+        &self,
+        player: &SwissPlayer,
+        assigned_color: Color,
+    ) -> bool {
         match &player.color_preference {
             ColorPreference::Absolute(preferred_color) => *preferred_color == assigned_color,
             _ => true, // Non-absolute preferences can be overridden if necessary
@@ -757,7 +785,11 @@ impl SwissPairingEngine {
                             "Same federation pairing: {} vs {} (both from {})",
                             white_player.name,
                             black_player.name,
-                            white.player.country_code.as_ref().unwrap_or(&"Unknown".to_string())
+                            white
+                                .player
+                                .country_code
+                                .as_ref()
+                                .unwrap_or(&"Unknown".to_string())
                         ));
                     }
                 }
@@ -766,10 +798,12 @@ impl SwissPairingEngine {
 
         // Apply FIDE tolerance rules for team avoidance
         let total_pairings = pairings.iter().filter(|p| p.black_player.is_some()).count();
-        
+
         // FIDE allows some same-federation pairings in large tournaments
-        let max_allowed_federation_violations = self.calculate_max_federation_violations(total_pairings, round_number);
-        let max_allowed_club_violations = self.calculate_max_club_violations(total_pairings, round_number);
+        let max_allowed_federation_violations =
+            self.calculate_max_federation_violations(total_pairings, round_number);
+        let max_allowed_club_violations =
+            self.calculate_max_club_violations(total_pairings, round_number);
 
         // Check if violations exceed FIDE limits
         if same_club_violations > max_allowed_club_violations {
@@ -797,12 +831,16 @@ impl SwissPairingEngine {
     }
 
     /// Calculate maximum allowed federation violations based on FIDE rules
-    fn calculate_max_federation_violations(&self, total_pairings: usize, round_number: i32) -> usize {
+    fn calculate_max_federation_violations(
+        &self,
+        total_pairings: usize,
+        round_number: i32,
+    ) -> usize {
         // FIDE rules for international tournaments:
         // - Early rounds (1-3): Strict avoidance, max 5% of pairings
-        // - Middle rounds (4-7): Moderate avoidance, max 10% of pairings  
+        // - Middle rounds (4-7): Moderate avoidance, max 10% of pairings
         // - Late rounds (8+): Relaxed avoidance, max 15% of pairings
-        
+
         let base_percentage = if round_number <= 3 {
             0.05 // 5% in early rounds
         } else if round_number <= 7 {
@@ -1410,12 +1448,12 @@ impl SwissPairingEngine {
         // FIDE rules for international tournaments:
         // - Team tournaments: Strict federation avoidance
         // - Individual tournaments: Federation avoidance only in early rounds or small sections
-        
+
         // Major chess federations where avoidance is typically enforced
         let major_federations = [
-            "RUS", "USA", "CHN", "IND", "FRA", "GER", "UKR", "ARM", "IRA", "BRA",
-            "POL", "ESP", "HUN", "CZE", "NED", "NOR", "SWE", "ITA", "ISR", "CAN",
-            "AZE", "GEO", "LTU", "LAT", "EST", "BUL", "ROU", "TUR", "GRE", "CRO"
+            "RUS", "USA", "CHN", "IND", "FRA", "GER", "UKR", "ARM", "IRA", "BRA", "POL", "ESP",
+            "HUN", "CZE", "NED", "NOR", "SWE", "ITA", "ISR", "CAN", "AZE", "GEO", "LTU", "LAT",
+            "EST", "BUL", "ROU", "TUR", "GRE", "CRO",
         ];
 
         // For major federations, apply avoidance in early rounds
@@ -1442,25 +1480,41 @@ impl SwissPairingEngine {
     /// Check if club name is generic and shouldn't trigger avoidance
     fn is_generic_club_name(&self, club_name: &str) -> bool {
         let generic_names = [
-            "Unaffiliated", "Independent", "No Club", "Individual", "Private",
-            "Local Club", "Chess Club", "Unknown", "N/A", "None", "TBD"
+            "Unaffiliated",
+            "Independent",
+            "No Club",
+            "Individual",
+            "Private",
+            "Local Club",
+            "Chess Club",
+            "Unknown",
+            "N/A",
+            "None",
+            "TBD",
         ];
-        
+
         let normalized = club_name.trim().to_lowercase();
-        generic_names.iter().any(|&generic| normalized.contains(&generic.to_lowercase()))
+        generic_names
+            .iter()
+            .any(|&generic| normalized.contains(&generic.to_lowercase()))
     }
 
     /// Enhanced team avoidance scoring with multiple penalty levels
-    fn calculate_team_avoidance_penalty(&self, player1: &SwissPlayer, player2: &SwissPlayer) -> f64 {
+    fn calculate_team_avoidance_penalty(
+        &self,
+        player1: &SwissPlayer,
+        player2: &SwissPlayer,
+    ) -> f64 {
         // Level 1: Same club (highest penalty)
         if self.are_same_club(player1, player2) {
             return -8000.0; // Very high penalty for same club
         }
 
-        // Level 2: Same federation/country  
+        // Level 2: Same federation/country
         if self.should_avoid_same_federation(player1, player2) {
-            if let (Some(country1), Some(country2)) = 
-                (&player1.player.country_code, &player2.player.country_code) {
+            if let (Some(country1), Some(country2)) =
+                (&player1.player.country_code, &player2.player.country_code)
+            {
                 if country1 == country2 {
                     // Variable penalty based on federation size and tournament type
                     return self.calculate_federation_penalty(country1);
@@ -1475,7 +1529,7 @@ impl SwissPairingEngine {
     fn calculate_federation_penalty(&self, country_code: &str) -> f64 {
         // Major federations get moderate penalty (can be overridden if necessary)
         let major_federations = [
-            "RUS", "USA", "CHN", "IND", "FRA", "GER", "UKR", "ARM", "IRA"
+            "RUS", "USA", "CHN", "IND", "FRA", "GER", "UKR", "ARM", "IRA",
         ];
 
         if major_federations.contains(&country_code) {

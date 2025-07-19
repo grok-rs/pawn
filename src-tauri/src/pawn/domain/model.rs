@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use specta::Type as SpectaType;
 use sqlx::{FromRow, prelude::Type};
 
@@ -36,14 +36,14 @@ pub struct Player {
     pub name: String,
     pub rating: Option<i32>,
     pub country_code: Option<String>,
-    pub title: Option<String>,      // Chess titles: GM, IM, FM, etc.
-    pub birth_date: Option<String>, // For age-based categories
-    pub gender: Option<String>,     // M, F, O
-    pub email: Option<String>,      // Contact information
-    pub phone: Option<String>,      // Contact information
-    pub club: Option<String>,       // Club/federation affiliation
-    pub status: String,             // Registration status
-    pub seed_number: Option<i32>,   // Manual seed assignment (1, 2, 3, etc.)
+    pub title: Option<String>,       // Chess titles: GM, IM, FM, etc.
+    pub birth_date: Option<String>,  // For age-based categories
+    pub gender: Option<String>,      // M, F, O
+    pub email: Option<String>,       // Contact information
+    pub phone: Option<String>,       // Contact information
+    pub club: Option<String>,        // Club/federation affiliation
+    pub status: String,              // Registration status
+    pub seed_number: Option<i32>,    // Manual seed assignment (1, 2, 3, etc.)
     pub pairing_number: Option<i32>, // Sequential pairing number for tournaments
     pub initial_rating: Option<i32>, // Rating at tournament start for seeding consistency
     pub created_at: String,
@@ -123,13 +123,13 @@ pub enum TournamentStatus {
 
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum RoundStatus {
-    Planned,     // Round scheduled but not started
-    Pairing,     // Actively generating pairings
-    Published,   // Pairings complete and published
-    InProgress,  // Games being played
-    Finishing,   // Some games complete, waiting for others
-    Completed,   // All results entered
-    Verified,    // Results confirmed by arbiter
+    Planned,    // Round scheduled but not started
+    Pairing,    // Actively generating pairings
+    Published,  // Pairings complete and published
+    InProgress, // Games being played
+    Finishing,  // Some games complete, waiting for others
+    Completed,  // All results entered
+    Verified,   // Results confirmed by arbiter
 }
 
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
@@ -297,22 +297,22 @@ impl RoundStatus {
             (RoundStatus::InProgress, RoundStatus::Finishing) => true,
             (RoundStatus::Finishing, RoundStatus::Completed) => true,
             (RoundStatus::Completed, RoundStatus::Verified) => true,
-            
+
             // Direct transitions for simpler workflows
-            (RoundStatus::Planned, RoundStatus::Published) => true,  // Skip pairing step
+            (RoundStatus::Planned, RoundStatus::Published) => true, // Skip pairing step
             (RoundStatus::Published, RoundStatus::Completed) => true, // Skip in_progress for quick entry
             (RoundStatus::InProgress, RoundStatus::Completed) => true, // All games finished quickly
-            
+
             // Backward transitions for corrections
-            (RoundStatus::Published, RoundStatus::Pairing) => true,   // Re-generate pairings
+            (RoundStatus::Published, RoundStatus::Pairing) => true, // Re-generate pairings
             (RoundStatus::InProgress, RoundStatus::Published) => true, // Reopen before start
             (RoundStatus::Finishing, RoundStatus::InProgress) => true, // Reopen game
-            (RoundStatus::Completed, RoundStatus::Finishing) => true,  // Reopen result
-            (RoundStatus::Verified, RoundStatus::Completed) => true,   // Unverify for changes
-            
+            (RoundStatus::Completed, RoundStatus::Finishing) => true, // Reopen result
+            (RoundStatus::Verified, RoundStatus::Completed) => true, // Unverify for changes
+
             // Same status (no-op)
             (a, b) if a == b => true,
-            
+
             _ => false,
         }
     }
@@ -547,19 +547,19 @@ impl ChessTitle {
 pub struct TournamentSeedingSettings {
     pub id: i32,
     pub tournament_id: i32,
-    pub seeding_method: String, // rating, manual, random, category_based
+    pub seeding_method: String,   // rating, manual, random, category_based
     pub use_initial_rating: bool, // Use rating at tournament start
-    pub randomize_unrated: bool, // Randomize placement of unrated players
-    pub protect_top_seeds: i32, // Number of top seeds to protect from changes
+    pub randomize_unrated: bool,  // Randomize placement of unrated players
+    pub protect_top_seeds: i32,   // Number of top seeds to protect from changes
     pub created_at: String,
     pub updated_at: Option<String>,
 }
 
 #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
 pub enum SeedingMethod {
-    Rating,       // Automatic seeding by rating (highest to lowest)
-    Manual,       // Manual seed assignment by tournament director
-    Random,       // Random seeding/pairing numbers
+    Rating,        // Automatic seeding by rating (highest to lowest)
+    Manual,        // Manual seed assignment by tournament director
+    Random,        // Random seeding/pairing numbers
     CategoryBased, // Seeding within player categories
 }
 
@@ -916,7 +916,7 @@ pub struct TeamTournamentSettings {
     pub require_board_order: bool,
     pub allow_late_entries: bool,
     pub team_pairing_method: String, // "swiss", "round_robin", "knockout", "scheveningen"
-    pub color_allocation: String, // "balanced", "alternating", "random"
+    pub color_allocation: String,    // "balanced", "alternating", "random"
     pub created_at: String,
     pub updated_at: Option<String>,
 }

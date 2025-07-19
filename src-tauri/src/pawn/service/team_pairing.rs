@@ -1,11 +1,11 @@
 use crate::pawn::{
     common::error::PawnError,
-    domain::model::{Pairing, Player, Team, TeamMatch, TeamLineup},
     db::Db,
+    domain::model::{Pairing, Player, Team, TeamLineup, TeamMatch},
 };
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
-use tracing::{info, warn, instrument};
+use tracing::{info, instrument, warn};
 
 /// Enhanced team pairing engine with multiple algorithms
 pub struct TeamPairingEngine<D> {
@@ -27,29 +27,29 @@ pub struct TeamPairingConfig {
 /// Team pairing methods
 #[derive(Debug, Clone)]
 pub enum TeamPairingMethod {
-    Swiss,              // Swiss system between teams
-    RoundRobin,         // Each team plays every other team once
-    Scheveningen,       // Two groups play against each other
-    Knockout,           // Elimination-based team matches
-    DoubleRoundRobin,   // Each team plays every other team twice
+    Swiss,            // Swiss system between teams
+    RoundRobin,       // Each team plays every other team once
+    Scheveningen,     // Two groups play against each other
+    Knockout,         // Elimination-based team matches
+    DoubleRoundRobin, // Each team plays every other team twice
 }
 
 /// Color allocation strategies for team matches
 #[derive(Debug, Clone)]
 pub enum ColorAllocation {
-    AlternatingBoards,  // Alternate colors board by board
-    AlternatingRounds,  // Alternate colors round by round
-    BalancedRotation,   // Optimize for overall color balance
-    FixedBoards,        // Fixed color assignments per board
+    AlternatingBoards, // Alternate colors board by board
+    AlternatingRounds, // Alternate colors round by round
+    BalancedRotation,  // Optimize for overall color balance
+    FixedBoards,       // Fixed color assignments per board
 }
 
 /// Board order policies
 #[derive(Debug, Clone)]
 pub enum BoardOrderPolicy {
-    RatingDescending,   // Highest rated player on board 1
-    RatingAscending,    // Lowest rated player on board 1
-    CaptainChoice,      // Team captain determines order
-    Flexible,           // Allow changes between rounds
+    RatingDescending, // Highest rated player on board 1
+    RatingAscending,  // Lowest rated player on board 1
+    CaptainChoice,    // Team captain determines order
+    Flexible,         // Allow changes between rounds
 }
 
 /// Team pairing result
@@ -64,10 +64,10 @@ pub struct TeamPairingResult {
 /// Quality metrics for team pairings
 #[derive(Debug)]
 pub struct PairingQuality {
-    pub color_balance_score: f32,      // 0.0 to 1.0, higher is better
-    pub rating_balance_score: f32,     // 0.0 to 1.0, higher is better
-    pub rematch_avoidance_score: f32,  // 0.0 to 1.0, higher is better
-    pub overall_quality: f32,          // Weighted combination
+    pub color_balance_score: f32,     // 0.0 to 1.0, higher is better
+    pub rating_balance_score: f32,    // 0.0 to 1.0, higher is better
+    pub rematch_avoidance_score: f32, // 0.0 to 1.0, higher is better
+    pub overall_quality: f32,         // Weighted combination
 }
 
 /// Team match context for pairing decisions
@@ -111,7 +111,8 @@ impl<D: Db> TeamPairingEngine<D> {
                     previous_matches,
                     round_number,
                     &config,
-                ).await
+                )
+                .await
             }
             TeamPairingMethod::RoundRobin => {
                 self.generate_round_robin_team_pairings(
@@ -119,7 +120,8 @@ impl<D: Db> TeamPairingEngine<D> {
                     all_memberships,
                     round_number,
                     &config,
-                ).await
+                )
+                .await
             }
             TeamPairingMethod::Scheveningen => {
                 self.generate_scheveningen_team_pairings(
@@ -127,7 +129,8 @@ impl<D: Db> TeamPairingEngine<D> {
                     all_memberships,
                     round_number,
                     &config,
-                ).await
+                )
+                .await
             }
             TeamPairingMethod::Knockout => {
                 self.generate_knockout_team_pairings(
@@ -136,7 +139,8 @@ impl<D: Db> TeamPairingEngine<D> {
                     previous_matches,
                     round_number,
                     &config,
-                ).await
+                )
+                .await
             }
             TeamPairingMethod::DoubleRoundRobin => {
                 self.generate_double_round_robin_team_pairings(
@@ -144,7 +148,8 @@ impl<D: Db> TeamPairingEngine<D> {
                     all_memberships,
                     round_number,
                     &config,
-                ).await
+                )
+                .await
             }
         }
     }
@@ -162,31 +167,36 @@ impl<D: Db> TeamPairingEngine<D> {
 
         // Calculate team scores from previous matches
         let team_scores = self.calculate_team_scores(&teams, &previous_matches);
-        
+
         // Sort teams by score (descending) and rating (tiebreaker)
         let mut sorted_teams = teams.clone();
         sorted_teams.sort_by(|a, b| {
             let score_a = team_scores.get(&a.id).unwrap_or(&0.0);
             let score_b = team_scores.get(&b.id).unwrap_or(&0.0);
-            
-            score_b.partial_cmp(score_a).unwrap_or(std::cmp::Ordering::Equal)
+
+            score_b
+                .partial_cmp(score_a)
+                .unwrap_or(std::cmp::Ordering::Equal)
                 .then_with(|| {
                     let rating_a = self.calculate_team_average_rating(&memberships, a.id);
                     let rating_b = self.calculate_team_average_rating(&memberships, b.id);
-                    rating_b.partial_cmp(&rating_a).unwrap_or(std::cmp::Ordering::Equal)
+                    rating_b
+                        .partial_cmp(&rating_a)
+                        .unwrap_or(std::cmp::Ordering::Equal)
                 })
         });
 
         // Group teams by similar scores
         let score_groups = self.create_score_groups(&sorted_teams, &team_scores);
-        
+
         // Generate pairings within and between score groups
         let mut team_matches = Vec::new();
         let mut used_teams = HashSet::new();
         let mut bye_team = None;
 
         for group in score_groups {
-            let available_teams: Vec<&Team> = group.iter()
+            let available_teams: Vec<&Team> = group
+                .iter()
                 .filter(|t| !used_teams.contains(&t.id))
                 .collect();
 
@@ -234,11 +244,9 @@ impl<D: Db> TeamPairingEngine<D> {
         }
 
         // Generate individual board pairings for each team match
-        let individual_pairings = self.generate_individual_board_pairings(
-            &team_matches,
-            &memberships,
-            config,
-        ).await?;
+        let individual_pairings = self
+            .generate_individual_board_pairings(&team_matches, &memberships, config)
+            .await?;
 
         // Calculate pairing quality
         let pairing_quality = self.calculate_pairing_quality(
@@ -264,11 +272,16 @@ impl<D: Db> TeamPairingEngine<D> {
         round_number: i32,
         config: &TeamPairingConfig,
     ) -> Result<TeamPairingResult, PawnError> {
-        info!("Generating round-robin team pairings for {} teams", teams.len());
+        info!(
+            "Generating round-robin team pairings for {} teams",
+            teams.len()
+        );
 
         let total_teams = teams.len();
         if total_teams < 2 {
-            return Err(PawnError::InvalidInput("Need at least 2 teams for round-robin".to_string()));
+            return Err(PawnError::InvalidInput(
+                "Need at least 2 teams for round-robin".to_string(),
+            ));
         }
 
         // Calculate total rounds needed
@@ -279,7 +292,9 @@ impl<D: Db> TeamPairingEngine<D> {
         };
 
         if round_number > total_rounds as i32 {
-            return Err(PawnError::InvalidInput("Round number exceeds total rounds".to_string()));
+            return Err(PawnError::InvalidInput(
+                "Round number exceeds total rounds".to_string(),
+            ));
         }
 
         // Use round-robin algorithm to generate pairings
@@ -290,7 +305,9 @@ impl<D: Db> TeamPairingEngine<D> {
         let working_teams = if total_teams % 2 == 1 {
             let bye_index = (round_number - 1) as usize % total_teams;
             bye_team = Some(teams[bye_index].clone());
-            teams.iter().enumerate()
+            teams
+                .iter()
+                .enumerate()
                 .filter(|(i, _)| *i != bye_index)
                 .map(|(_, team)| team.clone())
                 .collect()
@@ -326,19 +343,13 @@ impl<D: Db> TeamPairingEngine<D> {
         }
 
         // Generate individual board pairings
-        let individual_pairings = self.generate_individual_board_pairings(
-            &team_matches,
-            &memberships,
-            config,
-        ).await?;
+        let individual_pairings = self
+            .generate_individual_board_pairings(&team_matches, &memberships, config)
+            .await?;
 
         // Calculate pairing quality
-        let pairing_quality = self.calculate_pairing_quality(
-            &team_matches,
-            &individual_pairings,
-            &[],
-            config,
-        );
+        let pairing_quality =
+            self.calculate_pairing_quality(&team_matches, &individual_pairings, &[], config);
 
         Ok(TeamPairingResult {
             team_matches,
@@ -356,10 +367,15 @@ impl<D: Db> TeamPairingEngine<D> {
         round_number: i32,
         config: &TeamPairingConfig,
     ) -> Result<TeamPairingResult, PawnError> {
-        info!("Generating Scheveningen team pairings for {} teams", teams.len());
+        info!(
+            "Generating Scheveningen team pairings for {} teams",
+            teams.len()
+        );
 
         if teams.len() % 2 != 0 {
-            return Err(PawnError::InvalidInput("Scheveningen requires even number of teams".to_string()));
+            return Err(PawnError::InvalidInput(
+                "Scheveningen requires even number of teams".to_string(),
+            ));
         }
 
         // Split teams into two groups
@@ -373,7 +389,9 @@ impl<D: Db> TeamPairingEngine<D> {
         let total_rounds = teams_per_group as i32;
 
         if round_number > total_rounds {
-            return Err(PawnError::InvalidInput("Round number exceeds total rounds for Scheveningen".to_string()));
+            return Err(PawnError::InvalidInput(
+                "Round number exceeds total rounds for Scheveningen".to_string(),
+            ));
         }
 
         // Generate pairings for this round
@@ -405,19 +423,13 @@ impl<D: Db> TeamPairingEngine<D> {
         }
 
         // Generate individual board pairings
-        let individual_pairings = self.generate_individual_board_pairings(
-            &team_matches,
-            &memberships,
-            config,
-        ).await?;
+        let individual_pairings = self
+            .generate_individual_board_pairings(&team_matches, &memberships, config)
+            .await?;
 
         // Calculate pairing quality
-        let pairing_quality = self.calculate_pairing_quality(
-            &team_matches,
-            &individual_pairings,
-            &[],
-            config,
-        );
+        let pairing_quality =
+            self.calculate_pairing_quality(&team_matches, &individual_pairings, &[], config);
 
         Ok(TeamPairingResult {
             team_matches,
@@ -436,13 +448,18 @@ impl<D: Db> TeamPairingEngine<D> {
         round_number: i32,
         config: &TeamPairingConfig,
     ) -> Result<TeamPairingResult, PawnError> {
-        info!("Generating knockout team pairings for {} teams", teams.len());
+        info!(
+            "Generating knockout team pairings for {} teams",
+            teams.len()
+        );
 
         // Filter teams that haven't been eliminated
         let active_teams = self.filter_active_teams(&teams, &previous_matches);
-        
+
         if active_teams.len() < 2 {
-            return Err(PawnError::InvalidInput("Not enough active teams for knockout round".to_string()));
+            return Err(PawnError::InvalidInput(
+                "Not enough active teams for knockout round".to_string(),
+            ));
         }
 
         // Pair teams based on bracket position or seeding
@@ -488,11 +505,9 @@ impl<D: Db> TeamPairingEngine<D> {
         }
 
         // Generate individual board pairings
-        let individual_pairings = self.generate_individual_board_pairings(
-            &team_matches,
-            &memberships,
-            config,
-        ).await?;
+        let individual_pairings = self
+            .generate_individual_board_pairings(&team_matches, &memberships, config)
+            .await?;
 
         // Calculate pairing quality
         let pairing_quality = self.calculate_pairing_quality(
@@ -518,11 +533,16 @@ impl<D: Db> TeamPairingEngine<D> {
         round_number: i32,
         config: &TeamPairingConfig,
     ) -> Result<TeamPairingResult, PawnError> {
-        info!("Generating double round-robin team pairings for {} teams", teams.len());
+        info!(
+            "Generating double round-robin team pairings for {} teams",
+            teams.len()
+        );
 
         let total_teams = teams.len();
         if total_teams < 2 {
-            return Err(PawnError::InvalidInput("Need at least 2 teams for double round-robin".to_string()));
+            return Err(PawnError::InvalidInput(
+                "Need at least 2 teams for double round-robin".to_string(),
+            ));
         }
 
         // Calculate total rounds needed (each team plays each other twice)
@@ -534,7 +554,9 @@ impl<D: Db> TeamPairingEngine<D> {
         let total_rounds = single_round_robin_rounds * 2;
 
         if round_number > total_rounds as i32 {
-            return Err(PawnError::InvalidInput("Round number exceeds total rounds".to_string()));
+            return Err(PawnError::InvalidInput(
+                "Round number exceeds total rounds".to_string(),
+            ));
         }
 
         // Determine if we're in the first or second cycle
@@ -546,12 +568,9 @@ impl<D: Db> TeamPairingEngine<D> {
         };
 
         // Generate pairings using single round-robin logic
-        let mut result = self.generate_round_robin_team_pairings(
-            teams,
-            memberships,
-            effective_round,
-            config,
-        ).await?;
+        let mut result = self
+            .generate_round_robin_team_pairings(teams, memberships, effective_round, config)
+            .await?;
 
         // In the second cycle, reverse colors for all matches
         if is_second_cycle {
@@ -639,23 +658,33 @@ impl<D: Db> TeamPairingEngine<D> {
     }
 
     // Helper methods
-    fn calculate_team_scores(&self, teams: &[Team], previous_matches: &[TeamMatch]) -> HashMap<i32, f32> {
+    fn calculate_team_scores(
+        &self,
+        teams: &[Team],
+        previous_matches: &[TeamMatch],
+    ) -> HashMap<i32, f32> {
         let mut scores = HashMap::new();
-        
+
         for team in teams {
             scores.insert(team.id, 0.0);
         }
 
         for team_match in previous_matches {
             // Use match points for team scoring
-            *scores.entry(team_match.team_a_id).or_insert(0.0) += team_match.team_a_match_points as f32;
-            *scores.entry(team_match.team_b_id).or_insert(0.0) += team_match.team_b_match_points as f32;
+            *scores.entry(team_match.team_a_id).or_insert(0.0) +=
+                team_match.team_a_match_points as f32;
+            *scores.entry(team_match.team_b_id).or_insert(0.0) +=
+                team_match.team_b_match_points as f32;
         }
 
         scores
     }
 
-    fn calculate_team_average_rating(&self, memberships: &[crate::pawn::domain::model::TeamMembership], team_id: i32) -> f32 {
+    fn calculate_team_average_rating(
+        &self,
+        memberships: &[crate::pawn::domain::model::TeamMembership],
+        team_id: i32,
+    ) -> f32 {
         let team_players: Vec<&crate::pawn::domain::model::TeamMembership> = memberships
             .iter()
             .filter(|m| m.team_id == team_id)
@@ -665,18 +694,25 @@ impl<D: Db> TeamPairingEngine<D> {
             return 0.0;
         }
 
-        let total_rating: i32 = team_players.iter().map(|p| p.rating_at_assignment.unwrap_or(0)).sum();
+        let total_rating: i32 = team_players
+            .iter()
+            .map(|p| p.rating_at_assignment.unwrap_or(0))
+            .sum();
         total_rating as f32 / team_players.len() as f32
     }
 
-    fn create_score_groups(&self, teams: &[Team], team_scores: &HashMap<i32, f32>) -> Vec<Vec<Team>> {
+    fn create_score_groups(
+        &self,
+        teams: &[Team],
+        team_scores: &HashMap<i32, f32>,
+    ) -> Vec<Vec<Team>> {
         let mut groups = Vec::new();
         let mut current_group = Vec::new();
         let mut current_score: Option<f32> = None;
 
         for team in teams {
             let score = team_scores.get(&team.id).unwrap_or(&0.0);
-            
+
             if current_score.is_none() || (current_score.unwrap() - *score).abs() < 0.1_f32 {
                 current_group.push(team.clone());
                 current_score = Some(*score);
@@ -717,7 +753,9 @@ impl<D: Db> TeamPairingEngine<D> {
                 }
 
                 // Check if teams have played before (if rematch prevention is enabled)
-                if config.prevent_early_rematches && self.have_teams_played(team_a.id, team_b.id, previous_matches) {
+                if config.prevent_early_rematches
+                    && self.have_teams_played(team_a.id, team_b.id, previous_matches)
+                {
                     continue;
                 }
 
@@ -731,24 +769,33 @@ impl<D: Db> TeamPairingEngine<D> {
         Ok(pairings)
     }
 
-    fn have_teams_played(&self, team_a_id: i32, team_b_id: i32, previous_matches: &[TeamMatch]) -> bool {
+    fn have_teams_played(
+        &self,
+        team_a_id: i32,
+        team_b_id: i32,
+        previous_matches: &[TeamMatch],
+    ) -> bool {
         previous_matches.iter().any(|m| {
-            (m.team_a_id == team_a_id && m.team_b_id == team_b_id) ||
-            (m.team_a_id == team_b_id && m.team_b_id == team_a_id)
+            (m.team_a_id == team_a_id && m.team_b_id == team_b_id)
+                || (m.team_a_id == team_b_id && m.team_b_id == team_a_id)
         })
     }
 
-    fn generate_round_robin_rotation(&self, teams: &[Team], round_number: i32) -> Result<Vec<(Team, Team)>, PawnError> {
+    fn generate_round_robin_rotation(
+        &self,
+        teams: &[Team],
+        round_number: i32,
+    ) -> Result<Vec<(Team, Team)>, PawnError> {
         let mut pairings = Vec::new();
         let n = teams.len();
-        
+
         if n < 2 {
             return Ok(pairings);
         }
 
         // Use round-robin rotation algorithm
         let mut positions = (0..n).collect::<Vec<_>>();
-        
+
         // Rotate positions for the given round
         for _ in 1..round_number {
             let first = positions[0];
@@ -758,7 +805,7 @@ impl<D: Db> TeamPairingEngine<D> {
         }
 
         // Create pairings
-        for i in 0..n/2 {
+        for i in 0..n / 2 {
             let team_a = &teams[positions[i]];
             let team_b = &teams[positions[n - 1 - i]];
             pairings.push((team_a.clone(), team_b.clone()));
@@ -773,7 +820,11 @@ impl<D: Db> TeamPairingEngine<D> {
         teams.to_vec()
     }
 
-    fn get_team_players(&self, memberships: &[crate::pawn::domain::model::TeamMembership], team_id: i32) -> Vec<Player> {
+    fn get_team_players(
+        &self,
+        memberships: &[crate::pawn::domain::model::TeamMembership],
+        team_id: i32,
+    ) -> Vec<Player> {
         // For now, return an empty vector. This should be replaced with actual database queries
         // to get the real Player objects based on membership player_ids
         let team_members: Vec<&crate::pawn::domain::model::TeamMembership> = memberships
@@ -815,17 +866,18 @@ impl<D: Db> TeamPairingEngine<D> {
     ) -> PairingQuality {
         // Calculate color balance score
         let color_balance_score = self.calculate_color_balance_score(individual_pairings);
-        
+
         // Calculate rating balance score
         let rating_balance_score = self.calculate_rating_balance_score(individual_pairings);
-        
+
         // Calculate rematch avoidance score
-        let rematch_avoidance_score = self.calculate_rematch_avoidance_score(team_matches, previous_matches);
-        
+        let rematch_avoidance_score =
+            self.calculate_rematch_avoidance_score(team_matches, previous_matches);
+
         // Calculate overall quality as weighted average
-        let overall_quality = (color_balance_score * 0.3) + 
-                             (rating_balance_score * 0.4) + 
-                             (rematch_avoidance_score * 0.3);
+        let overall_quality = (color_balance_score * 0.3)
+            + (rating_balance_score * 0.4)
+            + (rematch_avoidance_score * 0.3);
 
         PairingQuality {
             color_balance_score,
@@ -872,14 +924,19 @@ impl<D: Db> TeamPairingEngine<D> {
         (400.0 - avg_diff.min(400.0)) / 400.0
     }
 
-    fn calculate_rematch_avoidance_score(&self, team_matches: &[TeamMatch], previous_matches: &[TeamMatch]) -> f32 {
+    fn calculate_rematch_avoidance_score(
+        &self,
+        team_matches: &[TeamMatch],
+        previous_matches: &[TeamMatch],
+    ) -> f32 {
         if team_matches.is_empty() {
             return 1.0;
         }
 
         let mut rematches = 0;
         for team_match in team_matches {
-            if self.have_teams_played(team_match.team_a_id, team_match.team_b_id, previous_matches) {
+            if self.have_teams_played(team_match.team_a_id, team_match.team_b_id, previous_matches)
+            {
                 rematches += 1;
             }
         }
@@ -910,7 +967,7 @@ mod tests {
 
     mock! {
         TestDb {}
-        
+
         #[async_trait::async_trait]
         impl Db for TestDb {
             async fn get_teams_by_tournament(&self, tournament_id: i32) -> Result<Vec<Team>, sqlx::Error>;
@@ -923,9 +980,9 @@ mod tests {
     #[tokio::test]
     async fn test_swiss_team_pairing() {
         let mut mock_db = MockTestDb::new();
-        
-        mock_db.expect_get_teams_by_tournament()
-            .returning(|_| Ok(vec![
+
+        mock_db.expect_get_teams_by_tournament().returning(|_| {
+            Ok(vec![
                 Team {
                     id: 1,
                     tournament_id: 1,
@@ -956,20 +1013,23 @@ mod tests {
                     created_at: chrono::Utc::now().to_rfc3339(),
                     updated_at: Some(chrono::Utc::now().to_rfc3339()),
                 },
-            ]));
+            ])
+        });
 
-        mock_db.expect_get_all_team_memberships()
+        mock_db
+            .expect_get_all_team_memberships()
             .returning(|_| Ok(vec![]));
 
-        mock_db.expect_get_team_matches()
+        mock_db
+            .expect_get_team_matches()
             .returning(|_, _| Ok(vec![]));
 
         let engine = TeamPairingEngine::new(Arc::new(mock_db));
         let config = TeamPairingConfig::default();
-        
+
         let result = engine.generate_team_pairings(1, 1, config).await;
         assert!(result.is_ok());
-        
+
         let pairing_result = result.unwrap();
         assert_eq!(pairing_result.team_matches.len(), 1);
         assert!(pairing_result.pairing_quality.overall_quality >= 0.0);
@@ -978,9 +1038,9 @@ mod tests {
     #[tokio::test]
     async fn test_round_robin_team_pairing() {
         let mut mock_db = MockTestDb::new();
-        
-        mock_db.expect_get_teams_by_tournament()
-            .returning(|_| Ok(vec![
+
+        mock_db.expect_get_teams_by_tournament().returning(|_| {
+            Ok(vec![
                 Team {
                     id: 1,
                     tournament_id: 1,
@@ -1026,9 +1086,11 @@ mod tests {
                     created_at: chrono::Utc::now().to_rfc3339(),
                     updated_at: Some(chrono::Utc::now().to_rfc3339()),
                 },
-            ]));
+            ])
+        });
 
-        mock_db.expect_get_all_team_memberships()
+        mock_db
+            .expect_get_all_team_memberships()
             .returning(|_| Ok(vec![]));
 
         let engine = TeamPairingEngine::new(Arc::new(mock_db));
@@ -1036,10 +1098,10 @@ mod tests {
             pairing_method: TeamPairingMethod::RoundRobin,
             ..Default::default()
         };
-        
+
         let result = engine.generate_team_pairings(1, 1, config).await;
         assert!(result.is_ok());
-        
+
         let pairing_result = result.unwrap();
         assert_eq!(pairing_result.team_matches.len(), 1); // One match per round in round-robin
         assert!(pairing_result.bye_team.is_some()); // Odd number of teams

@@ -1,7 +1,7 @@
 import CheckIcon from '@mui/icons-material/Check';
 import { useTranslation } from 'react-i18next';
 
-import { useFormStepperContext } from '../FormStepperContext';
+import { useFormStepperContext } from '../hooks/useFormStepperContext';
 import { StyledStep, StyledStepLabel, StyledStepper } from './styled';
 
 const FormStepperStepIndicator = () => {

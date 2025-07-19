@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -111,13 +111,7 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
     },
   });
 
-  useEffect(() => {
-    if (open && player) {
-      fetchRatingHistory();
-    }
-  }, [open, player]);
-
-  const fetchRatingHistory = async () => {
+  const fetchRatingHistory = useCallback(async () => {
     if (!player) return;
 
     setLoading(true);
@@ -131,7 +125,13 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [player, t]);
+
+  useEffect(() => {
+    if (open && player) {
+      fetchRatingHistory();
+    }
+  }, [open, player, fetchRatingHistory]);
 
   const onSubmitRating = async (data: RatingFormData) => {
     if (!player) return;

@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Paper,
   Typography,
   Button,
-  Card,
-  CardContent,
   Grid2 as Grid,
   TextField,
   FormControl,
@@ -14,44 +12,23 @@ import {
   MenuItem,
   Switch,
   FormControlLabel,
-  Divider,
   Alert,
   Stepper,
   Step,
   StepLabel,
   StepContent,
-  Chip,
   List,
   ListItem,
   ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Slider,
   FormHelperText,
 } from '@mui/material';
-import {
-  Settings,
-  SportsSoccer,
-  EmojiEvents,
-  Schedule,
-  Add,
-  Remove,
-  ExpandMore,
-  Info,
-  CheckCircle,
-  Save,
-  Preview,
-  RestartAlt,
-} from '@mui/icons-material';
+import { Save, Preview, RestartAlt } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import { commands } from '@dto/bindings';
+import { commands as _commands } from '@dto/bindings';
 
 // Team tournament configuration interfaces
 interface TeamTournamentConfig {
@@ -182,21 +159,24 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
     }
   }, [config, onConfigChange]);
 
-  const handleConfigChange = (
-    field: keyof TeamTournamentConfig,
-    value: any
-  ) => {
-    setConfig(prev => ({ ...prev, [field]: value }));
+  const handleConfigChange = useCallback(
+    (
+      field: keyof TeamTournamentConfig,
+      value: string | number | boolean | string[]
+    ) => {
+      setConfig(prev => ({ ...prev, [field]: value }));
 
-    // Clear validation error for this field
-    if (validationErrors[field]) {
-      setValidationErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  };
+      // Clear validation error for this field
+      if (validationErrors[field]) {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        });
+      }
+    },
+    [validationErrors]
+  );
 
   const handleTiebreakChange = (criteria: string[]) => {
     setConfig(prev => ({ ...prev, tiebreak_criteria: criteria }));
@@ -326,7 +306,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
       label: 'Basic Settings',
       content: (
         <Grid container spacing={3}>
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ mobile: 12, tablet: 6 }}>
             <FormControl fullWidth error={!!validationErrors.tournament_format}>
               <InputLabel>Tournament Format</InputLabel>
               <Select
@@ -349,7 +329,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
               )}
             </FormControl>
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ mobile: 12, tablet: 6 }}>
             <TextField
               fullWidth
               type="number"
@@ -365,7 +345,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
               }
             />
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ mobile: 12, tablet: 6 }}>
             <TextField
               fullWidth
               type="number"
@@ -382,7 +362,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
               }
             />
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ mobile: 12, tablet: 6 }}>
             <FormControlLabel
               control={
                 <Switch
@@ -423,7 +403,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
       label: 'Scoring System',
       content: (
         <Grid container spacing={3}>
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ mobile: 12 }}>
             <FormControl fullWidth>
               <InputLabel>Scoring System</InputLabel>
               <Select
@@ -444,7 +424,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
 
           {config.scoring_system === 'match_points' && (
             <>
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid size={{ mobile: 12, tablet: 4 }}>
                 <TextField
                   fullWidth
                   type="number"
@@ -460,7 +440,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
                   error={!!validationErrors.match_points}
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid size={{ mobile: 12, tablet: 4 }}>
                 <TextField
                   fullWidth
                   type="number"
@@ -476,7 +456,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
                   error={!!validationErrors.match_points}
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid size={{ mobile: 12, tablet: 4 }}>
                 <TextField
                   fullWidth
                   type="number"
@@ -496,7 +476,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
             </>
           )}
 
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ mobile: 12 }}>
             <Typography variant="h6" gutterBottom>
               Tiebreak Criteria
             </Typography>
@@ -535,7 +515,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
       label: 'Team Management',
       content: (
         <Grid container spacing={3}>
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ mobile: 12 }}>
             <Typography variant="h6" gutterBottom>
               Team Captain Privileges
             </Typography>
@@ -562,7 +542,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
             ))}
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ mobile: 12, tablet: 6 }}>
             <FormControlLabel
               control={
                 <Switch
@@ -579,7 +559,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
             />
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ mobile: 12, tablet: 6 }}>
             <FormControlLabel
               control={
                 <Switch
@@ -614,7 +594,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
             )}
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ mobile: 12, tablet: 6 }}>
             <FormControlLabel
               control={
                 <Switch
@@ -631,7 +611,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
             />
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ mobile: 12, tablet: 6 }}>
             <FormControlLabel
               control={
                 <Switch
@@ -654,7 +634,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
       label: 'Advanced Settings',
       content: (
         <Grid container spacing={3}>
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ mobile: 12, tablet: 6 }}>
             <FormControlLabel
               control={
                 <Switch
@@ -668,7 +648,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
             />
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ mobile: 12, tablet: 6 }}>
             <FormControlLabel
               control={
                 <Switch
@@ -685,7 +665,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
             />
           </Grid>
 
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ mobile: 12 }}>
             <FormControl fullWidth>
               <InputLabel>Cross Table Format</InputLabel>
               <Select
@@ -787,13 +767,13 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
       <Dialog
         open={previewDialogOpen}
         onClose={() => setPreviewDialogOpen(false)}
-        maxWidth="md"
+        maxWidth={false}
         fullWidth
       >
         <DialogTitle>{t('tournament.teams.configurationPreview')}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ mobile: 12, tablet: 6 }}>
               <Typography variant="h6" gutterBottom>
                 Basic Settings
               </Typography>
@@ -828,7 +808,7 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
                 </ListItem>
               </List>
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ mobile: 12, tablet: 6 }}>
               <Typography variant="h6" gutterBottom>
                 Scoring System
               </Typography>

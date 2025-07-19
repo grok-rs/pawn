@@ -5,6 +5,15 @@ import { useTranslation } from 'react-i18next';
 import CustomFormHelperText from '../FormHelperText/FormHelperText';
 import { StyledTextField } from './styled';
 
+interface TimeInputWithUnitsProps {
+  label: string;
+  inputName: string;
+  unitName: string;
+  error?: string;
+  defaultUnit: string;
+  unitOptions: { value: string; label: string }[];
+}
+
 const TimeInputWithUnits = ({
   label,
   inputName,
@@ -12,7 +21,7 @@ const TimeInputWithUnits = ({
   error,
   defaultUnit,
   unitOptions,
-}: any) => {
+}: TimeInputWithUnitsProps) => {
   const { t } = useTranslation();
   const { register } = useFormContext();
 
@@ -32,7 +41,7 @@ const TimeInputWithUnits = ({
           endAdornment: (
             <InputAdornment position="end">
               <Select defaultValue={defaultUnit} {...register(unitName)}>
-                {unitOptions.map((unit: any) => (
+                {unitOptions.map(unit => (
                   <MenuItem key={unit.value} value={unit.value}>
                     {t(unit.label)}
                   </MenuItem>

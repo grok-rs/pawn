@@ -1,11 +1,11 @@
 use crate::pawn::{
     common::error::PawnError,
     db::Db,
-    domain::model::{Team, TeamMatch, TeamMembership, Player, Game, TeamStanding},
+    domain::model::{Game, Player, Team, TeamMatch, TeamMembership, TeamStanding},
 };
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{info, warn, instrument};
+use tracing::{info, instrument, warn};
 
 /// Team scoring service that handles match points, board points, and tiebreaks
 pub struct TeamScoringService<D> {
@@ -28,33 +28,33 @@ pub struct TeamScoringConfig {
 /// Different team scoring systems
 #[derive(Debug, Clone)]
 pub enum TeamScoringSystem {
-    MatchPoints,        // 2 points for match win, 1 for draw, 0 for loss
-    BoardPoints,        // Sum of individual board points
-    OlympicPoints,      // Match points first, then board points as tiebreaker
-    CustomPoints,       // Custom point allocation
+    MatchPoints,   // 2 points for match win, 1 for draw, 0 for loss
+    BoardPoints,   // Sum of individual board points
+    OlympicPoints, // Match points first, then board points as tiebreaker
+    CustomPoints,  // Custom point allocation
 }
 
 /// Board weight systems for calculating team scores
 #[derive(Debug, Clone)]
 pub enum BoardWeightSystem {
-    Equal,              // All boards have equal weight
-    Descending,         // Board 1 has highest weight, descending
-    Ascending,          // Board 1 has lowest weight, ascending
-    Custom(Vec<f64>),   // Custom weights for each board
+    Equal,            // All boards have equal weight
+    Descending,       // Board 1 has highest weight, descending
+    Ascending,        // Board 1 has lowest weight, ascending
+    Custom(Vec<f64>), // Custom weights for each board
 }
 
 /// Tiebreak criteria for team standings
 #[derive(Debug, Clone)]
 pub enum TeamTiebreakCriterion {
-    MatchPoints,        // Total match points
-    BoardPoints,        // Total board points
-    DirectEncounter,    // Head-to-head results
-    SonnebornBerger,    // Weighted opponent score
+    MatchPoints,           // Total match points
+    BoardPoints,           // Total board points
+    DirectEncounter,       // Head-to-head results
+    SonnebornBerger,       // Weighted opponent score
     AverageOpponentRating, // Average rating of opponents
-    BoardCountTiebreak, // Most wins on individual boards
-    CaptainBoard,       // Result on captain's board (board 1)
-    MatchWins,          // Number of match wins
-    DrawCount,          // Number of draws (fewer is better)
+    BoardCountTiebreak,    // Most wins on individual boards
+    CaptainBoard,          // Result on captain's board (board 1)
+    MatchWins,             // Number of match wins
+    DrawCount,             // Number of draws (fewer is better)
 }
 
 /// Team match result for scoring
@@ -145,7 +145,10 @@ impl<D: Db> TeamScoringService<D> {
         tournament_id: i32,
         config: TeamScoringConfig,
     ) -> Result<TeamStandingsResult, PawnError> {
-        info!("Calculating team standings for tournament {}", tournament_id);
+        info!(
+            "Calculating team standings for tournament {}",
+            tournament_id
+        );
 
         // Get all teams, matches, and games for the tournament
         let teams = self.db.get_teams_by_tournament(tournament_id).await?;
@@ -155,12 +158,9 @@ impl<D: Db> TeamScoringService<D> {
         // Calculate scores for each team
         let mut team_scores = HashMap::new();
         for team in &teams {
-            let score_breakdown = self.calculate_team_score_breakdown(
-                team,
-                &team_matches,
-                &all_games,
-                &config,
-            ).await?;
+            let score_breakdown = self
+                .calculate_team_score_breakdown(team, &team_matches, &all_games, &config)
+                .await?;
             team_scores.insert(team.id, score_breakdown);
         }
 
@@ -227,8 +227,9 @@ impl<D: Db> TeamScoringService<D> {
                 opponents_faced.push(opponent_id);
 
                 // Calculate match result
-                let (team_match_points, team_board_points, match_result) = 
-                    self.calculate_match_result(team_match, all_games, team.id, config).await?;
+                let (team_match_points, team_board_points, match_result) = self
+                    .calculate_match_result(team_match, all_games, team.id, config)
+                    .await?;
 
                 match_points += team_match_points;
                 board_points += team_board_points;
@@ -241,7 +242,9 @@ impl<D: Db> TeamScoringService<D> {
                 }
 
                 // Count individual board results
-                let board_results = self.get_board_results_for_match(team_match, all_games, team.id).await?;
+                let board_results = self
+                    .get_board_results_for_match(team_match, all_games, team.id)
+                    .await?;
                 for board_result in &board_results {
                     games_played += 1;
                     match &board_result.result {
@@ -289,19 +292,20 @@ impl<D: Db> TeamScoringService<D> {
         };
 
         // Calculate average opponent rating
-        let average_opponent_rating = self.calculate_average_opponent_rating(
-            &opponents_faced,
-            team_matches,
-        ).await?;
+        let average_opponent_rating = self
+            .calculate_average_opponent_rating(&opponents_faced, team_matches)
+            .await?;
 
         // Calculate tiebreak scores
-        let tiebreak_scores = self.calculate_tiebreak_scores(
-            team,
-            team_matches,
-            all_games,
-            &config.tiebreak_criteria,
-            &opponents_faced,
-        ).await?;
+        let tiebreak_scores = self
+            .calculate_tiebreak_scores(
+                team,
+                team_matches,
+                all_games,
+                &config.tiebreak_criteria,
+                &opponents_faced,
+            )
+            .await?;
 
         Ok(TeamScoreBreakdown {
             team: team.clone(),
@@ -329,15 +333,17 @@ impl<D: Db> TeamScoringService<D> {
         team_id: i32,
         config: &TeamScoringConfig,
     ) -> Result<(f64, f64, MatchResult), PawnError> {
-        let board_results = self.get_board_results_for_match(team_match, all_games, team_id).await?;
-        
+        let board_results = self
+            .get_board_results_for_match(team_match, all_games, team_id)
+            .await?;
+
         let mut team_board_points = 0.0;
         let mut opponent_board_points = 0.0;
 
         // Calculate board points for each team
         for board_result in &board_results {
             let (white_points, black_points) = self.get_game_points(&board_result.result);
-            
+
             if board_result.white_team_id == team_id {
                 team_board_points += white_points;
                 opponent_board_points += black_points;
@@ -387,65 +393,89 @@ impl<D: Db> TeamScoringService<D> {
 
         for game in match_games {
             // Determine if this game involves players from both teams
-            let white_in_team_a = team_a_members.iter().any(|m| m.player_id == game.white_player_id);
-            let white_in_team_b = team_b_members.iter().any(|m| m.player_id == game.white_player_id);
-            
-            let black_in_team_a = team_a_members.iter().any(|m| m.player_id == game.black_player_id);
-            let black_in_team_b = team_b_members.iter().any(|m| m.player_id == game.black_player_id);
+            let white_in_team_a = team_a_members
+                .iter()
+                .any(|m| m.player_id == game.white_player_id);
+            let white_in_team_b = team_b_members
+                .iter()
+                .any(|m| m.player_id == game.white_player_id);
+
+            let black_in_team_a = team_a_members
+                .iter()
+                .any(|m| m.player_id == game.black_player_id);
+            let black_in_team_b = team_b_members
+                .iter()
+                .any(|m| m.player_id == game.black_player_id);
 
             // Check if this is a team match game (one player from each team)
             if (white_in_team_a && black_in_team_b) || (white_in_team_b && black_in_team_a) {
-                let white_team_id = if white_in_team_a { team_match.team_a_id } else { team_match.team_b_id };
-                let black_team_id = if black_in_team_a { team_match.team_a_id } else { team_match.team_b_id };
+                let white_team_id = if white_in_team_a {
+                    team_match.team_a_id
+                } else {
+                    team_match.team_b_id
+                };
+                let black_team_id = if black_in_team_a {
+                    team_match.team_a_id
+                } else {
+                    team_match.team_b_id
+                };
 
                 let game_result = self.convert_game_result(game);
-                
-                // Get actual player objects
-                let white_player = self.db.get_player(game.white_player_id).await.unwrap_or_else(|_| {
-                    // Create dummy player if not found
-                    Player {
-                        id: game.white_player_id,
-                        tournament_id: game.tournament_id,
-                        name: format!("Player {}", game.white_player_id),
-                        rating: None,
-                        country_code: None,
-                        title: None,
-                        birth_date: None,
-                        gender: None,
-                        email: None,
-                        phone: None,
-                        club: None,
-                        status: "active".to_string(),
-                        seed_number: None,
-                        pairing_number: None,
-                        initial_rating: None,
-                        created_at: chrono::Utc::now().to_rfc3339(),
-                        updated_at: Some(chrono::Utc::now().to_rfc3339()),
-                    }
-                });
 
-                let black_player = self.db.get_player(game.black_player_id).await.unwrap_or_else(|_| {
-                    // Create dummy player if not found
-                    Player {
-                        id: game.black_player_id,
-                        tournament_id: game.tournament_id,
-                        name: format!("Player {}", game.black_player_id),
-                        rating: None,
-                        country_code: None,
-                        title: None,
-                        birth_date: None,
-                        gender: None,
-                        email: None,
-                        phone: None,
-                        club: None,
-                        status: "active".to_string(),
-                        seed_number: None,
-                        pairing_number: None,
-                        initial_rating: None,
-                        created_at: chrono::Utc::now().to_rfc3339(),
-                        updated_at: Some(chrono::Utc::now().to_rfc3339()),
-                    }
-                });
+                // Get actual player objects
+                let white_player = self
+                    .db
+                    .get_player(game.white_player_id)
+                    .await
+                    .unwrap_or_else(|_| {
+                        // Create dummy player if not found
+                        Player {
+                            id: game.white_player_id,
+                            tournament_id: game.tournament_id,
+                            name: format!("Player {}", game.white_player_id),
+                            rating: None,
+                            country_code: None,
+                            title: None,
+                            birth_date: None,
+                            gender: None,
+                            email: None,
+                            phone: None,
+                            club: None,
+                            status: "active".to_string(),
+                            seed_number: None,
+                            pairing_number: None,
+                            initial_rating: None,
+                            created_at: chrono::Utc::now().to_rfc3339(),
+                            updated_at: Some(chrono::Utc::now().to_rfc3339()),
+                        }
+                    });
+
+                let black_player = self
+                    .db
+                    .get_player(game.black_player_id)
+                    .await
+                    .unwrap_or_else(|_| {
+                        // Create dummy player if not found
+                        Player {
+                            id: game.black_player_id,
+                            tournament_id: game.tournament_id,
+                            name: format!("Player {}", game.black_player_id),
+                            rating: None,
+                            country_code: None,
+                            title: None,
+                            birth_date: None,
+                            gender: None,
+                            email: None,
+                            phone: None,
+                            club: None,
+                            status: "active".to_string(),
+                            seed_number: None,
+                            pairing_number: None,
+                            initial_rating: None,
+                            created_at: chrono::Utc::now().to_rfc3339(),
+                            updated_at: Some(chrono::Utc::now().to_rfc3339()),
+                        }
+                    });
 
                 board_results.push(BoardResult {
                     board_number: 0, // Game doesn't have board_number in the current model
@@ -514,7 +544,8 @@ impl<D: Db> TeamScoringService<D> {
                 .collect();
 
             if !opponent_ratings.is_empty() {
-                let opponent_avg: f64 = opponent_ratings.iter().sum::<i32>() as f64 / opponent_ratings.len() as f64;
+                let opponent_avg: f64 =
+                    opponent_ratings.iter().sum::<i32>() as f64 / opponent_ratings.len() as f64;
                 total_rating += opponent_avg;
                 count += 1;
             }
@@ -549,25 +580,32 @@ impl<D: Db> TeamScoringService<D> {
                     0.0
                 }
                 TeamTiebreakCriterion::DirectEncounter => {
-                    self.calculate_direct_encounter_score(team.id, team_matches, all_games).await?
+                    self.calculate_direct_encounter_score(team.id, team_matches, all_games)
+                        .await?
                 }
                 TeamTiebreakCriterion::SonnebornBerger => {
-                    self.calculate_sonneborn_berger_score(team.id, team_matches, opponent_ids).await?
+                    self.calculate_sonneborn_berger_score(team.id, team_matches, opponent_ids)
+                        .await?
                 }
                 TeamTiebreakCriterion::AverageOpponentRating => {
-                    self.calculate_average_opponent_rating(opponent_ids, team_matches).await?
+                    self.calculate_average_opponent_rating(opponent_ids, team_matches)
+                        .await?
                 }
                 TeamTiebreakCriterion::BoardCountTiebreak => {
-                    self.calculate_board_count_tiebreak(team.id, team_matches, all_games).await?
+                    self.calculate_board_count_tiebreak(team.id, team_matches, all_games)
+                        .await?
                 }
                 TeamTiebreakCriterion::CaptainBoard => {
-                    self.calculate_captain_board_score(team.id, team_matches, all_games).await?
+                    self.calculate_captain_board_score(team.id, team_matches, all_games)
+                        .await?
                 }
                 TeamTiebreakCriterion::MatchWins => {
-                    self.calculate_match_wins(team.id, team_matches, all_games).await?
+                    self.calculate_match_wins(team.id, team_matches, all_games)
+                        .await?
                 }
                 TeamTiebreakCriterion::DrawCount => {
-                    self.calculate_draw_count(team.id, team_matches, all_games).await?
+                    self.calculate_draw_count(team.id, team_matches, all_games)
+                        .await?
                 }
             };
 
@@ -610,10 +648,12 @@ impl<D: Db> TeamScoringService<D> {
     ) -> Result<f64, PawnError> {
         // Count individual board wins
         let mut board_wins = 0.0;
-        
+
         for team_match in team_matches {
             if team_match.team_a_id == team_id || team_match.team_b_id == team_id {
-                let board_results = self.get_board_results_for_match(team_match, all_games, team_id).await?;
+                let board_results = self
+                    .get_board_results_for_match(team_match, all_games, team_id)
+                    .await?;
                 for board_result in &board_results {
                     match &board_result.result {
                         GameResult::WhiteWin => {
@@ -643,15 +683,18 @@ impl<D: Db> TeamScoringService<D> {
         all_games: &[Game],
     ) -> Result<f64, PawnError> {
         let mut captain_score = 0.0;
-        
+
         for team_match in team_matches {
             if team_match.team_a_id == team_id || team_match.team_b_id == team_id {
-                let board_results = self.get_board_results_for_match(team_match, all_games, team_id).await?;
-                
+                let board_results = self
+                    .get_board_results_for_match(team_match, all_games, team_id)
+                    .await?;
+
                 // Find board 1 result
                 for board_result in &board_results {
                     if board_result.board_number == 1 {
-                        let (white_points, black_points) = self.get_game_points(&board_result.result);
+                        let (white_points, black_points) =
+                            self.get_game_points(&board_result.result);
                         captain_score += if board_result.white_team_id == team_id {
                             white_points
                         } else {
@@ -674,7 +717,7 @@ impl<D: Db> TeamScoringService<D> {
         all_games: &[Game],
     ) -> Result<f64, PawnError> {
         let mut match_wins = 0.0;
-        
+
         for team_match in team_matches {
             if team_match.team_a_id == team_id || team_match.team_b_id == team_id {
                 let is_team_a = team_match.team_a_id == team_id;
@@ -706,7 +749,7 @@ impl<D: Db> TeamScoringService<D> {
         all_games: &[Game],
     ) -> Result<f64, PawnError> {
         let mut draw_count = 0.0;
-        
+
         for team_match in team_matches {
             if team_match.team_a_id == team_id || team_match.team_b_id == team_id {
                 let is_team_a = team_match.team_a_id == team_id;
@@ -739,24 +782,30 @@ impl<D: Db> TeamScoringService<D> {
     ) -> Result<(), PawnError> {
         standings.sort_by(|a, b| {
             // Primary sort: total score (descending)
-            b.points.partial_cmp(&a.points).unwrap_or(std::cmp::Ordering::Equal)
+            b.points
+                .partial_cmp(&a.points)
+                .unwrap_or(std::cmp::Ordering::Equal)
                 .then_with(|| {
                     // Apply tiebreak criteria in order
                     for criterion in &config.tiebreak_criteria {
                         let a_score = self.get_tiebreak_score(a, criterion, team_scores);
                         let b_score = self.get_tiebreak_score(b, criterion, team_scores);
-                        
+
                         let cmp = match criterion {
                             TeamTiebreakCriterion::DrawCount => {
                                 // Fewer draws is better
-                                a_score.partial_cmp(&b_score).unwrap_or(std::cmp::Ordering::Equal)
+                                a_score
+                                    .partial_cmp(&b_score)
+                                    .unwrap_or(std::cmp::Ordering::Equal)
                             }
                             _ => {
                                 // Higher score is better
-                                b_score.partial_cmp(&a_score).unwrap_or(std::cmp::Ordering::Equal)
+                                b_score
+                                    .partial_cmp(&a_score)
+                                    .unwrap_or(std::cmp::Ordering::Equal)
                             }
                         };
-                        
+
                         if cmp != std::cmp::Ordering::Equal {
                             return cmp;
                         }
@@ -781,7 +830,11 @@ impl<D: Db> TeamScoringService<D> {
             _ => {
                 // Get from tiebreak_scores HashMap
                 let criterion_key = format!("{:?}", criterion);
-                standing.tiebreak_scores.get(&criterion_key).cloned().unwrap_or(0.0)
+                standing
+                    .tiebreak_scores
+                    .get(&criterion_key)
+                    .cloned()
+                    .unwrap_or(0.0)
             }
         }
     }
@@ -820,7 +873,7 @@ impl<D: Db> TeamScoringService<D> {
         for group in tied_groups {
             let mut explanation = String::new();
             explanation.push_str(&format!("Tied on {} points. ", group[0].1.points));
-            
+
             for criterion in &config.tiebreak_criteria {
                 explanation.push_str(&format!("Tiebreak: {:?}. ", criterion));
             }
@@ -852,7 +905,7 @@ impl<D: Db> TeamScoringService<D> {
 
         for board_result in &board_results {
             let (white_points, black_points) = self.get_game_points(&board_result.result);
-            
+
             if board_result.white_team_id == team_match.team_a_id {
                 team_a_board_points += white_points;
                 team_b_board_points += black_points;
@@ -863,7 +916,7 @@ impl<D: Db> TeamScoringService<D> {
         }
 
         // Determine match result
-        let (team_a_match_points, team_b_match_points) = 
+        let (team_a_match_points, team_b_match_points) =
             if team_a_board_points > team_b_board_points {
                 (config.match_points_win, config.match_points_loss)
             } else if team_a_board_points < team_b_board_points {
@@ -922,7 +975,7 @@ mod tests {
 
     mock! {
         TestDb {}
-        
+
         #[async_trait::async_trait]
         impl Db for TestDb {
             async fn get_teams_by_tournament(&self, tournament_id: i32) -> Result<Vec<Team>, sqlx::Error>;
@@ -937,10 +990,10 @@ mod tests {
     #[tokio::test]
     async fn test_team_scoring_olympic_system() {
         let mut mock_db = MockTestDb::new();
-        
+
         // Setup mock expectations
-        mock_db.expect_get_teams_by_tournament()
-            .returning(|_| Ok(vec![
+        mock_db.expect_get_teams_by_tournament().returning(|_| {
+            Ok(vec![
                 Team {
                     id: 1,
                     tournament_id: 1,
@@ -971,48 +1024,50 @@ mod tests {
                     created_at: chrono::Utc::now().to_rfc3339(),
                     updated_at: Some(chrono::Utc::now().to_rfc3339()),
                 },
-            ]));
+            ])
+        });
 
-        mock_db.expect_get_team_matches()
-            .returning(|_, _| Ok(vec![
-                TeamMatch {
-                    id: 1,
-                    tournament_id: 1,
-                    round_number: 1,
-                    team_a_id: 1,
-                    team_b_id: 2,
-                    venue: None,
-                    scheduled_time: None,
-                    status: "completed".to_string(),
-                    team_a_match_points: 2.0,
-                    team_b_match_points: 0.0,
-                    team_a_board_points: 2.5,
-                    team_b_board_points: 1.5,
-                    arbiter_name: None,
-                    arbiter_notes: None,
-                    result_approved: true,
-                    approved_by: None,
-                    approved_at: None,
-                    created_at: chrono::Utc::now().to_rfc3339(),
-                    updated_at: Some(chrono::Utc::now().to_rfc3339()),
-                },
-            ]));
+        mock_db.expect_get_team_matches().returning(|_, _| {
+            Ok(vec![TeamMatch {
+                id: 1,
+                tournament_id: 1,
+                round_number: 1,
+                team_a_id: 1,
+                team_b_id: 2,
+                venue: None,
+                scheduled_time: None,
+                status: "completed".to_string(),
+                team_a_match_points: 2.0,
+                team_b_match_points: 0.0,
+                team_a_board_points: 2.5,
+                team_b_board_points: 1.5,
+                arbiter_name: None,
+                arbiter_notes: None,
+                result_approved: true,
+                approved_by: None,
+                approved_at: None,
+                created_at: chrono::Utc::now().to_rfc3339(),
+                updated_at: Some(chrono::Utc::now().to_rfc3339()),
+            }])
+        });
 
-        mock_db.expect_get_games_by_tournament()
+        mock_db
+            .expect_get_games_by_tournament()
             .returning(|_| Ok(vec![]));
 
-        mock_db.expect_get_team_memberships()
+        mock_db
+            .expect_get_team_memberships()
             .returning(|_| Ok(vec![]));
 
         let service = TeamScoringService::new(Arc::new(mock_db));
         let config = TeamScoringConfig::default();
-        
+
         let result = service.calculate_team_standings(1, config).await;
         assert!(result.is_ok());
-        
+
         let standings = result.unwrap();
         assert_eq!(standings.standings.len(), 2);
-        
+
         // Team A should be ranked higher due to match win
         assert_eq!(standings.standings[0].team.id, 1);
         assert_eq!(standings.standings[1].team.id, 2);
@@ -1021,7 +1076,7 @@ mod tests {
     #[test]
     fn test_game_points_calculation() {
         let service = TeamScoringService::new(Arc::new(MockTestDb::new()));
-        
+
         assert_eq!(service.get_game_points(&GameResult::WhiteWin), (1.0, 0.0));
         assert_eq!(service.get_game_points(&GameResult::BlackWin), (0.0, 1.0));
         assert_eq!(service.get_game_points(&GameResult::Draw), (0.5, 0.5));
@@ -1034,13 +1089,19 @@ mod tests {
             scoring_system: TeamScoringSystem::MatchPoints,
             ..Default::default()
         };
-        
+
         let board_points_config = TeamScoringConfig {
             scoring_system: TeamScoringSystem::BoardPoints,
             ..Default::default()
         };
-        
-        assert!(matches!(match_points_config.scoring_system, TeamScoringSystem::MatchPoints));
-        assert!(matches!(board_points_config.scoring_system, TeamScoringSystem::BoardPoints));
+
+        assert!(matches!(
+            match_points_config.scoring_system,
+            TeamScoringSystem::MatchPoints
+        ));
+        assert!(matches!(
+            board_points_config.scoring_system,
+            TeamScoringSystem::BoardPoints
+        ));
     }
 }

@@ -1,13 +1,13 @@
-use specta_typescript::{BigIntExportBehavior, Typescript};
 use specta_typescript::formatter::prettier;
-use tauri_specta::collect_commands;
-use std::path::Path;
+use specta_typescript::{BigIntExportBehavior, Typescript};
 use std::fs;
+use std::path::Path;
+use tauri_specta::collect_commands;
 
 // Import the pawn module from the main crate
 use pawn::pawn::command::{
-    tournament, round, game_result, player, knockout, time_control, 
-    seeding, export, norm_calculation, team, settings
+    export, game_result, knockout, norm_calculation, player, round, seeding, settings, team,
+    time_control, tournament,
 };
 
 fn main() {
@@ -189,7 +189,7 @@ fn main() {
 
     // Generate TypeScript bindings
     let output_path = Path::new("../src/dto/bindings.ts");
-    
+
     builder
         .export(
             Typescript::new()
@@ -203,35 +203,40 @@ fn main() {
     // Enable restructuring to fix type ordering
     restructure_bindings_file(output_path).expect("Failed to restructure bindings file");
 
-    println!("✅ TypeScript bindings generated successfully at: {}", output_path.display());
+    println!(
+        "✅ TypeScript bindings generated successfully at: {}",
+        output_path.display()
+    );
 }
 
 fn restructure_bindings_file(path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     let content = fs::read_to_string(path)?;
-    
+
     // Find the commands section
-    let commands_start = content.find("export const commands = {")
+    let commands_start = content
+        .find("export const commands = {")
         .ok_or("Could not find commands export")?;
-    
+
     // Find where types start (look for first "export type")
-    let types_start = content.find("export type ")
+    let types_start = content
+        .find("export type ")
         .ok_or("Could not find types section")?;
-    
+
     if types_start < commands_start {
         println!("Types are already properly ordered before commands");
         return Ok(());
     }
-    
+
     // Extract sections:
     // 1. Header (everything before commands)
     let header = &content[..commands_start];
-    
+
     // 2. Commands section (from commands start to where types begin)
     let commands_section = &content[commands_start..types_start];
-    
+
     // 3. Types section (from first export type to end of file)
     let types_section = &content[types_start..];
-    
+
     // Reconstruct with types first, then commands
     let restructured = format!(
         "{}{}{}",
@@ -239,9 +244,9 @@ fn restructure_bindings_file(path: &Path) -> Result<(), Box<dyn std::error::Erro
         format!("\n\n{}", types_section.trim()),
         format!("\n\n{}", commands_section.trim())
     );
-    
+
     fs::write(path, restructured)?;
     println!("✅ Successfully restructured bindings file - types now come before commands");
-    
+
     Ok(())
 }

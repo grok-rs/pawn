@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -68,22 +68,22 @@ const TournamentsPage = () => {
     finished: tournaments.filter(isFinishedTournament).length,
   };
 
-  useEffect(() => {
-    const fetch = async () => {
-      setLoading(true);
-      try {
-        const data = await commands.getTournaments();
-        setTournaments(data);
-        setFilteredTournaments(data);
-      } catch (error) {
-        console.error('Failed to fetch tournaments:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetch();
+  const fetchTournaments = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await commands.getTournaments();
+      setTournaments(data);
+      setFilteredTournaments(data);
+    } catch (error) {
+      console.error('Failed to fetch tournaments:', error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchTournaments();
+  }, [fetchTournaments]);
 
   useEffect(() => {
     let filtered = tournaments;
@@ -140,9 +140,7 @@ const TournamentsPage = () => {
     try {
       await commands.deleteTournament(tournamentToDelete.id);
       // Refresh the tournaments list
-      const data = await commands.getTournaments();
-      setTournaments(data);
-      setFilteredTournaments(data);
+      await fetchTournaments();
     } catch (error) {
       console.error('Failed to delete tournament:', error);
     }
@@ -160,16 +158,24 @@ const TournamentsPage = () => {
     try {
       await commands.populateMockTournaments();
       // Refresh the tournaments list
-      const data = await commands.getTournaments();
-      setTournaments(data);
-      setFilteredTournaments(data);
+      await fetchTournaments();
     } catch (error) {
       console.error('Failed to populate sample tournaments:', error);
     }
     setPopulatingTournaments(false);
   };
 
-  const StatCard = ({ title, value, icon, color }: any) => (
+  const StatCard = ({
+    title,
+    value,
+    icon,
+    color,
+  }: {
+    title: string;
+    value: string | number;
+    icon: React.ReactNode;
+    color: string;
+  }) => (
     <Card
       sx={{
         transition: 'all 0.3s ease',

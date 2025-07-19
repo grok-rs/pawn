@@ -118,7 +118,11 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn update_tournament_status(&self, tournament_id: i32, status: &str) -> Result<Tournament, sqlx::Error> {
+    async fn update_tournament_status(
+        &self,
+        tournament_id: i32,
+        status: &str,
+    ) -> Result<Tournament, sqlx::Error> {
         // Update tournament status
         sqlx::query("UPDATE tournaments SET status = ? WHERE id = ?")
             .bind(status)
@@ -1088,7 +1092,10 @@ impl Db for SqliteDb {
 
     // Team management operations
     #[instrument(ret, skip(self))]
-    async fn create_team(&self, data: crate::pawn::domain::dto::CreateTeam) -> Result<crate::pawn::domain::model::Team, sqlx::Error> {
+    async fn create_team(
+        &self,
+        data: crate::pawn::domain::dto::CreateTeam,
+    ) -> Result<crate::pawn::domain::model::Team, sqlx::Error> {
         let result = sqlx::query_as(
             "INSERT INTO teams (tournament_id, name, captain, description, color, club_affiliation, contact_email, contact_phone, max_board_count, status, created_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP)
@@ -1110,7 +1117,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn update_team(&self, data: crate::pawn::domain::dto::UpdateTeam) -> Result<crate::pawn::domain::model::Team, sqlx::Error> {
+    async fn update_team(
+        &self,
+        data: crate::pawn::domain::dto::UpdateTeam,
+    ) -> Result<crate::pawn::domain::model::Team, sqlx::Error> {
         let result = sqlx::query_as(
             "UPDATE teams SET 
                 name = COALESCE(?, name),
@@ -1153,7 +1163,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_team_by_id(&self, team_id: i32) -> Result<crate::pawn::domain::model::Team, sqlx::Error> {
+    async fn get_team_by_id(
+        &self,
+        team_id: i32,
+    ) -> Result<crate::pawn::domain::model::Team, sqlx::Error> {
         let result = sqlx::query_as("SELECT * FROM teams WHERE id = ?")
             .bind(team_id)
             .fetch_one(&self.pool)
@@ -1163,7 +1176,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_teams_by_tournament(&self, tournament_id: i32) -> Result<Vec<crate::pawn::domain::model::Team>, sqlx::Error> {
+    async fn get_teams_by_tournament(
+        &self,
+        tournament_id: i32,
+    ) -> Result<Vec<crate::pawn::domain::model::Team>, sqlx::Error> {
         let result = sqlx::query_as("SELECT * FROM teams WHERE tournament_id = ? ORDER BY name")
             .bind(tournament_id)
             .fetch_all(&self.pool)
@@ -1173,14 +1189,19 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn search_teams(&self, filters: crate::pawn::domain::dto::TeamSearchFilters) -> Result<Vec<crate::pawn::domain::model::Team>, sqlx::Error> {
+    async fn search_teams(
+        &self,
+        filters: crate::pawn::domain::dto::TeamSearchFilters,
+    ) -> Result<Vec<crate::pawn::domain::model::Team>, sqlx::Error> {
         // For now, use a simple query that handles the most basic filtering
         let result = if let Some(name) = &filters.name {
-            sqlx::query_as("SELECT * FROM teams WHERE tournament_id = ? AND name LIKE ? ORDER BY name")
-                .bind(filters.tournament_id)
-                .bind(format!("%{}%", name))
-                .fetch_all(&self.pool)
-                .await?
+            sqlx::query_as(
+                "SELECT * FROM teams WHERE tournament_id = ? AND name LIKE ? ORDER BY name",
+            )
+            .bind(filters.tournament_id)
+            .bind(format!("%{}%", name))
+            .fetch_all(&self.pool)
+            .await?
         } else {
             sqlx::query_as("SELECT * FROM teams WHERE tournament_id = ? ORDER BY name")
                 .bind(filters.tournament_id)
@@ -1203,7 +1224,10 @@ impl Db for SqliteDb {
 
     // Team membership operations
     #[instrument(ret, skip(self))]
-    async fn add_player_to_team(&self, data: crate::pawn::domain::dto::AddPlayerToTeam) -> Result<crate::pawn::domain::model::TeamMembership, sqlx::Error> {
+    async fn add_player_to_team(
+        &self,
+        data: crate::pawn::domain::dto::AddPlayerToTeam,
+    ) -> Result<crate::pawn::domain::model::TeamMembership, sqlx::Error> {
         let result = sqlx::query_as(
             "INSERT INTO team_memberships (team_id, player_id, board_number, is_captain, is_reserve, status, assigned_at, created_at)
              VALUES (?, ?, ?, ?, 0, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
@@ -1220,7 +1244,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn remove_player_from_team(&self, data: crate::pawn::domain::dto::RemovePlayerFromTeam) -> Result<(), sqlx::Error> {
+    async fn remove_player_from_team(
+        &self,
+        data: crate::pawn::domain::dto::RemovePlayerFromTeam,
+    ) -> Result<(), sqlx::Error> {
         sqlx::query("DELETE FROM team_memberships WHERE team_id = ? AND player_id = ?")
             .bind(data.team_id)
             .bind(data.player_id)
@@ -1231,17 +1258,25 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_team_memberships(&self, team_id: i32) -> Result<Vec<crate::pawn::domain::model::TeamMembership>, sqlx::Error> {
-        let result = sqlx::query_as("SELECT * FROM team_memberships WHERE team_id = ? ORDER BY board_number")
-            .bind(team_id)
-            .fetch_all(&self.pool)
-            .await?;
+    async fn get_team_memberships(
+        &self,
+        team_id: i32,
+    ) -> Result<Vec<crate::pawn::domain::model::TeamMembership>, sqlx::Error> {
+        let result = sqlx::query_as(
+            "SELECT * FROM team_memberships WHERE team_id = ? ORDER BY board_number",
+        )
+        .bind(team_id)
+        .fetch_all(&self.pool)
+        .await?;
 
         Ok(result)
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_all_team_memberships(&self, tournament_id: i32) -> Result<Vec<crate::pawn::domain::model::TeamMembership>, sqlx::Error> {
+    async fn get_all_team_memberships(
+        &self,
+        tournament_id: i32,
+    ) -> Result<Vec<crate::pawn::domain::model::TeamMembership>, sqlx::Error> {
         let result = sqlx::query_as(
             "SELECT tm.* FROM team_memberships tm
              JOIN teams t ON tm.team_id = t.id
@@ -1267,7 +1302,10 @@ impl Db for SqliteDb {
 
     // Team match operations
     #[instrument(ret, skip(self))]
-    async fn create_team_match(&self, data: crate::pawn::domain::dto::CreateTeamMatch) -> Result<crate::pawn::domain::model::TeamMatch, sqlx::Error> {
+    async fn create_team_match(
+        &self,
+        data: crate::pawn::domain::dto::CreateTeamMatch,
+    ) -> Result<crate::pawn::domain::model::TeamMatch, sqlx::Error> {
         let result = sqlx::query_as(
             "INSERT INTO team_matches (tournament_id, round_number, team_a_id, team_b_id, venue, scheduled_time, status, team_a_match_points, team_b_match_points, team_a_board_points, team_b_board_points, arbiter_name, result_approved, created_at)
              VALUES (?, ?, ?, ?, ?, ?, 'scheduled', 0, 0, 0, 0, ?, 0, CURRENT_TIMESTAMP)
@@ -1287,7 +1325,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn update_team_match(&self, data: crate::pawn::domain::dto::UpdateTeamMatch) -> Result<crate::pawn::domain::model::TeamMatch, sqlx::Error> {
+    async fn update_team_match(
+        &self,
+        data: crate::pawn::domain::dto::UpdateTeamMatch,
+    ) -> Result<crate::pawn::domain::model::TeamMatch, sqlx::Error> {
         let result = sqlx::query_as(
             "UPDATE team_matches SET 
                 status = COALESCE(?, status),
@@ -1324,7 +1365,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_team_match_by_id(&self, match_id: i32) -> Result<crate::pawn::domain::model::TeamMatch, sqlx::Error> {
+    async fn get_team_match_by_id(
+        &self,
+        match_id: i32,
+    ) -> Result<crate::pawn::domain::model::TeamMatch, sqlx::Error> {
         let result = sqlx::query_as("SELECT * FROM team_matches WHERE id = ?")
             .bind(match_id)
             .fetch_one(&self.pool)
@@ -1334,7 +1378,11 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_team_matches(&self, tournament_id: i32, round_number: Option<i32>) -> Result<Vec<crate::pawn::domain::model::TeamMatch>, sqlx::Error> {
+    async fn get_team_matches(
+        &self,
+        tournament_id: i32,
+        round_number: Option<i32>,
+    ) -> Result<Vec<crate::pawn::domain::model::TeamMatch>, sqlx::Error> {
         let result = if let Some(round) = round_number {
             sqlx::query_as("SELECT * FROM team_matches WHERE tournament_id = ? AND round_number = ? ORDER BY id")
                 .bind(tournament_id)
@@ -1342,10 +1390,12 @@ impl Db for SqliteDb {
                 .fetch_all(&self.pool)
                 .await?
         } else {
-            sqlx::query_as("SELECT * FROM team_matches WHERE tournament_id = ? ORDER BY round_number, id")
-                .bind(tournament_id)
-                .fetch_all(&self.pool)
-                .await?
+            sqlx::query_as(
+                "SELECT * FROM team_matches WHERE tournament_id = ? ORDER BY round_number, id",
+            )
+            .bind(tournament_id)
+            .fetch_all(&self.pool)
+            .await?
         };
 
         Ok(result)
@@ -1353,7 +1403,10 @@ impl Db for SqliteDb {
 
     // Team lineup operations
     #[instrument(ret, skip(self))]
-    async fn create_team_lineup(&self, data: crate::pawn::domain::dto::CreateTeamLineup) -> Result<crate::pawn::domain::model::TeamLineup, sqlx::Error> {
+    async fn create_team_lineup(
+        &self,
+        data: crate::pawn::domain::dto::CreateTeamLineup,
+    ) -> Result<crate::pawn::domain::model::TeamLineup, sqlx::Error> {
         let result = sqlx::query_as(
             "INSERT INTO team_lineups (team_id, round_number, board_number, player_id, is_substitute, substituted_player_id, submission_deadline, submitted_at, submitted_by, notes, created_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, CURRENT_TIMESTAMP)
@@ -1375,7 +1428,11 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_team_lineups(&self, team_id: i32, round_number: i32) -> Result<Vec<crate::pawn::domain::model::TeamLineup>, sqlx::Error> {
+    async fn get_team_lineups(
+        &self,
+        team_id: i32,
+        round_number: i32,
+    ) -> Result<Vec<crate::pawn::domain::model::TeamLineup>, sqlx::Error> {
         let result = sqlx::query_as("SELECT * FROM team_lineups WHERE team_id = ? AND round_number = ? ORDER BY board_number")
             .bind(team_id)
             .bind(round_number)
@@ -1387,7 +1444,10 @@ impl Db for SqliteDb {
 
     // Team tournament settings operations
     #[instrument(ret, skip(self))]
-    async fn create_team_tournament_settings(&self, data: crate::pawn::domain::dto::CreateTeamTournamentSettings) -> Result<crate::pawn::domain::model::TeamTournamentSettings, sqlx::Error> {
+    async fn create_team_tournament_settings(
+        &self,
+        data: crate::pawn::domain::dto::CreateTeamTournamentSettings,
+    ) -> Result<crate::pawn::domain::model::TeamTournamentSettings, sqlx::Error> {
         let result = sqlx::query_as(
             "INSERT INTO team_tournament_settings (tournament_id, team_size, max_teams, match_scoring_system, match_points_win, match_points_draw, match_points_loss, board_weight_system, require_board_order, allow_late_entries, team_pairing_method, color_allocation, created_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
@@ -1412,7 +1472,10 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn update_team_tournament_settings(&self, data: crate::pawn::domain::dto::UpdateTeamTournamentSettings) -> Result<crate::pawn::domain::model::TeamTournamentSettings, sqlx::Error> {
+    async fn update_team_tournament_settings(
+        &self,
+        data: crate::pawn::domain::dto::UpdateTeamTournamentSettings,
+    ) -> Result<crate::pawn::domain::model::TeamTournamentSettings, sqlx::Error> {
         let result = sqlx::query_as(
             "UPDATE team_tournament_settings SET 
                 team_size = COALESCE(?, team_size),
@@ -1449,11 +1512,15 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_team_tournament_settings(&self, tournament_id: i32) -> Result<crate::pawn::domain::model::TeamTournamentSettings, sqlx::Error> {
-        let result = sqlx::query_as("SELECT * FROM team_tournament_settings WHERE tournament_id = ?")
-            .bind(tournament_id)
-            .fetch_one(&self.pool)
-            .await?;
+    async fn get_team_tournament_settings(
+        &self,
+        tournament_id: i32,
+    ) -> Result<crate::pawn::domain::model::TeamTournamentSettings, sqlx::Error> {
+        let result =
+            sqlx::query_as("SELECT * FROM team_tournament_settings WHERE tournament_id = ?")
+                .bind(tournament_id)
+                .fetch_one(&self.pool)
+                .await?;
 
         Ok(result)
     }

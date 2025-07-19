@@ -150,7 +150,7 @@ const NewTournamentPage = () => {
                 </Typography>
                 <TournamentTemplates
                   showSelection={true}
-                  onSelectTemplate={template => {
+                  onSelectTemplate={_template => {
                     // In a real implementation, this would populate the form with template data
                     // Selected template: template
                   }}

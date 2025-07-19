@@ -50,17 +50,18 @@ pub async fn update_game_result(
         "Successfully updated game {} result to {}",
         updated_game.id, updated_game.result
     );
-    
+
     // Trigger real-time standings update
     let affected_players = vec![updated_game.white_player_id, updated_game.black_player_id];
-    if let Err(e) = state.realtime_standings_service
+    if let Err(e) = state
+        .realtime_standings_service
         .handle_game_result_update(updated_game.tournament_id, affected_players)
         .await
     {
         warn!("Failed to update real-time standings: {}", e);
         // Don't fail the entire operation if standings update fails
     }
-    
+
     Ok(updated_game)
 }
 
@@ -270,16 +271,19 @@ pub async fn import_results_csv(
     state: State<'_, PawnState>,
     data: CsvResultImport,
 ) -> Result<CsvImportResult, PawnError> {
-    info!("Importing results from CSV for tournament {}", data.tournament_id);
+    info!(
+        "Importing results from CSV for tournament {}",
+        data.tournament_id
+    );
 
     let db = &*state.db;
-    
+
     // Parse CSV content
     let mut csv_reader = csv::Reader::from_reader(data.csv_content.as_bytes());
     let mut csv_rows = Vec::new();
     let mut errors = Vec::new();
     let mut warnings = Vec::new();
-    
+
     // Parse headers
     let headers = match csv_reader.headers() {
         Ok(headers) => headers.clone(),
@@ -327,7 +331,7 @@ pub async fn import_results_csv(
     // Parse each row
     for (row_index, record) in csv_reader.records().enumerate() {
         let row_number = row_index + 2; // +2 because we have header row and 0-based index
-        
+
         match record {
             Ok(record) => {
                 let board_number = board_col
@@ -362,7 +366,7 @@ pub async fn import_results_csv(
                 if let Some(result) = result {
                     // Normalize result format
                     let normalized_result = normalize_result(&result);
-                    
+
                     csv_rows.push(CsvResultRow {
                         board_number,
                         white_player,
@@ -393,7 +397,7 @@ pub async fn import_results_csv(
     }
 
     let total_rows = csv_rows.len();
-    
+
     if total_rows == 0 && errors.is_empty() {
         return Ok(CsvImportResult {
             success: false,
@@ -446,9 +450,11 @@ pub async fn import_results_csv(
                 let match_info = if let Some(board) = csv_row.board_number {
                     format!("board {}", board)
                 } else if csv_row.white_player.is_some() || csv_row.black_player.is_some() {
-                    format!("players {} vs {}", 
+                    format!(
+                        "players {} vs {}",
                         csv_row.white_player.as_deref().unwrap_or("?"),
-                        csv_row.black_player.as_deref().unwrap_or("?"))
+                        csv_row.black_player.as_deref().unwrap_or("?")
+                    )
                 } else {
                     "game".to_string()
                 };
@@ -507,8 +513,13 @@ pub async fn import_results_csv(
     let success = errors.is_empty() && processed_rows > 0;
     let valid_rows = csv_rows.len();
 
-    info!("CSV import completed: {} total, {} valid, {} processed, {} errors", 
-          total_rows, valid_rows, processed_rows, errors.len());
+    info!(
+        "CSV import completed: {} total, {} valid, {} processed, {} errors",
+        total_rows,
+        valid_rows,
+        processed_rows,
+        errors.len()
+    );
 
     Ok(CsvImportResult {
         success,
@@ -544,7 +555,10 @@ fn normalize_result(result: &str) -> String {
     }
 }
 
-fn find_matching_game<'a>(games: &'a [crate::pawn::domain::model::Game], csv_row: &CsvResultRow) -> Option<&'a crate::pawn::domain::model::Game> {
+fn find_matching_game<'a>(
+    games: &'a [crate::pawn::domain::model::Game],
+    csv_row: &CsvResultRow,
+) -> Option<&'a crate::pawn::domain::model::Game> {
     // First try to match by board number if available
     if let Some(board_number) = csv_row.board_number {
         // Board numbers are typically 1-based, but we need to match against the game order

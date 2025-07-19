@@ -2,8 +2,9 @@ use crate::pawn::{
     common::error::PawnError,
     domain::{
         dto::{
-            BatchUpdatePlayerSeeding, CreateTournamentSeedingSettings, GeneratePairingNumbersRequest,
-            GenerateSeedingRequest, SeedingAnalysis, SeedingPreview, UpdateTournamentSeedingSettings,
+            BatchUpdatePlayerSeeding, CreateTournamentSeedingSettings,
+            GeneratePairingNumbersRequest, GenerateSeedingRequest, SeedingAnalysis, SeedingPreview,
+            UpdateTournamentSeedingSettings,
         },
         model::{Player, TournamentSeedingSettings},
     },

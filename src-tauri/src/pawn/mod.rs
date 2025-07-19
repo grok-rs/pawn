@@ -188,7 +188,7 @@ pub fn init_plugin<R: Runtime>() -> TauriPlugin<R> {
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Throw);
 
-    // Note: TypeScript bindings are now generated using the separate 
+    // Note: TypeScript bindings are now generated using the separate
     // generate_bindings binary instead of during plugin initialization
     // This ensures bindings are available before frontend compilation
 

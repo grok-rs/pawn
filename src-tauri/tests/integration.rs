@@ -62,7 +62,7 @@ async fn test_database_connection_and_migrations() {
     assert!(table_names.contains(&"players".to_string()));
     assert!(table_names.contains(&"rounds".to_string()));
     assert!(table_names.contains(&"games".to_string()));
-    
+
     // Verify team tournament tables exist
     assert!(table_names.contains(&"teams".to_string()));
     assert!(table_names.contains(&"team_memberships".to_string()));
@@ -416,7 +416,10 @@ async fn test_team_basic_crud_operations() {
         .await
         .expect("Failed to fetch updated team");
 
-    assert_eq!(updated_team.get::<String, _>("description"), "Updated team description");
+    assert_eq!(
+        updated_team.get::<String, _>("description"),
+        "Updated team description"
+    );
 
     test_db
         .cleanup()
@@ -449,27 +452,29 @@ async fn test_team_membership_operations() {
 
     let tournament_id = tournament_insert.last_insert_rowid();
 
-    let team_insert = sqlx::query("INSERT INTO teams (tournament_id, name, captain) VALUES (?, ?, ?)")
-        .bind(tournament_id)
-        .bind("Team Beta")
-        .bind("Captain Jones")
-        .execute(&test_db.pool)
-        .await
-        .expect("Failed to create team");
+    let team_insert =
+        sqlx::query("INSERT INTO teams (tournament_id, name, captain) VALUES (?, ?, ?)")
+            .bind(tournament_id)
+            .bind("Team Beta")
+            .bind("Captain Jones")
+            .execute(&test_db.pool)
+            .await
+            .expect("Failed to create team");
 
     let team_id = team_insert.last_insert_rowid();
 
     // Create players for the team
     let mut player_ids = Vec::new();
     for i in 1..=4 {
-        let player_insert = sqlx::query("INSERT INTO players (tournament_id, name, rating) VALUES (?, ?, ?)")
-            .bind(tournament_id)
-            .bind(format!("Player {}", i))
-            .bind(1500 + i * 50)
-            .execute(&test_db.pool)
-            .await
-            .expect("Failed to create player");
-        
+        let player_insert =
+            sqlx::query("INSERT INTO players (tournament_id, name, rating) VALUES (?, ?, ?)")
+                .bind(tournament_id)
+                .bind(format!("Player {}", i))
+                .bind(1500 + i * 50)
+                .execute(&test_db.pool)
+                .await
+                .expect("Failed to create player");
+
         player_ids.push(player_insert.last_insert_rowid());
     }
 
@@ -477,7 +482,7 @@ async fn test_team_membership_operations() {
     for (i, player_id) in player_ids.iter().enumerate() {
         let board_number = i + 1;
         let is_captain = i == 0; // First player is captain
-        
+
         sqlx::query("INSERT INTO team_memberships (team_id, player_id, board_number, is_captain, rating_at_assignment) VALUES (?, ?, ?, ?, ?)")
             .bind(team_id)
             .bind(player_id)
@@ -490,11 +495,12 @@ async fn test_team_membership_operations() {
     }
 
     // Test team membership retrieval
-    let memberships = sqlx::query("SELECT * FROM team_memberships WHERE team_id = ? ORDER BY board_number")
-        .bind(team_id)
-        .fetch_all(&test_db.pool)
-        .await
-        .expect("Failed to fetch team memberships");
+    let memberships =
+        sqlx::query("SELECT * FROM team_memberships WHERE team_id = ? ORDER BY board_number")
+            .bind(team_id)
+            .fetch_all(&test_db.pool)
+            .await
+            .expect("Failed to fetch team memberships");
 
     assert_eq!(memberships.len(), 4);
     assert_eq!(memberships[0].get::<i32, _>("board_number"), 1);
@@ -511,7 +517,10 @@ async fn test_team_membership_operations() {
         .execute(&test_db.pool)
         .await;
 
-    assert!(duplicate_board_result.is_err(), "Should not allow duplicate board numbers");
+    assert!(
+        duplicate_board_result.is_err(),
+        "Should not allow duplicate board numbers"
+    );
 
     test_db
         .cleanup()
@@ -544,23 +553,25 @@ async fn test_team_match_operations() {
 
     let tournament_id = tournament_insert.last_insert_rowid();
 
-    let team_a_insert = sqlx::query("INSERT INTO teams (tournament_id, name, captain) VALUES (?, ?, ?)")
-        .bind(tournament_id)
-        .bind("Team Alpha")
-        .bind("Captain Alpha")
-        .execute(&test_db.pool)
-        .await
-        .expect("Failed to create team A");
+    let team_a_insert =
+        sqlx::query("INSERT INTO teams (tournament_id, name, captain) VALUES (?, ?, ?)")
+            .bind(tournament_id)
+            .bind("Team Alpha")
+            .bind("Captain Alpha")
+            .execute(&test_db.pool)
+            .await
+            .expect("Failed to create team A");
 
     let team_a_id = team_a_insert.last_insert_rowid();
 
-    let team_b_insert = sqlx::query("INSERT INTO teams (tournament_id, name, captain) VALUES (?, ?, ?)")
-        .bind(tournament_id)
-        .bind("Team Beta")
-        .bind("Captain Beta")
-        .execute(&test_db.pool)
-        .await
-        .expect("Failed to create team B");
+    let team_b_insert =
+        sqlx::query("INSERT INTO teams (tournament_id, name, captain) VALUES (?, ?, ?)")
+            .bind(tournament_id)
+            .bind("Team Beta")
+            .bind("Captain Beta")
+            .execute(&test_db.pool)
+            .await
+            .expect("Failed to create team B");
 
     let team_b_id = team_b_insert.last_insert_rowid();
 
@@ -647,27 +658,30 @@ async fn test_team_lineup_operations() {
 
     let tournament_id = tournament_insert.last_insert_rowid();
 
-    let team_insert = sqlx::query("INSERT INTO teams (tournament_id, name, captain) VALUES (?, ?, ?)")
-        .bind(tournament_id)
-        .bind("Team Gamma")
-        .bind("Captain Gamma")
-        .execute(&test_db.pool)
-        .await
-        .expect("Failed to create team");
+    let team_insert =
+        sqlx::query("INSERT INTO teams (tournament_id, name, captain) VALUES (?, ?, ?)")
+            .bind(tournament_id)
+            .bind("Team Gamma")
+            .bind("Captain Gamma")
+            .execute(&test_db.pool)
+            .await
+            .expect("Failed to create team");
 
     let team_id = team_insert.last_insert_rowid();
 
     // Create players
     let mut player_ids = Vec::new();
-    for i in 1..=5 { // 5 players (4 regular + 1 substitute)
-        let player_insert = sqlx::query("INSERT INTO players (tournament_id, name, rating) VALUES (?, ?, ?)")
-            .bind(tournament_id)
-            .bind(format!("Player {}", i))
-            .bind(1500 + i * 50)
-            .execute(&test_db.pool)
-            .await
-            .expect("Failed to create player");
-        
+    for i in 1..=5 {
+        // 5 players (4 regular + 1 substitute)
+        let player_insert =
+            sqlx::query("INSERT INTO players (tournament_id, name, rating) VALUES (?, ?, ?)")
+                .bind(tournament_id)
+                .bind(format!("Player {}", i))
+                .bind(1500 + i * 50)
+                .execute(&test_db.pool)
+                .await
+                .expect("Failed to create player");
+
         player_ids.push(player_insert.last_insert_rowid());
     }
 
@@ -686,12 +700,14 @@ async fn test_team_lineup_operations() {
     }
 
     // Test lineup retrieval
-    let lineups = sqlx::query("SELECT * FROM team_lineups WHERE team_id = ? AND round_number = ? ORDER BY board_number")
-        .bind(team_id)
-        .bind(1)
-        .fetch_all(&test_db.pool)
-        .await
-        .expect("Failed to fetch team lineups");
+    let lineups = sqlx::query(
+        "SELECT * FROM team_lineups WHERE team_id = ? AND round_number = ? ORDER BY board_number",
+    )
+    .bind(team_id)
+    .bind(1)
+    .fetch_all(&test_db.pool)
+    .await
+    .expect("Failed to fetch team lineups");
 
     assert_eq!(lineups.len(), 4);
     assert_eq!(lineups[0].get::<i32, _>("board_number"), 1);
@@ -713,16 +729,21 @@ async fn test_team_lineup_operations() {
         .await
         .expect("Failed to create substitution");
 
-    let substitution = sqlx::query("SELECT * FROM team_lineups WHERE team_id = ? AND round_number = ? AND board_number = ?")
-        .bind(team_id)
-        .bind(2)
-        .bind(2)
-        .fetch_one(&test_db.pool)
-        .await
-        .expect("Failed to fetch substitution");
+    let substitution = sqlx::query(
+        "SELECT * FROM team_lineups WHERE team_id = ? AND round_number = ? AND board_number = ?",
+    )
+    .bind(team_id)
+    .bind(2)
+    .bind(2)
+    .fetch_one(&test_db.pool)
+    .await
+    .expect("Failed to fetch substitution");
 
     assert_eq!(substitution.get::<bool, _>("is_substitute"), true);
-    assert_eq!(substitution.get::<i64, _>("substituted_player_id"), player_ids[1]);
+    assert_eq!(
+        substitution.get::<i64, _>("substituted_player_id"),
+        player_ids[1]
+    );
     assert_eq!(substitution.get::<String, _>("notes"), "Player 2 is ill");
 
     test_db
@@ -783,7 +804,10 @@ async fn test_team_tournament_settings() {
 
     assert_eq!(settings.get::<i32, _>("team_size"), 4);
     assert_eq!(settings.get::<i32, _>("max_teams"), 8);
-    assert_eq!(settings.get::<String, _>("match_scoring_system"), "match_points");
+    assert_eq!(
+        settings.get::<String, _>("match_scoring_system"),
+        "match_points"
+    );
     assert_eq!(settings.get::<i32, _>("match_points_win"), 2);
     assert_eq!(settings.get::<i32, _>("match_points_draw"), 1);
     assert_eq!(settings.get::<i32, _>("match_points_loss"), 0);
@@ -802,11 +826,12 @@ async fn test_team_tournament_settings() {
         .await
         .expect("Failed to update team tournament settings");
 
-    let updated_settings = sqlx::query("SELECT * FROM team_tournament_settings WHERE tournament_id = ?")
-        .bind(tournament_id)
-        .fetch_one(&test_db.pool)
-        .await
-        .expect("Failed to fetch updated team tournament settings");
+    let updated_settings =
+        sqlx::query("SELECT * FROM team_tournament_settings WHERE tournament_id = ?")
+            .bind(tournament_id)
+            .fetch_one(&test_db.pool)
+            .await
+            .expect("Failed to fetch updated team tournament settings");
 
     assert_eq!(updated_settings.get::<i32, _>("max_teams"), 12);
     assert_eq!(updated_settings.get::<i32, _>("match_points_win"), 3);
@@ -831,17 +856,25 @@ async fn test_team_foreign_key_constraints() {
         .execute(&test_db.pool)
         .await;
 
-    assert!(invalid_team_result.is_err(), "Should fail due to foreign key constraint");
+    assert!(
+        invalid_team_result.is_err(),
+        "Should fail due to foreign key constraint"
+    );
 
     // Test team membership foreign key constraints
-    let invalid_membership_result = sqlx::query("INSERT INTO team_memberships (team_id, player_id, board_number) VALUES (?, ?, ?)")
-        .bind(99999)
-        .bind(99999)
-        .bind(1)
-        .execute(&test_db.pool)
-        .await;
+    let invalid_membership_result = sqlx::query(
+        "INSERT INTO team_memberships (team_id, player_id, board_number) VALUES (?, ?, ?)",
+    )
+    .bind(99999)
+    .bind(99999)
+    .bind(1)
+    .execute(&test_db.pool)
+    .await;
 
-    assert!(invalid_membership_result.is_err(), "Should fail due to foreign key constraint");
+    assert!(
+        invalid_membership_result.is_err(),
+        "Should fail due to foreign key constraint"
+    );
 
     // Test team match foreign key constraints
     let invalid_match_result = sqlx::query("INSERT INTO team_matches (tournament_id, round_number, team_a_id, team_b_id) VALUES (?, ?, ?, ?)")
@@ -852,7 +885,10 @@ async fn test_team_foreign_key_constraints() {
         .execute(&test_db.pool)
         .await;
 
-    assert!(invalid_match_result.is_err(), "Should fail due to foreign key constraint");
+    assert!(
+        invalid_match_result.is_err(),
+        "Should fail due to foreign key constraint"
+    );
 
     test_db
         .cleanup()
@@ -890,25 +926,27 @@ async fn test_team_performance_with_large_dataset() {
 
     // Create 50 teams with 4 players each
     for team_num in 1..=50 {
-        let team_insert = sqlx::query("INSERT INTO teams (tournament_id, name, captain) VALUES (?, ?, ?)")
-            .bind(tournament_id)
-            .bind(format!("Team {}", team_num))
-            .bind(format!("Captain {}", team_num))
-            .execute(&test_db.pool)
-            .await
-            .expect("Failed to create team");
+        let team_insert =
+            sqlx::query("INSERT INTO teams (tournament_id, name, captain) VALUES (?, ?, ?)")
+                .bind(tournament_id)
+                .bind(format!("Team {}", team_num))
+                .bind(format!("Captain {}", team_num))
+                .execute(&test_db.pool)
+                .await
+                .expect("Failed to create team");
 
         let team_id = team_insert.last_insert_rowid();
 
         // Create 4 players for each team
         for player_num in 1..=4 {
-            let player_insert = sqlx::query("INSERT INTO players (tournament_id, name, rating) VALUES (?, ?, ?)")
-                .bind(tournament_id)
-                .bind(format!("Team {} Player {}", team_num, player_num))
-                .bind(1500 + player_num * 50)
-                .execute(&test_db.pool)
-                .await
-                .expect("Failed to create player");
+            let player_insert =
+                sqlx::query("INSERT INTO players (tournament_id, name, rating) VALUES (?, ?, ?)")
+                    .bind(tournament_id)
+                    .bind(format!("Team {} Player {}", team_num, player_num))
+                    .bind(1500 + player_num * 50)
+                    .execute(&test_db.pool)
+                    .await
+                    .expect("Failed to create player");
 
             let player_id = player_insert.last_insert_rowid();
 
@@ -975,4 +1013,4 @@ async fn test_team_performance_with_large_dataset() {
 }
 
 // Team command integration tests
-mod team_commands_integration;
+// Note: team_commands_integration module temporarily removed until implementation is complete

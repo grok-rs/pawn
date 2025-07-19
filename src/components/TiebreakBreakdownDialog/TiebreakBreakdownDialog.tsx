@@ -99,7 +99,7 @@ const TiebreakBreakdownDialog: React.FC<TiebreakBreakdownDialogProps> = ({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="md"
+      maxWidth={false}
       fullWidth
       PaperProps={{
         sx: {
@@ -126,7 +126,7 @@ const TiebreakBreakdownDialog: React.FC<TiebreakBreakdownDialogProps> = ({
               label={breakdown.display_value}
               color="primary"
               variant="outlined"
-              size="large"
+              size="medium"
               sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}
             />
             <IconButton onClick={onClose} size="small">

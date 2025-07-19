@@ -1,11 +1,11 @@
+use crate::pawn::common::error::PawnError;
 use crate::pawn::domain::dto::*;
 use crate::pawn::domain::model::*;
-use crate::pawn::common::error::PawnError;
-use sqlx::{SqlitePool, Row};
-use std::sync::Arc;
-use std::collections::HashMap;
-use serde_json;
 use chrono::{DateTime, Utc};
+use serde_json;
+use sqlx::{Row, SqlitePool};
+use std::collections::HashMap;
+use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub struct SettingsService {
@@ -187,7 +187,7 @@ impl SettingsService {
         data: CreateUserPreference,
     ) -> Result<UserPreference, PawnError> {
         let user_id = data.user_id.unwrap_or_else(|| "default".to_string());
-        
+
         let preference = sqlx::query_as::<_, UserPreference>(
             r#"
             INSERT INTO user_preferences (user_id, category, setting_key, setting_value, is_custom)
@@ -257,7 +257,8 @@ impl SettingsService {
                 u.user_id = ?
             )
             WHERE 1=1
-        "#.to_string();
+        "#
+        .to_string();
 
         let mut params = vec![user_id.to_string()];
 
@@ -274,13 +275,13 @@ impl SettingsService {
         }
 
         let rows = query_builder.fetch_all(self.pool.as_ref()).await?;
-        
+
         let mut settings = HashMap::new();
         for row in rows {
             let category: String = row.try_get("category")?;
             let setting_key: String = row.try_get("setting_key")?;
             let effective_value: Option<String> = row.try_get("effective_value")?;
-            
+
             if let Some(value) = effective_value {
                 let full_key = format!("{}.{}", category, setting_key);
                 settings.insert(full_key, value);
@@ -347,13 +348,15 @@ impl SettingsService {
         Ok(templates)
     }
 
-    pub async fn get_settings_template(&self, id: i32) -> Result<Option<SettingsTemplate>, PawnError> {
-        let template = sqlx::query_as::<_, SettingsTemplate>(
-            "SELECT * FROM settings_templates WHERE id = ?",
-        )
-        .bind(id)
-        .fetch_optional(self.pool.as_ref())
-        .await?;
+    pub async fn get_settings_template(
+        &self,
+        id: i32,
+    ) -> Result<Option<SettingsTemplate>, PawnError> {
+        let template =
+            sqlx::query_as::<_, SettingsTemplate>("SELECT * FROM settings_templates WHERE id = ?")
+                .bind(id)
+                .fetch_optional(self.pool.as_ref())
+                .await?;
 
         Ok(template)
     }
@@ -430,9 +433,11 @@ impl SettingsService {
         data: CreateSettingsBackup,
     ) -> Result<SettingsBackupHistory, PawnError> {
         let user_id = data.user_id.unwrap_or_else(|| "default".to_string());
-        
+
         // Generate backup data (JSON)
-        let backup_data = self.generate_backup_data(&user_id, data.categories.as_ref()).await?;
+        let backup_data = self
+            .generate_backup_data(&user_id, data.categories.as_ref())
+            .await?;
         let backup_size = backup_data.len() as i32;
 
         let backup = sqlx::query_as::<_, SettingsBackupHistory>(
@@ -460,21 +465,24 @@ impl SettingsService {
         categories: Option<&Vec<String>>,
     ) -> Result<String, PawnError> {
         let settings = self.get_effective_settings(user_id, None).await?;
-        
+
         // Filter by categories if specified
         let filtered_settings: HashMap<String, String> = if let Some(categories) = categories {
             settings
                 .into_iter()
                 .filter(|(key, _)| {
-                    categories.iter().any(|cat| key.starts_with(&format!("{}.", cat)))
+                    categories
+                        .iter()
+                        .any(|cat| key.starts_with(&format!("{}.", cat)))
                 })
                 .collect()
         } else {
             settings
         };
 
-        let backup_data = serde_json::to_string(&filtered_settings)
-            .map_err(|e| PawnError::InvalidInput(format!("Failed to serialize backup data: {}", e)))?;
+        let backup_data = serde_json::to_string(&filtered_settings).map_err(|e| {
+            PawnError::InvalidInput(format!("Failed to serialize backup data: {}", e))
+        })?;
 
         Ok(backup_data)
     }
@@ -498,11 +506,14 @@ impl SettingsService {
         data: RestoreSettingsBackup,
     ) -> Result<(), PawnError> {
         let user_id = data.user_id.unwrap_or_else(|| "default".to_string());
-        
+
         // Create backup before restore if requested
         if data.create_backup_before_restore.unwrap_or(true) {
             let backup_data = CreateSettingsBackup {
-                backup_name: format!("Auto-backup before restore {}", chrono::Utc::now().format("%Y-%m-%d %H:%M:%S")),
+                backup_name: format!(
+                    "Auto-backup before restore {}",
+                    chrono::Utc::now().format("%Y-%m-%d %H:%M:%S")
+                ),
                 backup_type: "automatic".to_string(),
                 user_id: Some(user_id.clone()),
                 categories: data.categories.clone(),
@@ -548,10 +559,12 @@ impl SettingsService {
         }
 
         // Update backup as restored
-        sqlx::query("UPDATE settings_backup_history SET restored_at = CURRENT_TIMESTAMP WHERE id = ?")
-            .bind(data.backup_id)
-            .execute(self.pool.as_ref())
-            .await?;
+        sqlx::query(
+            "UPDATE settings_backup_history SET restored_at = CURRENT_TIMESTAMP WHERE id = ?",
+        )
+        .bind(data.backup_id)
+        .execute(self.pool.as_ref())
+        .await?;
 
         Ok(())
     }
@@ -574,19 +587,28 @@ impl SettingsService {
             "integer" => {
                 if let Err(_) = request.setting_value.parse::<i64>() {
                     result.is_valid = false;
-                    result.errors.push(format!("Value '{}' is not a valid integer", request.setting_value));
+                    result.errors.push(format!(
+                        "Value '{}' is not a valid integer",
+                        request.setting_value
+                    ));
                 }
             }
             "float" => {
                 if let Err(_) = request.setting_value.parse::<f64>() {
                     result.is_valid = false;
-                    result.errors.push(format!("Value '{}' is not a valid float", request.setting_value));
+                    result.errors.push(format!(
+                        "Value '{}' is not a valid float",
+                        request.setting_value
+                    ));
                 }
             }
             "boolean" => {
                 if !matches!(request.setting_value.as_str(), "true" | "false" | "1" | "0") {
                     result.is_valid = false;
-                    result.errors.push(format!("Value '{}' is not a valid boolean", request.setting_value));
+                    result.errors.push(format!(
+                        "Value '{}' is not a valid boolean",
+                        request.setting_value
+                    ));
                 } else {
                     // Normalize boolean values
                     let normalized = match request.setting_value.as_str() {
@@ -600,7 +622,9 @@ impl SettingsService {
             "json" => {
                 if let Err(e) = serde_json::from_str::<serde_json::Value>(&request.setting_value) {
                     result.is_valid = false;
-                    result.errors.push(format!("Value is not valid JSON: {}", e));
+                    result
+                        .errors
+                        .push(format!("Value is not valid JSON: {}", e));
                 }
             }
             _ => {} // string and array types are generally valid
@@ -612,15 +636,21 @@ impl SettingsService {
                 let valid_languages = vec!["en", "ru", "ua"];
                 let lang = request.setting_value.trim_matches('"');
                 if !valid_languages.contains(&lang) {
-                    result.warnings.push(format!("Language '{}' may not be fully supported", lang));
+                    result
+                        .warnings
+                        .push(format!("Language '{}' may not be fully supported", lang));
                 }
             }
             ("performance", "cache_size_mb") => {
                 if let Ok(size) = request.setting_value.parse::<i32>() {
                     if size < 16 {
-                        result.warnings.push("Cache size below 16MB may impact performance".to_string());
+                        result
+                            .warnings
+                            .push("Cache size below 16MB may impact performance".to_string());
                     } else if size > 1024 {
-                        result.warnings.push("Cache size above 1GB may use excessive memory".to_string());
+                        result
+                            .warnings
+                            .push("Cache size above 1GB may use excessive memory".to_string());
                     }
                 }
             }
@@ -632,7 +662,10 @@ impl SettingsService {
 
     // Settings Overview
 
-    pub async fn get_settings_overview(&self, user_id: &str) -> Result<SettingsOverview, PawnError> {
+    pub async fn get_settings_overview(
+        &self,
+        user_id: &str,
+    ) -> Result<SettingsOverview, PawnError> {
         // Get category summaries
         let category_rows = sqlx::query(
             r#"
@@ -672,7 +705,7 @@ impl SettingsService {
 
             total_settings += total;
             user_customized += customized;
-            
+
             if restart_required > 0 {
                 pending_restart = true;
             }
@@ -727,11 +760,14 @@ impl SettingsService {
         request: SettingsResetRequest,
     ) -> Result<SettingsResetResult, PawnError> {
         let user_id = request.user_id.unwrap_or_else(|| "default".to_string());
-        
+
         // Create backup if requested
         let backup_created = if request.create_backup.unwrap_or(true) {
             let backup_data = CreateSettingsBackup {
-                backup_name: format!("Auto-backup before reset {}", chrono::Utc::now().format("%Y-%m-%d %H:%M:%S")),
+                backup_name: format!(
+                    "Auto-backup before reset {}",
+                    chrono::Utc::now().format("%Y-%m-%d %H:%M:%S")
+                ),
                 backup_type: "automatic".to_string(),
                 user_id: Some(user_id.clone()),
                 categories: request.category.as_ref().map(|c| vec![c.clone()]),
@@ -780,27 +816,36 @@ impl SettingsService {
             self.get_effective_settings(user_id, None).await?
         } else {
             // Get application defaults
-            self.get_application_settings(None).await?
+            self.get_application_settings(None)
+                .await?
                 .into_iter()
-                .map(|s| (format!("{}.{}", s.category, s.setting_key), s.setting_value.unwrap_or_default()))
+                .map(|s| {
+                    (
+                        format!("{}.{}", s.category, s.setting_key),
+                        s.setting_value.unwrap_or_default(),
+                    )
+                })
                 .collect()
         };
-        
+
         match request.format.as_str() {
             "json" => {
-                let json_data = serde_json::to_string_pretty(&settings)
-                    .map_err(|e| PawnError::InvalidInput(format!("JSON serialization error: {}", e)))?;
+                let json_data = serde_json::to_string_pretty(&settings).map_err(|e| {
+                    PawnError::InvalidInput(format!("JSON serialization error: {}", e))
+                })?;
                 Ok(json_data)
             }
             "yaml" => {
-                let yaml_data = serde_yaml::to_string(&settings)
-                    .map_err(|e| PawnError::InvalidInput(format!("YAML serialization error: {}", e)))?;
+                let yaml_data = serde_yaml::to_string(&settings).map_err(|e| {
+                    PawnError::InvalidInput(format!("YAML serialization error: {}", e))
+                })?;
                 Ok(yaml_data)
             }
             "csv" => {
                 let mut csv_data = String::from("category,setting_key,setting_value\n");
                 for (key, value) in settings {
-                    csv_data.push_str(&format!("{},{},{}\n", 
+                    csv_data.push_str(&format!(
+                        "{},{},{}\n",
                         key.split('.').next().unwrap_or("unknown"),
                         key.split('.').nth(1).unwrap_or(&key),
                         value.replace(',', "\"\"")
@@ -808,7 +853,10 @@ impl SettingsService {
                 }
                 Ok(csv_data)
             }
-            _ => Err(PawnError::InvalidInput(format!("Unsupported export format: {}", request.format)))
+            _ => Err(PawnError::InvalidInput(format!(
+                "Unsupported export format: {}",
+                request.format
+            ))),
         }
     }
 
@@ -826,7 +874,10 @@ impl SettingsService {
         // Create backup if requested
         if request.create_backup_before_import.unwrap_or(false) {
             let backup_data = CreateSettingsBackup {
-                backup_name: format!("Pre-import backup {}", chrono::Utc::now().format("%Y-%m-%d %H:%M:%S")),
+                backup_name: format!(
+                    "Pre-import backup {}",
+                    chrono::Utc::now().format("%Y-%m-%d %H:%M:%S")
+                ),
                 backup_type: "automatic".to_string(),
                 user_id: request.user_id.clone(),
                 categories: None,
@@ -837,16 +888,15 @@ impl SettingsService {
         }
 
         let settings_data = match request.format.as_str() {
-            "json" => {
-                serde_json::from_str::<HashMap<String, String>>(&request.data)
-                    .map_err(|e| PawnError::InvalidInput(format!("JSON parsing error: {}", e)))?
-            }
-            "yaml" => {
-                serde_yaml::from_str::<HashMap<String, String>>(&request.data)
-                    .map_err(|e| PawnError::InvalidInput(format!("YAML parsing error: {}", e)))?
-            }
+            "json" => serde_json::from_str::<HashMap<String, String>>(&request.data)
+                .map_err(|e| PawnError::InvalidInput(format!("JSON parsing error: {}", e)))?,
+            "yaml" => serde_yaml::from_str::<HashMap<String, String>>(&request.data)
+                .map_err(|e| PawnError::InvalidInput(format!("YAML parsing error: {}", e)))?,
             _ => {
-                return Err(PawnError::InvalidInput(format!("Unsupported import format: {}", request.format)));
+                return Err(PawnError::InvalidInput(format!(
+                    "Unsupported import format: {}",
+                    request.format
+                )));
             }
         };
 
@@ -893,7 +943,9 @@ impl SettingsService {
         &self,
         request: ApplySettingsTemplateRequest,
     ) -> Result<SettingsTemplateResult, PawnError> {
-        let template = self.get_settings_template(request.template_id).await?
+        let template = self
+            .get_settings_template(request.template_id)
+            .await?
             .ok_or_else(|| PawnError::NotFound("Settings template not found".to_string()))?;
 
         let template_data: HashMap<String, String> = serde_json::from_str(&template.template_data)
@@ -924,7 +976,9 @@ impl SettingsService {
                 if request.override_existing {
                     // Delete existing preference if it exists
                     if let Some(ref user_id) = request.user_id {
-                        if let Ok(Some(existing)) = self.get_user_preference(user_id, category, key).await {
+                        if let Ok(Some(existing)) =
+                            self.get_user_preference(user_id, category, key).await
+                        {
                             let _ = self.delete_user_preference(existing.id).await;
                         }
                     }
@@ -951,7 +1005,10 @@ impl SettingsService {
         })
     }
 
-    pub async fn get_settings_requiring_restart(&self, user_id: &str) -> Result<Vec<String>, PawnError> {
+    pub async fn get_settings_requiring_restart(
+        &self,
+        user_id: &str,
+    ) -> Result<Vec<String>, PawnError> {
         let query = r#"
             SELECT DISTINCT up.category || '.' || up.setting_key as setting_key
             FROM user_preferences up
@@ -973,7 +1030,10 @@ impl SettingsService {
         Ok(restart_settings)
     }
 
-    pub async fn get_settings_backup_history(&self, user_id: &str) -> Result<Vec<SettingsBackupHistory>, PawnError> {
+    pub async fn get_settings_backup_history(
+        &self,
+        user_id: &str,
+    ) -> Result<Vec<SettingsBackupHistory>, PawnError> {
         let backups = sqlx::query_as::<_, SettingsBackupHistory>(
             "SELECT * FROM settings_backup_history WHERE user_id = ? ORDER BY created_at DESC",
         )
@@ -983,13 +1043,30 @@ impl SettingsService {
 
         Ok(backups)
     }
-
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::get_test_db;
+    use sqlx::SqlitePool;
+    use tempfile::TempDir;
+
+    async fn get_test_db() -> SqlitePool {
+        let temp_dir = TempDir::new().expect("Failed to create temp directory");
+        let db_path = temp_dir.path().join("test.db");
+        let database_url = format!("sqlite://{}?mode=rwc", db_path.display());
+        let pool = SqlitePool::connect(&database_url)
+            .await
+            .expect("Failed to connect to test database");
+
+        // Apply migrations
+        sqlx::migrate!("../migrations")
+            .run(&pool)
+            .await
+            .expect("Failed to run migrations");
+
+        pool
+    }
 
     #[tokio::test]
     async fn test_get_effective_settings() {
@@ -1019,7 +1096,10 @@ mod tests {
             setting_value: Some("\"ru\"".to_string()),
         };
 
-        service.create_user_preference(preference_data).await.unwrap();
+        service
+            .create_user_preference(preference_data)
+            .await
+            .unwrap();
 
         // Check that the effective setting is overridden
         let effective_value = service
@@ -1074,7 +1154,10 @@ mod tests {
             setting_value: Some("\"ru\"".to_string()),
         };
 
-        service.create_user_preference(preference_data).await.unwrap();
+        service
+            .create_user_preference(preference_data)
+            .await
+            .unwrap();
 
         // Create a backup
         let backup_data = CreateSettingsBackup {
@@ -1088,13 +1171,17 @@ mod tests {
         assert_eq!(backup.backup_name, "Test Backup");
 
         // Clear preferences
-        service.delete_user_preference(
-            service.get_user_preference("test_user", "general", "language")
-                .await
-                .unwrap()
-                .unwrap()
-                .id
-        ).await.unwrap();
+        service
+            .delete_user_preference(
+                service
+                    .get_user_preference("test_user", "general", "language")
+                    .await
+                    .unwrap()
+                    .unwrap()
+                    .id,
+            )
+            .await
+            .unwrap();
 
         // Restore from backup
         let restore_data = RestoreSettingsBackup {
@@ -1113,6 +1200,9 @@ mod tests {
             .unwrap();
 
         assert!(restored_preference.is_some());
-        assert_eq!(restored_preference.unwrap().setting_value, Some("\"ru\"".to_string()));
+        assert_eq!(
+            restored_preference.unwrap().setting_value,
+            Some("\"ru\"".to_string())
+        );
     }
 }

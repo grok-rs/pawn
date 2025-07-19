@@ -1,7 +1,7 @@
 import { Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 
-import { useFormStepperContext } from '../FormStepperContext';
+import { useFormStepperContext } from '../hooks/useFormStepperContext';
 import { StyledBox } from './styled';
 
 const FormStepperIntro = () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -38,13 +38,7 @@ const TournamentSettings: React.FC<TournamentSettingsProps> = ({
   );
   const [isDirty, setIsDirty] = useState(false);
 
-  useEffect(() => {
-    if (open) {
-      fetchSettings();
-    }
-  }, [open, tournamentId]);
-
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -56,7 +50,13 @@ const TournamentSettings: React.FC<TournamentSettingsProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [tournamentId]);
+
+  useEffect(() => {
+    if (open) {
+      fetchSettings();
+    }
+  }, [open, fetchSettings]);
 
   const handleTiebreakChange = (tiebreaks: TiebreakType[]) => {
     if (settings) {

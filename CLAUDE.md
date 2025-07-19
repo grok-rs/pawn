@@ -91,6 +91,7 @@ This file provides comprehensive guidance to Claude Code (claude.ai/code) when w
 - **Backend**: Rust + Tauri 2.5 + SQLite + SQLx  
 - **Communication**: 60+ Tauri commands with auto-generated TypeScript bindings
 - **Type Safety**: Complete Rust-TypeScript integration via tauri-specta
+- **Custom Theming**: Custom breakpoint system optimized for chess tournament interfaces
 
 ### Frontend Architecture
 
@@ -106,6 +107,42 @@ This file provides comprehensive guidance to Claude Code (claude.ai/code) when w
 - **State**: Local component state (no Redux dependency for simplicity)
 - **Forms**: react-hook-form + Yup validation
 - **Internationalization**: react-i18next (en, ru, ua)
+
+### Custom Material-UI Theme & Breakpoints
+
+**Pawn** uses a **custom breakpoint system** instead of Material-UI's default breakpoints:
+
+**Custom Breakpoints** (defined in `src/constants/muiTheme.ts`):
+```typescript
+breakpoints: {
+  values: {
+    mobile: 0,      // Replaces 'xs' (0px+)
+    tablet: 640,    // Replaces 'sm' (640px+)  
+    laptop: 1024,   // Replaces 'md' (1024px+)
+    desktop: 1280,  // Replaces 'lg'/'xl' (1280px+)
+  },
+}
+```
+
+**Usage Examples**:
+```typescript
+// ❌ DON'T use standard MUI breakpoints
+theme.breakpoints.down('lg')     // ERROR: 'lg' doesn't exist
+size={{ xs: 12, md: 6 }}         // ERROR: 'xs', 'md' don't exist
+
+// ✅ DO use custom breakpoints
+theme.breakpoints.down('laptop') // Correct
+size={{ mobile: 12, tablet: 6 }} // Correct
+
+// ✅ Responsive Grid2 patterns
+<Grid size={{ mobile: 12, tablet: 6, laptop: 4 }}>
+<Grid size={{ mobile: 12, desktop: 8 }}>
+```
+
+**Important Notes**:
+- **All MUI default breakpoints are disabled**: `xs`, `sm`, `md`, `lg`, `xl` will cause TypeScript errors
+- **Use custom breakpoints everywhere**: component styling, useMediaQuery, Grid2 sizing
+- **Optimized for chess tournaments**: breakpoints designed for table displays and mobile tournament management
 
 **Backend Architecture - Service Layer Pattern**:
 ```
@@ -363,6 +400,40 @@ commands.validateTimeControlData(data: CreateTimeControl): Promise<TimeControlVa
 ```
 
 ## Development Guidelines
+
+### Custom Breakpoint Development Rules
+
+**ALWAYS use custom breakpoints when developing components:**
+
+**✅ Correct Patterns**:
+```typescript
+// useMediaQuery with custom breakpoints
+const isMobile = useMediaQuery(theme.breakpoints.down('tablet'));
+const isDesktop = useMediaQuery(theme.breakpoints.up('laptop'));
+
+// Grid2 responsive sizing
+<Grid size={{ mobile: 12, tablet: 6, laptop: 4, desktop: 3 }}>
+
+// Responsive styling in components
+sx={{
+  padding: { mobile: 2, tablet: 3, laptop: 4 },
+  fontSize: { mobile: '0.875rem', tablet: '1rem' },
+}}
+```
+
+**❌ Incorrect Patterns** (will cause TypeScript errors):
+```typescript
+// DON'T use standard MUI breakpoints
+theme.breakpoints.down('lg')     // TypeScript error
+size={{ xs: 12, md: 6 }}         // TypeScript error  
+sx={{ padding: { sm: 2, lg: 4 }}} // TypeScript error
+```
+
+**Breakpoint Strategy**:
+- **mobile** (0px+): Single column, touch-optimized
+- **tablet** (640px+): Dual column, larger touch targets
+- **laptop** (1024px+): Multi-column, full feature set
+- **desktop** (1280px+): Maximum columns, dense layouts
 
 ### TDD Service Layer Pattern
 When adding new features, follow the **Tests-First** approach:

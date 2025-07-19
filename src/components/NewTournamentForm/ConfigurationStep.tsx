@@ -314,7 +314,7 @@ const ConfigurationStep = () => {
                   label={t('tournament.configuration.additionalTime')}
                   inputName="additionalTime"
                   unitName="additionalTimeUnit"
-                  error={errors.additionalTime}
+                  error={errors.additionalTime?.message}
                   defaultUnit="seconds"
                   unitOptions={timeUnitOptions}
                 />

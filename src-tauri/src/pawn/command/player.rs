@@ -256,36 +256,48 @@ mod tests {
 
     async fn setup_test_state() -> PawnState {
         let temp_dir = TempDir::new().unwrap();
-        
+
         // Use in-memory SQLite for testing
         let database_url = "sqlite::memory:";
         let pool = SqlitePool::connect(database_url).await.unwrap();
-        
+
         sqlx::migrate!("./migrations").run(&pool).await.unwrap();
-        
+
         let db = Arc::new(SqliteDb::new(pool));
-        
+
         use crate::pawn::service::{
-            export::ExportService, norm_calculation::NormCalculationService, player::PlayerService, 
-            realtime_standings::RealTimeStandingsService, round::RoundService, 
-            round_robin_analysis::RoundRobinAnalysisService, swiss_analysis::SwissAnalysisService, 
-            team::TeamService, tiebreak::TiebreakCalculator, time_control::TimeControlService, tournament::TournamentService,
+            export::ExportService, norm_calculation::NormCalculationService, player::PlayerService,
+            realtime_standings::RealTimeStandingsService, round::RoundService,
+            round_robin_analysis::RoundRobinAnalysisService, swiss_analysis::SwissAnalysisService,
+            team::TeamService, tiebreak::TiebreakCalculator, time_control::TimeControlService,
+            tournament::TournamentService,
         };
         use crate::pawn::state::State;
         use std::sync::Arc;
-        
+
         let tournament_service = Arc::new(TournamentService::new(Arc::clone(&db)));
         let tiebreak_calculator = Arc::new(TiebreakCalculator::new(Arc::clone(&db)));
-        let realtime_standings_service = Arc::new(RealTimeStandingsService::new(Arc::clone(&db), Arc::clone(&tiebreak_calculator)));
+        let realtime_standings_service = Arc::new(RealTimeStandingsService::new(
+            Arc::clone(&db),
+            Arc::clone(&tiebreak_calculator),
+        ));
         let round_service = Arc::new(RoundService::new(Arc::clone(&db)));
         let player_service = Arc::new(PlayerService::new(Arc::clone(&db)));
         let time_control_service = Arc::new(TimeControlService::new(Arc::clone(&db)));
         let swiss_analysis_service = Arc::new(SwissAnalysisService::new(Arc::clone(&db)));
-        let round_robin_analysis_service = Arc::new(RoundRobinAnalysisService::new(Arc::clone(&db)));
-        let export_service = Arc::new(ExportService::new(Arc::clone(&db), Arc::clone(&tiebreak_calculator), temp_dir.path().join("exports")));
-        let norm_calculation_service = Arc::new(NormCalculationService::new(Arc::clone(&db), Arc::clone(&tiebreak_calculator)));
+        let round_robin_analysis_service =
+            Arc::new(RoundRobinAnalysisService::new(Arc::clone(&db)));
+        let export_service = Arc::new(ExportService::new(
+            Arc::clone(&db),
+            Arc::clone(&tiebreak_calculator),
+            temp_dir.path().join("exports"),
+        ));
+        let norm_calculation_service = Arc::new(NormCalculationService::new(
+            Arc::clone(&db),
+            Arc::clone(&tiebreak_calculator),
+        ));
         let team_service = Arc::new(TeamService::new(Arc::clone(&db)));
-        
+
         State {
             app_data_dir: temp_dir.path().to_path_buf(),
             db,
@@ -306,7 +318,7 @@ mod tests {
     #[tokio::test]
     async fn command_get_players_by_tournament_enhanced_contract() {
         let state = setup_test_state().await;
-        
+
         // Test the underlying service directly to validate the command contract
         let result = state.player_service.get_players_by_tournament(1).await;
         assert!(result.is_ok());
@@ -316,7 +328,7 @@ mod tests {
     #[tokio::test]
     async fn command_search_players_contract() {
         let state = setup_test_state().await;
-        
+
         let filters = PlayerSearchFilters {
             tournament_id: Some(1),
             name: None,
@@ -330,7 +342,7 @@ mod tests {
             limit: Some(10),
             offset: Some(0),
         };
-        
+
         // Test the underlying service directly to validate the command contract
         let result = state.player_service.search_players(filters).await;
         assert!(result.is_ok());

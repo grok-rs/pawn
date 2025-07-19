@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useNotification } from '../../contexts/NotificationContext';
+import { useNotification } from '../../contexts/hooks/useNotification';
 
 import { APP_ROUTES } from '../../constants/appRoutes';
 import FormStepper from '../FormStepper';

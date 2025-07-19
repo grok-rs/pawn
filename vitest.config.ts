@@ -51,6 +51,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': '/src',
+      '@dto': '/src/dto',
     },
   },
 });

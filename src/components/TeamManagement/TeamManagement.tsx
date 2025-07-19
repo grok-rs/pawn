@@ -87,39 +87,39 @@ interface TeamMembership {
   updated_at: string;
 }
 
-interface CreateTeamData {
-  tournament_id: number;
-  name: string;
-  captain?: string;
-  description?: string;
-  color?: string;
-  club_affiliation?: string;
-  contact_email?: string;
-  contact_phone?: string;
-  max_board_count: number;
-}
+// interface CreateTeamData {
+//   tournament_id: number;
+//   name: string;
+//   captain?: string;
+//   description?: string;
+//   color?: string;
+//   club_affiliation?: string;
+//   contact_email?: string;
+//   contact_phone?: string;
+//   max_board_count: number;
+// }
 
-interface AddPlayerToTeamData {
-  team_id: number;
-  player_id: number;
-  board_number?: number;
-  is_captain: boolean;
-  is_reserve: boolean;
-  rating_at_assignment?: number;
-  notes?: string;
-}
+// interface AddPlayerToTeamData {
+//   team_id: number;
+//   player_id: number;
+//   board_number?: number;
+//   is_captain: boolean;
+//   is_reserve: boolean;
+//   rating_at_assignment?: number;
+//   notes?: string;
+// }
 
-interface TeamStatistics {
-  total_teams: number;
-  active_teams: number;
-  withdrawn_teams: number;
-  disqualified_teams: number;
-  total_players: number;
-  matches_played: number;
-  matches_completed: number;
-  matches_scheduled: number;
-  average_team_rating: number;
-}
+// interface TeamStatistics {
+//   total_teams: number;
+//   active_teams: number;
+//   withdrawn_teams: number;
+//   disqualified_teams: number;
+//   total_players: number;
+//   matches_played: number;
+//   matches_completed: number;
+//   matches_scheduled: number;
+//   average_team_rating: number;
+// }
 
 interface TeamManagementProps {
   tournamentId: number;
@@ -191,7 +191,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
   const getTeamMembers = (teamId: number) => {
     return teamMemberships
       .filter(membership => membership.team_id === teamId)
-      .sort((a, b) => a.board_number - b.board_number)
+      .sort((a, b) => (a.board_number || 0) - (b.board_number || 0))
       .map(membership => {
         const player = players.find(p => p.id === membership.player_id);
         return { ...membership, player };
@@ -281,7 +281,10 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
       player_id: selectedPlayer,
       board_number: boardNumber,
       is_captain: false,
+      is_reserve: false,
+      status: 'active',
       created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
     setTeamMemberships([...teamMemberships, newMembership]);

@@ -6,10 +6,11 @@ use tracing::info;
 use super::{
     db::sqlite::SqliteDb,
     service::{
-        export::ExportService, norm_calculation::NormCalculationService, player::PlayerService, 
-        realtime_standings::RealTimeStandingsService, round::RoundService, 
-        round_robin_analysis::RoundRobinAnalysisService, settings::SettingsService, swiss_analysis::SwissAnalysisService, 
-        team::TeamService, tiebreak::TiebreakCalculator, time_control::TimeControlService, tournament::TournamentService,
+        export::ExportService, norm_calculation::NormCalculationService, player::PlayerService,
+        realtime_standings::RealTimeStandingsService, round::RoundService,
+        round_robin_analysis::RoundRobinAnalysisService, settings::SettingsService,
+        swiss_analysis::SwissAnalysisService, team::TeamService, tiebreak::TiebreakCalculator,
+        time_control::TimeControlService, tournament::TournamentService,
     },
 };
 
@@ -62,23 +63,34 @@ impl PawnState {
 
         let tournament_service = Arc::new(TournamentService::new(Arc::clone(&sqlite)));
         let tiebreak_calculator = Arc::new(TiebreakCalculator::new(Arc::clone(&sqlite)));
-        let realtime_standings_service = Arc::new(RealTimeStandingsService::new(Arc::clone(&sqlite), Arc::clone(&tiebreak_calculator)));
+        let realtime_standings_service = Arc::new(RealTimeStandingsService::new(
+            Arc::clone(&sqlite),
+            Arc::clone(&tiebreak_calculator),
+        ));
         let round_service = Arc::new(RoundService::new(Arc::clone(&sqlite)));
         let player_service = Arc::new(PlayerService::new(Arc::clone(&sqlite)));
         let time_control_service = Arc::new(TimeControlService::new(Arc::clone(&sqlite)));
         let swiss_analysis_service = Arc::new(SwissAnalysisService::new(Arc::clone(&sqlite)));
-        let round_robin_analysis_service = Arc::new(RoundRobinAnalysisService::new(Arc::clone(&sqlite)));
-        
+        let round_robin_analysis_service =
+            Arc::new(RoundRobinAnalysisService::new(Arc::clone(&sqlite)));
+
         // Create export directory in app data directory
         let export_dir = app_data_dir.join("exports");
-        let export_service = Arc::new(ExportService::new(Arc::clone(&sqlite), Arc::clone(&tiebreak_calculator), export_dir));
-        
+        let export_service = Arc::new(ExportService::new(
+            Arc::clone(&sqlite),
+            Arc::clone(&tiebreak_calculator),
+            export_dir,
+        ));
+
         // Create norm calculation service
-        let norm_calculation_service = Arc::new(NormCalculationService::new(Arc::clone(&sqlite), Arc::clone(&tiebreak_calculator)));
-        
+        let norm_calculation_service = Arc::new(NormCalculationService::new(
+            Arc::clone(&sqlite),
+            Arc::clone(&tiebreak_calculator),
+        ));
+
         // Create team service
         let team_service = Arc::new(TeamService::new(Arc::clone(&sqlite)));
-        
+
         // Create settings service with pool reference
         let settings_service = Arc::new(SettingsService::new(Arc::new(pool)));
 

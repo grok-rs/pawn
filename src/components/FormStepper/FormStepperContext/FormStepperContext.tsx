@@ -1,5 +1,4 @@
-import { createContext, useContext } from 'react';
-import { FieldValues } from 'react-hook-form';
+import { createContext } from 'react';
 
 import { FormStepperContextType } from '../types';
 
@@ -16,17 +15,5 @@ const defaultFormStepperContextValue = {
 const FormStepperContext = createContext<FormStepperContextType<any>>(
   defaultFormStepperContextValue
 );
-
-export const useFormStepperContext = <
-  T extends FieldValues,
->(): FormStepperContextType<T> => {
-  const formStepperContext = useContext(FormStepperContext);
-
-  if (!formStepperContext) {
-    throw new Error('No form stepper context found!');
-  }
-
-  return formStepperContext;
-};
 
 export default FormStepperContext;

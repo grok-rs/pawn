@@ -3,7 +3,7 @@ import { Button, Stack } from '@mui/material';
 import { FunctionComponent } from 'react';
 import { FieldValues } from 'react-hook-form';
 
-import { useFormStepperContext } from '../FormStepperContext';
+import { useFormStepperContext } from '../hooks/useFormStepperContext';
 import { FormStepperContextType } from '../types';
 
 type Props = {
