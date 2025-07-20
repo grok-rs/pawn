@@ -8,9 +8,10 @@ use super::{
     service::{
         export::ExportService, norm_calculation::NormCalculationService, player::PlayerService,
         realtime_standings::RealTimeStandingsService, round::RoundService,
-        round_robin_analysis::RoundRobinAnalysisService, settings::SettingsService,
-        swiss_analysis::SwissAnalysisService, team::TeamService, tiebreak::TiebreakCalculator,
-        time_control::TimeControlService, tournament::TournamentService,
+        round_robin_analysis::RoundRobinAnalysisService, seeding::SeedingService,
+        settings::SettingsService, swiss_analysis::SwissAnalysisService, team::TeamService,
+        tiebreak::TiebreakCalculator, time_control::TimeControlService,
+        tournament::TournamentService,
     },
 };
 
@@ -29,6 +30,7 @@ pub struct State<D> {
     pub export_service: Arc<ExportService<D>>,
     pub norm_calculation_service: Arc<NormCalculationService<D>>,
     pub team_service: Arc<TeamService<D>>,
+    pub seeding_service: Arc<SeedingService>,
     pub settings_service: Arc<SettingsService>,
 }
 
@@ -91,6 +93,9 @@ impl PawnState {
         // Create team service
         let team_service = Arc::new(TeamService::new(Arc::clone(&sqlite)));
 
+        // Create seeding service
+        let seeding_service = Arc::new(SeedingService::new(pool.clone()));
+
         // Create settings service with pool reference
         let settings_service = Arc::new(SettingsService::new(Arc::new(pool)));
 
@@ -108,6 +113,7 @@ impl PawnState {
             export_service,
             norm_calculation_service,
             team_service,
+            seeding_service,
             settings_service,
         }
     }

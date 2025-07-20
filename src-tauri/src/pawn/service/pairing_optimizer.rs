@@ -858,7 +858,7 @@ mod tests {
         assert_eq!(result.pairings.len(), 75);
         assert_eq!(result.metrics.players_processed, 150);
         assert_eq!(result.metrics.pairings_generated, 75);
-        assert!(result.metrics.total_duration_ms > 0);
+        // Duration is always >= 0 by type (u128), may be 0ms for very fast operations
     }
 
     #[test]

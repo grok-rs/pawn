@@ -925,4 +925,288 @@ mod tests {
         let error_msg = format!("Unsupported format: {format}");
         assert!(error_msg.contains("Unsupported format: xml"));
     }
+
+    #[tokio::test]
+    async fn test_command_function_execution_coverage() {
+        // Test all command functions to cover missing lines that execute service calls
+
+        // Cover get_norm_types command (lines 47-62)
+        let norm_types_result = get_norm_types().await;
+        assert!(norm_types_result.is_ok());
+        let norm_types = norm_types_result.unwrap();
+        assert_eq!(norm_types.len(), 8);
+
+        // Test all norm types are present (lines 50-59)
+        use std::mem::discriminant;
+        assert!(
+            norm_types
+                .iter()
+                .any(|t| discriminant(t) == discriminant(&NormType::Grandmaster))
+        );
+        assert!(
+            norm_types
+                .iter()
+                .any(|t| discriminant(t) == discriminant(&NormType::InternationalMaster))
+        );
+        assert!(
+            norm_types
+                .iter()
+                .any(|t| discriminant(t) == discriminant(&NormType::FideMaster))
+        );
+        assert!(
+            norm_types
+                .iter()
+                .any(|t| discriminant(t) == discriminant(&NormType::CandidateMaster))
+        );
+        assert!(
+            norm_types
+                .iter()
+                .any(|t| discriminant(t) == discriminant(&NormType::WomanGrandmaster))
+        );
+        assert!(
+            norm_types
+                .iter()
+                .any(|t| discriminant(t) == discriminant(&NormType::WomanInternationalMaster))
+        );
+        assert!(
+            norm_types
+                .iter()
+                .any(|t| discriminant(t) == discriminant(&NormType::WomanFideMaster))
+        );
+        assert!(
+            norm_types
+                .iter()
+                .any(|t| discriminant(t) == discriminant(&NormType::WomanCandidateMaster))
+        );
+
+        // Cover get_norm_requirements command (lines 67-75)
+        for norm_type in norm_types {
+            let req_result = get_norm_requirements(norm_type.clone()).await;
+            assert!(req_result.is_ok());
+            let (rating, games, percentage) = req_result.unwrap();
+            // Test the tuple return from lines 70-74
+            assert!(rating > 0);
+            assert!(games > 0);
+            assert!(percentage > 0.0);
+        }
+
+        // Cover get_prize_distribution_templates command (lines 113-126)
+        let templates_result = get_prize_distribution_templates().await;
+        assert!(templates_result.is_ok());
+        let templates = templates_result.unwrap();
+
+        // Test all templates from lines 116-123
+        assert!(templates.contains(&"Standard Swiss".to_string()));
+        assert!(templates.contains(&"Round Robin".to_string()));
+        assert!(templates.contains(&"Knockout".to_string()));
+        assert!(templates.contains(&"Age Group Focus".to_string()));
+        assert!(templates.contains(&"Rating Group Focus".to_string()));
+        assert!(templates.contains(&"Custom".to_string()));
+
+        // Cover validate_prize_distribution command (lines 131-215)
+        let valid_request = PrizeDistributionRequest {
+            tournament_id: 1,
+            total_prize_fund: 10000.0,
+            currency: "USD".to_string(),
+            distribution_method: DistributionMethod::TiedPlayersShareEqually,
+            prize_structure: PrizeStructure {
+                first_place_percentage: 40.0,
+                second_place_percentage: 25.0,
+                third_place_percentage: 15.0,
+                additional_places: vec![],
+                age_group_prizes: vec![],
+                rating_group_prizes: vec![],
+            },
+            special_prizes: vec![],
+        };
+
+        let validation_result = validate_prize_distribution(valid_request).await;
+        assert!(validation_result.is_ok());
+        let errors = validation_result.unwrap();
+        assert!(errors.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_command_validation_logic_coverage() {
+        // Test all validation logic paths in validate_prize_distribution
+
+        use crate::pawn::domain::tiebreak::{
+            AgeGroupPrize, PrizePlace, RatingGroupPrize, SpecialPrize, SpecialPrizeType,
+        };
+
+        // Test complex prize structure to cover all validation calculations (lines 139-172)
+        let complex_request = PrizeDistributionRequest {
+            tournament_id: 1,
+            total_prize_fund: 10000.0,
+            currency: "USD".to_string(),
+            distribution_method: DistributionMethod::TiedPlayersShareEqually,
+            prize_structure: PrizeStructure {
+                first_place_percentage: 30.0,  // Line 139
+                second_place_percentage: 20.0, // Line 140
+                third_place_percentage: 15.0,  // Line 141
+                additional_places: vec![
+                    PrizePlace {
+                        place: 4,
+                        percentage: 10.0,
+                        description: "4th place".to_string(),
+                    },
+                    PrizePlace {
+                        place: 5,
+                        percentage: 5.0,
+                        description: "5th place".to_string(),
+                    },
+                ], // Lines 142-147
+                age_group_prizes: vec![AgeGroupPrize {
+                    age_group: "U18".to_string(),
+                    percentage: 5.0,
+                    description: "Best U18".to_string(),
+                }], // Lines 149-154
+                rating_group_prizes: vec![RatingGroupPrize {
+                    rating_group: "U1600".to_string(),
+                    percentage: 3.0,
+                    description: "Best U1600".to_string(),
+                }], // Lines 156-161
+            },
+            special_prizes: vec![SpecialPrize {
+                prize_type: SpecialPrizeType::BestGame,
+                amount: 200.0,
+                description: "Best Game".to_string(),
+                criteria: "Most brilliant".to_string(),
+            }], // Lines 163-167
+        };
+
+        // This should test the grand total calculation (lines 169-172)
+        // Total: 30+20+15+10+5+5+3+(200/10000*100) = 90%
+        let result = validate_prize_distribution(complex_request).await;
+        assert!(result.is_ok());
+        let errors = result.unwrap();
+        // Should be valid since total is 90%
+        assert!(errors.is_empty());
+
+        // Test over 100% validation (lines 174-178)
+        let over_100_request = PrizeDistributionRequest {
+            tournament_id: 1,
+            total_prize_fund: 1000.0,
+            currency: "USD".to_string(),
+            distribution_method: DistributionMethod::TiedPlayersShareEqually,
+            prize_structure: PrizeStructure {
+                first_place_percentage: 60.0,
+                second_place_percentage: 30.0,
+                third_place_percentage: 20.0, // Total 110%
+                additional_places: vec![],
+                age_group_prizes: vec![],
+                rating_group_prizes: vec![],
+            },
+            special_prizes: vec![],
+        };
+
+        let result = validate_prize_distribution(over_100_request).await;
+        assert!(result.is_ok());
+        let errors = result.unwrap();
+        assert!(errors.iter().any(|e| e.contains("exceeds 100%")));
+
+        // Test negative prize fund validation (lines 181-183)
+        let negative_fund_request = PrizeDistributionRequest {
+            tournament_id: 1,
+            total_prize_fund: -1000.0,
+            currency: "USD".to_string(),
+            distribution_method: DistributionMethod::TiedPlayersShareEqually,
+            prize_structure: PrizeStructure {
+                first_place_percentage: 100.0,
+                second_place_percentage: 0.0,
+                third_place_percentage: 0.0,
+                additional_places: vec![],
+                age_group_prizes: vec![],
+                rating_group_prizes: vec![],
+            },
+            special_prizes: vec![],
+        };
+
+        let result = validate_prize_distribution(negative_fund_request).await;
+        assert!(result.is_ok());
+        let errors = result.unwrap();
+        assert!(errors.iter().any(|e| e.contains("must be positive")));
+
+        // Test empty currency validation (lines 186-188)
+        let empty_currency_request = PrizeDistributionRequest {
+            tournament_id: 1,
+            total_prize_fund: 1000.0,
+            currency: "".to_string(),
+            distribution_method: DistributionMethod::TiedPlayersShareEqually,
+            prize_structure: PrizeStructure {
+                first_place_percentage: 100.0,
+                second_place_percentage: 0.0,
+                third_place_percentage: 0.0,
+                additional_places: vec![],
+                age_group_prizes: vec![],
+                rating_group_prizes: vec![],
+            },
+            special_prizes: vec![],
+        };
+
+        let result = validate_prize_distribution(empty_currency_request).await;
+        assert!(result.is_ok());
+        let errors = result.unwrap();
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.contains("Currency must be specified"))
+        );
+
+        // Test negative percentage validation (lines 191-196)
+        let negative_percentage_request = PrizeDistributionRequest {
+            tournament_id: 1,
+            total_prize_fund: 1000.0,
+            currency: "USD".to_string(),
+            distribution_method: DistributionMethod::TiedPlayersShareEqually,
+            prize_structure: PrizeStructure {
+                first_place_percentage: -10.0,
+                second_place_percentage: 50.0,
+                third_place_percentage: 30.0,
+                additional_places: vec![],
+                age_group_prizes: vec![],
+                rating_group_prizes: vec![],
+            },
+            special_prizes: vec![],
+        };
+
+        let result = validate_prize_distribution(negative_percentage_request).await;
+        assert!(result.is_ok());
+        let errors = result.unwrap();
+        assert!(errors.iter().any(|e| e.contains("non-negative")));
+
+        // Test additional places validation (lines 199-212)
+        let invalid_places_request = PrizeDistributionRequest {
+            tournament_id: 1,
+            total_prize_fund: 1000.0,
+            currency: "USD".to_string(),
+            distribution_method: DistributionMethod::TiedPlayersShareEqually,
+            prize_structure: PrizeStructure {
+                first_place_percentage: 50.0,
+                second_place_percentage: 30.0,
+                third_place_percentage: 15.0,
+                additional_places: vec![
+                    PrizePlace {
+                        place: 0, // Invalid place (line 206-211)
+                        percentage: 5.0,
+                        description: "Invalid".to_string(),
+                    },
+                    PrizePlace {
+                        place: 4,
+                        percentage: -2.0, // Invalid percentage (line 200-205)
+                        description: "4th place".to_string(),
+                    },
+                ],
+                age_group_prizes: vec![],
+                rating_group_prizes: vec![],
+            },
+            special_prizes: vec![],
+        };
+
+        let result = validate_prize_distribution(invalid_places_request).await;
+        assert!(result.is_ok());
+        let errors = result.unwrap();
+        assert!(errors.iter().any(|e| e.contains("must be positive")));
+        assert!(errors.iter().any(|e| e.contains("non-negative")));
+    }
 }
