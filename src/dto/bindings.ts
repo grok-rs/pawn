@@ -1684,6 +1684,13 @@ export const commands = {
       data,
     });
   },
+  async getPlayerCategoryAssignments(
+    tournamentId: number
+  ): Promise<PlayerCategoryAssignment[]> {
+    return await TAURI_INVOKE('plugin:pawn|get_player_category_assignments', {
+      tournamentId,
+    });
+  },
   async updatePlayerStatus(playerId: number, status: string): Promise<Player> {
     return await TAURI_INVOKE('plugin:pawn|update_player_status', {
       playerId,

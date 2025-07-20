@@ -1,10 +1,5 @@
-import {
-  render,
-  screen,
-  fireEvent,
-  act,
-  waitFor,
-} from '@testing-library/react';
+import { render, act } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/dom';
 import { vi } from 'vitest';
 import TournamentList from '../TournamentList';
 import type { Tournament } from '@dto/bindings';

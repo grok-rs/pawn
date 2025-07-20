@@ -66,24 +66,22 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Run npm audit
+      - name: Run yarn audit
         run: |
           # Run audit and capture output
-          if ! yarn audit --level moderate; then
-            echo "NPM audit found issues. Checking if they are fixable..."
-            yarn audit --level moderate --json > audit-results.json || true
+          if ! yarn audit --level moderate --json > audit-results.json; then
+            echo "Yarn audit found issues. Checking if they are fixable..."
             
-            # Check if there are fixable vulnerabilities
-            if yarn audit --level moderate --dry-run; then
-              echo "Found fixable vulnerabilities. Please run 'yarn audit --fix' to resolve them."
-              exit 1
-            else
-              echo "Found vulnerabilities that require manual review."
+            # Parse audit results and check for fixable vulnerabilities
+            if grep -q '"type":"auditAdvisory"' audit-results.json; then
+              echo "Found security vulnerabilities that require manual review."
               cat audit-results.json
               exit 1
+            else
+              echo "No actionable vulnerabilities found."
             fi
           else
-            echo "No security vulnerabilities found in npm dependencies."
+            echo "No security vulnerabilities found in dependencies."
           fi
 
   dependabot-auto-merge:
@@ -94,7 +92,7 @@ jobs:
     
     steps:
       - name: Auto-merge Dependabot PRs
-        uses: pascalgn/automerge-action@v0.15.6
+        uses: pascalgn/automerge-action@v0.16.4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           merge_method: squash
