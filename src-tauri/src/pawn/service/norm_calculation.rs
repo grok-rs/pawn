@@ -736,10 +736,7 @@ mod tests {
     async fn test_norm_calculation_service_creation() {
         // Test basic service creation without dependencies
         // Since the service requires external dependencies, we test basic logic
-        assert!(
-            true,
-            "Service creation test placeholder - requires mock database implementation"
-        );
+        // TODO: Implement proper test with mock database implementation
     }
 
     #[tokio::test]

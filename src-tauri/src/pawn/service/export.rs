@@ -888,7 +888,7 @@ mod tests {
 
         // Verify format string representation
         match csv_format {
-            ExportFormat::Csv => assert!(true, "CSV format is correctly defined"),
+            ExportFormat::Csv => (),
             _ => panic!("Expected CSV format"),
         }
     }
@@ -903,7 +903,7 @@ mod tests {
 
         // Verify format string representation
         match json_format {
-            ExportFormat::Json => assert!(true, "JSON format is correctly defined"),
+            ExportFormat::Json => (),
             _ => panic!("Expected JSON format"),
         }
     }
@@ -918,7 +918,7 @@ mod tests {
 
         // Verify format string representation
         match html_format {
-            ExportFormat::Html => assert!(true, "HTML format is correctly defined"),
+            ExportFormat::Html => (),
             _ => panic!("Expected HTML format"),
         }
     }

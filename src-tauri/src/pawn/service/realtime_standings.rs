@@ -386,11 +386,7 @@ mod tests {
         // Test performance metrics
         // Test cache invalidation
 
-        // Test basic caching logic validation
-        assert!(
-            true,
-            "Caching behavior test placeholder - requires mock database implementation"
-        );
+        // TODO: Implement proper caching behavior test with mock database implementation
     }
 
     #[tokio::test]
