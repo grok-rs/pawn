@@ -179,7 +179,7 @@ mod tests {
     use std::sync::Arc;
     use tempfile::TempDir;
 
-    async fn setup_test_state() -> State<SqliteDb> {
+    async fn setup_test_state() -> (State<SqliteDb>, TempDir) {
         let temp_dir = TempDir::new().unwrap();
         let database_url = "sqlite::memory:";
         let pool = SqlitePool::connect(database_url).await.unwrap();
@@ -218,7 +218,7 @@ mod tests {
         let team_service = Arc::new(TeamService::new(Arc::clone(&db)));
         let settings_service = Arc::new(SettingsService::new(Arc::new(pool)));
 
-        State {
+        (State {
             app_data_dir: temp_dir.path().to_path_buf(),
             db,
             tournament_service,
@@ -233,7 +233,7 @@ mod tests {
             norm_calculation_service,
             team_service,
             settings_service,
-        }
+        }, temp_dir)
     }
 
     async fn create_test_tournament(state: &State<SqliteDb>) -> Tournament {
@@ -295,7 +295,7 @@ mod tests {
 
     #[tokio::test]
     async fn command_export_service_operations_contract() {
-        let state = setup_test_state().await;
+        let (state, _temp_dir) = setup_test_state().await;
         let tournament = create_test_tournament(&state).await;
         let _player = create_test_player(&state, tournament.id).await;
 
@@ -324,7 +324,7 @@ mod tests {
 
     #[tokio::test]
     async fn command_validate_export_request_contract() {
-        let state = setup_test_state().await;
+        let (state, _temp_dir) = setup_test_state().await;
 
         // Test tournament not found
         let invalid_request = ExportRequest {
@@ -371,7 +371,7 @@ mod tests {
 
     #[tokio::test]
     async fn command_export_type_validation_contract() {
-        let state = setup_test_state().await;
+        let (state, _temp_dir) = setup_test_state().await;
         let tournament = create_test_tournament(&state).await;
         let _player = create_test_player(&state, tournament.id).await;
 
@@ -388,7 +388,7 @@ mod tests {
 
     #[tokio::test]
     async fn command_export_preview_generation_contract() {
-        let state = setup_test_state().await;
+        let (state, _temp_dir) = setup_test_state().await;
         let tournament = create_test_tournament(&state).await;
         let _player = create_test_player(&state, tournament.id).await;
 
