@@ -125,6 +125,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libsqlite3-dev \
+          pkg-config \
+          libwebkit2gtk-4.1-dev \
+          build-essential \
+          curl \
+          wget \
+          file \
+          libxdo-dev \
+          libssl-dev \
+          libayatana-appindicator3-dev \
+          librsvg2-dev
+
     - name: Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
@@ -162,6 +178,22 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libsqlite3-dev \
+          pkg-config \
+          libwebkit2gtk-4.1-dev \
+          build-essential \
+          curl \
+          wget \
+          file \
+          libxdo-dev \
+          libssl-dev \
+          libayatana-appindicator3-dev \
+          librsvg2-dev
 
     - name: Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4

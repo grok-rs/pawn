@@ -55,6 +55,24 @@ This file provides comprehensive guidance to Claude Code (claude.ai/code) when w
 - **Frontend Only**: `yarn dev` - Vite dev server on port 1420 (for UI-only work)
 - **Backend Only**: `cd src-tauri && cargo build` - Compile Rust backend
 
+#### System Dependencies (Ubuntu/Debian)
+Before development, install required system libraries:
+```bash
+sudo apt-get update
+sudo apt-get install -y \
+  libsqlite3-dev \
+  pkg-config \
+  libwebkit2gtk-4.1-dev \
+  build-essential \
+  curl \
+  wget \
+  file \
+  libxdo-dev \
+  libssl-dev \
+  libayatana-appindicator3-dev \
+  librsvg2-dev
+```
+
 ### Testing (TDD Workflow)
 - **Test First**: `cd src-tauri && cargo test [module_name] --watch` - Write failing tests
 - **Implement**: Write minimal code to pass tests
