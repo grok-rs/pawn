@@ -853,12 +853,12 @@ mod tests {
         assert!(export_dir.exists());
     }
 
-    #[tokio::test]
-    async fn test_filename_generation() {
+    #[test]
+    fn test_filename_generation() {
         // Test filename generation functionality
         use crate::pawn::domain::tiebreak::{ExportFormat, ExportRequest, ExportType};
-        
-        let request = ExportRequest {
+
+        let _request = ExportRequest {
             tournament_id: 1,
             format: ExportFormat::Csv,
             export_type: ExportType::Standings,
@@ -872,20 +872,20 @@ mod tests {
 
         // Test that we can create export service (even if we can't test filename generation directly)
         let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-        
+
         // Since the generate_filename method is private, we test the ExportService creation
         // which exercises filename-related logic
         assert!(tempdir.path().exists());
     }
 
-    #[tokio::test]
-    async fn test_csv_export() {
+    #[test]
+    fn test_csv_export() {
         // Test CSV format functionality by validating the export format
         use crate::pawn::domain::tiebreak::ExportFormat;
-        
+
         // Test that CSV format is properly defined
         let csv_format = ExportFormat::Csv;
-        
+
         // Verify format string representation
         match csv_format {
             ExportFormat::Csv => assert!(true, "CSV format is correctly defined"),
@@ -893,14 +893,14 @@ mod tests {
         }
     }
 
-    #[tokio::test]
-    async fn test_json_export() {
+    #[test]
+    fn test_json_export() {
         // Test JSON format functionality by validating the export format
         use crate::pawn::domain::tiebreak::ExportFormat;
-        
+
         // Test that JSON format is properly defined
         let json_format = ExportFormat::Json;
-        
+
         // Verify format string representation
         match json_format {
             ExportFormat::Json => assert!(true, "JSON format is correctly defined"),
@@ -908,14 +908,14 @@ mod tests {
         }
     }
 
-    #[tokio::test]
-    async fn test_html_export() {
+    #[test]
+    fn test_html_export() {
         // Test HTML format functionality by validating the export format
         use crate::pawn::domain::tiebreak::ExportFormat;
-        
+
         // Test that HTML format is properly defined
         let html_format = ExportFormat::Html;
-        
+
         // Verify format string representation
         match html_format {
             ExportFormat::Html => assert!(true, "HTML format is correctly defined"),

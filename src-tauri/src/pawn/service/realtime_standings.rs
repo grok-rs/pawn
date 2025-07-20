@@ -387,7 +387,10 @@ mod tests {
         // Test cache invalidation
 
         // Test basic caching logic validation
-        assert!(true, "Caching behavior test placeholder - requires mock database implementation");
+        assert!(
+            true,
+            "Caching behavior test placeholder - requires mock database implementation"
+        );
     }
 
     #[tokio::test]
@@ -396,22 +399,34 @@ mod tests {
         let threshold_ms = 1000; // 1 second threshold
         let fast_calculation_ms = 500;
         let slow_calculation_ms = 1500;
-        
-        assert!(fast_calculation_ms < threshold_ms, "Fast calculation is below threshold");
-        assert!(slow_calculation_ms > threshold_ms, "Slow calculation exceeds threshold");
+
+        assert!(
+            fast_calculation_ms < threshold_ms,
+            "Fast calculation is below threshold"
+        );
+        assert!(
+            slow_calculation_ms > threshold_ms,
+            "Slow calculation exceeds threshold"
+        );
     }
 
     #[tokio::test]
     async fn test_cache_expiration() {
         // Test cache expiration timing logic
         use std::time::Duration;
-        
+
         let cache_duration = Duration::from_secs(60); // 1 minute cache
         let short_duration = Duration::from_secs(30); // 30 seconds
         let long_duration = Duration::from_secs(120); // 2 minutes
-        
-        assert!(short_duration < cache_duration, "Short duration is within cache window");
-        assert!(long_duration > cache_duration, "Long duration exceeds cache window");
+
+        assert!(
+            short_duration < cache_duration,
+            "Short duration is within cache window"
+        );
+        assert!(
+            long_duration > cache_duration,
+            "Long duration exceeds cache window"
+        );
     }
 
     #[tokio::test]
@@ -419,8 +434,11 @@ mod tests {
         // Test event broadcasting concept
         let max_subscribers = 100;
         let current_subscribers = 50;
-        
-        assert!(current_subscribers <= max_subscribers, "Subscriber count is within limits");
+
+        assert!(
+            current_subscribers <= max_subscribers,
+            "Subscriber count is within limits"
+        );
         assert!(current_subscribers >= 0, "Subscriber count is non-negative");
     }
 }

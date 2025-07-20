@@ -736,28 +736,40 @@ mod tests {
     async fn test_norm_calculation_service_creation() {
         // Test basic service creation without dependencies
         // Since the service requires external dependencies, we test basic logic
-        assert!(true, "Service creation test placeholder - requires mock database implementation");
+        assert!(
+            true,
+            "Service creation test placeholder - requires mock database implementation"
+        );
     }
 
     #[tokio::test]
     async fn test_performance_rating_calculation() {
         // Test basic performance rating calculation constants
         // This tests that rating calculation logic can be verified
-        let expected_base_rating = 1500;  // Standard starting rating
+        let expected_base_rating = 1500; // Standard starting rating
         let actual_rating = 1500;
-        
-        assert_eq!(expected_base_rating, actual_rating, "Performance rating calculation baseline test");
+
+        assert_eq!(
+            expected_base_rating, actual_rating,
+            "Performance rating calculation baseline test"
+        );
     }
 
     #[tokio::test]
     async fn test_tournament_category_calculation() {
         // Test tournament category calculation constants
         // Categories are typically based on average rating ranges
-        let category_1_min = 2600;  // Category 1 tournament minimum average rating
-        let category_2_min = 2451;  // Category 2 tournament minimum average rating
-        
-        assert!(category_1_min > category_2_min, "Tournament categories are properly ordered");
-        assert!(category_1_min >= 2600, "Category 1 has correct minimum rating");
+        let category_1_min = 2600; // Category 1 tournament minimum average rating
+        let category_2_min = 2451; // Category 2 tournament minimum average rating
+
+        assert!(
+            category_1_min > category_2_min,
+            "Tournament categories are properly ordered"
+        );
+        assert!(
+            category_1_min >= 2600,
+            "Category 1 has correct minimum rating"
+        );
     }
 
     #[tokio::test]
@@ -767,9 +779,15 @@ mod tests {
         let total_prize = 1000.0;
         let tied_players = 2;
         let expected_share = total_prize / tied_players as f64;
-        
-        assert_eq!(expected_share, 500.0, "Prize distribution splits equally among tied players");
-        assert!(expected_share > 0.0, "Each tied player receives a positive prize amount");
+
+        assert_eq!(
+            expected_share, 500.0,
+            "Prize distribution splits equally among tied players"
+        );
+        assert!(
+            expected_share > 0.0,
+            "Each tied player receives a positive prize amount"
+        );
     }
 
     #[tokio::test]
@@ -778,9 +796,18 @@ mod tests {
         // GM norm typically requires 2600+ performance and specific conditions
         let gm_performance_requirement = 2600;
         let im_performance_requirement = 2450;
-        
-        assert!(gm_performance_requirement > im_performance_requirement, "GM norm has higher performance requirement than IM");
-        assert!(gm_performance_requirement >= 2600, "GM norm performance requirement is correctly set");
-        assert!(im_performance_requirement >= 2450, "IM norm performance requirement is correctly set");
+
+        assert!(
+            gm_performance_requirement > im_performance_requirement,
+            "GM norm has higher performance requirement than IM"
+        );
+        assert!(
+            gm_performance_requirement >= 2600,
+            "GM norm performance requirement is correctly set"
+        );
+        assert!(
+            im_performance_requirement >= 2450,
+            "IM norm performance requirement is correctly set"
+        );
     }
 }
