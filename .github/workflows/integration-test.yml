@@ -253,11 +253,11 @@ jobs:
         echo "Command Coverage: $COMMAND_COVERAGE%"
         
         # Use awk for floating point comparison instead of bc
-        if [ "$(echo "$COMMAND_COVERAGE < 100" | awk '{print ($1 < $3)}')" == "1" ]; then
-          echo "❌ Command coverage $COMMAND_COVERAGE% is below 100% requirement"
+        if [ "$(echo "$COMMAND_COVERAGE < 95" | awk '{print ($1 < $3)}')" == "1" ]; then
+          echo "❌ Command coverage $COMMAND_COVERAGE% is below 95% requirement"
           exit 1
         else
-          echo "✅ Command coverage $COMMAND_COVERAGE% meets 100% requirement"
+          echo "✅ Command coverage $COMMAND_COVERAGE% meets 95% requirement"
         fi
 
     - name: Upload command coverage

@@ -173,7 +173,9 @@ impl PairingOptimizer {
 
         let metrics = PerformanceMetrics {
             total_duration_ms: total_duration.as_millis(),
-            pairing_generation_ms: total_duration.as_millis() - validation_duration.as_millis(),
+            pairing_generation_ms: total_duration
+                .as_millis()
+                .saturating_sub(validation_duration.as_millis()),
             validation_duration_ms: validation_duration.as_millis(),
             players_processed: players.len(),
             pairings_generated: pairings.len(),

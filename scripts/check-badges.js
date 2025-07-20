@@ -38,8 +38,13 @@ const badges = [
     type: 'workflow'
   },
   {
-    name: 'Code Coverage',
-    url: 'https://codecov.io/gh/grok-rs/pawn/branch/main/graph/badge.svg',
+    name: 'Backend Coverage',
+    url: 'https://codecov.io/gh/grok-rs/pawn/branch/main/graph/badge.svg?flag=backend',
+    type: 'codecov'
+  },
+  {
+    name: 'Frontend Coverage',
+    url: 'https://codecov.io/gh/grok-rs/pawn/branch/main/graph/badge.svg?flag=frontend',
     type: 'codecov'
   },
   {

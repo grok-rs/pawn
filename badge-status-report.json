@@ -1,10 +1,10 @@
 {
-  "timestamp": "2025-07-20T10:14:05.356Z",
+  "timestamp": "2025-07-20T19:15:02.400Z",
   "summary": {
-    "total": 11,
-    "valid": 10,
-    "invalid": 1,
-    "successRate": 91
+    "total": 12,
+    "valid": 12,
+    "invalid": 0,
+    "successRate": 100
   },
   "badges": [
     {
@@ -38,14 +38,23 @@
       "name": "Security Audit",
       "url": "https://github.com/grok-rs/pawn/workflows/Security%20Audit/badge.svg",
       "type": "workflow",
-      "status": 404,
-      "contentType": "text/plain; charset=utf-8",
-      "isValid": false,
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "isValid": true,
       "error": null
     },
     {
-      "name": "Code Coverage",
-      "url": "https://codecov.io/gh/grok-rs/pawn/branch/main/graph/badge.svg",
+      "name": "Backend Coverage",
+      "url": "https://codecov.io/gh/grok-rs/pawn/branch/main/graph/badge.svg?flag=backend",
+      "type": "codecov",
+      "status": 200,
+      "contentType": "image/svg+xml",
+      "isValid": true,
+      "error": null
+    },
+    {
+      "name": "Frontend Coverage",
+      "url": "https://codecov.io/gh/grok-rs/pawn/branch/main/graph/badge.svg?flag=frontend",
       "type": "codecov",
       "status": 200,
       "contentType": "image/svg+xml",

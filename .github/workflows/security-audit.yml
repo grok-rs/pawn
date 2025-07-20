@@ -86,8 +86,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "These will be resolved when Tauri migrates to GTK4 in version 3.x" >> $GITHUB_STEP_SUMMARY
 
-  npm-audit:
-    name: NPM Security Audit
+  yarn-audit:
+    name: Yarn Security Audit
     runs-on: ubuntu-latest
     
     steps:
@@ -152,7 +152,7 @@ jobs:
   security-summary:
     name: Security Audit Summary
     runs-on: ubuntu-latest
-    needs: [cargo-audit, npm-audit]
+    needs: [cargo-audit, yarn-audit]
     if: always()
     
     steps:
@@ -168,10 +168,10 @@ jobs:
             echo "| Rust Dependencies | ❌ Vulnerabilities detected |" >> $GITHUB_STEP_SUMMARY
           fi
           
-          if [ "${{ needs.npm-audit.result }}" == "success" ]; then
-            echo "| NPM Dependencies | ✅ No vulnerabilities found |" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.yarn-audit.result }}" == "success" ]; then
+            echo "| Yarn Dependencies | ✅ No vulnerabilities found |" >> $GITHUB_STEP_SUMMARY
           else
-            echo "| NPM Dependencies | ❌ Vulnerabilities detected |" >> $GITHUB_STEP_SUMMARY
+            echo "| Yarn Dependencies | ❌ Vulnerabilities detected |" >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
