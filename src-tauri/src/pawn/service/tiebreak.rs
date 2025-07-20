@@ -1132,8 +1132,10 @@ impl<D: Db> TiebreakCalculator<D> {
             }
             _ => {
                 // Generic breakdown for other tiebreak types
-                let explanation =
-                    format!("Calculated using {} formula", tiebreak_type.display_name());
+                let explanation = format!(
+                    "Calculated using {display_name} formula",
+                    display_name = tiebreak_type.display_name()
+                );
                 let calculation_details = vec![TiebreakCalculationStep {
                     step_number: 1,
                     description: "Direct calculation".to_string(),
@@ -1180,7 +1182,7 @@ impl<D: Db> TiebreakCalculator<D> {
         calculation_details.push(TiebreakCalculationStep {
             step_number,
             description: "Identify all opponents played".to_string(),
-            calculation: format!("Found {} opponents", opponent_ids.len()),
+            calculation: format!("Found {count} opponents", count = opponent_ids.len()),
             intermediate_result: opponent_ids.len() as f64,
         });
         step_number += 1;
@@ -1327,7 +1329,7 @@ impl<D: Db> TiebreakCalculator<D> {
 
                     calculation_details.push(TiebreakCalculationStep {
                         step_number,
-                        description: format!("vs {}", opponent_player.name),
+                        description: format!("vs {name}", name = opponent_player.name),
                         calculation: format!(
                             "{game_points:.1} × {opponent_total:.1} = {sb_contribution:.1}"
                         ),
@@ -1437,7 +1439,10 @@ impl<D: Db> TiebreakCalculator<D> {
 
                     calculation_details.push(TiebreakCalculationStep {
                         step_number,
-                        description: format!("vs {} (tied player)", opponent_player.name),
+                        description: format!(
+                            "vs {name} (tied player)",
+                            name = opponent_player.name
+                        ),
                         calculation: format!("Result: {game_points:.1} points"),
                         intermediate_result: game_points,
                     });
@@ -1482,7 +1487,7 @@ impl<D: Db> TiebreakCalculator<D> {
         calculation_details.push(TiebreakCalculationStep {
             step_number,
             description: "Collect opponent ratings".to_string(),
-            calculation: format!("Found {} opponents", opponent_ids.len()),
+            calculation: format!("Found {count} opponents", count = opponent_ids.len()),
             intermediate_result: opponent_ids.len() as f64,
         });
         step_number += 1;

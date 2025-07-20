@@ -673,7 +673,7 @@ mod tests {
             ExportFormat::Pdf,
             ExportFormat::Xlsx,
         ] {
-            let format_name = format!("test_{:?}", format);
+            let format_name = format!("test_{format:?}");
             let request = ExportRequest {
                 tournament_id: tournament.id,
                 export_type: ExportType::PlayerList,

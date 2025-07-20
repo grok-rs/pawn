@@ -820,7 +820,11 @@ impl SettingsService {
                 .into_iter()
                 .map(|s| {
                     (
-                        format!("{}.{}", s.category, s.setting_key),
+                        format!(
+                            "{category}.{setting_key}",
+                            category = s.category,
+                            setting_key = s.setting_key
+                        ),
                         s.setting_value.unwrap_or_default(),
                     )
                 })

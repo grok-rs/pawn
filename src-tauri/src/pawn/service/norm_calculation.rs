@@ -492,7 +492,10 @@ impl<D: Db> NormCalculationService<D> {
         let mut info = Vec::new();
 
         info.push(format!("Tournament category: {tournament_category}"));
-        info.push(format!("Norm type: {}", norm_type.display_name()));
+        info.push(format!(
+            "Norm type: {norm_type}",
+            norm_type = norm_type.display_name()
+        ));
 
         if requirements.performance_rating_met {
             info.push("✓ Performance rating requirement met".to_string());

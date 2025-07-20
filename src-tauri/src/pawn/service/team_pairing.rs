@@ -840,7 +840,7 @@ impl<D: Db> TeamPairingEngine<D> {
             .map(|m| Player {
                 id: m.player_id,
                 tournament_id: 0, // This should be fetched from the database
-                name: format!("Player {}", m.player_id), // Placeholder name
+                name: format!("Player {player_id}", player_id = m.player_id), // Placeholder name
                 rating: m.rating_at_assignment,
                 country_code: None,
                 title: None,
@@ -1121,7 +1121,10 @@ mod tests {
             // Test that config can be created with each method
             assert!(!description.is_empty());
             let debug_str = format!("{config:?}");
-            assert!(debug_str.contains(&format!("{:?}", config.pairing_method)));
+            assert!(debug_str.contains(&format!(
+                "{pairing_method:?}",
+                pairing_method = config.pairing_method
+            )));
         }
     }
 

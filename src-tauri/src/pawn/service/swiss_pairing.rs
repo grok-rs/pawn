@@ -630,7 +630,11 @@ impl SwissPairingEngine {
                         Color::White,
                         round_number,
                     ) {
-                        validation_errors.push(format!("Player {}: {}", white_player.name, e));
+                        validation_errors.push(format!(
+                            "Player {name}: {error}",
+                            name = white_player.name,
+                            error = e
+                        ));
                     }
 
                     if let Err(e) = self.validate_consecutive_color_limit(
@@ -638,7 +642,11 @@ impl SwissPairingEngine {
                         Color::Black,
                         round_number,
                     ) {
-                        validation_errors.push(format!("Player {}: {}", black_player.name, e));
+                        validation_errors.push(format!(
+                            "Player {name}: {error}",
+                            name = black_player.name,
+                            error = e
+                        ));
                     }
 
                     // FIDE C.04.2.2.2: Color balance should not exceed ±2 in tournaments of 9+ rounds
@@ -646,13 +654,21 @@ impl SwissPairingEngine {
                         if let Err(e) =
                             self.validate_color_balance_limit(&white.color_history, round_number)
                         {
-                            validation_errors.push(format!("Player {}: {}", white_player.name, e));
+                            validation_errors.push(format!(
+                                "Player {name}: {error}",
+                                name = white_player.name,
+                                error = e
+                            ));
                         }
 
                         if let Err(e) =
                             self.validate_color_balance_limit(&black.color_history, round_number)
                         {
-                            validation_errors.push(format!("Player {}: {}", black_player.name, e));
+                            validation_errors.push(format!(
+                                "Player {name}: {error}",
+                                name = black_player.name,
+                                error = e
+                            ));
                         }
                     }
 
@@ -679,8 +695,11 @@ impl SwissPairingEngine {
                         if let Err(e) = self
                             .validate_color_balance_limit(&white_swiss.color_history, round_number)
                         {
-                            validation_errors
-                                .push(format!("Player {} (bye): {}", white_player.name, e));
+                            validation_errors.push(format!(
+                                "Player {name} (bye): {error}",
+                                name = white_player.name,
+                                error = e
+                            ));
                         }
                     }
                 }

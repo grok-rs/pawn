@@ -214,7 +214,10 @@ impl<D: Db> ExportService<D> {
                 // Add tiebreak headers
                 if let Some(first_standing) = standings.standings.first() {
                     for tiebreak in &first_standing.tiebreak_scores {
-                        output.push_str(&format!(",{}", tiebreak.tiebreak_type.display_name()));
+                        output.push_str(&format!(
+                            ",{display_name}",
+                            display_name = tiebreak.tiebreak_type.display_name()
+                        ));
                     }
                 }
                 output.push('\n');
@@ -236,7 +239,10 @@ impl<D: Db> ExportService<D> {
 
                     // Add tiebreak scores
                     for tiebreak in &standing.tiebreak_scores {
-                        output.push_str(&format!(",{}", tiebreak.display_value));
+                        output.push_str(&format!(
+                            ",{display_value}",
+                            display_value = tiebreak.display_value
+                        ));
                     }
                     output.push('\n');
                 }
@@ -309,7 +315,7 @@ impl<D: Db> ExportService<D> {
         html.push_str("</head>\n<body>\n");
 
         // Tournament header
-        html.push_str(&format!("<h1>{}</h1>\n", data.tournament.name));
+        html.push_str(&format!("<h1>{name}</h1>\n", name = data.tournament.name));
         html.push_str(&format!(
             "<p><strong>Location:</strong> {}</p>\n",
             data.tournament.location
@@ -336,7 +342,10 @@ impl<D: Db> ExportService<D> {
             // Tiebreak headers
             if let Some(first_standing) = standings.standings.first() {
                 for tiebreak in &first_standing.tiebreak_scores {
-                    html.push_str(&format!("<th>{}</th>", tiebreak.tiebreak_type.short_name()));
+                    html.push_str(&format!(
+                        "<th>{short_name}</th>",
+                        short_name = tiebreak.tiebreak_type.short_name()
+                    ));
                 }
             }
             html.push_str("</tr>\n");
@@ -357,7 +366,10 @@ impl<D: Db> ExportService<D> {
 
                 // Tiebreak scores
                 for tiebreak in &standing.tiebreak_scores {
-                    html.push_str(&format!("<td>{}</td>", tiebreak.display_value));
+                    html.push_str(&format!(
+                        "<td>{display_value}</td>",
+                        display_value = tiebreak.display_value
+                    ));
                 }
                 html.push_str("</tr>\n");
             }
@@ -378,7 +390,7 @@ impl<D: Db> ExportService<D> {
             html.push_str("<th>Total</th></tr>\n");
 
             for row in &cross_table.rows {
-                html.push_str(&format!("<tr><td>{}</td>", row.player.name));
+                html.push_str(&format!("<tr><td>{name}</td>", name = row.player.name));
                 for result in &row.results {
                     let display = match result.result {
                         Some(1.0) => "1",
@@ -389,7 +401,10 @@ impl<D: Db> ExportService<D> {
                     };
                     html.push_str(&format!("<td>{display}</td>"));
                 }
-                html.push_str(&format!("<td>{}</td></tr>\n", row.total_points));
+                html.push_str(&format!(
+                    "<td>{total_points}</td></tr>\n",
+                    total_points = row.total_points
+                ));
             }
             html.push_str("</table>\n");
         }
@@ -415,10 +430,19 @@ impl<D: Db> ExportService<D> {
         let mut output = String::new();
 
         // Tournament header
-        output.push_str(&format!("Tournament: {}\n", data.tournament.name));
-        output.push_str(&format!("Location: {}\n", data.tournament.location));
-        output.push_str(&format!("Date: {}\n", data.tournament.date));
-        output.push_str(&format!("Players: {}\n", data.tournament.player_count));
+        output.push_str(&format!(
+            "Tournament: {name}\n",
+            name = data.tournament.name
+        ));
+        output.push_str(&format!(
+            "Location: {location}\n",
+            location = data.tournament.location
+        ));
+        output.push_str(&format!("Date: {date}\n", date = data.tournament.date));
+        output.push_str(&format!(
+            "Players: {player_count}\n",
+            player_count = data.tournament.player_count
+        ));
         output.push_str(&format!(
             "Rounds: {}/{}\n\n",
             data.tournament.rounds_played, data.tournament.total_rounds
@@ -461,7 +485,7 @@ impl<D: Db> ExportService<D> {
 
         // Create PDF document
         let (doc, page1, layer1) = PdfDocument::new(
-            format!("{} - Tournament Report", data.tournament.name),
+            format!("{name} - Tournament Report", name = data.tournament.name),
             Mm(210.0), // A4 width
             Mm(297.0), // A4 height
             "Layer 1",
@@ -488,7 +512,7 @@ impl<D: Db> ExportService<D> {
 
         // Tournament details
         current_layer.use_text(
-            format!("Location: {}", data.tournament.location),
+            format!("Location: {location}", location = data.tournament.location),
             12.0,
             Mm(20.0),
             y_pos,
@@ -496,7 +520,7 @@ impl<D: Db> ExportService<D> {
         );
         y_pos -= Mm(6.0);
         current_layer.use_text(
-            format!("Date: {}", data.tournament.date),
+            format!("Date: {date}", date = data.tournament.date),
             12.0,
             Mm(20.0),
             y_pos,
@@ -504,7 +528,10 @@ impl<D: Db> ExportService<D> {
         );
         y_pos -= Mm(6.0);
         current_layer.use_text(
-            format!("Players: {}", data.tournament.player_count),
+            format!(
+                "Players: {player_count}",
+                player_count = data.tournament.player_count
+            ),
             12.0,
             Mm(20.0),
             y_pos,
@@ -543,24 +570,35 @@ impl<D: Db> ExportService<D> {
                     break;
                 }
 
-                current_layer.use_text(format!("{}", standing.rank), 10.0, Mm(20.0), y_pos, &font);
+                current_layer.use_text(
+                    format!("{rank}", rank = standing.rank),
+                    10.0,
+                    Mm(20.0),
+                    y_pos,
+                    &font,
+                );
                 current_layer.use_text(&standing.player.name, 10.0, Mm(40.0), y_pos, &font);
                 current_layer.use_text(
-                    format!("{}", standing.player.rating.unwrap_or(0)),
+                    format!("{rating}", rating = standing.player.rating.unwrap_or(0)),
                     10.0,
                     Mm(100.0),
                     y_pos,
                     &font,
                 );
                 current_layer.use_text(
-                    format!("{}", standing.points),
+                    format!("{points}", points = standing.points),
                     10.0,
                     Mm(130.0),
                     y_pos,
                     &font,
                 );
                 current_layer.use_text(
-                    format!("{}-{}-{}", standing.wins, standing.draws, standing.losses),
+                    format!(
+                        "{wins}-{draws}-{losses}",
+                        wins = standing.wins,
+                        draws = standing.draws,
+                        losses = standing.losses
+                    ),
                     10.0,
                     Mm(160.0),
                     y_pos,

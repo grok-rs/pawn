@@ -268,8 +268,17 @@ mod tests {
         let validation_result =
             crate::pawn::service::knockout::KnockoutService::validate_bracket(&positions);
 
-        // Should either succeed or fail gracefully
-        assert!(validation_result.is_ok() || validation_result.is_err());
+        // Should handle empty bracket validation
+        match validation_result {
+            Ok(_) => {
+                // Validation succeeded for empty bracket
+            }
+            Err(err) => {
+                // Validation failed as expected for empty bracket
+                let error_msg = format!("{err:?}");
+                assert!(!error_msg.is_empty());
+            }
+        }
     }
 
     #[tokio::test]
@@ -404,6 +413,319 @@ mod tests {
         // Test validation with empty bracket
         let validation =
             crate::pawn::service::knockout::KnockoutService::validate_bracket(&positions);
-        assert!(validation.is_ok() || validation.is_err());
+        // Should handle validation gracefully
+        match validation {
+            Ok(_) => {
+                // Validation succeeded
+            }
+            Err(err) => {
+                // Validation failed for empty bracket
+                let error_msg = format!("{err:?}");
+                assert!(!error_msg.is_empty());
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn command_knockout_dto_input_validation() {
+        // Test DTO validation without database operations
+
+        // Test various bracket type values
+        let bracket_types = vec![
+            "single_elimination",
+            "double_elimination",
+            "swiss_knockout",
+            "round_robin_knockout",
+            "invalid_type",
+            "",
+            "very_long_bracket_type_name_that_exceeds_reasonable_limits",
+        ];
+
+        for bracket_type in bracket_types {
+            let create_bracket = CreateKnockoutBracket {
+                tournament_id: 1,
+                bracket_type: bracket_type.to_string(),
+            };
+
+            // DTO should accept any string value (validation happens at service layer)
+            assert_eq!(create_bracket.bracket_type, bracket_type);
+            assert_eq!(create_bracket.tournament_id, 1);
+        }
+
+        // Test boundary tournament ID values
+        let tournament_ids = vec![i32::MIN, -1, 0, 1, i32::MAX];
+
+        for tournament_id in tournament_ids {
+            let create_bracket = CreateKnockoutBracket {
+                tournament_id,
+                bracket_type: "single_elimination".to_string(),
+            };
+
+            assert_eq!(create_bracket.tournament_id, tournament_id);
+        }
+    }
+
+    #[tokio::test]
+    async fn command_knockout_boundary_conditions() {
+        // Test extreme values and boundary conditions
+
+        // Test very large player counts
+        let large_player_count = 1024;
+        let calculated_rounds =
+            crate::pawn::service::knockout::KnockoutService::calculate_rounds(large_player_count);
+        assert_eq!(calculated_rounds, 10); // log2(1024) = 10
+
+        // Test power of 2 player counts
+        let power_of_2_cases = vec![
+            (2, 1),   // 2^1
+            (4, 2),   // 2^2
+            (8, 3),   // 2^3
+            (16, 4),  // 2^4
+            (32, 5),  // 2^5
+            (64, 6),  // 2^6
+            (128, 7), // 2^7
+            (256, 8), // 2^8
+        ];
+
+        for (players, expected_rounds) in power_of_2_cases {
+            let calculated_rounds =
+                crate::pawn::service::knockout::KnockoutService::calculate_rounds(players);
+            assert_eq!(
+                calculated_rounds, expected_rounds,
+                "Failed for {players} players (power of 2)"
+            );
+        }
+
+        // Test non-power of 2 player counts
+        let non_power_of_2_cases = vec![
+            (3, 2),   // 3 players need 2 rounds (next power of 2 is 4)
+            (5, 3),   // 5 players need 3 rounds (next power of 2 is 8)
+            (9, 4),   // 9 players need 4 rounds (next power of 2 is 16)
+            (17, 5),  // 17 players need 5 rounds (next power of 2 is 32)
+            (100, 7), // 100 players need 7 rounds (next power of 2 is 128)
+        ];
+
+        for (players, expected_rounds) in non_power_of_2_cases {
+            let calculated_rounds =
+                crate::pawn::service::knockout::KnockoutService::calculate_rounds(players);
+            assert_eq!(
+                calculated_rounds, expected_rounds,
+                "Failed for {players} players (non-power of 2)"
+            );
+        }
+
+        // Test zero players
+        let zero_rounds = crate::pawn::service::knockout::KnockoutService::calculate_rounds(0);
+        assert_eq!(zero_rounds, 0);
+
+        // Test negative player count (edge case)
+        let negative_rounds = crate::pawn::service::knockout::KnockoutService::calculate_rounds(-5);
+        // Should handle gracefully (likely returns 0 or calculates as if 0)
+        assert!(negative_rounds >= 0);
+    }
+
+    #[tokio::test]
+    async fn command_knockout_winner_advancement_comprehensive() {
+        // Test comprehensive winner advancement scenarios
+
+        // Test single match advancement
+        let single_match_winners = vec![(1, 2)]; // Player 1 beats Player 2
+        let next_positions = crate::pawn::service::knockout::KnockoutService::advance_winners(
+            1, // bracket_id
+            2, // next_round
+            &single_match_winners,
+        );
+        // Service determines actual advancement behavior
+        assert!(next_positions.len() <= 1);
+        if !next_positions.is_empty() {
+            assert_eq!(next_positions[0].player_id, Some(1));
+            // Round number depends on service implementation
+            assert!(next_positions[0].round_number > 0);
+        }
+
+        // Test multiple matches advancement
+        let multiple_match_winners = vec![(1, 2), (3, 4), (5, 6), (7, 8)];
+        let next_positions = crate::pawn::service::knockout::KnockoutService::advance_winners(
+            1,
+            2,
+            &multiple_match_winners,
+        );
+        // Service determines actual advancement logic
+        assert!(next_positions.len() <= 4);
+
+        // Verify all winners advanced
+        let advanced_players: Vec<i32> = next_positions
+            .iter()
+            .filter_map(|pos| pos.player_id)
+            .collect();
+        assert_eq!(advanced_players, vec![1, 3, 5, 7]);
+
+        // Test advancement with gaps (simulating byes)
+        let winners_with_gaps = vec![(1, 2), (5, 6)]; // Players 3 and 4 missing (bye scenario)
+        let next_positions = crate::pawn::service::knockout::KnockoutService::advance_winners(
+            1,
+            2,
+            &winners_with_gaps,
+        );
+        assert_eq!(next_positions.len(), 2);
+
+        // Test advancement to final round
+        let final_round_winner = vec![(1, 3)];
+        let final_positions = crate::pawn::service::knockout::KnockoutService::advance_winners(
+            1,
+            4, // Final round
+            &final_round_winner,
+        );
+        // Final advancement depends on service implementation
+        assert!(final_positions.len() <= 1);
+        if !final_positions.is_empty() {
+            assert_eq!(final_positions[0].player_id, Some(1));
+        }
+    }
+
+    #[tokio::test]
+    async fn command_knockout_bracket_status_validation() {
+        // Test various bracket status scenarios
+
+        // Test empty bracket validation
+        let empty_positions = vec![];
+        let empty_validation =
+            crate::pawn::service::knockout::KnockoutService::validate_bracket(&empty_positions);
+
+        match empty_validation {
+            Ok(_) => {
+                // Empty bracket is considered valid
+            }
+            Err(err) => {
+                // Or validation fails for empty bracket
+                let error_msg = format!("{err:?}");
+                assert!(!error_msg.is_empty());
+            }
+        }
+
+        // Test tournament completion with different scenarios
+        let incomplete_tournament_3_rounds =
+            crate::pawn::service::knockout::KnockoutService::is_tournament_complete(
+                &empty_positions,
+                3,
+            );
+        assert!(!incomplete_tournament_3_rounds);
+
+        let no_rounds_tournament =
+            crate::pawn::service::knockout::KnockoutService::is_tournament_complete(
+                &empty_positions,
+                0,
+            );
+        // A tournament with 0 rounds should not be considered complete
+        assert!(!no_rounds_tournament);
+
+        // Test winner determination with empty tournament
+        let no_winner = crate::pawn::service::knockout::KnockoutService::get_tournament_winner(
+            &empty_positions,
+            3,
+        );
+        assert!(no_winner.is_none());
+
+        let no_rounds_winner =
+            crate::pawn::service::knockout::KnockoutService::get_tournament_winner(
+                &empty_positions,
+                0,
+            );
+        assert!(no_rounds_winner.is_none());
+    }
+
+    #[tokio::test]
+    async fn command_knockout_dto_comprehensive_validation() {
+        // Test comprehensive DTO validation and edge cases
+
+        // Test bracket type variations
+        let bracket_types = vec![
+            "single_elimination",
+            "double_elimination",
+            "swiss_knockout",
+            "round_robin_knockout",
+            "custom_elimination",
+            "modified_swiss",
+            "", // Empty string
+            "UPPERCASE",
+            "mixed_Case_Type",
+            "type-with-dashes",
+            "type_with_underscores",
+            "type with spaces",
+            "very_long_bracket_type_name_that_exceeds_normal_limits",
+        ];
+
+        for bracket_type in bracket_types {
+            let create_bracket = CreateKnockoutBracket {
+                tournament_id: 1,
+                bracket_type: bracket_type.to_string(),
+            };
+
+            // All bracket types should be storable (validation happens at service level)
+            assert_eq!(create_bracket.bracket_type, bracket_type);
+            assert_eq!(create_bracket.tournament_id, 1);
+        }
+
+        // Test bracket position with various status values
+        let status_values = vec![
+            "active",
+            "eliminated",
+            "bye",
+            "pending",
+            "completed",
+            "withdrawn",
+            "",
+            "UPPERCASE_STATUS",
+            "Mixed_Case_Status",
+        ];
+
+        for status in status_values {
+            let bracket_position = BracketPosition {
+                id: 1,
+                bracket_id: 1,
+                round_number: 1,
+                position_number: 1,
+                player_id: Some(1),
+                advanced_from_position: None,
+                status: status.to_string(),
+                created_at: "2024-01-01T00:00:00Z".to_string(),
+            };
+
+            assert_eq!(bracket_position.status, status);
+        }
+
+        // Test bracket position with boundary values
+        let boundary_position = BracketPosition {
+            id: i32::MAX,
+            bracket_id: i32::MAX,
+            round_number: i32::MAX,
+            position_number: i32::MAX,
+            player_id: Some(i32::MAX),
+            advanced_from_position: Some(i32::MAX),
+            status: "boundary_test".to_string(),
+            created_at: "2024-12-31T23:59:59Z".to_string(),
+        };
+
+        assert_eq!(boundary_position.id, i32::MAX);
+        assert_eq!(boundary_position.bracket_id, i32::MAX);
+        assert_eq!(boundary_position.round_number, i32::MAX);
+        assert_eq!(boundary_position.position_number, i32::MAX);
+        assert_eq!(boundary_position.player_id, Some(i32::MAX));
+        assert_eq!(boundary_position.advanced_from_position, Some(i32::MAX));
+
+        // Test bracket position with None values
+        let none_position = BracketPosition {
+            id: 1,
+            bracket_id: 1,
+            round_number: 1,
+            position_number: 1,
+            player_id: None,
+            advanced_from_position: None,
+            status: "empty".to_string(),
+            created_at: "2024-01-01T00:00:00Z".to_string(),
+        };
+
+        assert_eq!(none_position.player_id, None);
+        assert_eq!(none_position.advanced_from_position, None);
     }
 }

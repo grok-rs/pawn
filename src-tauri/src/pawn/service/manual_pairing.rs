@@ -656,7 +656,10 @@ impl ManualPairingController {
             if !used_boards.insert(pairing.board_number) {
                 errors.push(ValidationError {
                     error_type: ValidationErrorType::InvalidBoardAssignment,
-                    message: format!("Board number {} used multiple times", pairing.board_number),
+                    message: format!(
+                        "Board number {board_number} used multiple times",
+                        board_number = pairing.board_number
+                    ),
                     affected_players: vec![pairing.white_player.id],
                     severity: ErrorSeverity::Critical,
                 });

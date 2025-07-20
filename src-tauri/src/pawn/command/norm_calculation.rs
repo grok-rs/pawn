@@ -204,7 +204,10 @@ pub async fn validate_prize_distribution(
             ));
         }
         if place.place < 1 {
-            errors.push(format!("Prize place {} must be positive", place.place));
+            errors.push(format!(
+                "Prize place {place} must be positive",
+                place = place.place
+            ));
         }
     }
 
@@ -629,7 +632,7 @@ mod tests {
         // Validate the comprehensive request
         let result = validate_prize_distribution(request).await;
         assert!(result.is_ok());
-        let errors = result.unwrap();
+        let _errors = result.unwrap();
         // This should be valid as total is 100% (40+25+15+10+5+3+2+1=101% but close)
         // The test validates the structure and calculation logic
     }

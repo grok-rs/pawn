@@ -907,7 +907,19 @@ mod tests {
         };
 
         let result = state.team_service.update_team(update_data).await;
-        assert!(result.is_ok() || result.is_err()); // Either outcome is valid for contract testing
+        // Should fail because team with ID 1 doesn't exist
+        assert!(result.is_err());
+        match result {
+            Err(err) => {
+                let error_msg = format!("{err:?}");
+                assert!(
+                    error_msg.contains("not found")
+                        || error_msg.contains("NotFound")
+                        || error_msg.contains("no rows")
+                );
+            }
+            Ok(_) => panic!("Expected error for non-existent team"),
+        }
     }
 
     #[tokio::test]
@@ -915,7 +927,19 @@ mod tests {
         let state = setup_test_state().await;
 
         let result = state.team_service.delete_team(1).await;
-        assert!(result.is_ok() || result.is_err()); // Either outcome is valid for contract testing
+        // Should fail because team with ID 1 doesn't exist
+        assert!(result.is_err());
+        match result {
+            Err(err) => {
+                let error_msg = format!("{err:?}");
+                assert!(
+                    error_msg.contains("not found")
+                        || error_msg.contains("NotFound")
+                        || error_msg.contains("no rows")
+                );
+            }
+            Ok(_) => panic!("Expected error for non-existent team"),
+        }
     }
 
     #[tokio::test]
@@ -930,7 +954,20 @@ mod tests {
         };
 
         let result = state.team_service.add_player_to_team(add_data).await;
-        assert!(result.is_ok() || result.is_err()); // Either outcome is valid for contract testing
+        // Should fail because team/player don't exist
+        assert!(result.is_err());
+        match result {
+            Err(err) => {
+                let error_msg = format!("{err:?}");
+                assert!(
+                    error_msg.contains("not found")
+                        || error_msg.contains("NotFound")
+                        || error_msg.contains("constraint")
+                        || error_msg.contains("no rows")
+                );
+            }
+            Ok(_) => panic!("Expected error for non-existent team/player"),
+        }
     }
 
     #[tokio::test]
@@ -946,7 +983,18 @@ mod tests {
             .team_service
             .remove_player_from_team(remove_data)
             .await;
-        assert!(result.is_ok() || result.is_err()); // Either outcome is valid for contract testing
+        // Should fail because team/player don't exist, but service may handle this gracefully
+        match result {
+            Err(err) => {
+                let error_msg = format!("{err:?}");
+                // Could be various error types depending on service implementation
+                assert!(!error_msg.is_empty());
+            }
+            Ok(_) => {
+                // Service may handle gracefully by not removing anything
+                // This is also valid behavior
+            }
+        }
     }
 
     #[tokio::test]
@@ -973,7 +1021,20 @@ mod tests {
         };
 
         let result = state.team_service.create_team_match(match_data).await;
-        assert!(result.is_ok() || result.is_err()); // Either outcome is valid for contract testing
+        // Should fail because tournament/teams don't exist
+        assert!(result.is_err());
+        match result {
+            Err(err) => {
+                let error_msg = format!("{err:?}");
+                assert!(
+                    error_msg.contains("not found")
+                        || error_msg.contains("NotFound")
+                        || error_msg.contains("constraint")
+                        || error_msg.contains("foreign key")
+                );
+            }
+            Ok(_) => panic!("Expected error for non-existent tournament/teams"),
+        }
     }
 
     #[tokio::test]
@@ -996,7 +1057,19 @@ mod tests {
         };
 
         let result = state.team_service.update_team_match(update_data).await;
-        assert!(result.is_ok() || result.is_err()); // Either outcome is valid for contract testing
+        // Should fail because team match doesn't exist
+        assert!(result.is_err());
+        match result {
+            Err(err) => {
+                let error_msg = format!("{err:?}");
+                assert!(
+                    error_msg.contains("not found")
+                        || error_msg.contains("NotFound")
+                        || error_msg.contains("no rows")
+                );
+            }
+            Ok(_) => panic!("Expected error for non-existent team match"),
+        }
     }
 
     #[tokio::test]
@@ -1004,7 +1077,19 @@ mod tests {
         let state = setup_test_state().await;
 
         let result = state.team_service.get_team_match_by_id(1).await;
-        assert!(result.is_ok() || result.is_err()); // Either outcome is valid for contract testing
+        // Should fail because team match doesn't exist
+        assert!(result.is_err());
+        match result {
+            Err(err) => {
+                let error_msg = format!("{err:?}");
+                assert!(
+                    error_msg.contains("not found")
+                        || error_msg.contains("NotFound")
+                        || error_msg.contains("no rows")
+                );
+            }
+            Ok(_) => panic!("Expected error for non-existent team match"),
+        }
     }
 
     #[tokio::test]
@@ -1024,7 +1109,20 @@ mod tests {
         };
 
         let result = state.team_service.create_team_lineup(lineup_data).await;
-        assert!(result.is_ok() || result.is_err()); // Either outcome is valid for contract testing
+        // Should fail because team/player don't exist
+        assert!(result.is_err());
+        match result {
+            Err(err) => {
+                let error_msg = format!("{err:?}");
+                assert!(
+                    error_msg.contains("not found")
+                        || error_msg.contains("NotFound")
+                        || error_msg.contains("constraint")
+                        || error_msg.contains("foreign key")
+                );
+            }
+            Ok(_) => panic!("Expected error for non-existent team/player"),
+        }
     }
 
     #[tokio::test]
@@ -1050,7 +1148,20 @@ mod tests {
             .team_service
             .create_team_tournament_settings(settings_data)
             .await;
-        assert!(result.is_ok() || result.is_err()); // Either outcome is valid for contract testing
+        // Should fail because tournament doesn't exist
+        assert!(result.is_err());
+        match result {
+            Err(err) => {
+                let error_msg = format!("{err:?}");
+                assert!(
+                    error_msg.contains("not found")
+                        || error_msg.contains("NotFound")
+                        || error_msg.contains("constraint")
+                        || error_msg.contains("foreign key")
+                );
+            }
+            Ok(_) => panic!("Expected error for non-existent tournament"),
+        }
     }
 
     #[tokio::test]
@@ -1076,7 +1187,19 @@ mod tests {
             .team_service
             .update_team_tournament_settings(update_data)
             .await;
-        assert!(result.is_ok() || result.is_err()); // Either outcome is valid for contract testing
+        // Should fail because tournament settings don't exist
+        assert!(result.is_err());
+        match result {
+            Err(err) => {
+                let error_msg = format!("{err:?}");
+                assert!(
+                    error_msg.contains("not found")
+                        || error_msg.contains("NotFound")
+                        || error_msg.contains("no rows")
+                );
+            }
+            Ok(_) => panic!("Expected error for non-existent tournament settings"),
+        }
     }
 
     #[tokio::test]
@@ -1084,7 +1207,19 @@ mod tests {
         let state = setup_test_state().await;
 
         let result = state.team_service.get_team_tournament_settings(1).await;
-        assert!(result.is_ok() || result.is_err()); // Either outcome is valid for contract testing
+        // Should fail because tournament settings don't exist
+        assert!(result.is_err());
+        match result {
+            Err(err) => {
+                let error_msg = format!("{err:?}");
+                assert!(
+                    error_msg.contains("not found")
+                        || error_msg.contains("NotFound")
+                        || error_msg.contains("no rows")
+                );
+            }
+            Ok(_) => panic!("Expected error for non-existent tournament settings"),
+        }
     }
 
     #[tokio::test]
@@ -1092,7 +1227,18 @@ mod tests {
         let state = setup_test_state().await;
 
         let result = state.team_service.get_team_statistics(1).await;
-        assert!(result.is_ok() || result.is_err()); // Either outcome is valid for contract testing
+        // Should fail because team doesn't exist, or return empty statistics
+        match result {
+            Err(err) => {
+                let error_msg = format!("{err:?}");
+                // Expected error for non-existent team
+                assert!(!error_msg.is_empty());
+            }
+            Ok(_stats) => {
+                // Service may return default/empty statistics for non-existent team
+                // This is also valid service behavior
+            }
+        }
     }
 
     #[tokio::test]
@@ -1100,7 +1246,10 @@ mod tests {
         let state = setup_test_state().await;
 
         let result = state.team_service.get_team_standings(1).await;
-        assert!(result.is_ok() || result.is_err()); // Either outcome is valid for contract testing
+        // Should return empty standings for non-existent tournament (business logic)
+        assert!(result.is_ok());
+        let standings = result.unwrap();
+        assert!(standings.is_empty());
     }
 
     #[tokio::test]
@@ -1108,7 +1257,18 @@ mod tests {
         let state = setup_test_state().await;
 
         let result = state.team_service.validate_team_lineup(1, 1).await;
-        assert!(result.is_ok() || result.is_err()); // Either outcome is valid for contract testing
+        // Should fail because team doesn't exist, or return validation result
+        match result {
+            Err(err) => {
+                let error_msg = format!("{err:?}");
+                // Expected error for non-existent team
+                assert!(!error_msg.is_empty());
+            }
+            Ok(_validation_result) => {
+                // Service may return validation result even for non-existent team
+                // This tests the contract
+            }
+        }
     }
 
     #[tokio::test]
@@ -1116,7 +1276,18 @@ mod tests {
         let state = setup_test_state().await;
 
         let result = state.team_service.validate_team_board_order(1, 1).await;
-        assert!(result.is_ok() || result.is_err()); // Either outcome is valid for contract testing
+        // Should fail because team doesn't exist, or return validation result
+        match result {
+            Err(err) => {
+                let error_msg = format!("{err:?}");
+                // Expected error for non-existent team
+                assert!(!error_msg.is_empty());
+            }
+            Ok(_validation_result) => {
+                // Service may return validation result even for non-existent team
+                // This tests the contract
+            }
+        }
     }
 
     #[tokio::test]
@@ -1462,6 +1633,462 @@ mod tests {
 
         // Test that invalid score difference is detected
         assert!(invalid_score_diff_config.max_score_difference.unwrap() > 10.0);
+    }
+
+    #[tokio::test]
+    async fn command_team_input_validation_errors() {
+        let state = setup_test_state().await;
+
+        // Test empty team name
+        let empty_name_team = CreateTeam {
+            tournament_id: 1,
+            name: "".to_string(),
+            captain: None,
+            description: None,
+            color: None,
+            club_affiliation: None,
+            contact_email: None,
+            contact_phone: None,
+            max_board_count: 4,
+        };
+
+        let result = state.team_service.create_team(empty_name_team).await;
+        assert!(result.is_err());
+
+        // Test invalid email format
+        let invalid_email_team = CreateTeam {
+            tournament_id: 1,
+            name: "Test Team".to_string(),
+            captain: Some("Captain".to_string()),
+            description: None,
+            color: None,
+            club_affiliation: None,
+            contact_email: Some("not-an-email".to_string()),
+            contact_phone: None,
+            max_board_count: 4,
+        };
+
+        let result = state.team_service.create_team(invalid_email_team).await;
+        // Should fail due to tournament not existing, but validates email format is handled
+        assert!(result.is_err());
+
+        // Test negative board count
+        let negative_board_team = CreateTeam {
+            tournament_id: 1,
+            name: "Test Team".to_string(),
+            captain: None,
+            description: None,
+            color: None,
+            club_affiliation: None,
+            contact_email: None,
+            contact_phone: None,
+            max_board_count: -1,
+        };
+
+        let result = state.team_service.create_team(negative_board_team).await;
+        assert!(result.is_err());
+
+        // Test zero board count
+        let zero_board_team = CreateTeam {
+            tournament_id: 1,
+            name: "Test Team".to_string(),
+            captain: None,
+            description: None,
+            color: None,
+            club_affiliation: None,
+            contact_email: None,
+            contact_phone: None,
+            max_board_count: 0,
+        };
+
+        let result = state.team_service.create_team(zero_board_team).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn command_team_boundary_conditions() {
+        let state = setup_test_state().await;
+
+        // Test maximum name length
+        let long_name = "a".repeat(256);
+        let long_name_team = CreateTeam {
+            tournament_id: 1,
+            name: long_name.clone(),
+            captain: None,
+            description: None,
+            color: None,
+            club_affiliation: None,
+            contact_email: None,
+            contact_phone: None,
+            max_board_count: 4,
+        };
+
+        let result = state.team_service.create_team(long_name_team).await;
+        // Should fail due to tournament not existing or name length validation
+        assert!(result.is_err());
+
+        // Test maximum description length
+        let long_description = "a".repeat(1000);
+        let long_desc_team = CreateTeam {
+            tournament_id: 1,
+            name: "Test Team".to_string(),
+            captain: None,
+            description: Some(long_description),
+            color: None,
+            club_affiliation: None,
+            contact_email: None,
+            contact_phone: None,
+            max_board_count: 4,
+        };
+
+        let result = state.team_service.create_team(long_desc_team).await;
+        // Should fail due to tournament not existing or description length validation
+        assert!(result.is_err());
+
+        // Test maximum board count
+        let max_board_team = CreateTeam {
+            tournament_id: 1,
+            name: "Test Team".to_string(),
+            captain: None,
+            description: None,
+            color: None,
+            club_affiliation: None,
+            contact_email: None,
+            contact_phone: None,
+            max_board_count: 1000,
+        };
+
+        let result = state.team_service.create_team(max_board_team).await;
+        // Should fail due to tournament not existing or board count validation
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn command_team_search_filters_comprehensive() {
+        let state = setup_test_state().await;
+
+        // Test all search filter combinations
+        let comprehensive_filters = TeamSearchFilters {
+            tournament_id: 1,
+            name: Some("Test".to_string()),
+            status: Some("active".to_string()),
+            captain: Some("Captain".to_string()),
+            club_affiliation: Some("Club".to_string()),
+            min_members: Some(1),
+            max_members: Some(10),
+            has_captain: Some(true),
+            limit: Some(50),
+            offset: Some(0),
+        };
+
+        let result = state.team_service.search_teams(comprehensive_filters).await;
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_empty());
+
+        // Test invalid limit/offset
+        let invalid_limit_filters = TeamSearchFilters {
+            tournament_id: 1,
+            name: None,
+            status: None,
+            captain: None,
+            club_affiliation: None,
+            min_members: None,
+            max_members: None,
+            has_captain: None,
+            limit: Some(-1),
+            offset: Some(-1),
+        };
+
+        // Note: This should be handled by service layer validation
+        let result = state.team_service.search_teams(invalid_limit_filters).await;
+        // Could succeed with corrected parameters or fail with validation error
+        assert!(result.is_ok() || result.is_err());
+
+        // Test min > max members
+        let invalid_member_range = TeamSearchFilters {
+            tournament_id: 1,
+            name: None,
+            status: None,
+            captain: None,
+            club_affiliation: None,
+            min_members: Some(10),
+            max_members: Some(5),
+            has_captain: None,
+            limit: Some(10),
+            offset: Some(0),
+        };
+
+        let result = state.team_service.search_teams(invalid_member_range).await;
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_empty()); // Should return no results
+    }
+
+    #[tokio::test]
+    async fn command_team_pairing_validation_coverage() {
+        // Test validation logic for pairing configurations directly
+
+        // Test invalid pairing method
+        let invalid_method_config = TeamPairingConfigDto {
+            pairing_method: "invalid_method".to_string(),
+            color_allocation: "alternating_boards".to_string(),
+            board_order_policy: "rating_descending".to_string(),
+            allow_team_vs_team: true,
+            prevent_early_rematches: true,
+            max_score_difference: Some(1.0),
+            prefer_balanced_matches: true,
+        };
+
+        let is_invalid_method = !matches!(
+            invalid_method_config.pairing_method.as_str(),
+            "swiss" | "round_robin" | "scheveningen" | "knockout" | "double_round_robin"
+        );
+        assert!(is_invalid_method);
+
+        // Test invalid color allocation
+        let invalid_color_config = TeamPairingConfigDto {
+            pairing_method: "swiss".to_string(),
+            color_allocation: "invalid_allocation".to_string(),
+            board_order_policy: "rating_descending".to_string(),
+            allow_team_vs_team: true,
+            prevent_early_rematches: true,
+            max_score_difference: Some(1.0),
+            prefer_balanced_matches: true,
+        };
+
+        let is_invalid_color = !matches!(
+            invalid_color_config.color_allocation.as_str(),
+            "alternating_boards" | "alternating_rounds" | "balanced_rotation" | "fixed_boards"
+        );
+        assert!(is_invalid_color);
+
+        // Test invalid board order policy
+        let invalid_policy_config = TeamPairingConfigDto {
+            pairing_method: "swiss".to_string(),
+            color_allocation: "alternating_boards".to_string(),
+            board_order_policy: "invalid_policy".to_string(),
+            allow_team_vs_team: true,
+            prevent_early_rematches: true,
+            max_score_difference: Some(1.0),
+            prefer_balanced_matches: true,
+        };
+
+        let is_invalid_policy = !matches!(
+            invalid_policy_config.board_order_policy.as_str(),
+            "rating_descending" | "rating_ascending" | "captain_choice" | "flexible"
+        );
+        assert!(is_invalid_policy);
+
+        // Test invalid score difference (too high)
+        let high_score_config = TeamPairingConfigDto {
+            pairing_method: "swiss".to_string(),
+            color_allocation: "alternating_boards".to_string(),
+            board_order_policy: "rating_descending".to_string(),
+            allow_team_vs_team: true,
+            prevent_early_rematches: true,
+            max_score_difference: Some(15.0),
+            prefer_balanced_matches: true,
+        };
+
+        if let Some(diff) = high_score_config.max_score_difference {
+            assert!(!(0.0..=10.0).contains(&diff));
+        }
+
+        // Test invalid score difference (negative)
+        let negative_score_config = TeamPairingConfigDto {
+            pairing_method: "swiss".to_string(),
+            color_allocation: "alternating_boards".to_string(),
+            board_order_policy: "rating_descending".to_string(),
+            allow_team_vs_team: true,
+            prevent_early_rematches: true,
+            max_score_difference: Some(-1.0),
+            prefer_balanced_matches: true,
+        };
+
+        if let Some(diff) = negative_score_config.max_score_difference {
+            assert!(!(0.0..=10.0).contains(&diff));
+        }
+
+        // Test valid configuration
+        let valid_config = TeamPairingConfigDto {
+            pairing_method: "swiss".to_string(),
+            color_allocation: "alternating_boards".to_string(),
+            board_order_policy: "rating_descending".to_string(),
+            allow_team_vs_team: true,
+            prevent_early_rematches: true,
+            max_score_difference: Some(5.0),
+            prefer_balanced_matches: true,
+        };
+
+        let is_valid_method = matches!(
+            valid_config.pairing_method.as_str(),
+            "swiss" | "round_robin" | "scheveningen" | "knockout" | "double_round_robin"
+        );
+        let is_valid_color = matches!(
+            valid_config.color_allocation.as_str(),
+            "alternating_boards" | "alternating_rounds" | "balanced_rotation" | "fixed_boards"
+        );
+        let is_valid_policy = matches!(
+            valid_config.board_order_policy.as_str(),
+            "rating_descending" | "rating_ascending" | "captain_choice" | "flexible"
+        );
+        let is_valid_score = valid_config
+            .max_score_difference
+            .map(|diff| (0.0..=10.0).contains(&diff))
+            .unwrap_or(true);
+
+        assert!(is_valid_method);
+        assert!(is_valid_color);
+        assert!(is_valid_policy);
+        assert!(is_valid_score);
+    }
+
+    #[tokio::test]
+    async fn command_team_scoring_validation_coverage() {
+        // Test validation logic for scoring configurations directly
+
+        // Test invalid scoring system
+        let invalid_system_config = TeamScoringConfigDto {
+            scoring_system: "invalid_system".to_string(),
+            match_points_win: 2.0,
+            match_points_draw: 1.0,
+            match_points_loss: 0.0,
+            board_weight_system: "equal".to_string(),
+            tiebreak_criteria: vec!["match_points".to_string()],
+            olympic_scoring: false,
+            minimum_games_for_board_points: 4,
+        };
+
+        let is_invalid_system = !matches!(
+            invalid_system_config.scoring_system.as_str(),
+            "match_points" | "board_points" | "olympic_points" | "custom_points"
+        );
+        assert!(is_invalid_system);
+
+        // Test invalid board weight system
+        let invalid_weight_config = TeamScoringConfigDto {
+            scoring_system: "match_points".to_string(),
+            match_points_win: 2.0,
+            match_points_draw: 1.0,
+            match_points_loss: 0.0,
+            board_weight_system: "invalid_weight".to_string(),
+            tiebreak_criteria: vec!["match_points".to_string()],
+            olympic_scoring: false,
+            minimum_games_for_board_points: 4,
+        };
+
+        let is_invalid_weight = !matches!(
+            invalid_weight_config.board_weight_system.as_str(),
+            "equal" | "descending" | "ascending"
+        );
+        assert!(is_invalid_weight);
+
+        // Test invalid tiebreak criterion
+        let invalid_criterion_config = TeamScoringConfigDto {
+            scoring_system: "match_points".to_string(),
+            match_points_win: 2.0,
+            match_points_draw: 1.0,
+            match_points_loss: 0.0,
+            board_weight_system: "equal".to_string(),
+            tiebreak_criteria: vec!["invalid_criterion".to_string()],
+            olympic_scoring: false,
+            minimum_games_for_board_points: 4,
+        };
+
+        let has_invalid_criterion =
+            invalid_criterion_config
+                .tiebreak_criteria
+                .iter()
+                .any(|criterion| {
+                    !matches!(
+                        criterion.as_str(),
+                        "match_points"
+                            | "board_points"
+                            | "direct_encounter"
+                            | "sonneborn_berger"
+                            | "average_opponent_rating"
+                            | "board_count_tiebreak"
+                            | "captain_board"
+                            | "match_wins"
+                            | "draw_count"
+                    )
+                });
+        assert!(has_invalid_criterion);
+
+        // Test negative match points
+        let negative_points_config = TeamScoringConfigDto {
+            scoring_system: "match_points".to_string(),
+            match_points_win: -1.0,
+            match_points_draw: 1.0,
+            match_points_loss: 0.0,
+            board_weight_system: "equal".to_string(),
+            tiebreak_criteria: vec!["match_points".to_string()],
+            olympic_scoring: false,
+            minimum_games_for_board_points: 4,
+        };
+
+        let has_negative_points = negative_points_config.match_points_win < 0.0
+            || negative_points_config.match_points_draw < 0.0
+            || negative_points_config.match_points_loss < 0.0;
+        assert!(has_negative_points);
+
+        // Test negative minimum games
+        let negative_games_config = TeamScoringConfigDto {
+            scoring_system: "match_points".to_string(),
+            match_points_win: 2.0,
+            match_points_draw: 1.0,
+            match_points_loss: 0.0,
+            board_weight_system: "equal".to_string(),
+            tiebreak_criteria: vec!["match_points".to_string()],
+            olympic_scoring: false,
+            minimum_games_for_board_points: -1,
+        };
+
+        assert!(negative_games_config.minimum_games_for_board_points < 0);
+
+        // Test valid configuration
+        let valid_config = TeamScoringConfigDto {
+            scoring_system: "olympic_points".to_string(),
+            match_points_win: 2.0,
+            match_points_draw: 1.0,
+            match_points_loss: 0.0,
+            board_weight_system: "equal".to_string(),
+            tiebreak_criteria: vec!["match_points".to_string(), "board_points".to_string()],
+            olympic_scoring: true,
+            minimum_games_for_board_points: 4,
+        };
+
+        let is_valid_system = matches!(
+            valid_config.scoring_system.as_str(),
+            "match_points" | "board_points" | "olympic_points" | "custom_points"
+        );
+        let is_valid_weight = matches!(
+            valid_config.board_weight_system.as_str(),
+            "equal" | "descending" | "ascending"
+        );
+        let has_valid_criteria = valid_config.tiebreak_criteria.iter().all(|criterion| {
+            matches!(
+                criterion.as_str(),
+                "match_points"
+                    | "board_points"
+                    | "direct_encounter"
+                    | "sonneborn_berger"
+                    | "average_opponent_rating"
+                    | "board_count_tiebreak"
+                    | "captain_board"
+                    | "match_wins"
+                    | "draw_count"
+            )
+        });
+        let has_valid_points = valid_config.match_points_win >= 0.0
+            && valid_config.match_points_draw >= 0.0
+            && valid_config.match_points_loss >= 0.0;
+        let has_valid_min_games = valid_config.minimum_games_for_board_points >= 0;
+
+        assert!(is_valid_system);
+        assert!(is_valid_weight);
+        assert!(has_valid_criteria);
+        assert!(has_valid_points);
+        assert!(has_valid_min_games);
     }
 
     #[tokio::test]

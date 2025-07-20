@@ -435,7 +435,10 @@ impl<D: Db> TeamScoringService<D> {
                         Player {
                             id: game.white_player_id,
                             tournament_id: game.tournament_id,
-                            name: format!("Player {}", game.white_player_id),
+                            name: format!(
+                                "Player {white_player_id}",
+                                white_player_id = game.white_player_id
+                            ),
                             rating: None,
                             country_code: None,
                             title: None,
@@ -462,7 +465,10 @@ impl<D: Db> TeamScoringService<D> {
                         Player {
                             id: game.black_player_id,
                             tournament_id: game.tournament_id,
-                            name: format!("Player {}", game.black_player_id),
+                            name: format!(
+                                "Player {black_player_id}",
+                                black_player_id = game.black_player_id
+                            ),
                             rating: None,
                             country_code: None,
                             title: None,
@@ -875,7 +881,10 @@ impl<D: Db> TeamScoringService<D> {
         // Generate explanations for tied teams
         for group in tied_groups {
             let mut explanation = String::new();
-            explanation.push_str(&format!("Tied on {} points. ", group[0].1.points));
+            explanation.push_str(&format!(
+                "Tied on {points} points. ",
+                points = group[0].1.points
+            ));
 
             for criterion in &config.tiebreak_criteria {
                 explanation.push_str(&format!("Tiebreak: {criterion:?}. "));
@@ -1157,7 +1166,10 @@ mod tests {
             // Test that config can be created with each system
             assert!(!description.is_empty());
             let debug_str = format!("{config:?}");
-            assert!(debug_str.contains(&format!("{:?}", config.scoring_system)));
+            assert!(debug_str.contains(&format!(
+                "{scoring_system:?}",
+                scoring_system = config.scoring_system
+            )));
         }
     }
 

@@ -473,18 +473,18 @@ mod tests {
             "custom",
         ] {
             let data = CreateTimeControl {
-                name: format!("Test {}", tc_type),
+                name: format!("Test {tc_type}"),
                 time_control_type: tc_type.to_string(),
                 base_time_minutes: Some(30),
                 increment_seconds: Some(5),
                 moves_per_session: None,
                 session_time_minutes: None,
                 total_sessions: None,
-                description: Some(format!("Test {} time control", tc_type)),
+                description: Some(format!("Test {tc_type} time control")),
             };
 
             let result = state.time_control_service.create_time_control(data).await;
-            assert!(result.is_ok(), "Failed to create {} time control", tc_type);
+            assert!(result.is_ok(), "Failed to create {tc_type} time control");
         }
 
         // Test with session-based time control (or skip if not supported)
