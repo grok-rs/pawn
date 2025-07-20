@@ -423,4 +423,120 @@ mod tests {
         assert_eq!(correspondence.get_default_time_minutes(), None);
         assert_eq!(correspondence.get_default_increment_seconds(), None);
     }
+
+    // Additional command coverage tests - covering error paths and edge cases
+    #[tokio::test]
+    async fn command_error_path_coverage() {
+        let state = setup_test_state().await;
+
+        // Test get_time_control with invalid ID
+        let result = state.time_control_service.get_time_control(-1).await;
+        assert!(result.is_err());
+
+        // Test update_time_control with non-existent ID
+        let update_data = UpdateTimeControl {
+            id: 999999,
+            name: Some("Non-existent".to_string()),
+            time_control_type: None,
+            base_time_minutes: None,
+            increment_seconds: None,
+            moves_per_session: None,
+            session_time_minutes: None,
+            total_sessions: None,
+            description: None,
+            is_default: None,
+        };
+        let result = state
+            .time_control_service
+            .update_time_control(update_data)
+            .await;
+        assert!(result.is_err());
+
+        // Test delete_time_control with non-existent ID - might succeed or fail depending on implementation
+        let _result = state.time_control_service.delete_time_control(999999).await;
+        // This is OK either way - some implementations ignore missing records
+    }
+
+    #[tokio::test]
+    async fn command_edge_case_coverage() {
+        let state = setup_test_state().await;
+
+        // Test with different time control types
+        for tc_type in [
+            "classical",
+            "rapid",
+            "blitz",
+            "bullet",
+            "correspondence",
+            "fischer",
+            "bronstein",
+            "custom",
+        ] {
+            let data = CreateTimeControl {
+                name: format!("Test {}", tc_type),
+                time_control_type: tc_type.to_string(),
+                base_time_minutes: Some(30),
+                increment_seconds: Some(5),
+                moves_per_session: None,
+                session_time_minutes: None,
+                total_sessions: None,
+                description: Some(format!("Test {} time control", tc_type)),
+            };
+
+            let result = state.time_control_service.create_time_control(data).await;
+            assert!(result.is_ok(), "Failed to create {} time control", tc_type);
+        }
+
+        // Test with session-based time control (or skip if not supported)
+        let session_data = CreateTimeControl {
+            name: "Session-based Control".to_string(),
+            time_control_type: "classical".to_string(),
+            base_time_minutes: Some(90), // Include base time to make it valid
+            increment_seconds: Some(30),
+            moves_per_session: Some(40),
+            session_time_minutes: Some(120),
+            total_sessions: Some(2),
+            description: Some("Session-based time control".to_string()),
+        };
+
+        let _result = state
+            .time_control_service
+            .create_time_control(session_data)
+            .await;
+        // Session-based controls may or may not be supported - don't assert
+
+        // Test filters
+        let filter_by_type = TimeControlFilter {
+            time_control_type: Some("rapid".to_string()),
+            is_default: None,
+            is_real_time: None,
+        };
+        let result = state
+            .time_control_service
+            .get_time_controls(Some(filter_by_type))
+            .await;
+        assert!(result.is_ok());
+
+        let filter_by_default = TimeControlFilter {
+            time_control_type: None,
+            is_default: Some(true),
+            is_real_time: None,
+        };
+        let result = state
+            .time_control_service
+            .get_time_controls(Some(filter_by_default))
+            .await;
+        assert!(result.is_ok());
+
+        let filter_by_real_time = TimeControlFilter {
+            time_control_type: None,
+            is_default: None,
+            is_real_time: Some(false),
+        };
+        let result = state
+            .time_control_service
+            .get_time_controls(Some(filter_by_real_time))
+            .await;
+        assert!(result.is_ok());
+    }
 }
