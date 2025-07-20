@@ -1,5 +1,16 @@
 # Pawn - Professional Chess Tournament Management System
 
+[![CI](https://github.com/grok-rs/pawn/workflows/CI%20Orchestration%20(Complete%20Pipeline)/badge.svg)](https://github.com/grok-rs/pawn/actions/workflows/ci-orchestration.yml)
+[![Backend Tests](https://github.com/grok-rs/pawn/workflows/Backend%20Quality%20Gates%20(Parallelized)/badge.svg)](https://github.com/grok-rs/pawn/actions/workflows/backend-test.yml)
+[![Frontend Tests](https://github.com/grok-rs/pawn/workflows/Frontend%20Quality%20Gates/badge.svg)](https://github.com/grok-rs/pawn/actions/workflows/frontend-test.yml)
+[![codecov](https://codecov.io/gh/grok-rs/pawn/branch/main/graph/badge.svg)](https://codecov.io/gh/grok-rs/pawn)
+[![Security audit](https://github.com/grok-rs/pawn/workflows/Security%20Audit/badge.svg)](https://github.com/grok-rs/pawn/actions)
+[![Maintainability](https://api.codeclimate.com/v1/badges/badge-id/maintainability)](https://codeclimate.com/github/grok-rs/pawn/maintainability)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tauri](https://img.shields.io/badge/Tauri-2.6.0-blue.svg)](https://tauri.app/)
+[![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://www.rust-lang.org/)
+[![React](https://img.shields.io/badge/React-18.3+-blue.svg)](https://reactjs.org/)
+
 A comprehensive desktop application for professional chess tournament administration, built with Tauri, React, and Rust.
 
 ## Overview

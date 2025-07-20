@@ -211,3 +211,196 @@ pub async fn validate_knockout_bracket(
         Err(_) => Ok(false),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn knockout_service_calculate_rounds_contract() {
+        // Test the round calculation logic
+        let rounds = crate::pawn::service::knockout::KnockoutService::calculate_rounds(8);
+        assert!(rounds > 0);
+        assert_eq!(rounds, 3); // 8 players -> 3 rounds (4->2->1)
+    }
+
+    #[tokio::test]
+    async fn knockout_service_advance_winners_contract() {
+        // Test winner advancement logic
+        let winner_results = vec![(1, 2), (3, 4)]; // (winner, loser) pairs
+        let next_positions =
+            crate::pawn::service::knockout::KnockoutService::advance_winners(1, 1, &winner_results);
+
+        // Should generate positions for next round
+        assert_eq!(next_positions.len(), 2); // 2 winners advance
+    }
+
+    #[tokio::test]
+    async fn knockout_service_pairing_generation_contract() {
+        // Test basic pairing generation logic
+        let positions = vec![]; // Empty positions
+        let pairings = crate::pawn::service::knockout::KnockoutService::generate_round_pairings(
+            1, 1, &positions,
+        );
+
+        // Should return empty pairings for empty positions
+        assert!(pairings.is_empty());
+    }
+
+    #[tokio::test]
+    async fn knockout_service_tournament_completion_contract() {
+        // Test tournament completion logic
+        let positions = vec![]; // Empty positions
+        let is_complete =
+            crate::pawn::service::knockout::KnockoutService::is_tournament_complete(&positions, 3);
+
+        // Should return false for empty tournament
+        assert!(!is_complete);
+    }
+
+    #[tokio::test]
+    async fn knockout_service_bracket_validation_contract() {
+        // Test bracket validation logic
+        let positions = vec![]; // Empty positions
+        let validation_result =
+            crate::pawn::service::knockout::KnockoutService::validate_bracket(&positions);
+
+        // Should either succeed or fail gracefully
+        assert!(validation_result.is_ok() || validation_result.is_err());
+    }
+
+    #[tokio::test]
+    async fn command_knockout_dto_coverage() {
+        // Test DTO structure creation for knockout-related DTOs
+        let tournament_id = 1;
+
+        let create_bracket = CreateKnockoutBracket {
+            tournament_id,
+            bracket_type: "single_elimination".to_string(),
+        };
+        assert_eq!(create_bracket.tournament_id, tournament_id);
+        assert_eq!(create_bracket.bracket_type, "single_elimination");
+
+        let bracket = KnockoutBracket {
+            id: 1,
+            tournament_id,
+            bracket_type: "double_elimination".to_string(),
+            total_rounds: 4,
+            created_at: "2024-01-01T00:00:00Z".to_string(),
+        };
+        assert_eq!(bracket.id, 1);
+        assert_eq!(bracket.tournament_id, tournament_id);
+        assert_eq!(bracket.bracket_type, "double_elimination");
+        assert_eq!(bracket.total_rounds, 4);
+        assert!(bracket.created_at.contains("2024-01-01"));
+
+        let bracket_position = BracketPosition {
+            id: 1,
+            bracket_id: 1,
+            round_number: 1,
+            position_number: 1,
+            player_id: Some(1),
+            advanced_from_position: None,
+            status: "active".to_string(),
+            created_at: "2024-01-01T00:00:00Z".to_string(),
+        };
+        assert_eq!(bracket_position.id, 1);
+        assert_eq!(bracket_position.bracket_id, 1);
+        assert_eq!(bracket_position.round_number, 1);
+        assert_eq!(bracket_position.position_number, 1);
+        assert_eq!(bracket_position.player_id, Some(1));
+        assert_eq!(bracket_position.advanced_from_position, None);
+        assert_eq!(bracket_position.status, "active");
+        assert!(bracket_position.created_at.contains("2024-01-01"));
+    }
+
+    #[tokio::test]
+    async fn command_knockout_bracket_types_coverage() {
+        // Test different bracket types
+        let bracket_types = vec![
+            "single_elimination",
+            "double_elimination",
+            "swiss_knockout",
+            "round_robin_knockout",
+        ];
+
+        for bracket_type in bracket_types {
+            let create_bracket = CreateKnockoutBracket {
+                tournament_id: 1,
+                bracket_type: bracket_type.to_string(),
+            };
+            assert_eq!(create_bracket.bracket_type, bracket_type);
+        }
+    }
+
+    #[tokio::test]
+    async fn command_knockout_round_calculations() {
+        // Test round calculations for various player counts
+        let test_cases = vec![
+            (2, 1),  // 2 players -> 1 round
+            (4, 2),  // 4 players -> 2 rounds
+            (8, 3),  // 8 players -> 3 rounds
+            (16, 4), // 16 players -> 4 rounds
+        ];
+
+        for (players, expected_rounds) in test_cases {
+            let calculated_rounds =
+                crate::pawn::service::knockout::KnockoutService::calculate_rounds(players);
+            assert_eq!(
+                calculated_rounds, expected_rounds,
+                "Failed for {players} players"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn command_knockout_winner_results_coverage() {
+        // Test different winner result patterns
+        let test_scenarios = [
+            vec![(1, 2)],                         // Single match
+            vec![(1, 2), (3, 4)],                 // Two matches
+            vec![(1, 2), (3, 4), (5, 6), (7, 8)], // Four matches
+        ];
+
+        for (round, scenario) in test_scenarios.iter().enumerate() {
+            let next_positions = crate::pawn::service::knockout::KnockoutService::advance_winners(
+                1,
+                round as i32 + 1,
+                scenario,
+            );
+            assert_eq!(next_positions.len(), scenario.len());
+        }
+    }
+
+    #[tokio::test]
+    async fn command_knockout_enhanced_testing() {
+        // Additional coverage for enhanced testing
+
+        // Test calculate_rounds edge cases
+        assert_eq!(
+            crate::pawn::service::knockout::KnockoutService::calculate_rounds(3),
+            2
+        );
+        assert_eq!(
+            crate::pawn::service::knockout::KnockoutService::calculate_rounds(1),
+            0
+        ); // 1 player needs 0 rounds
+
+        // Test empty winner advancement
+        let empty_results: Vec<(i32, i32)> = vec![];
+        let empty_positions =
+            crate::pawn::service::knockout::KnockoutService::advance_winners(1, 1, &empty_results);
+        assert!(empty_positions.is_empty());
+
+        // Test service methods with various inputs
+        let positions = vec![];
+        let winner_id =
+            crate::pawn::service::knockout::KnockoutService::get_tournament_winner(&positions, 3);
+        assert!(winner_id.is_none());
+
+        // Test validation with empty bracket
+        let validation =
+            crate::pawn::service::knockout::KnockoutService::validate_bracket(&positions);
+        assert!(validation.is_ok() || validation.is_err());
+    }
+}

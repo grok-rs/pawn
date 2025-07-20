@@ -261,3 +261,254 @@ pub async fn export_norms_report(
         ))),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::pawn::domain::tiebreak::{DistributionMethod, NormRequirements, PrizeStructure};
+
+    #[tokio::test]
+    async fn command_get_norm_types_contract() {
+        // Test the static command that returns norm types
+        let result = get_norm_types().await;
+        assert!(result.is_ok());
+        let types = result.unwrap();
+        assert!(!types.is_empty());
+        // Use discriminant comparison since NormType doesn't implement PartialEq
+        use std::mem::discriminant;
+        assert!(
+            types
+                .iter()
+                .any(|t| discriminant(t) == discriminant(&NormType::Grandmaster))
+        );
+        assert!(
+            types
+                .iter()
+                .any(|t| discriminant(t) == discriminant(&NormType::InternationalMaster))
+        );
+        assert!(
+            types
+                .iter()
+                .any(|t| discriminant(t) == discriminant(&NormType::FideMaster))
+        );
+    }
+
+    #[tokio::test]
+    async fn command_get_norm_requirements_contract() {
+        // Test the static command that returns norm requirements
+        let result = get_norm_requirements(NormType::Grandmaster).await;
+        assert!(result.is_ok());
+        let (rating, games, percentage) = result.unwrap();
+        assert!(rating > 0);
+        assert!(games > 0);
+        assert!(percentage > 0.0 && percentage <= 100.0);
+    }
+
+    #[tokio::test]
+    async fn command_get_prize_distribution_templates_contract() {
+        // Test the static command that returns templates
+        let result = get_prize_distribution_templates().await;
+        assert!(result.is_ok());
+        let templates = result.unwrap();
+        assert!(!templates.is_empty());
+        assert_eq!(templates.len(), 6); // Should have 6 templates
+
+        assert!(templates.contains(&"Standard Swiss".to_string()));
+        assert!(templates.contains(&"Round Robin".to_string()));
+        assert!(templates.contains(&"Knockout".to_string()));
+        assert!(templates.contains(&"Age Group Focus".to_string()));
+        assert!(templates.contains(&"Rating Group Focus".to_string()));
+        assert!(templates.contains(&"Custom".to_string()));
+    }
+
+    #[tokio::test]
+    async fn command_norm_types_coverage() {
+        // Test all norm types and their requirements
+        let norm_types = vec![
+            NormType::Grandmaster,
+            NormType::InternationalMaster,
+            NormType::FideMaster,
+            NormType::CandidateMaster,
+            NormType::WomanGrandmaster,
+            NormType::WomanInternationalMaster,
+            NormType::WomanFideMaster,
+            NormType::WomanCandidateMaster,
+        ];
+
+        for norm_type in norm_types {
+            let result = get_norm_requirements(norm_type.clone()).await;
+            assert!(result.is_ok());
+            let (rating, games, percentage) = result.unwrap();
+            assert!(rating > 0, "Rating should be positive for {norm_type:?}");
+            assert!(games > 0, "Games should be positive for {norm_type:?}");
+            assert!(
+                percentage > 0.0,
+                "Percentage should be positive for {norm_type:?}"
+            );
+            assert!(
+                percentage <= 100.0,
+                "Percentage should not exceed 100% for {norm_type:?}"
+            );
+
+            // Test display name
+            let display_name = norm_type.display_name();
+            assert!(
+                !display_name.is_empty(),
+                "Display name should not be empty for {norm_type:?}"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn command_validate_prize_distribution_contract() {
+        // Test valid distribution
+        let valid_request = PrizeDistributionRequest {
+            tournament_id: 1,
+            total_prize_fund: 10000.0,
+            currency: "USD".to_string(),
+            distribution_method: DistributionMethod::TiedPlayersShareEqually,
+            prize_structure: PrizeStructure {
+                first_place_percentage: 40.0,
+                second_place_percentage: 25.0,
+                third_place_percentage: 15.0,
+                additional_places: vec![],
+                age_group_prizes: vec![],
+                rating_group_prizes: vec![],
+            },
+            special_prizes: vec![],
+        };
+
+        let result = validate_prize_distribution(valid_request).await;
+        assert!(result.is_ok());
+        let errors = result.unwrap();
+        assert!(errors.is_empty()); // Should have no errors
+
+        // Test invalid distribution (over 100%)
+        let invalid_request = PrizeDistributionRequest {
+            tournament_id: 1,
+            total_prize_fund: 10000.0,
+            currency: "USD".to_string(),
+            distribution_method: DistributionMethod::TiedPlayersShareEqually,
+            prize_structure: PrizeStructure {
+                first_place_percentage: 50.0,
+                second_place_percentage: 30.0,
+                third_place_percentage: 25.0, // Total 105% - over 100%
+                additional_places: vec![],
+                age_group_prizes: vec![],
+                rating_group_prizes: vec![],
+            },
+            special_prizes: vec![],
+        };
+
+        let result = validate_prize_distribution(invalid_request).await;
+        assert!(result.is_ok());
+        let errors = result.unwrap();
+        assert!(!errors.is_empty()); // Should have errors
+        assert!(errors.iter().any(|e| e.contains("exceeds 100%")));
+    }
+
+    #[tokio::test]
+    async fn command_prize_distribution_validation_edge_cases() {
+        // Test negative prize fund
+        let negative_fund_request = PrizeDistributionRequest {
+            tournament_id: 1,
+            total_prize_fund: -1000.0,
+            currency: "USD".to_string(),
+            distribution_method: DistributionMethod::TiedPlayersShareEqually,
+            prize_structure: PrizeStructure {
+                first_place_percentage: 50.0,
+                second_place_percentage: 30.0,
+                third_place_percentage: 20.0,
+                additional_places: vec![],
+                age_group_prizes: vec![],
+                rating_group_prizes: vec![],
+            },
+            special_prizes: vec![],
+        };
+
+        let result = validate_prize_distribution(negative_fund_request).await;
+        assert!(result.is_ok());
+        let errors = result.unwrap();
+        assert!(errors.iter().any(|e| e.contains("must be positive")));
+
+        // Test empty currency
+        let empty_currency_request = PrizeDistributionRequest {
+            tournament_id: 1,
+            total_prize_fund: 1000.0,
+            currency: "".to_string(),
+            distribution_method: DistributionMethod::TiedPlayersShareEqually,
+            prize_structure: PrizeStructure {
+                first_place_percentage: 50.0,
+                second_place_percentage: 30.0,
+                third_place_percentage: 20.0,
+                additional_places: vec![],
+                age_group_prizes: vec![],
+                rating_group_prizes: vec![],
+            },
+            special_prizes: vec![],
+        };
+
+        let result = validate_prize_distribution(empty_currency_request).await;
+        assert!(result.is_ok());
+        let errors = result.unwrap();
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.contains("Currency must be specified"))
+        );
+    }
+
+    #[tokio::test]
+    async fn command_norm_dto_basic_coverage() {
+        // Test basic DTO structures without complex dependencies
+        use std::mem::discriminant;
+
+        let norm_request = NormCalculationRequest {
+            tournament_id: 1,
+            player_id: 1,
+            norm_type: NormType::Grandmaster,
+            tournament_category: Some(2400),
+            games_played: 9,
+            points_scored: 6.5,
+            performance_rating: Some(2520),
+        };
+        assert_eq!(norm_request.tournament_id, 1);
+        assert_eq!(norm_request.player_id, 1);
+        assert_eq!(
+            discriminant(&norm_request.norm_type),
+            discriminant(&NormType::Grandmaster)
+        );
+        assert_eq!(norm_request.games_played, 9);
+        assert_eq!(norm_request.points_scored, 6.5);
+
+        let norm_result = NormCalculationResult {
+            norm_type: NormType::InternationalMaster,
+            achieved: true,
+            performance_rating: 2520,
+            required_performance_rating: 2500,
+            games_played: 9,
+            minimum_games: 9,
+            points_scored: 6.5,
+            score_percentage: 72.2,
+            minimum_score_percentage: 50.0,
+            tournament_category: Some(2400),
+            requirements_met: NormRequirements {
+                performance_rating_met: true,
+                minimum_games_met: true,
+                minimum_score_met: true,
+                tournament_category_adequate: true,
+                opponent_diversity_met: true,
+            },
+            missing_requirements: vec![],
+            additional_info: "All requirements met".to_string(),
+        };
+        assert_eq!(
+            discriminant(&norm_result.norm_type),
+            discriminant(&NormType::InternationalMaster)
+        );
+        assert!(norm_result.achieved);
+        assert_eq!(norm_result.performance_rating, 2520);
+        assert_eq!(norm_result.games_played, 9);
+        assert_eq!(norm_result.points_scored, 6.5);
+    }
+}
