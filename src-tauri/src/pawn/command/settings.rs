@@ -266,8 +266,15 @@ pub async fn get_settings_backup_history(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::pawn::{db::sqlite::SqliteDb, state::State};
+    use crate::pawn::{
+        db::sqlite::SqliteDb,
+        domain::dto::{
+            ApplySettingsTemplateRequest, CreateSettingsBackup, CreateUserPreference,
+            RestoreSettingsBackup, SettingsExportRequest, SettingsFilter, SettingsImportRequest,
+            SettingsResetRequest, SettingsValidationRequest,
+        },
+        state::State,
+    };
     use sqlx::SqlitePool;
     use std::sync::Arc;
     use tempfile::TempDir;

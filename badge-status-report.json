@@ -1,0 +1,110 @@
+{
+  "timestamp": "2025-07-20T10:14:05.356Z",
+  "summary": {
+    "total": 11,
+    "valid": 10,
+    "invalid": 1,
+    "successRate": 91
+  },
+  "badges": [
+    {
+      "name": "CI Orchestration",
+      "url": "https://github.com/grok-rs/pawn/workflows/CI%20Orchestration%20(Complete%20Pipeline)/badge.svg",
+      "type": "workflow",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "isValid": true,
+      "error": null
+    },
+    {
+      "name": "Backend Tests",
+      "url": "https://github.com/grok-rs/pawn/workflows/Backend%20Quality%20Gates%20(Parallelized)/badge.svg",
+      "type": "workflow",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "isValid": true,
+      "error": null
+    },
+    {
+      "name": "Frontend Tests",
+      "url": "https://github.com/grok-rs/pawn/workflows/Frontend%20Quality%20Gates/badge.svg",
+      "type": "workflow",
+      "status": 200,
+      "contentType": "image/svg+xml; charset=utf-8",
+      "isValid": true,
+      "error": null
+    },
+    {
+      "name": "Security Audit",
+      "url": "https://github.com/grok-rs/pawn/workflows/Security%20Audit/badge.svg",
+      "type": "workflow",
+      "status": 404,
+      "contentType": "text/plain; charset=utf-8",
+      "isValid": false,
+      "error": null
+    },
+    {
+      "name": "Code Coverage",
+      "url": "https://codecov.io/gh/grok-rs/pawn/branch/main/graph/badge.svg",
+      "type": "codecov",
+      "status": 200,
+      "contentType": "image/svg+xml",
+      "isValid": true,
+      "error": null
+    },
+    {
+      "name": "Quality Gate",
+      "url": "https://img.shields.io/badge/Quality-Monitored-green.svg",
+      "type": "shields",
+      "status": 200,
+      "contentType": "image/svg+xml;charset=utf-8",
+      "isValid": true,
+      "error": null
+    },
+    {
+      "name": "Dependencies",
+      "url": "https://img.shields.io/badge/Dependencies-Monitored-blue.svg",
+      "type": "shields",
+      "status": 200,
+      "contentType": "image/svg+xml;charset=utf-8",
+      "isValid": true,
+      "error": null
+    },
+    {
+      "name": "License",
+      "url": "https://img.shields.io/badge/License-MIT-yellow.svg",
+      "type": "shields",
+      "status": 200,
+      "contentType": "image/svg+xml;charset=utf-8",
+      "isValid": true,
+      "error": null
+    },
+    {
+      "name": "Tauri Version",
+      "url": "https://img.shields.io/badge/Tauri-2.6.0-blue.svg",
+      "type": "shields",
+      "status": 200,
+      "contentType": "image/svg+xml;charset=utf-8",
+      "isValid": true,
+      "error": null
+    },
+    {
+      "name": "Rust Version",
+      "url": "https://img.shields.io/badge/Rust-1.70+-orange.svg",
+      "type": "shields",
+      "status": 200,
+      "contentType": "image/svg+xml;charset=utf-8",
+      "isValid": true,
+      "error": null
+    },
+    {
+      "name": "React Version",
+      "url": "https://img.shields.io/badge/React-18.3+-blue.svg",
+      "type": "shields",
+      "status": 200,
+      "contentType": "image/svg+xml;charset=utf-8",
+      "isValid": true,
+      "error": null
+    }
+  ]
+}

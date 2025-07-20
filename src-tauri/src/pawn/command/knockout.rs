@@ -214,7 +214,10 @@ pub async fn validate_knockout_bracket(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::pawn::domain::{
+        dto::CreateKnockoutBracket,
+        model::{BracketPosition, KnockoutBracket},
+    };
 
     #[tokio::test]
     async fn knockout_service_calculate_rounds_contract() {

@@ -218,22 +218,25 @@ mod tests {
         let team_service = Arc::new(TeamService::new(Arc::clone(&db)));
         let settings_service = Arc::new(SettingsService::new(Arc::new(pool)));
 
-        (State {
-            app_data_dir: temp_dir.path().to_path_buf(),
-            db,
-            tournament_service,
-            tiebreak_calculator,
-            realtime_standings_service,
-            round_service,
-            player_service,
-            time_control_service,
-            swiss_analysis_service,
-            round_robin_analysis_service,
-            export_service,
-            norm_calculation_service,
-            team_service,
-            settings_service,
-        }, temp_dir)
+        (
+            State {
+                app_data_dir: temp_dir.path().to_path_buf(),
+                db,
+                tournament_service,
+                tiebreak_calculator,
+                realtime_standings_service,
+                round_service,
+                player_service,
+                time_control_service,
+                swiss_analysis_service,
+                round_robin_analysis_service,
+                export_service,
+                norm_calculation_service,
+                team_service,
+                settings_service,
+            },
+            temp_dir,
+        )
     }
 
     async fn create_test_tournament(state: &State<SqliteDb>) -> Tournament {

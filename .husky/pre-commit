@@ -3,7 +3,23 @@
 
 echo "🚀 Running pre-commit quality gates..."
 
-# Run standard pre-commit checks
+# 🎨 Code Formatting
+echo "🎨 Formatting code..."
+
+# Check if any files need formatting
+if ! npm run format:all:check; then
+    echo "  ⚠️  Code needs formatting, applying fixes..."
+    npm run format:all
+    echo "  ✅ Code formatted successfully"
+    
+    # Re-add formatted files to staging area
+    git add .
+else
+    echo "  ✅ All code is properly formatted"
+fi
+
+# Run standard pre-commit checks (linting, type checking)
+echo "🔍 Running linting and type checks..."
 npm run pre-commit
 
 # TDD workflow enforcement

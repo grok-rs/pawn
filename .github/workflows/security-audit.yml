@@ -94,7 +94,7 @@ jobs:
     
     steps:
       - name: Auto-merge Dependabot PRs
-        uses: pascalgn/merge-action@v0.15.6
+        uses: pascalgn/automerge-action@v0.15.6
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           merge_method: squash
