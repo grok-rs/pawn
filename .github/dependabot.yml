@@ -1,0 +1,168 @@
+# Dependabot configuration for Pawn - Professional Chess Tournament Management System
+# Manages dependencies for React/TypeScript frontend, Rust/Tauri backend, and GitHub Actions
+
+version: 2
+updates:
+  # Frontend Dependencies (Node.js/npm ecosystem)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    labels:
+      - "dependencies:frontend"
+      - "automerge"
+    reviewers:
+      - "grok-rs"
+    assignees:
+      - "grok-rs"
+    open-pull-requests-limit: 5
+    # Version strategy for auto-merging
+    versioning-strategy: increase
+    # Group minor and patch updates to reduce PR noise
+    groups:
+      react-ecosystem:
+        patterns:
+          - "react*"
+          - "@types/react*"
+        update-types:
+          - "minor"
+          - "patch"
+      mui-ecosystem:
+        patterns:
+          - "@mui/*"
+          - "@emotion/*"
+        update-types:
+          - "minor"
+          - "patch"
+      testing-tools:
+        patterns:
+          - "*testing*"
+          - "vitest*"
+          - "playwright*"
+          - "@playwright/*"
+          - "jsdom"
+          - "msw"
+        update-types:
+          - "minor"
+          - "patch"
+      build-tools:
+        patterns:
+          - "vite*"
+          - "@vitejs/*"
+          - "typescript"
+          - "eslint*"
+          - "@typescript-eslint/*"
+          - "prettier"
+        update-types:
+          - "minor"
+          - "patch"
+    # Custom commit message format
+    commit-message:
+      prefix: "deps(frontend)"
+      include: "scope"
+
+  # Backend Dependencies (Rust/Cargo ecosystem)
+  - package-ecosystem: "cargo"
+    directory: "/src-tauri"
+    schedule:
+      interval: "daily"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    labels:
+      - "dependencies:backend"
+      - "automerge"
+    reviewers:
+      - "grok-rs"
+    assignees:
+      - "grok-rs"
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    groups:
+      tauri-ecosystem:
+        patterns:
+          - "tauri*"
+          - "specta*"
+          - "ts-rs"
+        update-types:
+          - "minor"
+          - "patch"
+      database-tools:
+        patterns:
+          - "sqlx*"
+          - "uuid"
+        update-types:
+          - "minor"
+          - "patch"
+      serialization:
+        patterns:
+          - "serde*"
+          - "chrono*"
+        update-types:
+          - "minor"
+          - "patch"
+      async-runtime:
+        patterns:
+          - "tokio*"
+          - "async-trait"
+          - "futures*"
+        update-types:
+          - "minor"
+          - "patch"
+      testing-tools:
+        patterns:
+          - "*test*"
+          - "mockall"
+          - "proptest"
+          - "criterion"
+          - "rstest"
+        update-types:
+          - "minor"
+          - "patch"
+    # Custom commit message format
+    commit-message:
+      prefix: "deps(backend)"
+      include: "scope"
+
+  # GitHub Actions Dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    labels:
+      - "dependencies:actions"
+      - "automerge"
+    reviewers:
+      - "grok-rs"
+    assignees:
+      - "grok-rs"
+    open-pull-requests-limit: 3
+    groups:
+      core-actions:
+        patterns:
+          - "actions/*"
+        update-types:
+          - "minor"
+          - "patch"
+      rust-actions:
+        patterns:
+          - "dtolnay/*"
+          - "*rust*"
+        update-types:
+          - "minor"
+          - "patch"
+      node-actions:
+        patterns:
+          - "*node*"
+          - "*npm*"
+        update-types:
+          - "minor"
+          - "patch"
+    # Custom commit message format
+    commit-message:
+      prefix: "deps(ci)"
+      include: "scope"

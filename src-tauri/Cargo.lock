@@ -3104,6 +3104,7 @@ dependencies = [
  "mockall",
  "once_cell",
  "printpdf",
+ "proc-macro-error",
  "proptest",
  "quickcheck",
  "rand 0.8.5",

@@ -139,7 +139,7 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
-        cache: 'npm'
+        cache: 'yarn'
 
     - name: Cache cargo registry
       uses: actions/cache@v4
@@ -158,7 +158,7 @@ jobs:
         sudo apt-get install -y libsqlite3-dev pkg-config libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
 
     - name: Install Node.js dependencies
-      run: npm ci
+      run: yarn install --frozen-lockfile
 
     - name: Build backend
       run: |
@@ -166,7 +166,7 @@ jobs:
         cargo build --release
 
     - name: Build frontend
-      run: npm run build
+      run: yarn build
 
     - name: Run full-stack integration tests
       run: |
@@ -180,7 +180,7 @@ jobs:
         
         # Run integration tests
         echo "🔄 Full-stack integration tests would run here"
-        # npm run test:integration
+        # yarn test:integration
         
         # Cleanup
         kill $BACKEND_PID || true

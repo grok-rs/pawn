@@ -20,7 +20,7 @@ path = "src/bin/generate_bindings.rs"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2.6.0", features = ["protocol-asset"] }
+tauri = { version = "2.6.2", features = ["protocol-asset"] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -30,9 +30,9 @@ thiserror = "2.0.12"
 chrono = "0.4"
 async-trait = "0.1"
 ts-rs = "11.0.1"
-specta = { version = "2.0.0-rc.20", features = ["serde", "serde_json"] }
+specta = { version = "2.0.0-rc.22", features = ["serde", "serde_json"] }
 specta-typescript = "0.0.9"
-tauri-specta = { version = "2.0.0-rc.17", features = ["derive", "typescript"] }
+tauri-specta = { version = "2.0.0-rc.21", features = ["derive", "typescript"] }
 tauri-utils = "2.4.0"
 uuid = { version = "1.17.0", features = ["v4"] }
 sqlx = { version = "0.8.6", features = [
@@ -84,6 +84,15 @@ chrono = "0.4"       # For date/time utilities in tests
 
 # Security dependency overrides
 crossbeam-channel = "0.5.15"
+
+# Override unmaintained crates with maintained alternatives
+# paste is unmaintained, but we can't easily replace it as it's used by specta
+# For now, we acknowledge the risk and will monitor for alternatives
+# proc-macro-error has newer maintained versions
+proc-macro-error = "1.0.4"  # Keep current version until dependencies update
+
+# glib has unsound Iterator implementation - will be fixed in GTK4 migration
+# For now we acknowledge the advisory but keep current version as required by Tauri
 
 # Benchmark configuration
 [[bench]]

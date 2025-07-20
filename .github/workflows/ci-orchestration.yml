@@ -28,7 +28,7 @@ jobs:
           frontend:
             - 'src/**'
             - 'package.json'
-            - 'package-lock.json'
+            - 'yarn.lock'
             - 'tsconfig.json'
             - 'vite.config.ts'
 

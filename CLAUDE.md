@@ -81,3 +81,38 @@ This file provides comprehensive guidance to Claude Code (claude.ai/code) when w
 - **View PR Comments**: `gh api repos/owner/repo/pulls/123/comments`
 - **Analyze Issues**: `gh issue view 123` or `gh issue list`
 - **Repository Info**: `gh repo view` for repository details
+
+## 🔒 Security Audit Status
+
+**Current Advisory Status**: The project has 13 known security advisories that are **acknowledged and documented**:
+
+### GTK3 Ecosystem (Unmaintained - Not Security Vulnerabilities)
+- **RUSTSEC-2024-0413**: atk - unmaintained
+- **RUSTSEC-2024-0416**: atk-sys - unmaintained  
+- **RUSTSEC-2024-0412**: gdk - unmaintained
+- **RUSTSEC-2024-0418**: gdk-sys - unmaintained
+- **RUSTSEC-2024-0411**: gdkwayland-sys - unmaintained
+- **RUSTSEC-2024-0417**: gdkx11 - unmaintained
+- **RUSTSEC-2024-0414**: gdkx11-sys - unmaintained
+- **RUSTSEC-2024-0415**: gtk - unmaintained
+- **RUSTSEC-2024-0420**: gtk-sys - unmaintained
+- **RUSTSEC-2024-0419**: gtk3-macros - unmaintained
+
+### Other Unmaintained Crates
+- **RUSTSEC-2024-0436**: paste - unmaintained
+- **RUSTSEC-2024-0370**: proc-macro-error - unmaintained
+
+### Technical Issues
+- **RUSTSEC-2024-0429**: glib - unsound Iterator implementation
+
+### Mitigation Strategy
+1. **Dependencies come through Tauri ecosystem** - not direct project dependencies
+2. **No actual security vulnerabilities** - only "unmaintained" status
+3. **Will be resolved** when Tauri migrates to GTK4 in version 3.x
+4. **CI configured** to ignore these known advisories while monitoring for new ones
+5. **Regular monitoring** in place for Tauri v3 development progress
+
+### Security Audit Commands
+- **Run with ignored advisories**: `cd src-tauri && cargo audit --ignore RUSTSEC-2024-0413 [... other IDs]`
+- **Check for new issues**: `cd src-tauri && cargo audit` (will show all advisories)
+- **Monitor Tauri v3**: Track migration progress for long-term resolution

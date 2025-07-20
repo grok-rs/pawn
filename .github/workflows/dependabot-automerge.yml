@@ -1,0 +1,243 @@
+name: Dependabot Auto-Merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  # Trigger when other workflows complete
+  workflow_run:
+    workflows: 
+      - "Backend Quality Gates (Parallelized)"
+      - "Frontend Quality Gates (Parallelized)" 
+      - "Integration Tests (Comprehensive)"
+      - "Security Audit"
+    types: [completed]
+
+# Ensure only one auto-merge process runs at a time
+concurrency:
+  group: dependabot-automerge-${{ github.event.pull_request.number || github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+
+jobs:
+  # Verify this is a Dependabot PR and determine update type
+  check-dependabot:
+    name: Verify Dependabot PR
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    outputs:
+      is-dependabot: ${{ steps.verify.outputs.is-dependabot }}
+      update-type: ${{ steps.analyze.outputs.update-type }}
+      ecosystem: ${{ steps.analyze.outputs.ecosystem }}
+      auto-merge-eligible: ${{ steps.analyze.outputs.auto-merge-eligible }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Verify Dependabot PR
+        id: verify
+        run: |
+          echo "Checking if PR is from Dependabot..."
+          if [[ "${{ github.actor }}" == "dependabot[bot]" ]]; then
+            echo "✅ Verified: This is a Dependabot PR"
+            echo "is-dependabot=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Not a Dependabot PR"
+            echo "is-dependabot=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Analyze dependency update
+        id: analyze
+        if: steps.verify.outputs.is-dependabot == 'true'
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          echo "PR Title: $PR_TITLE"
+          
+          # Determine ecosystem
+          if [[ "$PR_TITLE" =~ deps\(frontend\) ]]; then
+            ECOSYSTEM="frontend"
+          elif [[ "$PR_TITLE" =~ deps\(backend\) ]]; then
+            ECOSYSTEM="backend" 
+          elif [[ "$PR_TITLE" =~ deps\(ci\) ]]; then
+            ECOSYSTEM="actions"
+          else
+            ECOSYSTEM="unknown"
+          fi
+          
+          echo "ecosystem=$ECOSYSTEM" >> $GITHUB_OUTPUT
+          
+          # Determine update type based on semantic versioning patterns
+          if [[ "$PR_TITLE" =~ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            # Extract version numbers
+            OLD_VERSION=$(echo "$PR_TITLE" | grep -oP '(?<=from )[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            NEW_VERSION=$(echo "$PR_TITLE" | grep -oP '(?<=to )[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            
+            echo "Old version: $OLD_VERSION"
+            echo "New version: $NEW_VERSION"
+            
+            if [[ -n "$OLD_VERSION" && -n "$NEW_VERSION" ]]; then
+              OLD_MAJOR=$(echo "$OLD_VERSION" | cut -d. -f1)
+              OLD_MINOR=$(echo "$OLD_VERSION" | cut -d. -f2)
+              NEW_MAJOR=$(echo "$NEW_VERSION" | cut -d. -f1)
+              NEW_MINOR=$(echo "$NEW_VERSION" | cut -d. -f2)
+              
+              if [[ "$NEW_MAJOR" -gt "$OLD_MAJOR" ]]; then
+                UPDATE_TYPE="major"
+              elif [[ "$NEW_MINOR" -gt "$OLD_MINOR" ]]; then
+                UPDATE_TYPE="minor"
+              else
+                UPDATE_TYPE="patch"
+              fi
+            else
+              UPDATE_TYPE="unknown"
+            fi
+          else
+            UPDATE_TYPE="unknown"
+          fi
+          
+          echo "update-type=$UPDATE_TYPE" >> $GITHUB_OUTPUT
+          
+          # Determine if eligible for auto-merge
+          AUTO_MERGE_ELIGIBLE="false"
+          if [[ "$UPDATE_TYPE" == "patch" || "$UPDATE_TYPE" == "minor" ]]; then
+            # Check if it's not a pre-release
+            if [[ ! "$PR_TITLE" =~ (alpha|beta|rc|pre) ]]; then
+              AUTO_MERGE_ELIGIBLE="true"
+            fi
+          fi
+          
+          echo "auto-merge-eligible=$AUTO_MERGE_ELIGIBLE" >> $GITHUB_OUTPUT
+          
+          echo "📊 Update Analysis:"
+          echo "- Ecosystem: $ECOSYSTEM"
+          echo "- Update Type: $UPDATE_TYPE" 
+          echo "- Auto-merge Eligible: $AUTO_MERGE_ELIGIBLE"
+
+  # Wait for all required CI workflows to complete successfully
+  wait-for-ci:
+    name: Wait for CI Completion
+    runs-on: ubuntu-latest
+    needs: check-dependabot
+    if: needs.check-dependabot.outputs.is-dependabot == 'true' && needs.check-dependabot.outputs.auto-merge-eligible == 'true'
+    steps:
+      - name: Wait for required workflows
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          check-name: |
+            Quality Summary
+            Frontend Summary
+            Integration Summary
+            Security Audit Summary
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30
+          allowed-conclusions: success
+
+      - name: Verify all workflows passed
+        run: |
+          echo "✅ All required CI workflows have completed successfully"
+          echo "Ready to proceed with auto-merge"
+
+  # Apply delay for minor updates (allows time for manual intervention)
+  apply-delay:
+    name: Apply Merge Delay
+    runs-on: ubuntu-latest
+    needs: [check-dependabot, wait-for-ci]
+    if: needs.check-dependabot.outputs.update-type == 'minor'
+    steps:
+      - name: Apply 2-hour delay for minor updates
+        run: |
+          echo "⏳ Applying 2-hour delay for minor update..."
+          echo "This allows time for manual intervention if needed"
+          sleep 7200  # 2 hours in seconds
+
+  # Perform the auto-merge
+  auto-merge:
+    name: Auto-Merge Dependabot PR
+    runs-on: ubuntu-latest
+    needs: [check-dependabot, wait-for-ci, apply-delay]
+    # Run if delay completed (minor) or was skipped (patch), but always need CI to pass
+    if: |
+      always() && 
+      needs.check-dependabot.outputs.auto-merge-eligible == 'true' && 
+      needs.wait-for-ci.result == 'success' &&
+      (needs.apply-delay.result == 'success' || needs.apply-delay.result == 'skipped')
+    steps:
+      - name: Auto-merge PR
+        uses: pascalgn/automerge-action@v0.16.4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          merge_method: squash
+          merge_commit_message: "Auto-merge Dependabot PR: {pull_request_title} 🤖"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Auto-merge success notification
+        if: success()
+        run: |
+          echo "🎉 Successfully auto-merged Dependabot PR!"
+          echo "✅ Update Type: ${{ needs.check-dependabot.outputs.update-type }}"
+          echo "✅ Ecosystem: ${{ needs.check-dependabot.outputs.ecosystem }}"
+          echo "✅ All CI workflows passed"
+          echo "✅ PR has been squash-merged"
+
+  # Handle auto-merge failures gracefully
+  auto-merge-failed:
+    name: Auto-Merge Failed
+    runs-on: ubuntu-latest
+    needs: [check-dependabot, wait-for-ci, apply-delay, auto-merge]
+    if: |
+      always() && 
+      needs.check-dependabot.outputs.is-dependabot == 'true' && 
+      (needs.wait-for-ci.result == 'failure' || needs.auto-merge.result == 'failure')
+    steps:
+      - name: Report auto-merge failure
+        run: |
+          echo "⚠️ Auto-merge failed or CI checks did not pass"
+          echo "📋 Status Summary:"
+          echo "- Dependabot PR: ${{ needs.check-dependabot.outputs.is-dependabot }}"
+          echo "- Update Type: ${{ needs.check-dependabot.outputs.update-type }}"
+          echo "- Auto-merge Eligible: ${{ needs.check-dependabot.outputs.auto-merge-eligible }}"
+          echo "- CI Status: ${{ needs.wait-for-ci.result }}"
+          echo "- Auto-merge Status: ${{ needs.auto-merge.result }}"
+          echo ""
+          echo "🔍 Possible reasons for failure:"
+          echo "- One or more CI workflows failed"
+          echo "- Merge conflicts detected"
+          echo "- Repository protection rules preventing merge"
+          echo "- Network or API issues"
+          echo ""
+          echo "👥 Manual review required - please check the PR manually"
+
+  # Summary job for monitoring and reporting
+  summary:
+    name: Dependabot Auto-Merge Summary
+    runs-on: ubuntu-latest
+    needs: [check-dependabot, wait-for-ci, apply-delay, auto-merge, auto-merge-failed]
+    if: always() && needs.check-dependabot.outputs.is-dependabot == 'true'
+    steps:
+      - name: Generate summary report
+        run: |
+          echo "## 🤖 Dependabot Auto-Merge Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Attribute | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Ecosystem | ${{ needs.check-dependabot.outputs.ecosystem }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Update Type | ${{ needs.check-dependabot.outputs.update-type }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Auto-merge Eligible | ${{ needs.check-dependabot.outputs.auto-merge-eligible }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CI Status | ${{ needs.wait-for-ci.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Delay Applied | ${{ needs.apply-delay.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Merge Status | ${{ needs.auto-merge.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.auto-merge.result }}" == "success" ]]; then
+            echo "✅ **Result**: Successfully auto-merged" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.check-dependabot.outputs.auto-merge-eligible }}" == "false" ]]; then
+            echo "⏭️ **Result**: Manual review required (major update or pre-release)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Result**: Auto-merge failed - manual intervention needed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 **Processed at**: $(date -u)" >> $GITHUB_STEP_SUMMARY

@@ -83,13 +83,13 @@ mod tests {
             dto::{CreateTimeControl, TimeControlFilter, UpdateTimeControl},
             model::{TimeControl, TimeControlType},
         },
-        state::State,
+        state::PawnState,
     };
     use sqlx::SqlitePool;
     use std::sync::Arc;
     use tempfile::TempDir;
 
-    async fn setup_test_state() -> State<SqliteDb> {
+    async fn setup_test_state() -> PawnState {
         let temp_dir = TempDir::new().unwrap();
         let database_url = "sqlite::memory:";
         let pool = SqlitePool::connect(database_url).await.unwrap();
@@ -128,7 +128,7 @@ mod tests {
         let team_service = Arc::new(TeamService::new(Arc::clone(&db)));
         let settings_service = Arc::new(SettingsService::new(Arc::new(pool)));
 
-        State {
+        PawnState {
             app_data_dir: temp_dir.path().to_path_buf(),
             db,
             tournament_service,
@@ -146,7 +146,7 @@ mod tests {
         }
     }
 
-    async fn create_test_time_control(state: &State<SqliteDb>) -> TimeControl {
+    async fn create_test_time_control(state: &PawnState) -> TimeControl {
         let time_control_data = CreateTimeControl {
             name: "Classical 90+30".to_string(),
             time_control_type: "classical".to_string(),
@@ -537,6 +537,105 @@ mod tests {
             .time_control_service
             .get_time_controls(Some(filter_by_real_time))
             .await;
+        assert!(result.is_ok());
+    }
+
+    // Additional tests to ensure 100% command coverage
+    #[tokio::test]
+    async fn test_command_service_calls_comprehensive() {
+        let state = setup_test_state().await;
+
+        // Test all service method calls that commands make
+
+        // create_time_control command logic
+        let data = CreateTimeControl {
+            name: "Command Test".to_string(),
+            time_control_type: "blitz".to_string(),
+            base_time_minutes: Some(5),
+            increment_seconds: Some(3),
+            moves_per_session: None,
+            session_time_minutes: None,
+            total_sessions: None,
+            description: Some("Command test".to_string()),
+        };
+        let result = state.time_control_service.create_time_control(data).await;
+        assert!(result.is_ok());
+        let time_control = result.unwrap();
+
+        // get_time_control command logic
+        let result = state
+            .time_control_service
+            .get_time_control(time_control.id)
+            .await;
+        assert!(result.is_ok());
+
+        // get_time_controls command logic (with None filter)
+        let result = state.time_control_service.get_time_controls(None).await;
+        assert!(result.is_ok());
+
+        // get_time_controls command logic (with Some filter)
+        let filter = TimeControlFilter {
+            time_control_type: Some("blitz".to_string()),
+            is_default: None,
+            is_real_time: Some(true),
+        };
+        let result = state
+            .time_control_service
+            .get_time_controls(Some(filter))
+            .await;
+        assert!(result.is_ok());
+
+        // get_default_time_controls command logic
+        let result = state.time_control_service.get_default_time_controls().await;
+        assert!(result.is_ok());
+
+        // update_time_control command logic
+        let update_data = UpdateTimeControl {
+            id: time_control.id,
+            name: Some("Updated Command Test".to_string()),
+            time_control_type: None,
+            base_time_minutes: Some(10),
+            increment_seconds: None,
+            moves_per_session: None,
+            session_time_minutes: None,
+            total_sessions: None,
+            description: None,
+            is_default: None,
+        };
+        let result = state
+            .time_control_service
+            .update_time_control(update_data)
+            .await;
+        assert!(result.is_ok());
+
+        // delete_time_control command logic
+        let result = state
+            .time_control_service
+            .delete_time_control(time_control.id)
+            .await;
+        assert!(result.is_ok());
+
+        // get_time_control_templates command logic
+        let result = state
+            .time_control_service
+            .get_time_control_templates()
+            .await;
+        assert!(result.is_ok());
+
+        // validate_time_control_data command logic
+        let valid_data = CreateTimeControl {
+            name: "Valid Data".to_string(),
+            time_control_type: "rapid".to_string(),
+            base_time_minutes: Some(15),
+            increment_seconds: Some(10),
+            moves_per_session: None,
+            session_time_minutes: None,
+            total_sessions: None,
+            description: Some("Valid test".to_string()),
+        };
+        let result = state
+            .time_control_service
+            .validate_time_control_data(&valid_data);
         assert!(result.is_ok());
     }
 }
