@@ -1,4 +1,4 @@
-name: Backend Quality Gates
+name: Backend Quality Gates (Parallelized)
 
 on:
   push:
@@ -16,10 +16,10 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  test:
-    name: Backend Tests
+  # Quick format and lint checks (runs first, fastest feedback)
+  format-and-lint:
+    name: Format & Lint
     runs-on: ubuntu-latest
-    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -36,7 +36,7 @@ jobs:
           ~/.cargo/registry
           ~/.cargo/git
           src-tauri/target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-cargo-fmt-clippy-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-cargo-
 
@@ -60,10 +60,35 @@ jobs:
         cd src-tauri
         cargo check --all-targets --all-features
 
-    - name: Install cargo tools
+  # Unit tests with coverage
+  unit-tests:
+    name: Unit Tests & Coverage
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          src-tauri/target
+        key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Install system dependencies
       run: |
-        cargo install cargo-tarpaulin
-        cargo install cargo-audit
+        sudo apt-get update
+        sudo apt-get install -y libsqlite3-dev pkg-config libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
+    - name: Install cargo-tarpaulin
+      run: cargo install cargo-tarpaulin
 
     - name: Run tests with coverage
       run: |
@@ -81,7 +106,7 @@ jobs:
     - name: Check coverage threshold
       run: |
         cd src-tauri
-        COVERAGE=$(cargo tarpaulin --print-summary --ignore-panics | grep -oP 'Coverage: \K[0-9.]+' | head -1 || echo "0")
+        COVERAGE=$(cargo tarpaulin --ignore-panics 2>&1 | grep -oP 'Coverage: \K[0-9.]+' | head -1 || echo "0")
         echo "Coverage: $COVERAGE%"
         if (( $(echo "$COVERAGE < 50" | bc -l) )); then
           echo "❌ Coverage $COVERAGE% is below 50% threshold"
@@ -90,17 +115,38 @@ jobs:
           echo "✅ Coverage $COVERAGE% meets relaxed threshold for demo"
         fi
 
+  # Integration tests and database operations
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          src-tauri/target
+        key: ${{ runner.os }}-cargo-integration-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libsqlite3-dev pkg-config libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
     - name: Run integration tests
       run: |
         cd src-tauri
         cargo test --test integration --release
         echo "🔄 Integration tests completed"
-
-    - name: Run performance benchmarks
-      run: |
-        cd src-tauri
-        cargo bench --bench pairing_performance --message-format=json > benchmark_results.json
-        echo "⚡ Performance benchmarks completed"
 
     - name: Validate database migrations
       run: |
@@ -108,17 +154,98 @@ jobs:
         cargo test migration_ --release
         echo "🗄️ Database migration validation completed"
 
+    - name: Test command contracts
+      run: |
+        cd src-tauri
+        cargo test command_ --lib --release
+        echo "📡 Command contract tests completed"
+
+  # Performance and memory tests
+  performance-tests:
+    name: Performance & Memory Tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          src-tauri/target
+        key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libsqlite3-dev pkg-config libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
+    - name: Run performance benchmarks
+      run: |
+        cd src-tauri
+        cargo bench --bench pairing_performance --message-format=json > benchmark_results.json
+        echo "⚡ Performance benchmarks completed"
+
     - name: Run memory leak detection
       run: |
         cd src-tauri
         cargo test memory_leak_ --release
         echo "🧠 Memory leak detection completed"
 
-    - name: Test command contracts
+    - name: Performance regression check
       run: |
         cd src-tauri
-        cargo test command_ --lib --release
-        echo "📡 Command contract tests completed"
+        echo "⚡ Checking for performance regressions..."
+        
+        # Extract benchmark results
+        if [ -f benchmark_results.json ]; then
+          # Check that pairing algorithms complete within reasonable time
+          echo "Pairing performance check would run here"
+          # In a real implementation, you'd parse the JSON and check thresholds
+        fi
+
+  # Security and quality checks
+  security-and-quality:
+    name: Security & Quality
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          src-tauri/target
+        key: ${{ runner.os }}-cargo-audit-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libsqlite3-dev pkg-config libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
+    - name: Install cargo-audit
+      run: cargo install cargo-audit
+
+    - name: Security audit
+      run: |
+        cd src-tauri
+        cargo audit
+        echo "🔒 Security audit completed"
 
     - name: Validate TDD compliance
       run: |
@@ -143,20 +270,31 @@ jobs:
           echo "✅ TDD compliance check passed: $TEST_FILES/$SERVICE_FILES service files have tests"
         fi
 
-    - name: Performance regression check
+  # Final summary job that depends on all others
+  summary:
+    name: Quality Summary
+    runs-on: ubuntu-latest
+    needs: [format-and-lint, unit-tests, integration-tests, performance-tests, security-and-quality]
+    if: always()
+    steps:
+    - name: Check all jobs status
       run: |
-        cd src-tauri
-        echo "⚡ Checking for performance regressions..."
+        echo "🎯 Backend Quality Gates Summary"
+        echo "================================"
+        echo "Format & Lint: ${{ needs.format-and-lint.result }}"
+        echo "Unit Tests: ${{ needs.unit-tests.result }}"
+        echo "Integration Tests: ${{ needs.integration-tests.result }}"
+        echo "Performance Tests: ${{ needs.performance-tests.result }}"
+        echo "Security & Quality: ${{ needs.security-and-quality.result }}"
         
-        # Extract benchmark results
-        if [ -f benchmark_results.json ]; then
-          # Check that pairing algorithms complete within reasonable time
-          echo "Pairing performance check would run here"
-          # In a real implementation, you'd parse the JSON and check thresholds
+        if [[ "${{ needs.format-and-lint.result }}" == "success" && 
+              "${{ needs.unit-tests.result }}" == "success" && 
+              "${{ needs.integration-tests.result }}" == "success" && 
+              "${{ needs.performance-tests.result }}" == "success" && 
+              "${{ needs.security-and-quality.result }}" == "success" ]]; then
+          echo "✅ All quality gates passed!"
+          exit 0
+        else
+          echo "❌ Some quality gates failed!"
+          exit 1
         fi
-
-    - name: Security audit
-      run: |
-        cd src-tauri
-        cargo audit
-        echo "🔒 Security audit completed"

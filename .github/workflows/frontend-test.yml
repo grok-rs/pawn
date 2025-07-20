@@ -1,4 +1,4 @@
-name: Frontend Quality Gates
+name: Frontend Quality Gates (Parallelized)
 
 on:
   push:
@@ -21,14 +21,13 @@ on:
       - '.github/workflows/frontend-test.yml'
 
 jobs:
-  test:
-    name: Frontend Tests
+  # Quick format and lint checks (fastest feedback)
+  format-and-lint:
+    name: Format & Lint
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         node-version: [18.x, 20.x]
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -46,10 +45,30 @@ jobs:
       run: npm run format:check
 
     - name: Run ESLint
-      run: npm run lint || true
+      run: npm run lint
 
     - name: Run TypeScript type checking
       run: npm run type-check
+
+  # Unit tests with coverage
+  unit-tests:
+    name: Unit Tests & Coverage
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
 
     - name: Run unit tests with coverage
       run: npm run test:coverage
@@ -63,28 +82,66 @@ jobs:
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4
+      if: matrix.node-version == '20.x'
       with:
         file: ./coverage/lcov.info
         flags: frontend
         name: frontend-coverage
         fail_ci_if_error: false
 
+  # Integration tests
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
     - name: Run integration tests
       run: npm run test:integration
       env:
         CI: true
 
+  # Build and bundle analysis
+  build-and-bundle:
+    name: Build & Bundle Analysis
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
 
     - name: Build for production
       run: npm run build
 
-    - name: Run E2E tests
+    - name: Check bundle size
+      if: matrix.node-version == '20.x'
       run: |
-        # Install Playwright browsers
-        npx playwright install --with-deps
-        # Run E2E tests when available
-        # npm run test:e2e
-        echo "🎭 E2E tests would run here"
+        echo "📦 Bundle size analysis would run here"
+        # npx bundlesize
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -94,8 +151,63 @@ jobs:
         path: dist/
         retention-days: 7
 
-    - name: Check bundle size
-      if: matrix.node-version == '20.x'
+  # E2E tests (separate job due to different dependencies)
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [format-and-lint, build-and-bundle]
+    strategy:
+      matrix:
+        node-version: [20.x]  # Only run on latest Node for E2E
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps
+
+    - name: Build application
+      run: npm run build
+
+    - name: Run E2E tests
       run: |
-        echo "📦 Bundle size analysis would run here"
-        # npx bundlesize
+        # npm run test:e2e
+        echo "🎭 E2E tests would run here"
+
+  # Summary job
+  frontend-summary:
+    name: Frontend Summary
+    runs-on: ubuntu-latest
+    needs: [format-and-lint, unit-tests, integration-tests, build-and-bundle, e2e-tests]
+    if: always()
+    steps:
+    - name: Check all jobs status
+      run: |
+        echo "🎯 Frontend Quality Gates Summary"
+        echo "================================"
+        echo "Format & Lint: ${{ needs.format-and-lint.result }}"
+        echo "Unit Tests: ${{ needs.unit-tests.result }}"
+        echo "Integration Tests: ${{ needs.integration-tests.result }}"
+        echo "Build & Bundle: ${{ needs.build-and-bundle.result }}"
+        echo "E2E Tests: ${{ needs.e2e-tests.result }}"
+        
+        if [[ "${{ needs.format-and-lint.result }}" == "success" && 
+              "${{ needs.unit-tests.result }}" == "success" && 
+              "${{ needs.integration-tests.result }}" == "success" && 
+              "${{ needs.build-and-bundle.result }}" == "success" && 
+              "${{ needs.e2e-tests.result }}" == "success" ]]; then
+          echo "✅ All frontend quality gates passed!"
+          exit 0
+        else
+          echo "❌ Some frontend quality gates failed!"
+          exit 1
+        fi

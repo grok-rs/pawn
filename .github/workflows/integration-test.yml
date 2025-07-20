@@ -1,4 +1,4 @@
-name: Integration Tests
+name: Integration Tests (Parallelized)
 
 on:
   push:
@@ -10,10 +10,124 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  integration:
-    name: Integration Tests
+  # Database integration tests
+  database-integration:
+    name: Database Integration
     runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          src-tauri/target
+        key: ${{ runner.os }}-cargo-db-integration-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libsqlite3-dev pkg-config libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
+    - name: Run database integration tests
+      run: |
+        cd src-tauri
+        cargo test --test integration
+        echo "🗄️ Database integration tests completed"
+
+    - name: Test database migrations
+      run: |
+        cd src-tauri
+        cargo test migration_ --release
+        echo "🔄 Database migration tests completed"
+
+  # Tauri command tests
+  command-integration:
+    name: Tauri Command Integration
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          src-tauri/target
+        key: ${{ runner.os }}-cargo-command-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libsqlite3-dev pkg-config libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
+    - name: Test Tauri command contracts
+      run: |
+        cd src-tauri
+        # Test all 60+ Tauri commands
+        cargo test command_ --lib
+        echo "📡 Tauri command contract tests completed"
+
+  # Performance integration tests
+  performance-integration:
+    name: Performance Integration
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          src-tauri/target
+        key: ${{ runner.os }}-cargo-perf-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libsqlite3-dev pkg-config libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
+    - name: Performance test with large datasets
+      run: |
+        cd src-tauri
+        # Test pairing algorithms with 500+ players
+        cargo test --release perf_
+        echo "⚡ Performance tests with large datasets completed"
+
+    - name: Memory leak detection
+      run: |
+        cd src-tauri
+        # Run long-running tournament simulation
+        cargo test --release memory_leak_
+        echo "🧠 Memory leak detection completed"
+
+  # Full-stack integration tests
+  fullstack-integration:
+    name: Full-Stack Integration
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -34,9 +148,8 @@ jobs:
           ~/.cargo/registry
           ~/.cargo/git
           src-tauri/target
-        key: ${{ runner.os }}-cargo-integration-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-cargo-fullstack-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
-          ${{ runner.os }}-cargo-integration-
           ${{ runner.os }}-cargo-
 
     - name: Install system dependencies
@@ -50,73 +163,50 @@ jobs:
     - name: Build backend
       run: |
         cd src-tauri
-        cargo build
+        cargo build --release
 
-    - name: Run database integration tests
-      run: |
-        cd src-tauri
-        cargo test --test integration
-        echo "🗄️ Database integration tests completed"
+    - name: Build frontend
+      run: npm run build
 
     - name: Run full-stack integration tests
       run: |
-        # Build frontend
-        npm run build
-        
         # Start backend in test mode
         cd src-tauri
-        cargo run &
+        cargo run --release &
         BACKEND_PID=$!
         
         # Wait for backend to start
-        sleep 5
+        sleep 10
         
         # Run integration tests
         echo "🔄 Full-stack integration tests would run here"
         # npm run test:integration
         
         # Cleanup
-        kill $BACKEND_PID
+        kill $BACKEND_PID || true
 
-    - name: Test Tauri command contracts
-      run: |
-        cd src-tauri
-        # Test all 60+ Tauri commands
-        cargo test command_ --lib
-        echo "📡 Tauri command contract tests completed"
-
-    - name: Performance test with large datasets
-      run: |
-        cd src-tauri
-        # Test pairing algorithms with 500+ players
-        cargo test --release perf_
-        echo "⚡ Performance tests with large datasets completed"
-
-    - name: Test database migrations
-      run: |
-        cd src-tauri
-        # Test all migrations can be applied and rolled back
-        echo "🔄 Database migration tests would run here"
-        # cargo test migration_
-
-    - name: Memory leak detection
-      run: |
-        cd src-tauri
-        # Run long-running tournament simulation
-        echo "🧠 Memory leak detection would run here"
-        # cargo test --release memory_leak_
-
+  # Command coverage validation
   command-coverage:
-    name: Tauri Command Coverage
+    name: Command Coverage
     runs-on: ubuntu-latest
-    needs: integration
-
+    needs: [command-integration]  # Only run after command tests pass
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          src-tauri/target
+        key: ${{ runner.os }}-cargo-coverage-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
 
     - name: Install system dependencies
       run: |
@@ -132,14 +222,16 @@ jobs:
         # Ensure 100% coverage for all Tauri commands
         cargo tarpaulin --include-tests --out xml --output-dir ../coverage-commands \
           --include 'src/pawn/command/**' \
-          --exclude-files "src/main.rs"
+          --exclude-files "src/main.rs" \
+          --ignore-panics
 
     - name: Verify 100% command coverage
       run: |
         cd src-tauri
-        COMMAND_COVERAGE=$(cargo tarpaulin --include-tests --print-summary \
+        COMMAND_COVERAGE=$(cargo tarpaulin --include-tests \
           --include 'src/pawn/command/**' \
-          --exclude-files "src/main.rs" | grep -oP 'Coverage: \K[0-9.]+' | head -1)
+          --exclude-files "src/main.rs" \
+          --ignore-panics 2>&1 | grep -oP 'Coverage: \K[0-9.]+' | head -1 || echo "0")
         echo "Command Coverage: $COMMAND_COVERAGE%"
         if (( $(echo "$COMMAND_COVERAGE < 100" | bc -l) )); then
           echo "❌ Command coverage $COMMAND_COVERAGE% is below 100% requirement"
@@ -155,3 +247,32 @@ jobs:
         flags: commands
         name: command-coverage
         fail_ci_if_error: true
+
+  # Integration summary
+  integration-summary:
+    name: Integration Summary
+    runs-on: ubuntu-latest
+    needs: [database-integration, command-integration, performance-integration, fullstack-integration, command-coverage]
+    if: always()
+    steps:
+    - name: Check all jobs status
+      run: |
+        echo "🎯 Integration Test Summary"
+        echo "=========================="
+        echo "Database Integration: ${{ needs.database-integration.result }}"
+        echo "Command Integration: ${{ needs.command-integration.result }}"
+        echo "Performance Integration: ${{ needs.performance-integration.result }}"
+        echo "Full-Stack Integration: ${{ needs.fullstack-integration.result }}"
+        echo "Command Coverage: ${{ needs.command-coverage.result }}"
+        
+        if [[ "${{ needs.database-integration.result }}" == "success" && 
+              "${{ needs.command-integration.result }}" == "success" && 
+              "${{ needs.performance-integration.result }}" == "success" && 
+              "${{ needs.fullstack-integration.result }}" == "success" && 
+              "${{ needs.command-coverage.result }}" == "success" ]]; then
+          echo "✅ All integration tests passed!"
+          exit 0
+        else
+          echo "❌ Some integration tests failed!"
+          exit 1
+        fi
