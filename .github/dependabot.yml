@@ -19,7 +19,7 @@ updates:
       - "grok-rs"
     open-pull-requests-limit: 5
     # Version strategy for auto-merging
-    versioning-strategy: increase
+    versioning-strategy: auto
     # Group minor and patch updates to reduce PR noise
     groups:
       react-ecosystem:
@@ -78,7 +78,7 @@ updates:
     assignees:
       - "grok-rs"
     open-pull-requests-limit: 5
-    versioning-strategy: increase
+    versioning-strategy: auto
     groups:
       tauri-ecosystem:
         patterns:
