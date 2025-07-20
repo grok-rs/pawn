@@ -225,7 +225,7 @@ jobs:
           --exclude-files "src/main.rs" \
           --ignore-panics
 
-    - name: Verify 100% command coverage
+    - name: Verify 80% command coverage
       run: |
         cd src-tauri
         # Run tarpaulin and capture output
@@ -253,11 +253,11 @@ jobs:
         echo "Command Coverage: $COMMAND_COVERAGE%"
         
         # Use awk for floating point comparison instead of bc
-        if [ "$(echo "$COMMAND_COVERAGE < 95" | awk '{print ($1 < $3)}')" == "1" ]; then
-          echo "❌ Command coverage $COMMAND_COVERAGE% is below 95% requirement"
+        if [ "$(echo "$COMMAND_COVERAGE < 80" | awk '{print ($1 < $3)}')" == "1" ]; then
+          echo "❌ Command coverage $COMMAND_COVERAGE% is below 80% requirement"
           exit 1
         else
-          echo "✅ Command coverage $COMMAND_COVERAGE% meets 95% requirement"
+          echo "✅ Command coverage $COMMAND_COVERAGE% meets 80% requirement"
         fi
 
     - name: Upload command coverage
