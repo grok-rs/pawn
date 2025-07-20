@@ -13,10 +13,6 @@ updates:
     labels:
       - "dependencies:frontend"
       - "automerge"
-    reviewers:
-      - "grok-rs"
-    assignees:
-      - "grok-rs"
     open-pull-requests-limit: 5
     # Version strategy for auto-merging
     versioning-strategy: auto
@@ -73,10 +69,6 @@ updates:
     labels:
       - "dependencies:backend"
       - "automerge"
-    reviewers:
-      - "grok-rs"
-    assignees:
-      - "grok-rs"
     open-pull-requests-limit: 5
     versioning-strategy: auto
     groups:
@@ -136,10 +128,6 @@ updates:
     labels:
       - "dependencies:actions"
       - "automerge"
-    reviewers:
-      - "grok-rs"
-    assignees:
-      - "grok-rs"
     open-pull-requests-limit: 3
     groups:
       core-actions:

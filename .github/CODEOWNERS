@@ -1,0 +1,17 @@
+# Code owners for Pawn - Professional Chess Tournament Management System
+# These users will be automatically assigned as reviewers for pull requests
+
+# Global code ownership
+* @grok-rs
+
+# Frontend dependencies
+package.json @grok-rs
+package-lock.json @grok-rs
+yarn.lock @grok-rs
+
+# Backend dependencies  
+src-tauri/Cargo.toml @grok-rs
+src-tauri/Cargo.lock @grok-rs
+
+# GitHub Actions and CI
+.github/ @grok-rs
