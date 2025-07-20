@@ -4,14 +4,27 @@
 [![Backend Tests](https://github.com/grok-rs/pawn/workflows/Backend%20Quality%20Gates%20(Parallelized)/badge.svg)](https://github.com/grok-rs/pawn/actions/workflows/backend-test.yml)
 [![Frontend Tests](https://github.com/grok-rs/pawn/workflows/Frontend%20Quality%20Gates/badge.svg)](https://github.com/grok-rs/pawn/actions/workflows/frontend-test.yml)
 [![codecov](https://codecov.io/gh/grok-rs/pawn/branch/main/graph/badge.svg)](https://codecov.io/gh/grok-rs/pawn)
-[![Security audit](https://github.com/grok-rs/pawn/workflows/Security%20Audit/badge.svg)](https://github.com/grok-rs/pawn/actions)
-[![Maintainability](https://api.codeclimate.com/v1/badges/badge-id/maintainability)](https://codeclimate.com/github/grok-rs/pawn/maintainability)
+[![Security Audit](https://github.com/grok-rs/pawn/workflows/Security%20Audit/badge.svg)](https://github.com/grok-rs/pawn/actions/workflows/security-audit.yml)
+[![Quality Gate](https://img.shields.io/badge/Quality-Monitored-green.svg)](https://github.com/grok-rs/pawn/actions)
+[![Dependencies](https://img.shields.io/badge/Dependencies-Monitored-blue.svg)](https://github.com/grok-rs/pawn/actions/workflows/security-audit.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tauri](https://img.shields.io/badge/Tauri-2.6.0-blue.svg)](https://tauri.app/)
 [![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://www.rust-lang.org/)
 [![React](https://img.shields.io/badge/React-18.3+-blue.svg)](https://reactjs.org/)
 
 A comprehensive desktop application for professional chess tournament administration, built with Tauri, React, and Rust.
+
+## Quality & Security Monitoring
+
+Pawn maintains high code quality and security standards through automated monitoring:
+
+- **🔄 Continuous Integration**: Full pipeline testing with frontend, backend, and integration tests
+- **🔒 Security Audits**: Daily dependency vulnerability scanning for both Rust and npm packages  
+- **📊 Code Coverage**: Test coverage tracking with detailed reporting
+- **🛡️ Quality Gates**: Automated code formatting, linting, and type checking
+- **📈 Dependencies**: Monitored for updates and security patches with Dependabot integration
+
+All badges above link to live monitoring dashboards and test results.
 
 ## Overview
 
@@ -236,6 +249,28 @@ cd src-tauri && cargo build  # Backend only
 # Building
 yarn build              # Build frontend
 yarn tauri build        # Build complete desktop application
+
+# Code Quality
+npm run format:all      # Format both frontend and backend code
+npm run lint           # Run ESLint on frontend code
+npm run type-check     # Run TypeScript type checking
+npm run quality:check  # Full quality check (format, lint, type, test, perf)
+
+# Security & Dependencies
+npm run security:audit          # Run security audit on all dependencies
+npm run security:audit:frontend # Audit NPM dependencies only
+npm run security:audit:backend  # Audit Rust dependencies only
+npm run security:fix           # Fix NPM vulnerabilities automatically
+
+# Testing
+npm run test           # Run frontend unit tests
+npm run test:coverage  # Run tests with coverage report
+npm run test:e2e       # Run end-to-end tests
+npm run test:integration # Run backend integration tests
+
+# Performance
+npm run performance:test    # Run performance benchmarks
+npm run performance:profile # Profile pairing algorithms
 
 # Type Generation
 # TypeScript bindings auto-generate when starting dev server

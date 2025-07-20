@@ -17,6 +17,10 @@
     "lint:fix": "eslint src --ext ts,tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:backend": "cd src-tauri && cargo fmt",
+    "format:backend:check": "cd src-tauri && cargo fmt -- --check",
+    "format:all": "npm run format && npm run format:backend",
+    "format:all:check": "npm run format:check && npm run format:backend:check",
     "type-check": "tsc --noEmit",
     "pre-commit": "npm run format:check && npm run lint",
     "test": "vitest",
@@ -32,8 +36,13 @@
     "db:test": "cd src-tauri && cargo test --test integration",
     "db:migrate": "cd src-tauri && sqlx migrate run --database-url sqlite:pawn.sqlite",
     "db:reset": "rm -f ~/.local/share/pawn/db/pawn.sqlite && npm run db:migrate",
-    "quality:check": "npm run format:check && npm run lint && npm run type-check && npm run test:coverage && npm run performance:test",
-    "quality:fix": "npm run format && npm run lint:fix && npm run type-check"
+    "security:audit": "npm run security:audit:frontend && npm run security:audit:backend",
+    "security:audit:frontend": "yarn audit --level moderate",
+    "security:audit:backend": "cd src-tauri && cargo audit",
+    "security:fix": "yarn audit --fix",
+    "badges:check": "node scripts/check-badges.js",
+    "quality:check": "npm run format:all:check && npm run lint && npm run type-check && npm run test:coverage && npm run performance:test",
+    "quality:fix": "npm run format:all && npm run lint:fix && npm run type-check"
   },
   "dependencies": {
     "@ag-grid-community/client-side-row-model": "^32.1.0",
@@ -108,6 +117,9 @@
     ],
     "*.{js,jsx,json,css,md}": [
       "prettier --write"
+    ],
+    "src-tauri/src/**/*.rs": [
+      "cd src-tauri && cargo fmt --"
     ]
   }
 }
