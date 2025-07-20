@@ -261,7 +261,7 @@ jobs:
         fi
 
     - name: Upload command coverage
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         file: ./coverage-commands/cobertura.xml
         flags: commands
