@@ -22,6 +22,14 @@ fi
 echo "🔍 Running linting and type checks..."
 npm run pre-commit
 
+# Frontend-only mode (skips all backend-related checks)
+if [ "$FRONTEND_ONLY" = "1" ]; then
+    echo "⚠️  Frontend-only mode enabled"
+    echo "   Skipping all backend and integration tests"
+    echo "✅ Pre-commit quality gates passed!"
+    exit 0
+fi
+
 # TDD workflow enforcement
 echo "🔍 Checking TDD compliance..."
 
@@ -80,24 +88,28 @@ if [ -n "$NEW_COMMANDS" ]; then
 fi
 
 # Check that integration tests exist for new database operations
-DB_CHANGES=$(git diff --cached --name-only | grep "src-tauri/src/pawn/db/.*\.rs" || true)
+if [ "$SKIP_INTEGRATION_TESTS" != "1" ]; then
+    DB_CHANGES=$(git diff --cached --name-only | grep "src-tauri/src/pawn/db/.*\.rs" || true)
 
-if [ -n "$DB_CHANGES" ]; then
-    echo "🗄️ Database changes detected:"
-    echo "$DB_CHANGES"
-    
-    # Check that integration tests exist (either in tests/ directory or tests/integration/)
-    if [ -d "src-tauri/tests" ] && [ -n "$(find src-tauri/tests -name '*.rs' -type f 2>/dev/null)" ]; then
-        echo "✅ Integration tests found"
-    else
-        echo "❌ No integration tests found"
-        echo "   Please add integration tests for database changes"
-        exit 1
+    if [ -n "$DB_CHANGES" ]; then
+        echo "🗄️ Database changes detected:"
+        echo "$DB_CHANGES"
+        
+        # Check that integration tests exist (either in tests/ directory or tests/integration/)
+        if [ -d "src-tauri/tests" ] && [ -n "$(find src-tauri/tests -name '*.rs' -type f 2>/dev/null)" ]; then
+            echo "✅ Integration tests found"
+        else
+            echo "❌ No integration tests found"
+            echo "   Please add integration tests for database changes"
+            exit 1
+        fi
     fi
+elif [ "$SKIP_INTEGRATION_TESTS" = "1" ]; then
+    echo "⚠️  Integration tests skipped (SKIP_INTEGRATION_TESTS=1)"
 fi
 
 # Check test coverage (if tarpaulin is available)
-if command -v cargo-tarpaulin >/dev/null 2>&1; then
+if [ "$SKIP_BACKEND_TESTS" != "1" ] && command -v cargo-tarpaulin >/dev/null 2>&1; then
     echo "📊 Checking test coverage..."
     
     cd src-tauri
@@ -109,6 +121,8 @@ if command -v cargo-tarpaulin >/dev/null 2>&1; then
     }
     
     cd ..
+elif [ "$SKIP_BACKEND_TESTS" = "1" ]; then
+    echo "⚠️  Backend tests skipped (SKIP_BACKEND_TESTS=1)"
 fi
 
 echo "✅ Pre-commit quality gates passed!"

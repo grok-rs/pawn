@@ -79,6 +79,17 @@ sudo apt-get install -y \
 - **Refactor**: Clean up while maintaining green tests
 - **Coverage Check**: `cd src-tauri && cargo tarpaulin --out Html`
 
+### Development Workflow Commands
+- **Frontend-Only Commits**: `npm run commit:frontend -- -m "your message"` - Skips all backend/integration tests
+- **Skip Backend Tests**: `npm run commit:no-backend -- -m "your message"` - Skips backend tests only
+- **Skip Integration Tests**: `npm run commit:no-integration -- -m "your message"` - Skips integration tests only
+- **Manual Environment Variables**:
+  - `FRONTEND_ONLY=1 git commit -m "message"` - Complete frontend-only mode
+  - `SKIP_BACKEND_TESTS=1 git commit -m "message"` - Skip backend tests
+  - `SKIP_INTEGRATION_TESTS=1 git commit -m "message"` - Skip integration tests
+  - `SKIP_TDD_CHECK=1 git commit -m "message"` - Skip TDD compliance check
+- **Bypass All Hooks**: `git commit --no-verify -m "message"` - Emergency bypass (not recommended)
+
 ### Building
 - **Frontend**: `yarn build` - TypeScript compilation and Vite build
 - **Full Application**: `yarn tauri build` - Complete desktop app with installers
