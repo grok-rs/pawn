@@ -1,0 +1,4 @@
+
+> pawn@0.1.0 test:coverage
+> vitest --coverage --run --reporter=json
+

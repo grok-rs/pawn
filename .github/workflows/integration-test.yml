@@ -263,7 +263,7 @@ jobs:
     - name: Upload command coverage
       uses: codecov/codecov-action@v5
       with:
-        file: ./coverage-commands/cobertura.xml
+        files: ./coverage-commands/cobertura.xml
         flags: commands
         name: command-coverage
         fail_ci_if_error: true
