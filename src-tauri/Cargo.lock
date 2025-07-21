@@ -3111,7 +3111,7 @@ dependencies = [
  "proc-macro-error",
  "proptest",
  "quickcheck",
- "rand 0.8.5",
+ "rand 0.9.1",
  "rstest",
  "rust_xlsxwriter",
  "serde",
