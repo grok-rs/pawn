@@ -57,7 +57,7 @@ interface StandingsTableProps {
 
 // Tiebreak short names are now localized through translation keys
 
-const StandingsTable: React.FC<StandingsTableProps> = ({
+function StandingsTable({
   standings,
   loading = false,
   onPlayerClick,
@@ -65,7 +65,7 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
   onExportPdf,
   onPrint,
   onTiebreakBreakdown,
-}) => {
+}: StandingsTableProps) {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [denseMode, setDenseMode] = useState(false);
@@ -512,6 +512,6 @@ const StandingsTable: React.FC<StandingsTableProps> = ({
       />
     </Paper>
   );
-};
+}
 
 export default StandingsTable;

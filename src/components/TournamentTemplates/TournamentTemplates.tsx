@@ -107,10 +107,10 @@ const MOBILE_PHONE_POLICIES = [
   { value: 'prohibited', label: 'tournament.mobilePhone.prohibited' },
 ];
 
-const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
+function TournamentTemplates({
   onSelectTemplate,
   showSelection = false,
-}) => {
+}: TournamentTemplatesProps) {
   const { t } = useTranslation();
   const [templates, setTemplates] = useState<TournamentTemplate[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -794,6 +794,6 @@ const TournamentTemplates: React.FC<TournamentTemplatesProps> = ({
       </Dialog>
     </Box>
   );
-};
+}
 
 export default TournamentTemplates;

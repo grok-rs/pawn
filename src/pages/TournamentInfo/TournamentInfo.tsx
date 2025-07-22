@@ -96,7 +96,7 @@ function a11yProps(index: number) {
   };
 }
 
-const TournamentInfoPage: React.FC = () => {
+function TournamentInfoPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -888,6 +888,6 @@ const TournamentInfoPage: React.FC = () => {
       </Box>
     </BaseLayout>
   );
-};
+}
 
 export default TournamentInfoPage;

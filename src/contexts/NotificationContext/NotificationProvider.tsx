@@ -12,9 +12,7 @@ interface NotificationProviderProps {
   children: ReactNode;
 }
 
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({
-  children,
-}) => {
+export function NotificationProvider({ children }: NotificationProviderProps) {
   const [notification, setNotification] = useState<NotificationState>({
     open: false,
     message: '',
@@ -72,4 +70,4 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       </Snackbar>
     </NotificationContext.Provider>
   );
-};
+}

@@ -81,7 +81,7 @@ function a11yProps(index: number) {
   };
 }
 
-const Settings: React.FC = () => {
+function Settings() {
   const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -1342,6 +1342,6 @@ const Settings: React.FC = () => {
       </Snackbar>
     </Container>
   );
-};
+}
 
 export default Settings;

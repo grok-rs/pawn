@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -40,14 +40,14 @@ interface PairingsDisplayProps {
   loading?: boolean;
 }
 
-const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
+function PairingsDisplay({
   open,
   pairings,
   roundNumber,
   onClose,
   onConfirm,
   loading = false,
-}) => {
+}: PairingsDisplayProps) {
   const { t } = useTranslation();
   const [editedPairings, setEditedPairings] = useState<Pairing[]>(pairings);
 
@@ -277,6 +277,6 @@ const PairingsDisplay: React.FC<PairingsDisplayProps> = ({
       </DialogActions>
     </Dialog>
   );
-};
+}
 
 export default PairingsDisplay;

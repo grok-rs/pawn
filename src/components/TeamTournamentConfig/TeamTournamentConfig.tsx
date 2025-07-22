@@ -102,12 +102,12 @@ const CAPTAIN_PRIVILEGES = [
   { value: 'substitutions', label: 'Player Substitutions' },
 ];
 
-const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
+function TeamTournamentConfigComponent({
   tournamentId,
   initialConfig,
   onConfigChange,
   onSave,
-}) => {
+}: TeamTournamentConfigProps) {
   const { t } = useTranslation();
   const [config, setConfig] = useState<TeamTournamentConfig>({
     tournament_id: tournamentId,
@@ -847,6 +847,6 @@ const TeamTournamentConfigComponent: React.FC<TeamTournamentConfigProps> = ({
       </Dialog>
     </Box>
   );
-};
+}
 
 export default TeamTournamentConfigComponent;

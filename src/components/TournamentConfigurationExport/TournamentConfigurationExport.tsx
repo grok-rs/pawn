@@ -35,9 +35,10 @@ interface TournamentConfiguration {
   config: Partial<TournamentFormValues>;
 }
 
-const TournamentConfigurationExport: React.FC<
-  TournamentConfigurationExportProps
-> = ({ formData, onImport }) => {
+function TournamentConfigurationExport({
+  formData,
+  onImport,
+}: TournamentConfigurationExportProps) {
   const { t } = useTranslation();
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -309,6 +310,6 @@ const TournamentConfigurationExport: React.FC<
       </Dialog>
     </Box>
   );
-};
+}
 
 export default TournamentConfigurationExport;

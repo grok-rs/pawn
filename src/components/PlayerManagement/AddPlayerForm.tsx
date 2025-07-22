@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -111,13 +111,13 @@ const schema = yup.object({
 
 type FormData = yup.InferType<typeof schema>;
 
-const AddPlayerForm: React.FC<AddPlayerFormProps> = ({
+function AddPlayerForm({
   open,
   onClose,
   onSuccess,
   tournamentId,
   editingPlayer,
-}) => {
+}: AddPlayerFormProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -473,6 +473,6 @@ const AddPlayerForm: React.FC<AddPlayerFormProps> = ({
       </DialogActions>
     </Dialog>
   );
-};
+}
 
 export default AddPlayerForm;

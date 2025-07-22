@@ -55,12 +55,12 @@ interface PlayerManagementProps {
   onPlayersUpdated: () => void;
 }
 
-const PlayerManagement: React.FC<PlayerManagementProps> = ({
+function PlayerManagement({
   tournamentId,
   players,
   tournamentDetails,
   onPlayersUpdated,
-}) => {
+}: PlayerManagementProps) {
   const { t } = useTranslation();
   const [addPlayerOpen, setAddPlayerOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
@@ -559,6 +559,6 @@ const PlayerManagement: React.FC<PlayerManagementProps> = ({
       />
     </Box>
   );
-};
+}
 
 export default PlayerManagement;

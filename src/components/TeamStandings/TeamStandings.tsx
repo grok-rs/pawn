@@ -93,10 +93,10 @@ interface TeamStandingsProps {
   refreshInterval?: number; // milliseconds
 }
 
-const TeamStandings: React.FC<TeamStandingsProps> = ({
+function TeamStandings({
   tournamentId,
-  refreshInterval = 30000, // 30 seconds default
-}) => {
+  refreshInterval = 30000,
+}: TeamStandingsProps) {
   const { t } = useTranslation();
   const [standings, setStandings] = useState<TeamStanding[]>([]);
   const [loading, setLoading] = useState(false);
@@ -671,6 +671,6 @@ const TeamStandings: React.FC<TeamStandingsProps> = ({
       </Dialog>
     </Box>
   );
-};
+}
 
 export default TeamStandings;

@@ -53,12 +53,12 @@ const SAMPLE_CSV = `board,white,black,result,type,reason
 
 const steps = ['Upload CSV', 'Preview & Validate', 'Import Results'];
 
-export const CsvImportDialog: React.FC<CsvImportDialogProps> = ({
+export function CsvImportDialog({
   open,
   onClose,
   tournamentId,
   onImportComplete,
-}) => {
+}: CsvImportDialogProps) {
   const [activeStep, setActiveStep] = useState(0);
   const [csvContent, setCsvContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -582,4 +582,4 @@ export const CsvImportDialog: React.FC<CsvImportDialogProps> = ({
       </DialogActions>
     </Dialog>
   );
-};
+}

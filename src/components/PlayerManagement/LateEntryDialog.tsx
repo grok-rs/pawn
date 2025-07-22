@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -64,13 +64,13 @@ const lateEntrySchema = yup.object({
 
 type LateEntryFormData = yup.InferType<typeof lateEntrySchema>;
 
-const LateEntryDialog: React.FC<LateEntryDialogProps> = ({
+function LateEntryDialog({
   open,
   onClose,
   onSuccess,
   tournamentId,
   tournamentDetails,
-}) => {
+}: LateEntryDialogProps) {
   const { t } = useTranslation();
   const [rounds, setRounds] = useState<Round[]>([]);
   const [loading, setLoading] = useState(false);
@@ -479,6 +479,6 @@ const LateEntryDialog: React.FC<LateEntryDialogProps> = ({
       </DialogActions>
     </Dialog>
   );
-};
+}
 
 export default LateEntryDialog;

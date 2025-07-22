@@ -37,10 +37,10 @@ interface TournamentPreviewProps {
   }>;
 }
 
-const TournamentPreview: React.FC<TournamentPreviewProps> = ({
+function TournamentPreview({
   formData,
   timeControlTemplates = [],
-}) => {
+}: TournamentPreviewProps) {
   const { t } = useTranslation();
 
   const selectedTimeControl = timeControlTemplates.find(
@@ -345,6 +345,6 @@ const TournamentPreview: React.FC<TournamentPreviewProps> = ({
       </Grid>
     </Box>
   );
-};
+}
 
 export default TournamentPreview;

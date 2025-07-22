@@ -68,11 +68,11 @@ const SAMPLE_CSV = `Game ID,White Player,Black Player,Result,Result Type,Reason,
 3,Wilson K.,Miller S.,1/2-1/2,,Draw agreed,
 4,Taylor M.,Anderson L.,0-1D,white_default,Time forfeit,`;
 
-export const BatchImport: React.FC<BatchImportProps> = ({
+export function BatchImport({
   tournamentId,
   onImportCompleted,
   onClose,
-}) => {
+}: BatchImportProps) {
   const [importData, setImportData] = useState<ParsedImportRow[]>([]);
   const [isValidating, setIsValidating] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -584,4 +584,4 @@ export const BatchImport: React.FC<BatchImportProps> = ({
       </Dialog>
     </Box>
   );
-};
+}

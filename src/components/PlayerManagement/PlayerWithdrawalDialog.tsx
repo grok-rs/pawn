@@ -60,12 +60,12 @@ const withdrawalSchema = yup.object({
 
 type WithdrawalFormData = yup.InferType<typeof withdrawalSchema>;
 
-const PlayerWithdrawalDialog: React.FC<PlayerWithdrawalDialogProps> = ({
+function PlayerWithdrawalDialog({
   open,
   onClose,
   onSuccess,
   player,
-}) => {
+}: PlayerWithdrawalDialogProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -387,6 +387,6 @@ const PlayerWithdrawalDialog: React.FC<PlayerWithdrawalDialogProps> = ({
       </DialogActions>
     </Dialog>
   );
-};
+}
 
 export default PlayerWithdrawalDialog;

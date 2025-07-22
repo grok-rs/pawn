@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { commands } from '@dto/bindings';
 import type { TournamentFormValues } from './types';
 import type { TimeControlTemplate } from '@dto/bindings';
 import TournamentPreview from '../TournamentPreview';
 
-const PreviewStep: React.FC = () => {
+function PreviewStep() {
   const { getValues } = useFormContext<TournamentFormValues>();
   const [timeControlTemplates, setTimeControlTemplates] = useState<
     TimeControlTemplate[]
@@ -32,6 +32,6 @@ const PreviewStep: React.FC = () => {
       timeControlTemplates={timeControlTemplates}
     />
   );
-};
+}
 
 export default PreviewStep;

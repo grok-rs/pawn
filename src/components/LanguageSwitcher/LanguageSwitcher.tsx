@@ -23,7 +23,7 @@ const languages: LanguageOption[] = [
   { code: 'ua', name: 'Українська', flag: '🇺🇦' },
 ];
 
-const LanguageSwitcher: React.FC = () => {
+function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -97,6 +97,6 @@ const LanguageSwitcher: React.FC = () => {
       </Menu>
     </>
   );
-};
+}
 
 export default LanguageSwitcher;

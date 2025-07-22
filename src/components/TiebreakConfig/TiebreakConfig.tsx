@@ -48,12 +48,12 @@ const FIDE_DEFAULT_TIEBREAKS: TiebreakType[] = [
   'direct_encounter',
 ];
 
-const TiebreakConfig: React.FC<TiebreakConfigProps> = ({
+function TiebreakConfig({
   tiebreaks,
   onChange,
   useFideDefaults = true,
   onFideDefaultsChange,
-}) => {
+}: TiebreakConfigProps) {
   const { t } = useTranslation();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -297,6 +297,6 @@ const TiebreakConfig: React.FC<TiebreakConfigProps> = ({
       </Dialog>
     </Box>
   );
-};
+}
 
 export default TiebreakConfig;

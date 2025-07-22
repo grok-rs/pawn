@@ -28,13 +28,13 @@ interface PairingNumbersManagementProps {
   onUpdate: () => void;
 }
 
-const PairingNumbersManagement: React.FC<PairingNumbersManagementProps> = ({
+function PairingNumbersManagement({
   open,
   onClose,
   tournamentId,
   players,
   onUpdate,
-}) => {
+}: PairingNumbersManagementProps) {
   const { t } = useTranslation();
   const [method, setMethod] = useState('sequential');
   const [startNumber, setStartNumber] = useState(1);
@@ -151,6 +151,6 @@ const PairingNumbersManagement: React.FC<PairingNumbersManagementProps> = ({
       </DialogActions>
     </Dialog>
   );
-};
+}
 
 export default PairingNumbersManagement;

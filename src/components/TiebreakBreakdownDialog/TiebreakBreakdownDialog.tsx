@@ -43,12 +43,12 @@ interface TiebreakBreakdownDialogProps {
   playerName: string;
 }
 
-const TiebreakBreakdownDialog: React.FC<TiebreakBreakdownDialogProps> = ({
+function TiebreakBreakdownDialog({
   open,
   onClose,
   breakdown,
   playerName,
-}) => {
+}: TiebreakBreakdownDialogProps) {
   const { t } = useTranslation();
 
   if (!breakdown) {
@@ -303,6 +303,6 @@ const TiebreakBreakdownDialog: React.FC<TiebreakBreakdownDialogProps> = ({
       </DialogActions>
     </Dialog>
   );
-};
+}
 
 export default TiebreakBreakdownDialog;
