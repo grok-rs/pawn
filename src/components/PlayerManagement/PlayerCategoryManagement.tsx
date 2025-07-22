@@ -69,11 +69,11 @@ const categorySchema = yup.object({
 
 type CategoryFormData = yup.InferType<typeof categorySchema>;
 
-const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
+function PlayerCategoryManagement({
   tournamentId,
   players,
   onCategoriesUpdated,
-}) => {
+}: PlayerCategoryManagementProps) {
   const { t } = useTranslation();
   const [categories, setCategories] = useState<PlayerCategory[]>([]);
   const [_assignments, _setAssignments] = useState<
@@ -704,6 +704,6 @@ const PlayerCategoryManagement: React.FC<PlayerCategoryManagementProps> = ({
       </Dialog>
     </Box>
   );
-};
+}
 
 export default PlayerCategoryManagement;

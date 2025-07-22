@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 
 // Security test utilities
 const SecurityTestUtils = {
@@ -527,7 +528,7 @@ describe('Security Testing - Input Validation', () => {
   describe('XSS Protection', () => {
     test('should prevent XSS attacks in form inputs', async () => {
       const user = userEvent.setup();
-      const mockSubmit = jest.fn();
+      const mockSubmit = vi.fn();
       render(<MockSecurePlayerForm onSubmit={mockSubmit} />);
 
       for (const xssVector of SecurityTestUtils.xssVectors.slice(0, 5)) {
@@ -554,7 +555,7 @@ describe('Security Testing - Input Validation', () => {
 
     test('should handle XSS in email fields', async () => {
       const user = userEvent.setup();
-      render(<MockSecurePlayerForm onSubmit={jest.fn()} />);
+      render(<MockSecurePlayerForm onSubmit={vi.fn()} />);
 
       for (const emailAttack of SecurityTestUtils.emailAttacks.slice(0, 3)) {
         const emailInput = screen.getByTestId('email-input');
@@ -573,7 +574,7 @@ describe('Security Testing - Input Validation', () => {
 
     test('should prevent XSS in search functionality', async () => {
       const user = userEvent.setup();
-      const mockSearch = jest.fn();
+      const mockSearch = vi.fn();
       render(<MockSearchComponent onSearch={mockSearch} />);
 
       for (const xssVector of SecurityTestUtils.xssVectors.slice(0, 3)) {
@@ -598,7 +599,7 @@ describe('Security Testing - Input Validation', () => {
   describe('SQL Injection Protection', () => {
     test('should detect SQL injection attempts', async () => {
       const user = userEvent.setup();
-      render(<MockSecurePlayerForm onSubmit={jest.fn()} />);
+      render(<MockSecurePlayerForm onSubmit={vi.fn()} />);
 
       for (const sqlVector of SecurityTestUtils.sqlInjectionVectors.slice(
         0,
@@ -621,7 +622,7 @@ describe('Security Testing - Input Validation', () => {
 
     test('should prevent SQL injection in search', async () => {
       const user = userEvent.setup();
-      const mockSearch = jest.fn();
+      const mockSearch = vi.fn();
       render(<MockSearchComponent onSearch={mockSearch} />);
 
       const sqlInjection = SecurityTestUtils.sqlInjectionVectors[0];
@@ -643,7 +644,7 @@ describe('Security Testing - Input Validation', () => {
   describe('Path Traversal Protection', () => {
     test('should detect path traversal attempts', async () => {
       const user = userEvent.setup();
-      render(<MockSecurePlayerForm onSubmit={jest.fn()} />);
+      render(<MockSecurePlayerForm onSubmit={vi.fn()} />);
 
       for (const pathVector of SecurityTestUtils.pathTraversalVectors.slice(
         0,
@@ -668,7 +669,7 @@ describe('Security Testing - Input Validation', () => {
   describe('File Upload Security', () => {
     test('should reject malicious file types', async () => {
       const user = userEvent.setup();
-      const mockFileSelect = jest.fn();
+      const mockFileSelect = vi.fn();
       render(<MockFileUploadComponent onFileSelect={mockFileSelect} />);
 
       const maliciousFiles = [
@@ -699,7 +700,7 @@ describe('Security Testing - Input Validation', () => {
 
     test('should reject oversized files', async () => {
       const user = userEvent.setup();
-      const mockFileSelect = jest.fn();
+      const mockFileSelect = vi.fn();
       render(<MockFileUploadComponent onFileSelect={mockFileSelect} />);
 
       // Create a file larger than 10MB
@@ -723,7 +724,7 @@ describe('Security Testing - Input Validation', () => {
 
     test('should accept valid files', async () => {
       const user = userEvent.setup();
-      const mockFileSelect = jest.fn();
+      const mockFileSelect = vi.fn();
       render(<MockFileUploadComponent onFileSelect={mockFileSelect} />);
 
       const validFile = new File(['name,rating\nJohn,1500'], 'players.csv', {
@@ -744,7 +745,7 @@ describe('Security Testing - Input Validation', () => {
   describe('Input Length Validation', () => {
     test('should handle extremely large inputs', async () => {
       const user = userEvent.setup();
-      render(<MockSecurePlayerForm onSubmit={jest.fn()} />);
+      render(<MockSecurePlayerForm onSubmit={vi.fn()} />);
 
       const largeInput = SecurityTestUtils.largePayloads[1]; // 100KB
       const notesInput = screen.getByTestId('notes-input');
@@ -762,7 +763,7 @@ describe('Security Testing - Input Validation', () => {
 
     test('should enforce input length limits', async () => {
       const user = userEvent.setup();
-      render(<MockSecurePlayerForm onSubmit={jest.fn()} />);
+      render(<MockSecurePlayerForm onSubmit={vi.fn()} />);
 
       const nameInput = screen.getByTestId('name-input') as HTMLInputElement;
       const longName = 'A'.repeat(200); // Longer than maxLength
@@ -777,7 +778,7 @@ describe('Security Testing - Input Validation', () => {
   describe('Special Character Handling', () => {
     test('should handle special characters safely', async () => {
       const user = userEvent.setup();
-      const mockSubmit = jest.fn();
+      const mockSubmit = vi.fn();
       render(<MockSecurePlayerForm onSubmit={mockSubmit} />);
 
       for (const specialChars of SecurityTestUtils.specialCharacters.slice(
@@ -800,7 +801,7 @@ describe('Security Testing - Input Validation', () => {
 
     test('should handle null bytes and control characters', async () => {
       const user = userEvent.setup();
-      render(<MockSecurePlayerForm onSubmit={jest.fn()} />);
+      render(<MockSecurePlayerForm onSubmit={vi.fn()} />);
 
       const nameInput = screen.getByTestId('name-input');
       const inputWithNulls = `Test${String.fromCharCode(0, 1, 2)}User`;
@@ -815,7 +816,7 @@ describe('Security Testing - Input Validation', () => {
   describe('Format-Specific Validation', () => {
     test('should validate email formats strictly', async () => {
       const user = userEvent.setup();
-      render(<MockSecurePlayerForm onSubmit={jest.fn()} />);
+      render(<MockSecurePlayerForm onSubmit={vi.fn()} />);
 
       const invalidEmails = [
         'invalid-email',
@@ -846,7 +847,7 @@ describe('Security Testing - Input Validation', () => {
 
     test('should validate phone number formats', async () => {
       const user = userEvent.setup();
-      render(<MockSecurePlayerForm onSubmit={jest.fn()} />);
+      render(<MockSecurePlayerForm onSubmit={vi.fn()} />);
 
       const validPhones = ['+1-555-0123', '555.123.4567', '(555) 123-4567'];
       const invalidPhones = ['abc123', 'phone number', '555-abcd'];
@@ -884,7 +885,7 @@ describe('Security Testing - Input Validation', () => {
 
     test('should validate numeric inputs strictly', async () => {
       const user = userEvent.setup();
-      render(<MockSecurePlayerForm onSubmit={jest.fn()} />);
+      render(<MockSecurePlayerForm onSubmit={vi.fn()} />);
 
       const invalidRatings = [
         '-100',
@@ -913,7 +914,7 @@ describe('Security Testing - Input Validation', () => {
 
     test('should validate FIDE ID format', async () => {
       const user = userEvent.setup();
-      render(<MockSecurePlayerForm onSubmit={jest.fn()} />);
+      render(<MockSecurePlayerForm onSubmit={vi.fn()} />);
 
       const invalidFideIds = [
         'abc123',
@@ -942,7 +943,7 @@ describe('Security Testing - Input Validation', () => {
   describe('LDAP Injection Protection', () => {
     test('should detect LDAP injection attempts', async () => {
       const user = userEvent.setup();
-      const mockSearch = jest.fn();
+      const mockSearch = vi.fn();
       render(<MockSearchComponent onSearch={mockSearch} />);
 
       for (const ldapVector of SecurityTestUtils.ldapInjectionVectors.slice(
@@ -971,7 +972,7 @@ describe('Security Testing - Input Validation', () => {
   describe('Command Injection Protection', () => {
     test('should detect command injection attempts', async () => {
       const user = userEvent.setup();
-      render(<MockSecurePlayerForm onSubmit={jest.fn()} />);
+      render(<MockSecurePlayerForm onSubmit={vi.fn()} />);
 
       for (const cmdVector of SecurityTestUtils.commandInjectionVectors.slice(
         0,

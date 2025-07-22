@@ -41,10 +41,7 @@ interface RoundManagerProps {
   onRoundUpdate?: () => void;
 }
 
-const RoundManager: React.FC<RoundManagerProps> = ({
-  tournamentId,
-  onRoundUpdate,
-}) => {
+function RoundManager({ tournamentId, onRoundUpdate }: RoundManagerProps) {
   const { t } = useTranslation();
   const [rounds, setRounds] = useState<Round[]>([]);
   const [currentRound, setCurrentRound] = useState<Round | null>(null);
@@ -750,6 +747,6 @@ const RoundManager: React.FC<RoundManagerProps> = ({
       )}
     </Box>
   );
-};
+}
 
 export default RoundManager;

@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor, act, within } from '@testing-library/react';
+import { vi } from 'vitest';
 
 // Mock WebSocket implementation for testing
 class MockWebSocket {
@@ -352,7 +353,7 @@ describe('Real-Time Features Testing', () => {
 
   describe('Real-Time Standings Updates', () => {
     test('should update standings when receiving WebSocket messages', async () => {
-      const onUpdate = jest.fn();
+      const onUpdate = vi.fn();
       render(<MockRealTimeStandings tournamentId={1} onUpdate={onUpdate} />);
 
       await waitFor(() => {
@@ -693,7 +694,7 @@ describe('Real-Time Features Testing', () => {
       });
 
       const ws = MockWebSocket.getLastInstance();
-      const closeSpy = jest.spyOn(ws!, 'close');
+      const closeSpy = vi.spyOn(ws!, 'close');
 
       unmount();
 

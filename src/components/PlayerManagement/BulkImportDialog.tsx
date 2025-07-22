@@ -48,12 +48,12 @@ interface BulkImportDialogProps {
   tournamentId: number;
 }
 
-const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
+function BulkImportDialog({
   open,
   onClose,
   onSuccess,
   tournamentId,
-}) => {
+}: BulkImportDialogProps) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeStep, setActiveStep] = useState(0);
@@ -487,6 +487,6 @@ const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
       </DialogActions>
     </Dialog>
   );
-};
+}
 
 export default BulkImportDialog;

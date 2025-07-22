@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 
 // Performance profiling utilities
 const PerformanceProfiler = {
@@ -1230,7 +1231,7 @@ describe('Performance Profiling and Memory Usage Analytics Tests', () => {
     });
 
     test('should call onMetricsUpdate callback', async () => {
-      const onMetricsUpdate = jest.fn();
+      const onMetricsUpdate = vi.fn();
       const user = userEvent.setup();
 
       render(

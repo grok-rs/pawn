@@ -23,12 +23,12 @@ interface TournamentSettingsProps {
   onSettingsUpdated?: () => void;
 }
 
-const TournamentSettings: React.FC<TournamentSettingsProps> = ({
+function TournamentSettings({
   open,
   onClose,
   tournamentId,
   onSettingsUpdated,
-}) => {
+}: TournamentSettingsProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -191,6 +191,6 @@ const TournamentSettings: React.FC<TournamentSettingsProps> = ({
       </DialogActions>
     </Dialog>
   );
-};
+}
 
 export default TournamentSettings;

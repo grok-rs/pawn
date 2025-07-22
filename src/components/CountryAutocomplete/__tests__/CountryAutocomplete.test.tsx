@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useForm } from 'react-hook-form';
@@ -18,13 +17,16 @@ vi.mock('../constants', () => ({
   ],
 }));
 
-// Test wrapper with form context
-const TestWrapper = ({
-  children,
+// Test wrapper component
+const TestComponent = ({
   defaultValues = {},
+  ...props
 }: {
-  children: React.ReactNode;
   defaultValues?: Partial<TournamentFormValues>;
+  name: string;
+  label: string;
+  error?: boolean;
+  helperText?: string;
 }) => {
   const { control } = useForm<TournamentFormValues>({
     defaultValues: {
@@ -35,12 +37,12 @@ const TestWrapper = ({
     },
   });
 
-  return React.cloneElement(children as React.ReactElement, { control });
+  return <CountryAutocomplete control={control} {...props} />;
 };
 
 describe('CountryAutocomplete', () => {
   const mockProps = {
-    name: 'country',
+    name: 'country' as const,
     label: 'Tournament Country',
   };
 
@@ -50,22 +52,14 @@ describe('CountryAutocomplete', () => {
 
   describe('Basic Rendering', () => {
     test('renders autocomplete with correct label', () => {
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       expect(screen.getByRole('combobox')).toBeInTheDocument();
       expect(screen.getByLabelText('Tournament Country')).toBeInTheDocument();
     });
 
     test('renders as MUI Autocomplete component', () => {
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       const autocomplete = screen
         .getByRole('combobox')
@@ -74,11 +68,7 @@ describe('CountryAutocomplete', () => {
     });
 
     test('is full width by default', () => {
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       const autocomplete = screen
         .getByRole('combobox')
@@ -87,11 +77,7 @@ describe('CountryAutocomplete', () => {
     });
 
     test('displays placeholder text', () => {
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       const input = screen.getByRole('combobox');
       expect(input).toHaveAttribute('placeholder', '');
@@ -102,11 +88,7 @@ describe('CountryAutocomplete', () => {
     test('displays all available countries when clicked', async () => {
       const user = userEvent.setup();
 
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       const input = screen.getByRole('combobox');
       await user.click(input);
@@ -121,11 +103,7 @@ describe('CountryAutocomplete', () => {
     test('filters countries based on input text', async () => {
       const user = userEvent.setup();
 
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       const input = screen.getByRole('combobox');
       await user.type(input, 'Ukr');
@@ -140,11 +118,7 @@ describe('CountryAutocomplete', () => {
     test('shows no options message when no matches', async () => {
       const user = userEvent.setup();
 
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       const input = screen.getByRole('combobox');
       await user.type(input, 'XYZ123');
@@ -157,11 +131,7 @@ describe('CountryAutocomplete', () => {
     test('displays countries in correct format', async () => {
       const user = userEvent.setup();
 
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       const input = screen.getByRole('combobox');
       await user.click(input);
@@ -178,11 +148,7 @@ describe('CountryAutocomplete', () => {
     test('selects country when option is clicked', async () => {
       const user = userEvent.setup();
 
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       const input = screen.getByRole('combobox');
       await user.click(input);
@@ -200,9 +166,7 @@ describe('CountryAutocomplete', () => {
       const user = userEvent.setup();
 
       render(
-        <TestWrapper defaultValues={{ country: 'Ukraine' }}>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
+        <TestComponent {...mockProps} defaultValues={{ country: 'Ukraine' }} />
       );
 
       const input = screen.getByRole('combobox');
@@ -217,11 +181,7 @@ describe('CountryAutocomplete', () => {
     test('maintains selection after blur', async () => {
       const user = userEvent.setup();
 
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       const input = screen.getByRole('combobox');
       await user.click(input);
@@ -238,9 +198,7 @@ describe('CountryAutocomplete', () => {
 
     test('handles preset value correctly', () => {
       render(
-        <TestWrapper defaultValues={{ country: 'Germany' }}>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
+        <TestComponent {...mockProps} defaultValues={{ country: 'Germany' }} />
       );
 
       const input = screen.getByRole('combobox');
@@ -250,11 +208,7 @@ describe('CountryAutocomplete', () => {
 
   describe('Error States', () => {
     test('displays error state when error prop is true', () => {
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} error={true} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} error={true} />);
 
       const textField = screen
         .getByRole('combobox')
@@ -265,11 +219,7 @@ describe('CountryAutocomplete', () => {
     test('displays helper text when provided', () => {
       const helperText = 'Please select a valid country';
 
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} helperText={helperText} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} helperText={helperText} />);
 
       expect(screen.getByText(helperText)).toBeInTheDocument();
     });
@@ -278,13 +228,7 @@ describe('CountryAutocomplete', () => {
       const helperText = 'Country is required';
 
       render(
-        <TestWrapper>
-          <CountryAutocomplete
-            {...mockProps}
-            error={true}
-            helperText={helperText}
-          />
-        </TestWrapper>
+        <TestComponent {...mockProps} error={true} helperText={helperText} />
       );
 
       const textField = screen
@@ -298,13 +242,7 @@ describe('CountryAutocomplete', () => {
       const helperText = 'Invalid country selection';
 
       render(
-        <TestWrapper>
-          <CountryAutocomplete
-            {...mockProps}
-            error={true}
-            helperText={helperText}
-          />
-        </TestWrapper>
+        <TestComponent {...mockProps} error={true} helperText={helperText} />
       );
 
       const helperTextElement = screen.getByText(helperText);
@@ -315,21 +253,13 @@ describe('CountryAutocomplete', () => {
   describe('React Hook Form Integration', () => {
     test('integrates with react-hook-form Controller', () => {
       // This test verifies the component renders without errors when wrapped in Controller
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       expect(screen.getByRole('combobox')).toBeInTheDocument();
     });
 
     test('handles form field name correctly', () => {
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} name="venue.country" />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} name="venue.country" />);
 
       // Should render without errors even with nested field names
       expect(screen.getByRole('combobox')).toBeInTheDocument();
@@ -338,11 +268,7 @@ describe('CountryAutocomplete', () => {
     test('passes field value changes to form', async () => {
       const user = userEvent.setup();
 
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       const input = screen.getByRole('combobox');
       await user.click(input);
@@ -362,11 +288,7 @@ describe('CountryAutocomplete', () => {
     test('supports keyboard navigation', async () => {
       const user = userEvent.setup();
 
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       const input = screen.getByRole('combobox');
 
@@ -389,11 +311,7 @@ describe('CountryAutocomplete', () => {
     test('closes dropdown with Escape key', async () => {
       const user = userEvent.setup();
 
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       const input = screen.getByRole('combobox');
       await user.click(input);
@@ -412,11 +330,7 @@ describe('CountryAutocomplete', () => {
 
   describe('Accessibility', () => {
     test('has proper ARIA attributes', () => {
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       const input = screen.getByRole('combobox');
       expect(input).toHaveAttribute('aria-expanded', 'false');
@@ -426,11 +340,7 @@ describe('CountryAutocomplete', () => {
     test('announces options to screen readers', async () => {
       const user = userEvent.setup();
 
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       const input = screen.getByRole('combobox');
       await user.click(input);
@@ -447,11 +357,7 @@ describe('CountryAutocomplete', () => {
     test('maintains focus management', async () => {
       const user = userEvent.setup();
 
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       const input = screen.getByRole('combobox');
       await user.click(input);
@@ -470,9 +376,10 @@ describe('CountryAutocomplete', () => {
   describe('Edge Cases', () => {
     test('handles invalid preset values gracefully', () => {
       render(
-        <TestWrapper defaultValues={{ country: 'NonExistentCountry' }}>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
+        <TestComponent
+          {...mockProps}
+          defaultValues={{ country: 'NonExistentCountry' }}
+        />
       );
 
       const input = screen.getByRole('combobox');
@@ -484,11 +391,7 @@ describe('CountryAutocomplete', () => {
       // Mock empty countries array
       vi.mocked(countries).length = 0;
 
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       expect(screen.getByRole('combobox')).toBeInTheDocument();
     });
@@ -504,11 +407,7 @@ describe('CountryAutocomplete', () => {
 
       vi.mocked(countries).splice(0, countries.length, ...specialCountries);
 
-      render(
-        <TestWrapper>
-          <CountryAutocomplete {...mockProps} />
-        </TestWrapper>
-      );
+      render(<TestComponent {...mockProps} />);
 
       const input = screen.getByRole('combobox');
       await user.type(input, 'Côte');

@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import {
   renderWithAllProviders,
   createMockPlayer,
@@ -253,7 +254,7 @@ describe('Performance Tests for Large Datasets', () => {
         name: 'Large Tournament',
       });
 
-      const mockInvoke = jest.fn().mockResolvedValue(standings);
+      const mockInvoke = vi.fn().mockResolvedValue(standings);
       Object.defineProperty(window, '__TAURI_INTERNALS__', {
         value: { invoke: mockInvoke },
         configurable: true,
@@ -284,7 +285,7 @@ describe('Performance Tests for Large Datasets', () => {
     test('should update standings efficiently with real-time data', async () => {
       let standings = generateLargeStandings(200);
 
-      const mockInvoke = jest.fn().mockResolvedValue(standings);
+      const mockInvoke = vi.fn().mockResolvedValue(standings);
       Object.defineProperty(window, '__TAURI_INTERNALS__', {
         value: { invoke: mockInvoke },
         configurable: true,

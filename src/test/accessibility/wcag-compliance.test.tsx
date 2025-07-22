@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
+import { vi } from 'vitest';
 import { createMockPlayer } from '../utils/test-utils';
 
 // Extend Jest matchers for accessibility testing
@@ -429,7 +430,7 @@ describe('WCAG Accessibility Compliance Tests', () => {
 
     test('should support keyboard navigation in modal dialogs', async () => {
       const user = userEvent.setup();
-      const mockOnClose = jest.fn();
+      const mockOnClose = vi.fn();
 
       render(
         <MockModal

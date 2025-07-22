@@ -175,10 +175,10 @@ describe('LanguageSwitcher', () => {
         const menuItems = screen.getAllByRole('menuitem');
         expect(menuItems).toHaveLength(3);
 
-        // Flags should be visible within menu items
-        expect(screen.getByText('🇬🇧')).toBeInTheDocument();
-        expect(screen.getByText('🇷🇺')).toBeInTheDocument();
-        expect(screen.getByText('🇺🇦')).toBeInTheDocument();
+        // Flags should be visible within menu items (multiple instances expected)
+        expect(screen.getAllByText('🇬🇧')).toHaveLength(2); // Button + menu item
+        expect(screen.getAllByText('🇷🇺')).toHaveLength(1); // Only in menu
+        expect(screen.getAllByText('🇺🇦')).toHaveLength(1); // Only in menu
       });
     });
 
@@ -199,7 +199,8 @@ describe('LanguageSwitcher', () => {
         const russianMenuItem = screen.getByRole('menuitem', {
           name: /русский/i,
         });
-        expect(russianMenuItem).toHaveAttribute('aria-selected', 'true');
+        // MUI MenuItem uses CSS classes for selected state, not aria-selected
+        expect(russianMenuItem).toHaveClass('Mui-selected');
       });
     });
 
@@ -451,7 +452,8 @@ describe('LanguageSwitcher', () => {
         const englishMenuItem = screen.getByRole('menuitem', {
           name: /english/i,
         });
-        expect(englishMenuItem).toHaveAttribute('aria-selected', 'true');
+        // MUI MenuItem uses CSS classes for selected state, not aria-selected
+        expect(englishMenuItem).toHaveClass('Mui-selected');
       });
     });
 
