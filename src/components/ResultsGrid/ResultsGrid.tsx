@@ -77,13 +77,13 @@ interface ResultEntry {
 
 // RESULT_OPTIONS will be created inside the component to access translations
 
-export const ResultsGrid: React.FC<ResultsGridProps> = ({
+export function ResultsGrid({
   tournamentId,
   roundNumber,
   games,
   onResultsUpdated,
   readOnly = false,
-}) => {
+}: ResultsGridProps) {
   const { t } = useTranslation();
 
   // Create result options with translations
@@ -1110,4 +1110,4 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({
       />
     </Box>
   );
-};
+}

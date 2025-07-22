@@ -84,11 +84,11 @@ const RATING_TYPES = [
   { value: 'elo', label: 'ELO Rating', icon: <TrendingUp /> },
 ];
 
-const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
+function RatingHistoryDialog({
   open,
   onClose,
   player,
-}) => {
+}: RatingHistoryDialogProps) {
   const { t } = useTranslation();
   const [ratingHistory, setRatingHistory] = useState<RatingHistory[]>([]);
   const [loading, setLoading] = useState(false);
@@ -651,6 +651,6 @@ const RatingHistoryDialog: React.FC<RatingHistoryDialogProps> = ({
       </DialogActions>
     </Dialog>
   );
-};
+}
 
 export default RatingHistoryDialog;

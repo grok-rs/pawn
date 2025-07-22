@@ -42,14 +42,14 @@ interface RealTimeStandingsProps {
   onPrint?: () => void;
 }
 
-const RealTimeStandings: React.FC<RealTimeStandingsProps> = ({
+function RealTimeStandings({
   tournamentId,
   onTiebreakBreakdown,
   onPlayerClick,
   onExportCsv,
   onExportPdf,
   onPrint,
-}) => {
+}: RealTimeStandingsProps) {
   const { t } = useTranslation();
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -292,6 +292,6 @@ const RealTimeStandings: React.FC<RealTimeStandingsProps> = ({
       </Snackbar>
     </Box>
   );
-};
+}
 
 export default RealTimeStandings;

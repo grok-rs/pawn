@@ -67,12 +67,12 @@ const SPECIAL_RESULTS = [
   { value: 'CANC', label: 'Cancelled', type: 'cancelled' },
 ];
 
-export const MobileResultEntry: React.FC<MobileResultEntryProps> = ({
+export function MobileResultEntry({
   tournamentId,
   games,
   onResultsUpdated,
   onClose,
-}) => {
+}: MobileResultEntryProps) {
   const [currentGameIndex, setCurrentGameIndex] = useState(0);
   const [resultEntries, setResultEntries] = useState<Map<number, ResultEntry>>(
     new Map()
@@ -477,4 +477,4 @@ export const MobileResultEntry: React.FC<MobileResultEntryProps> = ({
       </Box>
     </Box>
   );
-};
+}

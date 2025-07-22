@@ -137,10 +137,7 @@ const TEAM_COLORS = [
   '#fbc02d', // Yellow
 ];
 
-const TeamManagement: React.FC<TeamManagementProps> = ({
-  tournamentId,
-  onTeamsChange,
-}) => {
+function TeamManagement({ tournamentId, onTeamsChange }: TeamManagementProps) {
   const { t } = useTranslation();
   const [teams, setTeams] = useState<Team[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -613,6 +610,6 @@ const TeamManagement: React.FC<TeamManagementProps> = ({
       </Dialog>
     </Box>
   );
-};
+}
 
 export default TeamManagement;
