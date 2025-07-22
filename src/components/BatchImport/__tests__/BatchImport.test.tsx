@@ -272,7 +272,10 @@ describe('BatchImport', () => {
 
       const mockValidationResult = {
         overall_valid: true,
-        results: [[0, { is_valid: true, errors: [], warnings: [] }]],
+        results: [[0, { is_valid: true, errors: [], warnings: [] }]] as [
+          number,
+          { is_valid: boolean; errors: string[]; warnings: string[] },
+        ][],
       };
 
       vi.mocked(commands.batchUpdateResults).mockResolvedValue(
@@ -313,7 +316,10 @@ describe('BatchImport', () => {
 
       const mockValidationResult = {
         overall_valid: true,
-        results: [[0, { is_valid: true, errors: [], warnings: [] }]],
+        results: [[0, { is_valid: true, errors: [], warnings: [] }]] as [
+          number,
+          { is_valid: boolean; errors: string[]; warnings: string[] },
+        ][],
       };
 
       vi.mocked(commands.batchUpdateResults).mockResolvedValue(
@@ -345,7 +351,10 @@ describe('BatchImport', () => {
 
       const mockValidationResult = {
         overall_valid: true,
-        results: [[0, { is_valid: true, errors: [], warnings: [] }]],
+        results: [[0, { is_valid: true, errors: [], warnings: [] }]] as [
+          number,
+          { is_valid: boolean; errors: string[]; warnings: string[] },
+        ][],
       };
 
       vi.mocked(commands.batchUpdateResults).mockResolvedValue(
@@ -360,7 +369,10 @@ describe('BatchImport', () => {
       // Now test import
       const mockImportResult = {
         overall_valid: true,
-        results: [[0, { is_valid: true, errors: [], warnings: [] }]],
+        results: [[0, { is_valid: true, errors: [], warnings: [] }]] as [
+          number,
+          { is_valid: boolean; errors: string[]; warnings: string[] },
+        ][],
       };
 
       vi.mocked(commands.batchUpdateResults).mockResolvedValue(
@@ -401,7 +413,10 @@ describe('BatchImport', () => {
 
       const mockResult = {
         overall_valid: true,
-        results: [[0, { is_valid: true, errors: [], warnings: [] }]],
+        results: [[0, { is_valid: true, errors: [], warnings: [] }]] as [
+          number,
+          { is_valid: boolean; errors: string[]; warnings: string[] },
+        ][],
       };
 
       vi.mocked(commands.batchUpdateResults).mockResolvedValue(mockResult);
@@ -519,7 +534,10 @@ describe('BatchImport', () => {
 
       const mockValidationResult = {
         overall_valid: true,
-        results: [[0, { is_valid: true, errors: [], warnings: [] }]],
+        results: [[0, { is_valid: true, errors: [], warnings: [] }]] as [
+          number,
+          { is_valid: boolean; errors: string[]; warnings: string[] },
+        ][],
       };
 
       vi.mocked(commands.batchUpdateResults).mockResolvedValue(
