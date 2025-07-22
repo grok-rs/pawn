@@ -18,6 +18,7 @@ export interface TournamentConfig {
   withStandings?: boolean;
   completedRounds?: number;
   scenarioType?: 'balanced' | 'decisive' | 'many_draws' | 'upset_heavy';
+  players?: ReturnType<typeof createRealisticPlayer>[];
 }
 
 export interface PlayerConfig {
@@ -303,7 +304,7 @@ const generateRoundPairings = (
       if (paired.has(sortedPlayers[i].id)) continue;
 
       // Find best opponent in same score group
-      let opponent = null;
+      let opponent: (typeof sortedPlayers)[0] | null = null;
       for (let j = i + 1; j < sortedPlayers.length; j++) {
         if (!paired.has(sortedPlayers[j].id)) {
           opponent = sortedPlayers[j];
@@ -385,7 +386,7 @@ const calculateRealisticResult = (
   whiteRating: number,
   blackRating: number,
   scenarioType?: string
-): string => {
+): 'draw' | 'white_wins' | 'black_wins' => {
   const ratingDiff = whiteRating - blackRating;
 
   // Elo probability calculation
@@ -578,7 +579,7 @@ export const createRealisticTeam = (config: TeamConfig = {}): any => {
   const memberCount = config.memberCount || 4;
   const averageRating = config.averageRating || 1600;
 
-  const members = [];
+  const members: ReturnType<typeof createRealisticPlayer>[] = [];
   for (let i = 0; i < memberCount; i++) {
     const rating = averageRating + (Math.random() - 0.5) * 400; // ±200 rating variance
     members.push(

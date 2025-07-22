@@ -26,6 +26,7 @@ afterAll(() => server.close());
 declare global {
   interface Window {
     __TAURI__: any;
+    __TAURI_INTERNALS__: any;
   }
 }
 
@@ -43,6 +44,11 @@ window.__TAURI__ = {
       emit: vi.fn(),
     },
   },
+};
+
+// Mock Tauri internals for newer API
+window.__TAURI_INTERNALS__ = {
+  invoke: vi.fn(),
 };
 
 // Global test utilities

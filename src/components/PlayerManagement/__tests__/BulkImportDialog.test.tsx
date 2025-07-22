@@ -55,7 +55,11 @@ const mockFileReader = {
     | null,
 };
 
-global.FileReader = vi.fn().mockImplementation(() => mockFileReader);
+// Mock FileReader globally
+Object.defineProperty(globalThis, 'FileReader', {
+  writable: true,
+  value: vi.fn().mockImplementation(() => mockFileReader),
+});
 
 // Mock data types
 interface BulkImportPlayer {

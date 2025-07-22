@@ -1,12 +1,13 @@
 import React from 'react';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 import { renderWithAllProviders } from '../utils/test-utils';
 import App from '../../App';
 
 // Mock Tauri API
-const mockInvoke = jest.fn();
-const mockListen = jest.fn(() => Promise.resolve(() => {}));
+const mockInvoke = vi.fn();
+const mockListen = vi.fn(() => Promise.resolve(() => {}));
 
 beforeAll(() => {
   Object.defineProperty(window, '__TAURI_INTERNALS__', {

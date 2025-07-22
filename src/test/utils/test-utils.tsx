@@ -7,6 +7,7 @@ import { Provider as ReduxProvider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { vi } from 'vitest';
 
 // Mock translations for testing
 const mockTranslations = {
@@ -251,7 +252,7 @@ export const createMockGameResult = (overrides = {}) => ({
 export const createMockTauriInvoke = (
   mockResponses: Record<string, any> = {}
 ) => {
-  return jest.fn().mockImplementation((command: string, _payload?: any) => {
+  return vi.fn().mockImplementation((command: string, _payload?: any) => {
     if (mockResponses[command]) {
       return Promise.resolve(mockResponses[command]);
     }

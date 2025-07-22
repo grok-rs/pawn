@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 import { createMockPlayer } from '../utils/test-utils';
 
 // Mobile testing utilities
@@ -661,7 +662,7 @@ describe('Mobile Responsiveness and Touch Interaction Tests', () => {
   describe('Touch Target Accessibility', () => {
     test('should have adequate touch target sizes', () => {
       MobileTestUtils.setViewport(MobileTestUtils.viewports.iPhone12);
-      render(<MockTouchFriendlyForm onSubmit={jest.fn()} />);
+      render(<MockTouchFriendlyForm onSubmit={vi.fn()} />);
 
       // Check button sizes (should be at least 44x44px)
       const submitButton = screen.getByTestId('touch-submit-button');
@@ -673,7 +674,7 @@ describe('Mobile Responsiveness and Touch Interaction Tests', () => {
 
     test('should have proper spacing between touch targets', () => {
       MobileTestUtils.setViewport(MobileTestUtils.viewports.androidMedium);
-      render(<MockTouchFriendlyForm onSubmit={jest.fn()} />);
+      render(<MockTouchFriendlyForm onSubmit={vi.fn()} />);
 
       const submitButton = screen.getByTestId('touch-submit-button');
       const cancelButton = screen.getByTestId('touch-cancel-button');
@@ -691,8 +692,8 @@ describe('Mobile Responsiveness and Touch Interaction Tests', () => {
 
   describe('Touch Gesture Support', () => {
     test('should handle swipe gestures', async () => {
-      const mockSwipeLeft = jest.fn();
-      const mockSwipeRight = jest.fn();
+      const mockSwipeLeft = vi.fn();
+      const mockSwipeRight = vi.fn();
 
       MobileTestUtils.setViewport(MobileTestUtils.viewports.iPhone12);
       render(
@@ -720,7 +721,7 @@ describe('Mobile Responsiveness and Touch Interaction Tests', () => {
     });
 
     test('should handle pull-to-refresh gesture', async () => {
-      const mockRefresh = jest.fn();
+      const mockRefresh = vi.fn();
 
       MobileTestUtils.setViewport(MobileTestUtils.viewports.androidLarge);
       render(<MockPullToRefresh onRefresh={mockRefresh} />);
@@ -759,7 +760,7 @@ describe('Mobile Responsiveness and Touch Interaction Tests', () => {
   describe('Mobile Input Handling', () => {
     test('should handle touch input in forms', async () => {
       const user = userEvent.setup();
-      const mockSubmit = jest.fn();
+      const mockSubmit = vi.fn();
 
       MobileTestUtils.setViewport(MobileTestUtils.viewports.iPhoneSE);
       render(<MockTouchFriendlyForm onSubmit={mockSubmit} />);
@@ -788,7 +789,7 @@ describe('Mobile Responsiveness and Touch Interaction Tests', () => {
       const user = userEvent.setup();
 
       MobileTestUtils.setViewport(MobileTestUtils.viewports.androidSmall);
-      render(<MockTouchFriendlyForm onSubmit={jest.fn()} />);
+      render(<MockTouchFriendlyForm onSubmit={vi.fn()} />);
 
       const nameInput = screen.getByTestId('touch-name-input');
 
@@ -893,7 +894,7 @@ describe('Mobile Responsiveness and Touch Interaction Tests', () => {
 
     test('should maintain functionality after orientation change', async () => {
       const user = userEvent.setup();
-      const mockSubmit = jest.fn();
+      const mockSubmit = vi.fn();
 
       // Start in portrait
       MobileTestUtils.setViewport(MobileTestUtils.viewports.iPhone12);
@@ -942,7 +943,7 @@ describe('Mobile Responsiveness and Touch Interaction Tests', () => {
 
     test('should support screen reader navigation on mobile', () => {
       MobileTestUtils.setViewport(MobileTestUtils.viewports.androidSmall);
-      render(<MockTouchFriendlyForm onSubmit={jest.fn()} />);
+      render(<MockTouchFriendlyForm onSubmit={vi.fn()} />);
 
       // All inputs should have proper labels
       const nameInput = screen.getByTestId('touch-name-input');
@@ -973,7 +974,7 @@ describe('Mobile Responsiveness and Touch Interaction Tests', () => {
         devicePixelRatio: 3, // iPhone 12 Pro Max
       });
 
-      render(<MockTouchFriendlyForm onSubmit={jest.fn()} />);
+      render(<MockTouchFriendlyForm onSubmit={vi.fn()} />);
 
       // Elements should still be rendered correctly
       expect(screen.getByTestId('touch-form')).toBeInTheDocument();

@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { FieldValues } from 'react-hook-form';
 import { vi } from 'vitest';
 import FormStepperNavigation from '../FormStepperNavigation';
 import FormStepperContext from '../../FormStepperContext/FormStepperContext';
@@ -70,9 +71,19 @@ vi.mock('@mui/material', () => ({
   ),
 }));
 
+// Define the component props interface
+interface NavigationComponentProps {
+  onStepBack?: () => void;
+  isSubmitting?: boolean;
+  isSubmitButtonDisabled?: boolean;
+  isLastStep?: boolean;
+  isFirstStep?: boolean;
+  onCancel?: () => void;
+}
+
 describe('FormStepperNavigation', () => {
   const createMockContext = (
-    overrides: Partial<FormStepperContextType<unknown>> = {}
+    overrides: Partial<FormStepperContextType<FieldValues>> = {}
   ) => ({
     activeStep: 0,
     steps: [],
@@ -89,15 +100,8 @@ describe('FormStepperNavigation', () => {
   });
 
   const renderWithContext = (
-    contextValue: FormStepperContextType<unknown>,
-    component?: React.ComponentType<{
-      onStepBack?: () => void;
-      isSubmitting?: boolean;
-      isSubmitButtonDisabled?: boolean;
-      isLastStep?: boolean;
-      isFirstStep?: boolean;
-      onCancel?: () => void;
-    }>
+    contextValue: FormStepperContextType<FieldValues>,
+    component?: React.ComponentType<NavigationComponentProps>
   ) => {
     return render(
       <FormStepperContext.Provider value={contextValue}>
@@ -242,18 +246,9 @@ describe('FormStepperNavigation', () => {
     });
 
     test('custom navigation receives all expected prop types', () => {
-      interface CustomNavProps {
-        onStepBack?: () => void;
-        isSubmitting?: boolean;
-        isSubmitButtonDisabled?: boolean;
-        isLastStep?: boolean;
-        isFirstStep?: boolean;
-        onCancel?: () => void;
-      }
+      let receivedProps: NavigationComponentProps | null = null;
 
-      let receivedProps: CustomNavProps | null = null;
-
-      const CustomNavigation = (props: CustomNavProps) => {
+      const CustomNavigation = (props: NavigationComponentProps) => {
         receivedProps = props;
         return <div>Custom Navigation</div>;
       };
@@ -279,11 +274,7 @@ describe('FormStepperNavigation', () => {
     });
 
     test('custom navigation handles undefined onCancel gracefully', () => {
-      interface CustomNavProps {
-        onCancel?: () => void;
-      }
-
-      const CustomNavigation = ({ onCancel }: CustomNavProps) => (
+      const CustomNavigation = ({ onCancel }: NavigationComponentProps) => (
         <button onClick={onCancel} disabled={!onCancel}>
           Cancel
         </button>

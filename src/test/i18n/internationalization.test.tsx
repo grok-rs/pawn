@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 
 // Mock translation resources
 const translationResources = {
@@ -567,7 +568,7 @@ describe('Internationalization (i18n) Testing', () => {
     test('should render content in English (default)', () => {
       document.documentElement.lang = 'en';
 
-      render(<MockI18nForm onSubmit={jest.fn()} />);
+      render(<MockI18nForm onSubmit={vi.fn()} />);
 
       expect(screen.getByText('Player Name:')).toBeInTheDocument();
       expect(screen.getByText('Email:')).toBeInTheDocument();
@@ -578,7 +579,7 @@ describe('Internationalization (i18n) Testing', () => {
     test('should render content in Spanish', () => {
       document.documentElement.lang = 'es';
 
-      render(<MockI18nForm onSubmit={jest.fn()} />);
+      render(<MockI18nForm onSubmit={vi.fn()} />);
 
       expect(screen.getByText('Nombre del Jugador:')).toBeInTheDocument();
       expect(screen.getByText('Correo Electrónico:')).toBeInTheDocument();
@@ -589,7 +590,7 @@ describe('Internationalization (i18n) Testing', () => {
     test('should render content in German', () => {
       document.documentElement.lang = 'de';
 
-      render(<MockI18nForm onSubmit={jest.fn()} />);
+      render(<MockI18nForm onSubmit={vi.fn()} />);
 
       expect(screen.getByText('Spielername:')).toBeInTheDocument();
       expect(screen.getByText('E-Mail:')).toBeInTheDocument();
@@ -600,7 +601,7 @@ describe('Internationalization (i18n) Testing', () => {
     test('should render content in Japanese', () => {
       document.documentElement.lang = 'ja';
 
-      render(<MockI18nForm onSubmit={jest.fn()} />);
+      render(<MockI18nForm onSubmit={vi.fn()} />);
 
       expect(screen.getByText('選手名:')).toBeInTheDocument();
       expect(screen.getByText('メールアドレス:')).toBeInTheDocument();
@@ -611,7 +612,7 @@ describe('Internationalization (i18n) Testing', () => {
     test('should handle missing translations gracefully', () => {
       document.documentElement.lang = 'unknown';
 
-      render(<MockI18nForm onSubmit={jest.fn()} />);
+      render(<MockI18nForm onSubmit={vi.fn()} />);
 
       // Should fall back to translation keys or English
       expect(screen.getByTestId('i18n-form')).toBeInTheDocument();
@@ -623,7 +624,7 @@ describe('Internationalization (i18n) Testing', () => {
       const user = userEvent.setup();
 
       document.documentElement.lang = 'es';
-      render(<MockI18nForm onSubmit={jest.fn()} />);
+      render(<MockI18nForm onSubmit={vi.fn()} />);
 
       const submitButton = screen.getByTestId('submit-button');
       await user.click(submitButton);
@@ -642,7 +643,7 @@ describe('Internationalization (i18n) Testing', () => {
       const user = userEvent.setup();
 
       document.documentElement.lang = 'de';
-      render(<MockI18nForm onSubmit={jest.fn()} />);
+      render(<MockI18nForm onSubmit={vi.fn()} />);
 
       const emailInput = screen.getByTestId('player-email-input');
       await user.type(emailInput, 'invalid-email');
@@ -661,7 +662,7 @@ describe('Internationalization (i18n) Testing', () => {
       const user = userEvent.setup();
 
       document.documentElement.lang = 'en';
-      render(<MockI18nForm onSubmit={jest.fn()} />);
+      render(<MockI18nForm onSubmit={vi.fn()} />);
 
       const ratingInput = screen.getByTestId('player-rating-input');
       await user.type(ratingInput, '5000'); // Out of range
@@ -728,12 +729,12 @@ describe('Internationalization (i18n) Testing', () => {
   describe('Date and Time Localization', () => {
     beforeAll(() => {
       // Mock Date for consistent testing
-      jest.useFakeTimers();
-      jest.setSystemTime(new Date('2024-01-15T10:00:00Z'));
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2024-01-15T10:00:00Z'));
     });
 
     afterAll(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     test('should format relative time in English', () => {
@@ -805,7 +806,7 @@ describe('Internationalization (i18n) Testing', () => {
       document.documentElement.lang = 'ar';
       document.documentElement.dir = 'rtl';
 
-      render(<MockI18nForm onSubmit={jest.fn()} />);
+      render(<MockI18nForm onSubmit={vi.fn()} />);
 
       // In a real implementation, these would be translated
       expect(screen.getByTestId('i18n-form')).toBeInTheDocument();
@@ -836,14 +837,14 @@ describe('Internationalization (i18n) Testing', () => {
       const user = userEvent.setup();
 
       document.documentElement.lang = 'en';
-      const { rerender } = render(<MockI18nForm onSubmit={jest.fn()} />);
+      const { rerender } = render(<MockI18nForm onSubmit={vi.fn()} />);
 
       const nameInput = screen.getByTestId('player-name-input');
       await user.type(nameInput, 'John Doe');
 
       // Switch language
       document.documentElement.lang = 'de';
-      rerender(<MockI18nForm onSubmit={jest.fn()} />);
+      rerender(<MockI18nForm onSubmit={vi.fn()} />);
 
       // Form value should persist, labels should change
       expect(screen.getByDisplayValue('John Doe')).toBeInTheDocument();
@@ -886,7 +887,7 @@ describe('Internationalization (i18n) Testing', () => {
   describe('Accessibility with i18n', () => {
     test('should maintain accessibility attributes across languages', () => {
       document.documentElement.lang = 'es';
-      render(<MockI18nForm onSubmit={jest.fn()} />);
+      render(<MockI18nForm onSubmit={vi.fn()} />);
 
       const nameInput = screen.getByTestId('player-name-input');
       expect(nameInput).toHaveAccessibleName(/nombre del jugador/i);
@@ -899,7 +900,7 @@ describe('Internationalization (i18n) Testing', () => {
       const user = userEvent.setup();
 
       document.documentElement.lang = 'de';
-      render(<MockI18nForm onSubmit={jest.fn()} />);
+      render(<MockI18nForm onSubmit={vi.fn()} />);
 
       const submitButton = screen.getByTestId('submit-button');
       await user.click(submitButton);

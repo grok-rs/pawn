@@ -22,7 +22,7 @@ const createMockPlayer = (overrides: Partial<Player> = {}): Player => ({
   title: '',
   birth_date: '1990-01-01',
   gender: 'M',
-  fide_id: null,
+  fideId: null,
   email: 'john@example.com',
   phone: '+1234567890',
   address: '123 Main St',
@@ -41,7 +41,7 @@ const createMockPlayer = (overrides: Partial<Player> = {}): Player => ({
 const createMockTiebreakScore = (
   overrides: Partial<TiebreakScore> = {}
 ): TiebreakScore => ({
-  name: 'Buchholz',
+  tiebreak_type: 'buchholz_full',
   value: 10.5,
   display_value: '10.5',
   ...overrides,
@@ -58,14 +58,15 @@ const createMockPlayerStanding = (
   draws: 1,
   losses: 1,
   performance_rating: 1550,
+  rating_change: null,
   tiebreak_scores: [
     createMockTiebreakScore({
-      name: 'Buchholz',
+      tiebreak_type: 'buchholz_full',
       value: 10.5,
       display_value: '10.5',
     }),
     createMockTiebreakScore({
-      name: 'Sonneborn-Berger',
+      tiebreak_type: 'sonneborn_berger',
       value: 5.25,
       display_value: '5.25',
     }),
@@ -85,27 +86,39 @@ describe('export utils', () => {
     mockCreateElement.mockReturnValue(mockElement);
     mockCreateObjectURL.mockReturnValue('blob:mock-url');
 
-    global.document = {
-      createElement: mockCreateElement,
-      body: {
-        appendChild: mockAppendChild,
-        removeChild: mockRemoveChild,
+    Object.defineProperty(globalThis, 'document', {
+      writable: true,
+      value: {
+        createElement: mockCreateElement,
+        body: {
+          appendChild: mockAppendChild,
+          removeChild: mockRemoveChild,
+        },
       },
-    } as any;
+    });
 
-    global.URL = {
-      createObjectURL: mockCreateObjectURL,
-      revokeObjectURL: mockRevokeObjectURL,
-    } as any;
+    Object.defineProperty(globalThis, 'URL', {
+      writable: true,
+      value: {
+        createObjectURL: mockCreateObjectURL,
+        revokeObjectURL: mockRevokeObjectURL,
+      },
+    });
 
-    global.Blob = vi.fn().mockImplementation((content, options) => ({
-      content,
-      options,
-    }));
+    Object.defineProperty(globalThis, 'Blob', {
+      writable: true,
+      value: vi.fn().mockImplementation((content, options) => ({
+        content,
+        options,
+      })),
+    });
 
-    global.window = {
-      print: mockPrint,
-    } as any;
+    Object.defineProperty(globalThis, 'window', {
+      writable: true,
+      value: {
+        print: mockPrint,
+      },
+    });
   });
 
   afterEach(() => {

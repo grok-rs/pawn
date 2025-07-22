@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 
 // API Contract Testing Utilities
 const APIContractUtils = {
@@ -557,7 +558,7 @@ const APIContractUtils = {
 
 // Mock Tauri API with contract validation
 const createMockTauriAPI = () => {
-  const invoke = jest
+  const invoke = vi
     .fn()
     .mockImplementation((command: string, payload: any = {}) => {
       // Find the appropriate schema
@@ -755,7 +756,7 @@ describe('API Contract Testing', () => {
       };
 
       // Mock the update response
-      window.__TAURI_INTERNALS__.invoke = jest.fn().mockResolvedValue({
+      window.__TAURI_INTERNALS__.invoke = vi.fn().mockResolvedValue({
         success: true,
         updated: { id: 1, name: 'Updated Tournament', status: 'active' },
       });
@@ -1035,7 +1036,7 @@ describe('API Contract Testing', () => {
 
     test('should handle API timeout scenarios', async () => {
       // Mock a slow API call
-      window.__TAURI_INTERNALS__.invoke = jest.fn().mockImplementation(() => {
+      window.__TAURI_INTERNALS__.invoke = vi.fn().mockImplementation(() => {
         return new Promise(resolve => {
           setTimeout(() => {
             resolve({ success: true });
@@ -1058,7 +1059,7 @@ describe('API Contract Testing', () => {
 
     test('should handle network connectivity issues', async () => {
       // Mock network error
-      window.__TAURI_INTERNALS__.invoke = jest
+      window.__TAURI_INTERNALS__.invoke = vi
         .fn()
         .mockRejectedValue(new Error('Network connection failed'));
 

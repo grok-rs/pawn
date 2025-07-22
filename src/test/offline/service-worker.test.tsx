@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 
 // Mock Service Worker utilities
 const ServiceWorkerTestUtils = {
@@ -9,9 +10,9 @@ const ServiceWorkerTestUtils = {
     const mockSW = {
       state: 'activated',
       scriptURL: '/sw.js',
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      postMessage: jest.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      postMessage: vi.fn(),
     };
 
     const mockRegistration = {
@@ -19,13 +20,13 @@ const ServiceWorkerTestUtils = {
       installing: null,
       waiting: null,
       scope: '/',
-      update: jest.fn(),
-      unregister: jest.fn().mockResolvedValue(true),
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
+      update: vi.fn(),
+      unregister: vi.fn().mockResolvedValue(true),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
       pushManager: {
-        subscribe: jest.fn(),
-        getSubscription: jest.fn(),
+        subscribe: vi.fn(),
+        getSubscription: vi.fn(),
       },
     };
 
@@ -36,15 +37,15 @@ const ServiceWorkerTestUtils = {
   mockServiceWorkerAPI: (registration: any = null) => {
     Object.defineProperty(navigator, 'serviceWorker', {
       value: {
-        register: jest.fn().mockResolvedValue(registration),
-        getRegistration: jest.fn().mockResolvedValue(registration),
-        getRegistrations: jest
+        register: vi.fn().mockResolvedValue(registration),
+        getRegistration: vi.fn().mockResolvedValue(registration),
+        getRegistrations: vi
           .fn()
           .mockResolvedValue([registration].filter(Boolean)),
         ready: Promise.resolve(registration),
         controller: registration?.active || null,
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
       },
       configurable: true,
     });
@@ -68,25 +69,25 @@ const ServiceWorkerTestUtils = {
       version: 1,
       name: 'pawn-offline-db',
       objectStoreNames: ['tournaments', 'players', 'games'],
-      transaction: jest.fn(),
-      close: jest.fn(),
+      transaction: vi.fn(),
+      close: vi.fn(),
     };
 
     const mockTransaction = {
-      objectStore: jest.fn(),
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
+      objectStore: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
     };
 
     const mockObjectStore = {
-      add: jest.fn().mockResolvedValue(undefined),
-      put: jest.fn().mockResolvedValue(undefined),
-      get: jest.fn().mockResolvedValue(undefined),
-      getAll: jest.fn().mockResolvedValue([]),
-      delete: jest.fn().mockResolvedValue(undefined),
-      clear: jest.fn().mockResolvedValue(undefined),
-      createIndex: jest.fn(),
-      index: jest.fn(),
+      add: vi.fn().mockResolvedValue(undefined),
+      put: vi.fn().mockResolvedValue(undefined),
+      get: vi.fn().mockResolvedValue(undefined),
+      getAll: vi.fn().mockResolvedValue([]),
+      delete: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined),
+      createIndex: vi.fn(),
+      index: vi.fn(),
     };
 
     mockTransaction.objectStore.mockReturnValue(mockObjectStore);
@@ -94,14 +95,14 @@ const ServiceWorkerTestUtils = {
 
     Object.defineProperty(window, 'indexedDB', {
       value: {
-        open: jest.fn().mockImplementation(() => {
+        open: vi.fn().mockImplementation(() => {
           const request = {
             result: mockDB,
             error: null,
             transaction: null,
             readyState: 'done',
-            addEventListener: jest.fn(),
-            removeEventListener: jest.fn(),
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
           };
 
           setTimeout(() => {
@@ -111,7 +112,7 @@ const ServiceWorkerTestUtils = {
 
           return request;
         }),
-        deleteDatabase: jest.fn(),
+        deleteDatabase: vi.fn(),
       },
       configurable: true,
     });
@@ -122,21 +123,21 @@ const ServiceWorkerTestUtils = {
   // Mock cache API
   mockCacheAPI: () => {
     const mockCache = {
-      match: jest.fn(),
-      matchAll: jest.fn(),
-      add: jest.fn(),
-      addAll: jest.fn(),
-      put: jest.fn(),
-      delete: jest.fn(),
-      keys: jest.fn(),
+      match: vi.fn(),
+      matchAll: vi.fn(),
+      add: vi.fn(),
+      addAll: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+      keys: vi.fn(),
     };
 
     const mockCaches = {
-      open: jest.fn().mockResolvedValue(mockCache),
-      has: jest.fn().mockResolvedValue(true),
-      delete: jest.fn().mockResolvedValue(true),
-      keys: jest.fn().mockResolvedValue(['v1']),
-      match: jest.fn(),
+      open: vi.fn().mockResolvedValue(mockCache),
+      has: vi.fn().mockResolvedValue(true),
+      delete: vi.fn().mockResolvedValue(true),
+      keys: vi.fn().mockResolvedValue(['v1']),
+      match: vi.fn(),
     };
 
     Object.defineProperty(window, 'caches', {
@@ -684,7 +685,7 @@ describe('Offline Functionality and Service Worker Tests', () => {
 
     test('should handle service worker registration failure', async () => {
       ServiceWorkerTestUtils.mockServiceWorkerAPI();
-      (navigator.serviceWorker.register as jest.Mock).mockRejectedValue(
+      (navigator.serviceWorker.register as vi.Mock).mockRejectedValue(
         new Error('Registration failed')
       );
 
@@ -850,7 +851,7 @@ describe('Offline Functionality and Service Worker Tests', () => {
       // Mock storage estimate
       Object.defineProperty(navigator, 'storage', {
         value: {
-          estimate: jest.fn().mockResolvedValue({
+          estimate: vi.fn().mockResolvedValue({
             quota: 1024 * 1024 * 100, // 100MB
             usage: 1024 * 1024 * 25, // 25MB
           }),
@@ -1213,7 +1214,7 @@ describe('Offline Functionality and Service Worker Tests', () => {
     test('should handle storage quota exceeded scenarios', async () => {
       // Mock storage quota exceeded
       const mockStorage = {
-        estimate: jest.fn().mockResolvedValue({
+        estimate: vi.fn().mockResolvedValue({
           quota: 1024 * 1024 * 50, // 50MB
           usage: 1024 * 1024 * 48, // 48MB (96% used)
         }),
