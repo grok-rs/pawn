@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 
 // Helper functions for creating mock data
 const createMockTournament = (overrides: Partial<any> = {}) => ({
@@ -33,7 +34,7 @@ const createStressTestMocks = () => {
     operations.set(operationType, stats);
   };
 
-  const mockInvoke = jest
+  const mockInvoke = vi
     .fn()
     .mockImplementation(async (command: string, payload?: any) => {
       await operationDelay(Math.random() * 200 + 50); // Simulate network delay

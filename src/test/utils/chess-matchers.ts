@@ -1,4 +1,4 @@
-import { expect } from '@jest/globals';
+import { expect } from 'vitest';
 
 // Chess-specific types for testing
 export interface ChessPlayer {
@@ -557,7 +557,7 @@ export const chessTestUtils = {
   },
 
   // Calculate expected points from game results
-  calculatePoints: (wins: number, losses: number, draws: number): number => {
+  calculatePoints: (wins: number, _losses: number, draws: number): number => {
     return wins + draws * 0.5;
   },
 

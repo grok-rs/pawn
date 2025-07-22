@@ -136,6 +136,9 @@ vi.mock('../constants', () => ({
   ],
 }));
 
+// Import for mocking
+import * as validation from '../validation';
+
 vi.mock('../validation', () => ({
   DEFAULT_TOURNAMENT_FORM_VALUES: {
     name: 'Test Tournament',
@@ -318,11 +321,9 @@ describe('NewTournamentSetup', () => {
       mockCreateTournament.mockResolvedValueOnce(mockTournament);
 
       // Mock default values with null startDate
-      vi.mocked(
-        vi.importActual('../validation')
-      ).DEFAULT_TOURNAMENT_FORM_VALUES = {
-        ...vi.mocked(vi.importActual('../validation'))
-          .DEFAULT_TOURNAMENT_FORM_VALUES,
+      const mockedValidation = vi.mocked(validation);
+      mockedValidation.DEFAULT_TOURNAMENT_FORM_VALUES = {
+        ...mockedValidation.DEFAULT_TOURNAMENT_FORM_VALUES,
         startDate: null,
       };
 

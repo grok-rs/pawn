@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 
 // Test metrics and reporting utilities
 const TestMetricsCollector = {
@@ -1329,16 +1330,16 @@ describe('Comprehensive Test Reporting and Metrics Tests', () => {
       const testResults = generateMockTestData(10, 0.9);
 
       // Mock URL.createObjectURL
-      global.URL.createObjectURL = jest.fn(() => 'mock-url');
-      global.URL.revokeObjectURL = jest.fn();
+      global.URL.createObjectURL = vi.fn(() => 'mock-url');
+      global.URL.revokeObjectURL = vi.fn();
 
       // Mock createElement and click
       const mockLink = {
         href: '',
         download: '',
-        click: jest.fn(),
+        click: vi.fn(),
       };
-      jest.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
+      vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
 
       render(<TestResultsDashboard testResults={testResults} />);
 

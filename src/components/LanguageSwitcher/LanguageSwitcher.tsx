@@ -31,6 +31,16 @@ const LanguageSwitcher: React.FC = () => {
   const currentLanguage =
     languages.find(lang => lang.code === i18n.language) || languages[0];
 
+  // Safe translation function with fallback
+  const safeTranslation = (key: string, fallback: string = key) => {
+    try {
+      return t(key);
+    } catch (error) {
+      console.warn(`Translation error for key "${key}":`, error);
+      return fallback;
+    }
+  };
+
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -47,12 +57,17 @@ const LanguageSwitcher: React.FC = () => {
 
   return (
     <>
-      <Tooltip title={t('language.changeLanguage')}>
+      <Tooltip
+        title={safeTranslation('language.changeLanguage', 'Change Language')}
+      >
         <IconButton
           onClick={handleClick}
           size="small"
           sx={{ ml: 2 }}
-          aria-label={t('language.changeLanguage')}
+          aria-label={safeTranslation(
+            'language.changeLanguage',
+            'Change Language'
+          )}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <span style={{ fontSize: '1.2rem' }}>{currentLanguage.flag}</span>

@@ -111,8 +111,8 @@ vi.mock('../../FormHelperText/FormHelperText', () => ({
 // Test wrapper component that provides form context
 const TestWrapper = ({
   children,
-  defaultValues = {},
-  errors = {},
+  defaultValues: _defaultValues = {},
+  errors: _errors = {},
 }: {
   children: React.ReactNode;
   defaultValues?: Partial<TournamentFormValues>;
@@ -120,23 +120,9 @@ const TestWrapper = ({
 }) => {
   const theme = createTheme();
 
-  // Mock form methods
-  const mockFormMethods = {
-    register: vi.fn((name: string) => ({
-      name,
-      onChange: vi.fn(),
-      onBlur: vi.fn(),
-      ref: vi.fn(),
-    })),
-    control: {},
-    formState: { errors },
-    ...defaultValues,
-  };
+  // This wrapper provides the necessary context for child components
 
   const TestForm = () => {
-    // Mock useFormContext to return our mock methods
-    vi.mocked(vi.importActual('react-hook-form')).useFormContext = () =>
-      mockFormMethods;
     return <>{children}</>;
   };
 
@@ -147,14 +133,13 @@ const TestWrapper = ({
   );
 };
 
-// Mock useFormContext at module level
-vi.mock('react-hook-form', async () => {
-  const actual = await vi.importActual('react-hook-form');
-  return {
-    ...actual,
-    useFormContext: vi.fn(),
-  };
-});
+// Import useFormContext for mocking
+import { useFormContext } from 'react-hook-form';
+
+// Mock react-hook-form
+vi.mock('react-hook-form', () => ({
+  useFormContext: vi.fn(),
+}));
 
 describe('GeneralInfoStep', () => {
   beforeEach(() => {
@@ -172,9 +157,7 @@ describe('GeneralInfoStep', () => {
       formState: { errors: {} },
     };
 
-    vi.mocked(
-      vi.importActual('react-hook-form')
-    ).useFormContext.mockReturnValue(mockFormMethods);
+    vi.mocked(useFormContext).mockReturnValue(mockFormMethods);
   });
 
   describe('Initial Rendering', () => {
@@ -444,9 +427,7 @@ describe('GeneralInfoStep', () => {
         ref: vi.fn(),
       }));
 
-      vi.mocked(
-        vi.importActual('react-hook-form')
-      ).useFormContext.mockReturnValue({
+      vi.mocked(useFormContext).mockReturnValue({
         register: mockRegister,
         control: {},
         formState: { errors: {} },
@@ -477,9 +458,7 @@ describe('GeneralInfoStep', () => {
     test('passes control to CountryAutocomplete', () => {
       const mockControl = { test: 'control' };
 
-      vi.mocked(
-        vi.importActual('react-hook-form')
-      ).useFormContext.mockReturnValue({
+      vi.mocked(useFormContext).mockReturnValue({
         register: vi.fn(),
         control: mockControl,
         formState: { errors: {} },

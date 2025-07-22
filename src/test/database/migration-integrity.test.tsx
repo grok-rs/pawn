@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 
 // Mock database migration utilities
 const DatabaseTestUtils = {
@@ -760,7 +761,7 @@ describe('Database Migration and Data Integrity Tests', () => {
     test('should handle migration failure gracefully', async () => {
       // Mock a migration failure
       const originalExecute = DatabaseTestUtils.mockDatabase.execute;
-      DatabaseTestUtils.mockDatabase.execute = jest
+      DatabaseTestUtils.mockDatabase.execute = vi
         .fn()
         .mockRejectedValue(new Error('SQL execution failed'));
 
@@ -917,7 +918,7 @@ describe('Database Migration and Data Integrity Tests', () => {
   describe('Backup and Restore Tests', () => {
     test('should create backup successfully', async () => {
       const user = userEvent.setup();
-      const mockBackupCreated = jest.fn();
+      const mockBackupCreated = vi.fn();
 
       render(<MockBackupRestore onBackupCreated={mockBackupCreated} />);
 
@@ -943,7 +944,7 @@ describe('Database Migration and Data Integrity Tests', () => {
 
     test('should restore backup successfully', async () => {
       const user = userEvent.setup();
-      const mockRestoreCompleted = jest.fn();
+      const mockRestoreCompleted = vi.fn();
 
       render(<MockBackupRestore onRestoreCompleted={mockRestoreCompleted} />);
 
