@@ -1,13 +1,10 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
-import {
-  renderWithAllProviders,
-  createMockPlayer,
-  createMockTournament,
-} from '../utils/test-utils';
-import DataTable from '../../components/common/DataTable';
-import TournamentStandings from '../../components/tournaments/TournamentStandings';
+import { renderWithAllProviders, createMockPlayer } from '../utils/test-utils';
+import DataTable from '../../components/ui/DataTable';
+import StandingsTable from '../../components/StandingsTable/StandingsTable';
+import type { PlayerStanding, TiebreakScore } from '../../dto/bindings';
 
 // Performance testing utilities
 const measureRenderTime = async (
@@ -24,8 +21,25 @@ const measureRenderTime = async (
 };
 
 const measureMemoryUsage = (): number => {
-  if ('memory' in performance) {
-    return (performance as any).memory.usedJSHeapSize;
+  if (
+    typeof performance === 'object' &&
+    performance !== null &&
+    'memory' in performance
+  ) {
+    const performanceMemory = performance as unknown as {
+      memory?: { usedJSHeapSize?: number };
+    };
+    const memory = performanceMemory.memory;
+    if (
+      typeof memory === 'object' &&
+      memory !== null &&
+      'usedJSHeapSize' in memory
+    ) {
+      const usedMemory = memory.usedJSHeapSize;
+      if (typeof usedMemory === 'number') {
+        return usedMemory;
+      }
+    }
   }
   return 0;
 };
@@ -55,29 +69,126 @@ const generateLargePlayers = (count: number) => {
   return players;
 };
 
-const generateLargeStandings = (count: number) => {
+// Helper function to create mock TiebreakScore
+const createMockTiebreakScore = (
+  overrides: Partial<TiebreakScore> = {}
+): TiebreakScore => ({
+  tiebreak_type: 'buchholz_full',
+  value: 10.5,
+  display_value: '10.5',
+  ...overrides,
+});
+
+// Helper function to create mock PlayerStanding
+const createMockPlayerStanding = (
+  overrides: Partial<PlayerStanding> = {}
+): PlayerStanding => ({
+  rank: 1,
+  player: {
+    id: 1,
+    tournament_id: 1,
+    name: 'Player 1',
+    rating: 1500,
+    country_code: 'US',
+    title: null,
+    birth_date: null,
+    gender: null,
+    email: null,
+    phone: null,
+    club: null,
+    status: 'active',
+    seed_number: null,
+    pairing_number: null,
+    initial_rating: null,
+    created_at: new Date().toISOString(),
+    updated_at: null,
+  },
+  points: 2.5,
+  games_played: 4,
+  wins: 2,
+  draws: 1,
+  losses: 1,
+  performance_rating: 1550,
+  rating_change: null,
+  tiebreak_scores: [
+    createMockTiebreakScore({
+      tiebreak_type: 'buchholz_full',
+      value: 10.5,
+      display_value: '10.5',
+    }),
+    createMockTiebreakScore({
+      tiebreak_type: 'sonneborn_berger',
+      value: 5.25,
+      display_value: '5.25',
+    }),
+  ],
+  ...overrides,
+});
+
+const generateLargeStandings = (count: number): PlayerStanding[] => {
   const standings = [];
   for (let i = 1; i <= count; i++) {
-    standings.push({
-      playerId: i,
-      playerName: `Player ${i.toString().padStart(4, '0')}`,
-      rank: i,
-      points: Math.max(0, Math.floor(Math.random() * 10) / 2),
-      gamesPlayed: Math.floor(Math.random() * 9) + 1,
-      wins: Math.floor(Math.random() * 5),
-      draws: Math.floor(Math.random() * 3),
-      losses: Math.floor(Math.random() * 4),
-      tiebreaks: [
-        Math.floor(Math.random() * 20) + 10,
-        Math.floor(Math.random() * 15) + 5,
-        Math.floor(Math.random() * 10) + 2,
-      ],
-      performance: 1200 + Math.floor(Math.random() * 800),
-      color: i % 2 === 0 ? 'white' : 'black',
-    });
+    const points = Math.max(0, Math.floor(Math.random() * 10) / 2);
+    const gamesPlayed = Math.floor(Math.random() * 9) + 1;
+    const wins = Math.floor(Math.random() * 5);
+    const draws = Math.floor(Math.random() * 3);
+    const losses = gamesPlayed - wins - draws;
+
+    standings.push(
+      createMockPlayerStanding({
+        rank: i,
+        player: {
+          id: i,
+          tournament_id: 1,
+          name: `Player ${i.toString().padStart(4, '0')}`,
+          rating: 1200 + Math.floor(Math.random() * 800),
+          country_code: ['US', 'CA', 'UK', 'DE', 'FR', 'ES', 'IT', 'RU'][i % 8],
+          title:
+            i % 10 === 0
+              ? 'FM'
+              : i % 20 === 0
+                ? 'IM'
+                : i % 50 === 0
+                  ? 'GM'
+                  : null,
+          birth_date: `${1950 + (i % 50)}-${(i % 12) + 1}-${(i % 28) + 1}`,
+          gender: i % 2 === 0 ? 'M' : 'F',
+          email: `player${i}@example.com`,
+          phone: `+1${(1000000000 + i).toString()}`,
+          club: `Club ${i % 20}`,
+          status: 'active',
+          seed_number: null,
+          pairing_number: i,
+          initial_rating: 1200 + Math.floor(Math.random() * 800),
+          created_at: new Date().toISOString(),
+          updated_at: null,
+        },
+        points,
+        games_played: gamesPlayed,
+        wins,
+        draws,
+        losses,
+        performance_rating: 1200 + Math.floor(Math.random() * 800),
+        rating_change: Math.floor(Math.random() * 40) - 20,
+        tiebreak_scores: [
+          createMockTiebreakScore({
+            tiebreak_type: 'buchholz_full',
+            value: Math.floor(Math.random() * 20) + 10,
+            display_value: (Math.floor(Math.random() * 20) + 10).toString(),
+          }),
+          createMockTiebreakScore({
+            tiebreak_type: 'sonneborn_berger',
+            value: Math.floor(Math.random() * 15) + 5,
+            display_value: (Math.floor(Math.random() * 15) + 5).toString(),
+          }),
+        ],
+      })
+    );
   }
   return standings.sort(
-    (a, b) => b.points - a.points || b.tiebreaks[0] - a.tiebreaks[0]
+    (a, b) =>
+      b.points - a.points ||
+      b.tiebreak_scores[0].value - a.tiebreak_scores[0].value
   );
 };
 
@@ -113,10 +224,10 @@ describe('Performance Tests for Large Datasets', () => {
     test('should render 100 players within performance threshold', async () => {
       const players = generateLargePlayers(100);
       const columns = [
-        { key: 'name', label: 'Name', sortable: true },
-        { key: 'rating', label: 'Rating', sortable: true },
-        { key: 'countryCode', label: 'Country', sortable: true },
-        { key: 'email', label: 'Email', sortable: false },
+        { id: 'name', label: 'Name' },
+        { id: 'rating', label: 'Rating' },
+        { id: 'countryCode', label: 'Country' },
+        { id: 'email', label: 'Email' },
       ];
 
       const initialMemory = measureMemoryUsage();
@@ -124,7 +235,6 @@ describe('Performance Tests for Large Datasets', () => {
         <DataTable
           data={players}
           columns={columns}
-          pagination={{ pageSize: 25, currentPage: 1 }}
           loading={false}
           data-testid="players-table"
         />
@@ -146,12 +256,12 @@ describe('Performance Tests for Large Datasets', () => {
     test('should render 500 players within performance threshold', async () => {
       const players = generateLargePlayers(500);
       const columns = [
-        { key: 'name', label: 'Name', sortable: true },
-        { key: 'rating', label: 'Rating', sortable: true },
-        { key: 'countryCode', label: 'Country', sortable: true },
-        { key: 'title', label: 'Title', sortable: true },
-        { key: 'email', label: 'Email', sortable: false },
-        { key: 'phone', label: 'Phone', sortable: false },
+        { id: 'name', label: 'Name' },
+        { id: 'rating', label: 'Rating' },
+        { id: 'countryCode', label: 'Country' },
+        { id: 'title', label: 'Title' },
+        { id: 'email', label: 'Email' },
+        { id: 'phone', label: 'Phone' },
       ];
 
       const initialMemory = measureMemoryUsage();
@@ -159,7 +269,6 @@ describe('Performance Tests for Large Datasets', () => {
         <DataTable
           data={players}
           columns={columns}
-          pagination={{ pageSize: 50, currentPage: 1 }}
           loading={false}
           data-testid="players-table-500"
         />
@@ -179,11 +288,11 @@ describe('Performance Tests for Large Datasets', () => {
     test('should render 1000 players within performance threshold', async () => {
       const players = generateLargePlayers(1000);
       const columns = [
-        { key: 'name', label: 'Name', sortable: true },
-        { key: 'rating', label: 'Rating', sortable: true },
-        { key: 'countryCode', label: 'Country', sortable: true },
-        { key: 'title', label: 'Title', sortable: true },
-        { key: 'email', label: 'Email', sortable: false },
+        { id: 'name', label: 'Name' },
+        { id: 'rating', label: 'Rating' },
+        { id: 'countryCode', label: 'Country' },
+        { id: 'title', label: 'Title' },
+        { id: 'email', label: 'Email' },
       ];
 
       const initialMemory = measureMemoryUsage();
@@ -191,7 +300,6 @@ describe('Performance Tests for Large Datasets', () => {
         <DataTable
           data={players}
           columns={columns}
-          pagination={{ pageSize: 100, currentPage: 1 }}
           loading={false}
           data-testid="players-table-1000"
         />
@@ -211,16 +319,15 @@ describe('Performance Tests for Large Datasets', () => {
     test('should handle sorting 1000 players efficiently', async () => {
       const players = generateLargePlayers(1000);
       const columns = [
-        { key: 'name', label: 'Name', sortable: true },
-        { key: 'rating', label: 'Rating', sortable: true },
-        { key: 'countryCode', label: 'Country', sortable: true },
+        { id: 'name', label: 'Name' },
+        { id: 'rating', label: 'Rating' },
+        { id: 'countryCode', label: 'Country' },
       ];
 
       render(
         <DataTable
           data={players}
           columns={columns}
-          pagination={{ pageSize: 100, currentPage: 1 }}
           loading={false}
           data-testid="sortable-table"
         />
@@ -249,10 +356,6 @@ describe('Performance Tests for Large Datasets', () => {
   describe('Tournament Standings Performance', () => {
     test('should render large standings efficiently', async () => {
       const standings = generateLargeStandings(500);
-      const tournament = createMockTournament({
-        id: 1,
-        name: 'Large Tournament',
-      });
 
       const mockInvoke = vi.fn().mockResolvedValue(standings);
       Object.defineProperty(window, '__TAURI_INTERNALS__', {
@@ -261,15 +364,17 @@ describe('Performance Tests for Large Datasets', () => {
       });
 
       const initialMemory = measureMemoryUsage();
-      const renderTime = await measureRenderTime(
-        renderWithAllProviders(
-          <TournamentStandings
-            tournamentId={1}
-            tournament={tournament}
-            data-testid="standings-large"
-          />
-        )
+
+      const startTime = performance.now();
+      renderWithAllProviders(
+        <StandingsTable standings={standings} data-testid="standings-large" />
       );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('standings-large')).toBeInTheDocument();
+      });
+
+      const renderTime = performance.now() - startTime;
       const finalMemory = measureMemoryUsage();
 
       console.log(
@@ -291,19 +396,11 @@ describe('Performance Tests for Large Datasets', () => {
         configurable: true,
       });
 
-      const tournament = createMockTournament({
-        id: 1,
-        name: 'Real-time Tournament',
-      });
-
-      const { rerender } = render(
-        renderWithAllProviders(
-          <TournamentStandings
-            tournamentId={1}
-            tournament={tournament}
-            data-testid="standings-realtime"
-          />
-        )
+      const { rerender } = renderWithAllProviders(
+        <StandingsTable
+          standings={standings}
+          data-testid="standings-realtime"
+        />
       );
 
       // Simulate standings update
@@ -313,13 +410,10 @@ describe('Performance Tests for Large Datasets', () => {
       mockInvoke.mockResolvedValue(standings);
 
       rerender(
-        renderWithAllProviders(
-          <TournamentStandings
-            tournamentId={1}
-            tournament={tournament}
-            data-testid="standings-realtime"
-          />
-        )
+        <StandingsTable
+          standings={standings}
+          data-testid="standings-realtime"
+        />
       );
 
       await waitFor(() => {
@@ -340,9 +434,9 @@ describe('Performance Tests for Large Datasets', () => {
     test('should not leak memory when unmounting large components', async () => {
       const players = generateLargePlayers(1000);
       const columns = [
-        { key: 'name', label: 'Name', sortable: true },
-        { key: 'rating', label: 'Rating', sortable: true },
-        { key: 'email', label: 'Email', sortable: false },
+        { id: 'name', label: 'Name' },
+        { id: 'rating', label: 'Rating' },
+        { id: 'email', label: 'Email' },
       ];
 
       const initialMemory = measureMemoryUsage();
@@ -351,7 +445,6 @@ describe('Performance Tests for Large Datasets', () => {
         <DataTable
           data={players}
           columns={columns}
-          pagination={{ pageSize: 100, currentPage: 1 }}
           loading={false}
           data-testid="memory-test-table"
         />
@@ -368,8 +461,12 @@ describe('Performance Tests for Large Datasets', () => {
       unmount();
 
       // Force garbage collection if available
-      if (global.gc) {
-        global.gc();
+      if (
+        typeof globalThis !== 'undefined' &&
+        'gc' in globalThis &&
+        typeof (globalThis as unknown as { gc?: () => void }).gc === 'function'
+      ) {
+        (globalThis as unknown as { gc: () => void }).gc();
       }
 
       // Wait a bit for cleanup
@@ -397,8 +494,8 @@ describe('Performance Tests for Large Datasets', () => {
     test('should handle multiple mount/unmount cycles without memory leaks', async () => {
       const players = generateLargePlayers(100);
       const columns = [
-        { key: 'name', label: 'Name', sortable: true },
-        { key: 'rating', label: 'Rating', sortable: true },
+        { id: 'name', label: 'Name' },
+        { id: 'rating', label: 'Rating' },
       ];
 
       const initialMemory = measureMemoryUsage();
@@ -409,7 +506,6 @@ describe('Performance Tests for Large Datasets', () => {
           <DataTable
             data={players}
             columns={columns}
-            pagination={{ pageSize: 25, currentPage: 1 }}
             loading={false}
             data-testid={`cycle-test-${i}`}
           />
@@ -423,8 +519,12 @@ describe('Performance Tests for Large Datasets', () => {
       }
 
       // Force garbage collection if available
-      if (global.gc) {
-        global.gc();
+      if (
+        typeof globalThis !== 'undefined' &&
+        'gc' in globalThis &&
+        typeof (globalThis as unknown as { gc?: () => void }).gc === 'function'
+      ) {
+        (globalThis as unknown as { gc: () => void }).gc();
       }
 
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -446,7 +546,11 @@ describe('Performance Tests for Large Datasets', () => {
       const players = generateLargePlayers(10000);
 
       // Mock virtual scrolling behavior
-      const VirtualizedDataTable = ({ data }: { data: any[] }) => {
+      const VirtualizedDataTable = ({
+        data,
+      }: {
+        data: Record<string, unknown>[];
+      }) => {
         const [visibleRange] = React.useState({
           start: 0,
           end: 50,
@@ -457,8 +561,11 @@ describe('Performance Tests for Large Datasets', () => {
           <div data-testid="virtualized-table">
             <div style={{ height: '400px', overflowY: 'auto' }}>
               {visibleData.map(item => (
-                <div key={item.id} style={{ height: '40px', padding: '8px' }}>
-                  {item.name} - {item.rating}
+                <div
+                  key={String(item.id)}
+                  style={{ height: '40px', padding: '8px' }}
+                >
+                  {String(item.name)} - {String(item.rating)}
                 </div>
               ))}
             </div>

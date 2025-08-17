@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import * as yup from 'yup';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, FieldValues } from 'react-hook-form';
 import FormStepper from '../FormStepper';
 import {
   FormStepOption,
@@ -18,17 +18,11 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-// Test form data type
-interface TestFormData {
-  step1Field: string;
-  step2Field: number;
-}
-
-// Test step components
+// Test step components using FieldValues
 const Step1Component = ({
   handleDisableSubmitButton,
-}: FormStepComponentProps<TestFormData>) => {
-  const { register } = useFormContext<TestFormData>();
+}: FormStepComponentProps<FieldValues>) => {
+  const { register } = useFormContext<FieldValues>();
 
   const handleFieldChange = (value: string) => {
     if (value === 'disable') {
@@ -52,7 +46,7 @@ const Step1Component = ({
 };
 
 const Step2Component = () => {
-  const { register } = useFormContext<TestFormData>();
+  const { register } = useFormContext<FieldValues>();
 
   return (
     <div>
@@ -90,7 +84,7 @@ describe('FormStepper', () => {
   const mockOnLastStep = vi.fn();
   const mockOnCancel = vi.fn();
 
-  const defaultSteps: FormStepOption<TestFormData>[] = [
+  const defaultSteps: FormStepOption<FieldValues>[] = [
     {
       component: Step1Component,
       schema: step1Schema,
@@ -126,7 +120,7 @@ describe('FormStepper', () => {
     defaultValues: {
       step1Field: '',
       step2Field: 0,
-    } as TestFormData,
+    } satisfies FieldValues,
   };
 
   beforeEach(() => {
@@ -202,7 +196,7 @@ describe('FormStepper', () => {
       const user = userEvent.setup();
 
       // Create steps with required validation
-      const stepsWithValidation: FormStepOption<TestFormData>[] = [
+      const stepsWithValidation: FormStepOption<FieldValues>[] = [
         {
           component: () => <input data-testid="required-input" required />,
           schema: yup.object({
@@ -278,10 +272,10 @@ describe('FormStepper', () => {
 
   describe('Context Provider', () => {
     test('provides correct context values', () => {
-      let contextValue: FormStepperContextType<TestFormData> | null = null;
+      let contextValue: FormStepperContextType<FieldValues> | null = null;
 
       const ContextConsumer = () => {
-        const context = useFormStepperContext<TestFormData>();
+        const context = useFormStepperContext();
         contextValue = context;
         return <div>Context consumer</div>;
       };
@@ -490,7 +484,7 @@ describe('FormStepper', () => {
     });
 
     test('handles steps without schema', () => {
-      const stepsWithoutSchema: FormStepOption<TestFormData>[] = [
+      const stepsWithoutSchema: FormStepOption<FieldValues>[] = [
         {
           component: Step1Component,
           // No schema

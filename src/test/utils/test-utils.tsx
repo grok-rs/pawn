@@ -1,10 +1,11 @@
-import React, { ReactElement } from 'react';
+import React, { type ReactElement } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider, createTheme, type Theme } from '@mui/material/styles';
 import { I18nextProvider } from 'react-i18next';
+import type { i18n as I18nType } from 'i18next';
 import { Provider as ReduxProvider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, type EnhancedStore } from '@reduxjs/toolkit';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { vi } from 'vitest';
@@ -96,9 +97,9 @@ const testTheme = createTheme({
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   initialEntries?: string[];
   route?: string;
-  theme?: any;
-  i18nInstance?: any;
-  store?: any;
+  theme?: Theme;
+  i18nInstance?: I18nType;
+  store?: EnhancedStore;
   withRouter?: boolean;
   withI18n?: boolean;
   withTheme?: boolean;
@@ -250,15 +251,15 @@ export const createMockGameResult = (overrides = {}) => ({
 
 // Mock Tauri invoke function for tests
 export const createMockTauriInvoke = (
-  mockResponses: Record<string, any> = {}
+  mockResponses: Record<string, unknown> = {}
 ) => {
-  return vi.fn().mockImplementation((command: string, _payload?: any) => {
+  return vi.fn().mockImplementation((command: string, _payload?: unknown) => {
     if (mockResponses[command]) {
       return Promise.resolve(mockResponses[command]);
     }
 
     // Default mock responses
-    const defaultResponses: Record<string, any> = {
+    const defaultResponses: Record<string, unknown> = {
       get_tournaments: [createMockTournament()],
       get_players_by_tournament_enhanced: [createMockPlayer()],
       create_tournament: createMockTournament({ id: Date.now() }),

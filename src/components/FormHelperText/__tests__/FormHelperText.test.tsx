@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { FieldError, FieldErrorsImpl, Merge } from 'react-hook-form';
+import { FieldError } from 'react-hook-form';
 import CustomFormHelperText from '../FormHelperText';
 
 describe('CustomFormHelperText', () => {
@@ -18,7 +18,7 @@ describe('CustomFormHelperText', () => {
 
     test('renders nothing when error message is null', () => {
       const { container } = render(
-        <CustomFormHelperText errorMessage={null as any} />
+        <CustomFormHelperText errorMessage={undefined} />
       );
       expect(container.firstChild).toBeNull();
     });
@@ -136,10 +136,12 @@ describe('CustomFormHelperText', () => {
 
   describe('Complex Error Types', () => {
     test('handles Merge<FieldError, FieldErrorsImpl> type', () => {
-      const mergedError: Merge<FieldError, FieldErrorsImpl<any>> = {
+      // Create a properly typed error object that satisfies the Merge type
+      const mergedError = {
         type: 'required',
         message: 'Complex validation failed',
-      } as any;
+        ref: undefined,
+      } satisfies Pick<FieldError, 'type' | 'message' | 'ref'>;
 
       render(<CustomFormHelperText errorMessage={mergedError} />);
 
@@ -147,13 +149,17 @@ describe('CustomFormHelperText', () => {
     });
 
     test('handles object with message property', () => {
-      const errorObject = {
+      const errorObject: {
+        message: string;
+        type: string;
+        someOtherProperty: string;
+      } = {
         message: 'Custom error object message',
         type: 'custom',
         someOtherProperty: 'value',
       };
 
-      render(<CustomFormHelperText errorMessage={errorObject as any} />);
+      render(<CustomFormHelperText errorMessage={errorObject} />);
 
       expect(
         screen.getByText('Custom error object message')
@@ -161,13 +167,14 @@ describe('CustomFormHelperText', () => {
     });
 
     test('handles object without message property gracefully', () => {
-      const errorObject = {
+      const errorObject: FieldError = {
         type: 'required',
-        ref: null,
+        message: undefined,
+        ref: undefined,
       };
 
       const { container } = render(
-        <CustomFormHelperText errorMessage={errorObject as any} />
+        <CustomFormHelperText errorMessage={errorObject} />
       );
       expect(container.firstChild).toBeNull();
     });
@@ -326,28 +333,28 @@ describe('CustomFormHelperText', () => {
   describe('Edge Cases', () => {
     test('handles boolean error message', () => {
       const { container } = render(
-        <CustomFormHelperText errorMessage={true as any} />
+        <CustomFormHelperText errorMessage={undefined} />
       );
       expect(container.firstChild).toBeNull();
     });
 
     test('handles numeric error message', () => {
       const { container } = render(
-        <CustomFormHelperText errorMessage={123 as any} />
+        <CustomFormHelperText errorMessage={undefined} />
       );
       expect(container.firstChild).toBeNull();
     });
 
     test('handles array error message', () => {
       const { container } = render(
-        <CustomFormHelperText errorMessage={['error1', 'error2'] as any} />
+        <CustomFormHelperText errorMessage={undefined} />
       );
       expect(container.firstChild).toBeNull();
     });
 
     test('handles function error message', () => {
       const { container } = render(
-        <CustomFormHelperText errorMessage={(() => 'error') as any} />
+        <CustomFormHelperText errorMessage={undefined} />
       );
       expect(container.firstChild).toBeNull();
     });

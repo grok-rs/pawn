@@ -135,7 +135,9 @@ describe('BaseLayout', () => {
         </TestWrapper>
       );
 
-      const layoutContainer = container.firstChild as HTMLElement;
+      const layoutContainer = container.firstChild;
+      expect(layoutContainer).toBeInstanceOf(HTMLElement);
+      if (!(layoutContainer instanceof HTMLElement)) return;
       expect(layoutContainer).toHaveStyle({
         backgroundColor: theme.palette.background.default,
       });
@@ -453,7 +455,9 @@ describe('BaseLayout', () => {
         </TestWrapper>
       );
 
-      const layoutContainer = container.firstChild as HTMLElement;
+      const layoutContainer = container.firstChild;
+      expect(layoutContainer).toBeInstanceOf(HTMLElement);
+      if (!(layoutContainer instanceof HTMLElement)) return;
       expect(layoutContainer).toHaveStyle({ minHeight: '100vh' });
 
       const mainElement = screen.getByRole('main');

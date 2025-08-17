@@ -98,7 +98,9 @@ const DataValidationUtils = {
       }
 
       case 'knockout': {
-        const maxKnockoutRounds = Math.ceil(Math.log2(playerCount));
+        const maxKnockoutRounds = Math.ceil(
+          Math.log(playerCount) / Math.log(2)
+        );
         if (rounds > maxKnockoutRounds) {
           errors.push(
             `Knockout with ${playerCount} players cannot have more than ${maxKnockoutRounds} rounds`
@@ -110,16 +112,19 @@ const DataValidationUtils = {
         break;
       }
 
-      case 'swiss':
-        if (rounds > Math.ceil(Math.log2(playerCount)) + 2) {
+      case 'swiss': {
+        const maxSwissRounds =
+          Math.ceil(Math.log(playerCount) / Math.log(2)) + 2;
+        if (rounds > maxSwissRounds) {
           errors.push(
-            `Swiss tournament with ${playerCount} players should not exceed ${Math.ceil(Math.log2(playerCount)) + 2} rounds`
+            `Swiss tournament with ${playerCount} players should not exceed ${maxSwissRounds} rounds`
           );
         }
         if (rounds < 3) {
           errors.push('Swiss tournaments typically need at least 3 rounds');
         }
         break;
+      }
     }
 
     return { valid: errors.length === 0, errors };
@@ -127,7 +132,15 @@ const DataValidationUtils = {
 
   // Time control validation
   validateTimeControl: (
-    timeControl: any
+    timeControl:
+      | {
+          mainTime?: number;
+          increment?: number;
+          type?: string;
+        }
+      | null
+      | undefined
+      | string
   ): { valid: boolean; errors: string[] } => {
     const errors: string[] = [];
 
@@ -142,7 +155,10 @@ const DataValidationUtils = {
     if (typeof mainTime !== 'number' || mainTime < 0) {
       errors.push('Main time must be a non-negative number');
     } else {
-      if (mainTime === 0 && increment === 0) {
+      if (
+        mainTime === 0 &&
+        (increment !== undefined ? increment === 0 : true)
+      ) {
         errors.push('Cannot have zero main time and zero increment');
       }
       if (mainTime > 10800) {
@@ -152,23 +168,25 @@ const DataValidationUtils = {
     }
 
     // Increment validation
-    if (typeof increment !== 'number' || increment < 0) {
-      errors.push('Increment must be a non-negative number');
-    } else if (increment > 3600) {
-      // 1 hour
-      errors.push('Increment exceeding 1 hour is unusual');
+    if (increment !== undefined) {
+      if (typeof increment !== 'number' || increment < 0) {
+        errors.push('Increment must be a non-negative number');
+      } else if (increment > 3600) {
+        // 1 hour
+        errors.push('Increment exceeding 1 hour is unusual');
+      }
     }
 
     // Type validation
     const validTypes = ['fischer', 'bronstein', 'delay', 'simple'];
-    if (!validTypes.includes(type)) {
+    if (!type || !validTypes.includes(type)) {
       errors.push(
         `Invalid time control type: ${type}. Must be one of: ${validTypes.join(', ')}`
       );
     }
 
     // Logical combinations
-    if (type === 'simple' && increment > 0) {
+    if (type === 'simple' && increment !== undefined && increment > 0) {
       errors.push('Simple time control should not have increment');
     }
 
@@ -188,6 +206,7 @@ const DataValidationUtils = {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       errors.push('Invalid email format');
+      return { valid: false, errors };
     }
 
     // Length validation
@@ -196,7 +215,10 @@ const DataValidationUtils = {
     }
 
     // Local part validation (before @)
-    const [localPart, domain] = email.split('@');
+    const emailParts = email.split('@');
+    const localPart = emailParts[0];
+    const domain = emailParts[1];
+
     if (localPart && localPart.length > 64) {
       errors.push('Email local part too long (max 64 characters)');
     }
@@ -206,12 +228,24 @@ const DataValidationUtils = {
       if (domain.length > 253) {
         errors.push('Email domain too long (max 253 characters)');
       }
-      if (domain.includes('..')) {
+      if (domain.indexOf('..') !== -1) {
         errors.push('Email domain cannot contain consecutive dots');
       }
-      if (domain.startsWith('.') || domain.endsWith('.')) {
+      if (
+        domain.charAt(0) === '.' ||
+        domain.charAt(domain.length - 1) === '.'
+      ) {
         errors.push('Email domain cannot start or end with a dot');
       }
+      // Domain must have at least one dot and not just be a single word
+      if (domain.indexOf('.') === -1) {
+        errors.push('Invalid email format');
+      }
+    }
+
+    // Local part validation for consecutive dots
+    if (localPart && localPart.indexOf('..') !== -1) {
+      errors.push('Email local part cannot contain consecutive dots');
     }
 
     // Common disposable email patterns
@@ -225,9 +259,16 @@ const DataValidationUtils = {
       'dispostable',
       'fakeinbox',
     ];
-    if (
-      disposablePatterns.some(pattern => email.toLowerCase().includes(pattern))
-    ) {
+
+    let hasDisposablePattern = false;
+    for (let i = 0; i < disposablePatterns.length; i++) {
+      if (email.toLowerCase().indexOf(disposablePatterns[i]) !== -1) {
+        hasDisposablePattern = true;
+        break;
+      }
+    }
+
+    if (hasDisposablePattern) {
       errors.push('Disposable email addresses are not recommended');
     }
 
@@ -248,11 +289,7 @@ const DataValidationUtils = {
     // Remove common formatting
     const cleanPhone = phone.replace(/[\s\-()+.]/g, '');
 
-    if (!/^\d{7,15}$/.test(cleanPhone)) {
-      errors.push('Phone number must contain 7-15 digits');
-    }
-
-    // Country-specific validation
+    // Country-specific validation takes priority
     if (countryCode) {
       switch (countryCode.toUpperCase()) {
         case 'US':
@@ -267,6 +304,17 @@ const DataValidationUtils = {
             errors.push('UK phone number format invalid');
           }
           break;
+        default:
+          // Fall back to general validation for unknown countries
+          if (!/^\d{7,15}$/.test(cleanPhone)) {
+            errors.push('Phone number must contain 7-15 digits');
+          }
+          break;
+      }
+    } else {
+      // General validation when no country code is provided
+      if (!/^\d{7,15}$/.test(cleanPhone)) {
+        errors.push('Phone number must contain 7-15 digits');
       }
     }
 
@@ -290,28 +338,58 @@ const DataValidationUtils = {
       return { valid: false, errors };
     }
 
-    const date = new Date(birthDate);
+    const date = new Date(birthDate + 'T00:00:00.000Z');
     if (isNaN(date.getTime())) {
       errors.push('Invalid birth date');
       return { valid: false, errors };
     }
 
-    // Age validation for chess context
-    const today = new Date();
-    const age = today.getFullYear() - date.getFullYear();
-    const monthDiff = today.getMonth() - date.getMonth();
+    // Additional validation for specific date format issues
+    const parts = birthDate.split('-');
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const day = parseInt(parts[2], 10);
 
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < date.getDate())
-    ) {
-      const adjustedAge = age - 1;
-      if (adjustedAge < 5) {
-        errors.push(
-          'Player must be at least 5 years old for rated tournaments'
-        );
-      }
-    } else if (age < 5) {
+    // Validate month
+    if (month < 1 || month > 12) {
+      errors.push('Invalid birth date');
+      return { valid: false, errors };
+    }
+
+    // Validate day for the given month and year
+    const daysInMonth = new Date(year, month, 0).getDate();
+    if (day < 1 || day > daysInMonth) {
+      errors.push('Invalid birth date');
+      return { valid: false, errors };
+    }
+
+    // Additional validation - check if the parsed date matches the input
+    const reconstructedDate = `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    if (reconstructedDate !== birthDate) {
+      errors.push('Invalid birth date');
+      return { valid: false, errors };
+    }
+
+    // Check future date first (highest priority error)
+    const today = new Date();
+    if (date > today) {
+      errors.push('Birth date cannot be in the future');
+      return { valid: false, errors };
+    }
+
+    // Age validation for chess context
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1; // getMonth() returns 0-11
+    const currentDay = today.getDate();
+
+    let age = currentYear - year;
+
+    // Adjust age if birthday hasn't occurred this year
+    if (currentMonth < month || (currentMonth === month && currentDay < day)) {
+      age--;
+    }
+
+    if (age < 5) {
       errors.push('Player must be at least 5 years old for rated tournaments');
     }
 
@@ -319,22 +397,42 @@ const DataValidationUtils = {
       errors.push('Please verify birth date - age appears unusually high');
     }
 
-    if (date > today) {
-      errors.push('Birth date cannot be in the future');
-    }
-
     return { valid: errors.length === 0, errors };
   },
 
   // Comprehensive player data validation
   validatePlayerData: (
-    playerData: any
+    playerData:
+      | {
+          name?: string;
+          rating?: number;
+          email?: string;
+          title?: string;
+          phone?: string;
+          birthDate?: string;
+          countryCode?: string;
+          fideId?: string;
+          format?: string;
+          playerCount?: string;
+          rounds?: string;
+        }
+      | null
+      | undefined
   ): { valid: boolean; errors: string[]; warnings: string[] } => {
     const errors: string[] = [];
     const warnings: string[] = [];
 
+    if (!playerData) {
+      errors.push('Player data is required');
+      return { valid: false, errors, warnings };
+    }
+
     // Required fields validation
-    const requiredFields = ['name', 'rating', 'email'];
+    const requiredFields: (keyof typeof playerData)[] = [
+      'name',
+      'rating',
+      'email',
+    ];
     for (const field of requiredFields) {
       if (!playerData[field]) {
         errors.push(`Missing required field: ${field}`);
@@ -346,16 +444,24 @@ const DataValidationUtils = {
     }
 
     // Individual field validations
-    const nameValidation = DataValidationUtils.validateName(playerData.name);
-    errors.push(...nameValidation.errors);
+    if (playerData.name) {
+      const nameValidation = DataValidationUtils.validateName(playerData.name);
+      errors.push(...nameValidation.errors);
+    }
 
-    const ratingValidation = DataValidationUtils.validateChessRating(
-      playerData.rating
-    );
-    errors.push(...ratingValidation.errors);
+    if (typeof playerData.rating === 'number') {
+      const ratingValidation = DataValidationUtils.validateChessRating(
+        playerData.rating
+      );
+      errors.push(...ratingValidation.errors);
+    }
 
-    const emailValidation = DataValidationUtils.validateEmail(playerData.email);
-    errors.push(...emailValidation.errors);
+    if (playerData.email) {
+      const emailValidation = DataValidationUtils.validateEmail(
+        playerData.email
+      );
+      errors.push(...emailValidation.errors);
+    }
 
     if (playerData.title) {
       const titleValidation = DataValidationUtils.validateFIDETitle(
@@ -369,18 +475,25 @@ const DataValidationUtils = {
         playerData.phone,
         playerData.countryCode
       );
-      errors.push(...phoneValidation.errors);
+      if (!phoneValidation.valid) {
+        errors.push(...phoneValidation.errors);
+      }
     }
 
     if (playerData.birthDate) {
       const birthDateValidation = DataValidationUtils.validateBirthDate(
         playerData.birthDate
       );
-      errors.push(...birthDateValidation.errors);
+      if (!birthDateValidation.valid) {
+        errors.push(...birthDateValidation.errors);
+      }
     }
 
     // Cross-field validation
-    if (playerData.title && playerData.rating) {
+    if (
+      typeof playerData.rating === 'number' &&
+      playerData.title !== undefined
+    ) {
       const titleRatingWarnings =
         DataValidationUtils.validateTitleRatingConsistency(
           playerData.title,
@@ -417,8 +530,11 @@ const DataValidationUtils = {
       errors.push('Name must be less than 100 characters');
     }
 
-    // Check for valid characters (letters, spaces, hyphens, apostrophes)
-    if (!/^[a-zA-ZÀ-ÿĀ-žА-я\s\-'.]+$/.test(name)) {
+    // Check for valid characters (letters, spaces, hyphens, apostrophes, international chars)
+    // Support ASCII letters, common international letters, and Chinese/Cyrillic characters
+    const nameRegex =
+      /^[a-zA-Z\u00c0-\u00ff\u0100-\u017e\u0410-\u044f\u4e00-\u9faf\s\-'.]+$/;
+    if (!nameRegex.test(name)) {
       errors.push('Name contains invalid characters');
     }
 
@@ -438,7 +554,7 @@ const DataValidationUtils = {
   validateTitleRatingConsistency: (title: string, rating: number): string[] => {
     const warnings: string[] = [];
 
-    const titleMinRatings = {
+    const titleMinRatings: Record<string, number> = {
       GM: 2500,
       IM: 2400,
       FM: 2300,
@@ -449,7 +565,7 @@ const DataValidationUtils = {
       WCM: 2000,
     };
 
-    const minRating = titleMinRatings[title as keyof typeof titleMinRatings];
+    const minRating = titleMinRatings[title];
     if (minRating && rating < minRating - 200) {
       warnings.push(
         `Rating ${rating} is unusually low for title ${title} (typical minimum ~${minRating})`
@@ -467,7 +583,18 @@ const DataValidationUtils = {
 
   // Bulk validation for imports
   validateBulkPlayerData: (
-    playersData: any[]
+    playersData:
+      | Array<{
+          name?: string;
+          rating?: number;
+          email?: string;
+          title?: string;
+          phone?: string;
+          birthDate?: string;
+          countryCode?: string;
+          fideId?: string;
+        }>
+      | unknown
   ): {
     valid: boolean;
     results: Array<{
@@ -507,7 +634,20 @@ const DataValidationTestComponent = ({
   testData = null,
 }: {
   validationMode?: 'player' | 'tournament' | 'timeControl';
-  testData?: any;
+  testData?: {
+    name?: string;
+    rating?: string;
+    email?: string;
+    title?: string;
+    phone?: string;
+    birthDate?: string;
+    format?: string;
+    playerCount?: string;
+    rounds?: string;
+    mainTime?: number;
+    increment?: number;
+    type?: string;
+  } | null;
 }) => {
   const [data, setData] = React.useState(
     testData || {
@@ -520,7 +660,11 @@ const DataValidationTestComponent = ({
     }
   );
 
-  const [validationResult, setValidationResult] = React.useState<any>(null);
+  const [validationResult, setValidationResult] = React.useState<{
+    valid: boolean;
+    errors?: string[];
+    warnings?: string[];
+  } | null>(null);
 
   const handleValidate = () => {
     let result;
@@ -529,14 +673,14 @@ const DataValidationTestComponent = ({
       case 'player':
         result = DataValidationUtils.validatePlayerData({
           ...data,
-          rating: parseInt(data.rating) || 0,
+          rating: parseInt(data.rating || '0') || 0,
         });
         break;
       case 'tournament':
         result = DataValidationUtils.validateTournamentFormat(
-          data.format,
-          parseInt(data.playerCount) || 0,
-          parseInt(data.rounds) || 0
+          data.format || '',
+          parseInt(data.playerCount || '0') || 0,
+          parseInt(data.rounds || '0') || 0
         );
         break;
       case 'timeControl':
@@ -570,24 +714,24 @@ const DataValidationTestComponent = ({
           <input
             data-testid="name-input"
             placeholder="Name"
-            value={data.name}
+            value={data.name || ''}
             onChange={e => handleInputChange('name', e.target.value)}
           />
           <input
             data-testid="rating-input"
             placeholder="Rating"
-            value={data.rating}
+            value={data.rating || ''}
             onChange={e => handleInputChange('rating', e.target.value)}
           />
           <input
             data-testid="email-input"
             placeholder="Email"
-            value={data.email}
+            value={data.email || ''}
             onChange={e => handleInputChange('email', e.target.value)}
           />
           <select
             data-testid="title-select"
-            value={data.title}
+            value={data.title || ''}
             onChange={e => handleInputChange('title', e.target.value)}
           >
             <option value="">No Title</option>
@@ -647,9 +791,26 @@ const DataValidationTestComponent = ({
 const BulkValidationTestComponent = ({
   playersData,
 }: {
-  playersData: any[];
+  playersData: Array<{
+    name?: string;
+    rating?: number;
+    email?: string;
+    title?: string;
+    phone?: string;
+    birthDate?: string;
+    countryCode?: string;
+    fideId?: string;
+  }>;
 }) => {
-  const [validationResults, setValidationResults] = React.useState<any>(null);
+  const [validationResults, setValidationResults] = React.useState<{
+    valid: boolean;
+    results: Array<{
+      index: number;
+      valid: boolean;
+      errors: string[];
+      warnings: string[];
+    }>;
+  } | null>(null);
 
   React.useEffect(() => {
     const results = DataValidationUtils.validateBulkPlayerData(playersData);
@@ -667,23 +828,33 @@ const BulkValidationTestComponent = ({
       </div>
 
       <div data-testid="individual-results">
-        {validationResults.results.map((result: any, index: number) => (
-          <div key={index} data-testid={`result-${index}`}>
-            <div>
-              Player {result.index + 1}: {result.valid ? 'Valid' : 'Invalid'}
+        {validationResults.results.map(
+          (
+            result: {
+              index: number;
+              valid: boolean;
+              errors: string[];
+              warnings: string[];
+            },
+            index: number
+          ) => (
+            <div key={index} data-testid={`result-${index}`}>
+              <div>
+                Player {result.index + 1}: {result.valid ? 'Valid' : 'Invalid'}
+              </div>
+              {result.errors.length > 0 && (
+                <div data-testid={`errors-${index}`}>
+                  Errors: {result.errors.join(', ')}
+                </div>
+              )}
+              {result.warnings.length > 0 && (
+                <div data-testid={`warnings-${index}`}>
+                  Warnings: {result.warnings.join(', ')}
+                </div>
+              )}
             </div>
-            {result.errors.length > 0 && (
-              <div data-testid={`errors-${index}`}>
-                Errors: {result.errors.join(', ')}
-              </div>
-            )}
-            {result.warnings.length > 0 && (
-              <div data-testid={`warnings-${index}`}>
-                Warnings: {result.warnings.join(', ')}
-              </div>
-            )}
-          </div>
-        ))}
+          )
+        )}
       </div>
     </div>
   );
@@ -1058,7 +1229,7 @@ describe('Advanced Data Validation and Schema Tests', () => {
     });
 
     test('should validate age constraints for chess', () => {
-      const tooYoung = DataValidationUtils.validateBirthDate('2020-01-01');
+      const tooYoung = DataValidationUtils.validateBirthDate('2022-01-01');
       expect(tooYoung.valid).toBe(false);
       expect(tooYoung.errors[0]).toContain('at least 5 years old');
 
@@ -1155,8 +1326,8 @@ describe('Advanced Data Validation and Schema Tests', () => {
         phone: '+47 123 45 678',
         birthDate: '1990-11-30',
         countryCode: 'NO',
-        fideId: '1503014',
-      };
+        fideId: '15030140',
+      } as const;
 
       const result = DataValidationUtils.validatePlayerData(validPlayer);
       expect(result.valid).toBe(true);
@@ -1207,9 +1378,9 @@ describe('Advanced Data Validation and Schema Tests', () => {
   describe('Bulk Validation', () => {
     test('should validate multiple players in bulk', () => {
       const playersData = [
-        { name: 'Player 1', rating: 1500, email: 'player1@test.com' },
-        { name: 'Player 2', rating: 1600, email: 'player2@test.com' },
-        { name: 'Player 3', rating: 1550, email: 'player3@test.com' },
+        { name: 'Alice Johnson', rating: 1500, email: 'alice@test.com' },
+        { name: 'Bob Smith', rating: 1600, email: 'bob@test.com' },
+        { name: 'Carol Davis', rating: 1550, email: 'carol@test.com' },
       ];
 
       const result = DataValidationUtils.validateBulkPlayerData(playersData);
@@ -1220,9 +1391,9 @@ describe('Advanced Data Validation and Schema Tests', () => {
 
     test('should identify invalid entries in bulk validation', () => {
       const mixedData = [
-        { name: 'Valid Player', rating: 1500, email: 'valid@test.com' },
+        { name: 'David Wilson', rating: 1500, email: 'david@test.com' },
         { name: '', rating: 1600, email: 'invalid-email' }, // Invalid
-        { name: 'Another Valid', rating: 1550, email: 'another@test.com' },
+        { name: 'Eva Brown', rating: 1550, email: 'eva@test.com' },
       ];
 
       const result = DataValidationUtils.validateBulkPlayerData(mixedData);
@@ -1233,9 +1404,7 @@ describe('Advanced Data Validation and Schema Tests', () => {
     });
 
     test('should handle non-array input', () => {
-      const result = DataValidationUtils.validateBulkPlayerData(
-        'not an array' as any
-      );
+      const result = DataValidationUtils.validateBulkPlayerData('not an array');
       expect(result.valid).toBe(false);
       expect(result.results[0].errors).toContain('Input must be an array');
     });
@@ -1292,7 +1461,7 @@ describe('Advanced Data Validation and Schema Tests', () => {
     test('should handle pre-filled validation data', () => {
       const testData = {
         name: 'Magnus Carlsen',
-        rating: 2830,
+        rating: '2830',
         email: 'magnus@chess.com',
         title: 'GM',
       };
@@ -1314,9 +1483,9 @@ describe('Advanced Data Validation and Schema Tests', () => {
   describe('Bulk Validation Component Testing', () => {
     test('should display bulk validation results', () => {
       const testData = [
-        { name: 'Player 1', rating: 1500, email: 'p1@test.com' },
+        { name: 'Frank Miller', rating: 1500, email: 'frank@test.com' },
         { name: 'Invalid', rating: -100, email: 'bad-email' },
-        { name: 'Player 3', rating: 1600, email: 'p3@test.com' },
+        { name: 'Grace Lee', rating: 1600, email: 'grace@test.com' },
       ];
 
       render(<BulkValidationTestComponent playersData={testData} />);
@@ -1338,8 +1507,8 @@ describe('Advanced Data Validation and Schema Tests', () => {
 
     test('should handle all valid data in bulk validation', () => {
       const testData = [
-        { name: 'Player 1', rating: 1500, email: 'p1@test.com' },
-        { name: 'Player 2', rating: 1600, email: 'p2@test.com' },
+        { name: 'Henry Adams', rating: 1500, email: 'henry@test.com' },
+        { name: 'Ivy Chen', rating: 1600, email: 'ivy@test.com' },
       ];
 
       render(<BulkValidationTestComponent playersData={testData} />);
@@ -1362,7 +1531,10 @@ describe('Advanced Data Validation and Schema Tests', () => {
     });
 
     test('should handle circular references in objects', () => {
-      const circularObj: any = { name: 'Test' };
+      const circularObj: {
+        name: string;
+        self?: unknown;
+      } = { name: 'Test' };
       circularObj.self = circularObj;
 
       expect(() =>
@@ -1372,8 +1544,8 @@ describe('Advanced Data Validation and Schema Tests', () => {
 
     test('should handle very large datasets efficiently', () => {
       const largeDataset = Array.from({ length: 1000 }, (_, i) => ({
-        name: `Player ${i}`,
-        rating: 1000 + Math.random() * 1000,
+        name: `Test Player`,
+        rating: 1000 + Math.floor(Math.random() * 1000),
         email: `player${i}@test.com`,
       }));
 

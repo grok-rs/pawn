@@ -4,14 +4,17 @@ import { server } from './mocks/server';
 
 // Silence console outputs during tests
 const originalConsole = globalThis.console;
-globalThis.console = {
-  ...originalConsole,
-  log: vi.fn(),
-  debug: vi.fn(),
-  info: vi.fn(),
-  warn: vi.fn(),
-  error: vi.fn(),
-} as any;
+Object.defineProperty(globalThis, 'console', {
+  value: {
+    ...originalConsole,
+    log: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+  configurable: true,
+});
 
 // Establish API mocking before all tests
 beforeAll(() => server.listen());
@@ -25,8 +28,24 @@ afterAll(() => server.close());
 // Mock Tauri API for testing
 declare global {
   interface Window {
-    __TAURI__: any;
-    __TAURI_INTERNALS__: any;
+    __TAURI__: {
+      tauri: {
+        invoke: typeof vi.fn;
+      };
+      event: {
+        listen: typeof vi.fn;
+        emit: typeof vi.fn;
+      };
+      window: {
+        appWindow: {
+          listen: typeof vi.fn;
+          emit: typeof vi.fn;
+        };
+      };
+    };
+    __TAURI_INTERNALS__: {
+      invoke: typeof vi.fn;
+    };
   }
 }
 
@@ -52,18 +71,24 @@ window.__TAURI_INTERNALS__ = {
 };
 
 // Global test utilities
-(globalThis as any).ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+Object.defineProperty(globalThis, 'ResizeObserver', {
+  value: vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  })),
+  configurable: true,
+});
 
 // Mock IntersectionObserver
-(globalThis as any).IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+Object.defineProperty(globalThis, 'IntersectionObserver', {
+  value: vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  })),
+  configurable: true,
+});
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {

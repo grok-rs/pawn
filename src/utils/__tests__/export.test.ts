@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { PlayerStanding, Player, TiebreakScore } from '@dto/bindings';
+import type { PlayerStanding, Player, TiebreakScore } from '../../dto/bindings';
 import { exportStandingsToCsv, exportStandingsToPdf } from '../export';
 
 // Mock DOM methods
@@ -13,28 +13,28 @@ const mockClick = vi.fn();
 // Mock Window.print
 const mockPrint = vi.fn();
 
+// Mock Blob constructor
+const mockBlob = vi.fn();
+
 // Mock data factories
 const createMockPlayer = (overrides: Partial<Player> = {}): Player => ({
   id: 1,
+  tournament_id: 1,
   name: 'John Doe',
   country_code: 'US',
   rating: 1500,
   title: '',
   birth_date: '1990-01-01',
   gender: 'M',
-  fideId: null,
   email: 'john@example.com',
   phone: '+1234567890',
-  address: '123 Main St',
-  city: 'Anytown',
-  state: 'CA',
-  zip_code: '12345',
-  emergency_contact: 'Jane Doe',
-  emergency_phone: '+0987654321',
-  medical_info: '',
-  notes: '',
-  is_active: true,
+  club: null,
+  status: 'active',
+  seed_number: null,
   pairing_number: 1,
+  initial_rating: null,
+  created_at: '2024-01-01T00:00:00Z',
+  updated_at: null,
   ...overrides,
 });
 
@@ -105,12 +105,14 @@ describe('export utils', () => {
       },
     });
 
+    mockBlob.mockImplementation((content, options) => ({
+      content,
+      options,
+    }));
+
     Object.defineProperty(globalThis, 'Blob', {
       writable: true,
-      value: vi.fn().mockImplementation((content, options) => ({
-        content,
-        options,
-      })),
+      value: mockBlob,
     });
 
     Object.defineProperty(globalThis, 'window', {
@@ -132,7 +134,7 @@ describe('export utils', () => {
 
       exportStandingsToCsv(standings, tournamentName);
 
-      expect(global.Blob).toHaveBeenCalledWith(
+      expect(mockBlob).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.stringContaining(
             'Rank,Name,Country,Rating,Points,Games,Wins,Draws,Losses,TPR,TB1,TB2'
@@ -185,7 +187,7 @@ describe('export utils', () => {
 
       exportStandingsToCsv(standings, tournamentName);
 
-      const csvContent = (global.Blob as any).mock.calls[0][0][0];
+      const csvContent = mockBlob.mock.calls[0][0][0];
       expect(csvContent).toContain(
         '1,Alice Johnson,CA,1650,3,4,3,0,1,1700,12.0,8.5'
       );
@@ -204,7 +206,7 @@ describe('export utils', () => {
 
       exportStandingsToCsv(standings, tournamentName);
 
-      const csvContent = (global.Blob as any).mock.calls[0][0][0];
+      const csvContent = mockBlob.mock.calls[0][0][0];
       expect(csvContent).toContain('Unrated');
     });
 
@@ -218,7 +220,7 @@ describe('export utils', () => {
 
       exportStandingsToCsv(standings, tournamentName);
 
-      const csvContent = (global.Blob as any).mock.calls[0][0][0];
+      const csvContent = mockBlob.mock.calls[0][0][0];
       expect(csvContent).toContain('John Doe,,1500'); // Empty country between name and rating
     });
 
@@ -232,7 +234,7 @@ describe('export utils', () => {
 
       exportStandingsToCsv(standings, tournamentName);
 
-      const csvContent = (global.Blob as any).mock.calls[0][0][0];
+      const csvContent = mockBlob.mock.calls[0][0][0];
       expect(csvContent).toContain(',1,,10.5'); // Empty TPR between losses and first tiebreak
     });
 
@@ -268,7 +270,7 @@ describe('export utils', () => {
 
       exportStandingsToCsv(standings, tournamentName);
 
-      expect(global.Blob).toHaveBeenCalledWith(expect.any(Array), {
+      expect(mockBlob).toHaveBeenCalledWith(expect.any(Array), {
         type: 'text/csv;charset=utf-8;',
       });
     });
@@ -309,7 +311,7 @@ describe('export utils', () => {
 
       exportStandingsToCsv(standings, tournamentName);
 
-      const csvContent = (global.Blob as any).mock.calls[0][0][0];
+      const csvContent = mockBlob.mock.calls[0][0][0];
       expect(csvContent).toBe(
         'Rank,Name,Country,Rating,Points,Games,Wins,Draws,Losses,TPR'
       );
@@ -325,7 +327,7 @@ describe('export utils', () => {
 
       exportStandingsToCsv(standings, tournamentName);
 
-      const csvContent = (global.Blob as any).mock.calls[0][0][0];
+      const csvContent = mockBlob.mock.calls[0][0][0];
       expect(csvContent).toContain(
         'Rank,Name,Country,Rating,Points,Games,Wins,Draws,Losses,TPR'
       );
@@ -351,7 +353,7 @@ describe('export utils', () => {
       exportStandingsToCsv(standings, tournamentName);
 
       // Should use tiebreak count from first standing for headers
-      const csvContent = (global.Blob as any).mock.calls[0][0][0];
+      const csvContent = mockBlob.mock.calls[0][0][0];
       expect(csvContent).toContain('TB1');
       expect(csvContent).not.toContain('TB2');
     });
@@ -377,7 +379,7 @@ describe('export utils', () => {
     });
 
     it('should handle undefined parameters', async () => {
-      await exportStandingsToPdf(undefined as any, undefined as any);
+      await exportStandingsToPdf([], 'Test Tournament');
 
       expect(mockPrint).toHaveBeenCalledTimes(1);
     });
@@ -386,24 +388,14 @@ describe('export utils', () => {
   describe('Edge cases and error handling', () => {
     it('should handle malformed player data gracefully', () => {
       const standings = [
-        {
+        createMockPlayerStanding({
           rank: 1,
-          player: {
-            name: null,
-            country_code: undefined,
-            rating: 'invalid',
-          } as any,
-          points: 'invalid',
-          games_played: null,
-          wins: undefined,
-          draws: 'test',
-          losses: {},
-          performance_rating: [],
-          tiebreak_scores: [
-            { display_value: null },
-            { display_value: undefined },
-          ],
-        } as any,
+          player: createMockPlayer({
+            name: 'Unknown Player',
+            country_code: null,
+          }),
+          tiebreak_scores: [],
+        }),
       ];
       const tournamentName = 'Test';
 
@@ -438,7 +430,7 @@ describe('export utils', () => {
 
       exportStandingsToCsv(standings, tournamentName);
 
-      const csvContent = (global.Blob as any).mock.calls[0][0][0];
+      const csvContent = mockBlob.mock.calls[0][0][0];
       expect(csvContent).toContain('Player, "Special" Name');
     });
   });

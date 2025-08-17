@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import TeamManagement from '../TeamManagement';
+import type { Team, Player, TeamMembership } from '@dto/bindings';
 
 // Mock react-i18next
 vi.mock('react-i18next', () => ({
@@ -37,52 +38,6 @@ vi.mock('@dto/bindings', () => ({
 }));
 
 // Mock data types
-interface Team {
-  id: number;
-  tournament_id: number;
-  name: string;
-  captain?: string;
-  description?: string;
-  color?: string;
-  club_affiliation?: string;
-  contact_email?: string;
-  contact_phone?: string;
-  max_board_count: number;
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface Player {
-  id: number;
-  tournament_id: number;
-  name: string;
-  rating?: number;
-  title?: string;
-  country_code?: string;
-  birth_date?: string;
-  gender?: string;
-  email?: string;
-  phone?: string;
-  club?: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface TeamMembership {
-  id: number;
-  team_id: number;
-  player_id: number;
-  board_number?: number;
-  is_captain: boolean;
-  is_reserve: boolean;
-  rating_at_assignment?: number;
-  notes?: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
 
 // Mock data
 const createMockPlayer = (
@@ -101,6 +56,9 @@ const createMockPlayer = (
   phone: null,
   club: `Club ${id}`,
   status: 'active',
+  seed_number: null,
+  pairing_number: null,
+  initial_rating: null,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
   ...overrides,
@@ -136,10 +94,9 @@ const createMockMembership = (
   is_captain: false,
   is_reserve: false,
   rating_at_assignment: 1800,
-  notes: null,
   status: 'active',
+  assigned_at: new Date().toISOString(),
   created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
   ...overrides,
 });
 

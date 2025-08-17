@@ -77,7 +77,9 @@ function BulkImportDialog({
     const reader = new FileReader();
     reader.onload = e => {
       try {
-        const csv = e.target?.result as string;
+        const result = e.target?.result;
+        if (typeof result !== 'string') return;
+        const csv = result;
         const players = parseCSV(csv);
         setCsvData(players);
         setActiveStep(1);

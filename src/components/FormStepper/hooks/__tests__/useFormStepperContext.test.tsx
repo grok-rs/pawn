@@ -6,7 +6,7 @@ import { FormStepperContextType } from '../../types';
 
 describe('useFormStepperContext', () => {
   test('returns context value when used within provider', () => {
-    const mockContextValue: FormStepperContextType<any> = {
+    const mockContextValue: FormStepperContextType<Record<string, unknown>> = {
       activeStep: 1,
       steps: [],
       isSubmitting: false,
@@ -43,13 +43,8 @@ describe('useFormStepperContext', () => {
     console.error = originalError;
   });
 
-  test('returns typed context value with generics', () => {
-    interface TestFormData {
-      field1: string;
-      field2: number;
-    }
-
-    const mockContextValue: FormStepperContextType<TestFormData> = {
+  test('returns context value with correct types', () => {
+    const mockContextValue: FormStepperContextType<Record<string, unknown>> = {
       activeStep: 0,
       steps: [],
       isSubmitting: false,
@@ -69,7 +64,7 @@ describe('useFormStepperContext', () => {
       </FormStepperContext.Provider>
     );
 
-    const { result } = renderHook(() => useFormStepperContext<TestFormData>(), {
+    const { result } = renderHook(() => useFormStepperContext(), {
       wrapper,
     });
 
@@ -79,12 +74,13 @@ describe('useFormStepperContext', () => {
   });
 
   test('works with default context value structure', () => {
-    const mockMinimalContext: FormStepperContextType<any> = {
-      activeStep: 0,
-      steps: [],
-      onSubmit: vi.fn(),
-      handleDisableSubmitButton: vi.fn(),
-    };
+    const mockMinimalContext: FormStepperContextType<Record<string, unknown>> =
+      {
+        activeStep: 0,
+        steps: [],
+        onSubmit: vi.fn(),
+        handleDisableSubmitButton: vi.fn(),
+      };
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <FormStepperContext.Provider value={mockMinimalContext}>

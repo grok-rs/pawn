@@ -276,9 +276,12 @@ export function BatchImport({
             <InputLabel>Import Method</InputLabel>
             <Select
               value={importFormat}
-              onChange={e =>
-                setImportFormat(e.target.value as 'csv' | 'manual')
-              }
+              onChange={e => {
+                const value = e.target.value;
+                if (value === 'csv' || value === 'manual') {
+                  setImportFormat(value);
+                }
+              }}
               label="Import Method"
             >
               <MenuItem value="csv">CSV Upload</MenuItem>

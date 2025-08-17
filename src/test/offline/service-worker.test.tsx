@@ -3,6 +3,37 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 
+// Type definitions for Service Worker testing
+interface MockServiceWorker {
+  state: string;
+  scriptURL: string;
+  addEventListener: (type: string, listener: EventListener) => void;
+  removeEventListener: (type: string, listener: EventListener) => void;
+  postMessage: (message: unknown) => void;
+}
+
+interface MockServiceWorkerRegistration {
+  active: MockServiceWorker | null;
+  installing: MockServiceWorker | null;
+  waiting: MockServiceWorker | null;
+  scope: string;
+  update: () => Promise<void>;
+  unregister: () => Promise<boolean>;
+  addEventListener: (type: string, listener: EventListener) => void;
+  removeEventListener: (type: string, listener: EventListener) => void;
+  dispatchEvent: (event: Event) => boolean;
+  pushManager: {
+    subscribe: () => Promise<unknown>;
+    getSubscription: () => Promise<unknown>;
+  };
+}
+
+interface Tournament {
+  id: number;
+  name: string;
+  lastModified: number;
+}
+
 // Mock Service Worker utilities
 const ServiceWorkerTestUtils = {
   // Mock service worker registration
@@ -24,6 +55,7 @@ const ServiceWorkerTestUtils = {
       unregister: vi.fn().mockResolvedValue(true),
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
       pushManager: {
         subscribe: vi.fn(),
         getSubscription: vi.fn(),
@@ -34,7 +66,9 @@ const ServiceWorkerTestUtils = {
   },
 
   // Mock navigator.serviceWorker
-  mockServiceWorkerAPI: (registration: any = null) => {
+  mockServiceWorkerAPI: (
+    registration: MockServiceWorkerRegistration | null = null
+  ) => {
     Object.defineProperty(navigator, 'serviceWorker', {
       value: {
         register: vi.fn().mockResolvedValue(registration),
@@ -68,7 +102,11 @@ const ServiceWorkerTestUtils = {
     const mockDB = {
       version: 1,
       name: 'pawn-offline-db',
-      objectStoreNames: ['tournaments', 'players', 'games'],
+      objectStoreNames: [
+        'tournaments',
+        'players',
+        'games',
+      ] as unknown as DOMStringList,
       transaction: vi.fn(),
       close: vi.fn(),
     };
@@ -100,14 +138,21 @@ const ServiceWorkerTestUtils = {
             result: mockDB,
             error: null,
             transaction: null,
-            readyState: 'done',
+            readyState: 'done' as const,
             addEventListener: vi.fn(),
             removeEventListener: vi.fn(),
+            onsuccess: null,
+            onerror: null,
           };
 
           setTimeout(() => {
-            if (request.onsuccess)
-              request.onsuccess({ target: request } as any);
+            if (request.onsuccess && typeof request.onsuccess === 'function') {
+              const successEvent = new Event('success') as Event & {
+                target: typeof request;
+              };
+              Object.defineProperty(successEvent, 'target', { value: request });
+              (request.onsuccess as (event: Event) => void)(successEvent);
+            }
           }, 10);
 
           return request;
@@ -155,7 +200,9 @@ const OfflineStorageManager = () => {
   const [syncStatus, setSyncStatus] = React.useState<
     'idle' | 'syncing' | 'error'
   >('idle');
-  const [offlineData, setOfflineData] = React.useState<any[]>([]);
+  const [offlineData, setOfflineData] = React.useState<
+    Record<string, unknown>[]
+  >([]);
   const [storageUsage, setStorageUsage] = React.useState<{
     quota: number;
     usage: number;
@@ -209,7 +256,7 @@ const OfflineStorageManager = () => {
     }
   };
 
-  const addOfflineData = (data: any) => {
+  const addOfflineData = (data: Record<string, unknown>) => {
     setOfflineData(prev => [...prev, { ...data, timestamp: Date.now() }]);
   };
 
@@ -259,7 +306,10 @@ const OfflineStorageManager = () => {
       <div data-testid="offline-items">
         {offlineData.map((item, index) => (
           <div key={index} data-testid={`offline-item-${index}`}>
-            {item.type}: {new Date(item.timestamp).toLocaleTimeString()}
+            {(item as { type: string; timestamp: number }).type}:{' '}
+            {new Date(
+              (item as { type: string; timestamp: number }).timestamp
+            ).toLocaleTimeString()}
           </div>
         ))}
       </div>
@@ -275,7 +325,7 @@ const ServiceWorkerRegistration = () => {
   const [swState, setSWState] = React.useState<string>('');
   const [updateAvailable, setUpdateAvailable] = React.useState(false);
   const [registration, setRegistration] =
-    React.useState<ServiceWorkerRegistration | null>(null);
+    React.useState<MockServiceWorkerRegistration | null>(null);
 
   const registerServiceWorker = async () => {
     if (!('serviceWorker' in navigator)) {
@@ -286,7 +336,9 @@ const ServiceWorkerRegistration = () => {
     setRegistrationState('registering');
 
     try {
-      const registration = await navigator.serviceWorker.register('/sw.js');
+      const registration = (await navigator.serviceWorker.register(
+        '/sw.js'
+      )) as unknown as MockServiceWorkerRegistration;
       setRegistration(registration);
       setRegistrationState('registered');
       setSWState(registration.active?.state || 'unknown');
@@ -367,9 +419,13 @@ const ServiceWorkerRegistration = () => {
 
 // Offline tournament management component
 const OfflineTournamentManager = () => {
-  const [tournaments, setTournaments] = React.useState<any[]>([]);
+  const [tournaments, setTournaments] = React.useState<
+    Record<string, unknown>[]
+  >([]);
   const [isOnline, setIsOnline] = React.useState(navigator.onLine);
-  const [syncQueue, setSyncQueue] = React.useState<any[]>([]);
+  const [syncQueue, setSyncQueue] = React.useState<Record<string, unknown>[]>(
+    []
+  );
 
   React.useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -384,7 +440,7 @@ const OfflineTournamentManager = () => {
     };
   }, []);
 
-  const createTournament = async (tournamentData: any) => {
+  const createTournament = async (tournamentData: Record<string, unknown>) => {
     const tournament = {
       id: Date.now(),
       ...tournamentData,
@@ -416,10 +472,15 @@ const OfflineTournamentManager = () => {
     }
   };
 
-  const updateTournament = async (id: number, updates: any) => {
+  const updateTournament = async (
+    id: number,
+    updates: Record<string, unknown>
+  ) => {
     setTournaments(prev =>
       prev.map(t =>
-        t.id === id ? { ...t, ...updates, lastModified: Date.now() } : t
+        (t as Tournament & Record<string, unknown>).id === id
+          ? { ...t, ...updates, lastModified: Date.now() }
+          : t
       )
     );
 
@@ -487,24 +548,34 @@ const OfflineTournamentManager = () => {
       </div>
 
       <div data-testid="tournament-list">
-        {tournaments.map(tournament => (
-          <div key={tournament.id} data-testid={`tournament-${tournament.id}`}>
-            <div>{tournament.name}</div>
-            <div>
-              {tournament.createdOffline ? 'Created Offline' : 'Created Online'}
-            </div>
-            <button
-              data-testid={`update-tournament-${tournament.id}`}
-              onClick={() =>
-                updateTournament(tournament.id, {
-                  name: tournament.name + ' (Updated)',
-                })
-              }
+        {tournaments.map(tournament => {
+          const tournamentData = tournament as unknown as Tournament & {
+            createdOffline?: boolean;
+          };
+          return (
+            <div
+              key={tournamentData.id}
+              data-testid={`tournament-${tournamentData.id}`}
             >
-              Update
-            </button>
-          </div>
-        ))}
+              <div>{tournamentData.name}</div>
+              <div>
+                {tournamentData.createdOffline
+                  ? 'Created Offline'
+                  : 'Created Online'}
+              </div>
+              <button
+                data-testid={`update-tournament-${tournamentData.id}`}
+                onClick={() =>
+                  updateTournament(tournamentData.id, {
+                    name: tournamentData.name + ' (Updated)',
+                  })
+                }
+              >
+                Update
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -642,7 +713,7 @@ const CacheManager = () => {
 };
 
 describe('Offline Functionality and Service Worker Tests', () => {
-  let originalNavigator: any;
+  let originalNavigator: unknown;
 
   beforeEach(() => {
     // Store originals
@@ -655,9 +726,9 @@ describe('Offline Functionality and Service Worker Tests', () => {
 
   afterEach(() => {
     // Restore originals
-    Object.keys(originalNavigator).forEach(key => {
+    Object.keys(originalNavigator as Record<string, unknown>).forEach(key => {
       Object.defineProperty(navigator, key, {
-        value: originalNavigator[key],
+        value: (originalNavigator as Record<string, unknown>)[key],
         configurable: true,
       });
     });
@@ -685,9 +756,8 @@ describe('Offline Functionality and Service Worker Tests', () => {
 
     test('should handle service worker registration failure', async () => {
       ServiceWorkerTestUtils.mockServiceWorkerAPI();
-      (navigator.serviceWorker.register as vi.Mock).mockRejectedValue(
-        new Error('Registration failed')
-      );
+      const mockRegister = vi.mocked(navigator.serviceWorker.register);
+      mockRegister.mockRejectedValue(new Error('Registration failed'));
 
       const user = userEvent.setup();
       render(<ServiceWorkerRegistration />);
@@ -1058,22 +1128,28 @@ describe('Offline Functionality and Service Worker Tests', () => {
       expect(mockCaches.keys).toHaveBeenCalled();
     });
 
-    test('should handle cache API unavailability', () => {
+    test('should handle cache API unavailability', async () => {
       // Remove cache API
-      Object.defineProperty(window, 'caches', {
-        value: undefined,
-        configurable: true,
-      });
+      const originalCaches = window.caches;
+      const windowWithOptionalCaches = window as Window & {
+        caches?: typeof window.caches;
+      };
+      delete (windowWithOptionalCaches as { caches?: CacheStorage }).caches;
 
       render(<CacheManager />);
 
-      expect(screen.getByTestId('cache-status')).toHaveTextContent(
-        'Cache API: unavailable'
-      );
+      await waitFor(() => {
+        expect(screen.getByTestId('cache-status')).toHaveTextContent(
+          'Cache API: unavailable'
+        );
+      });
 
       // Buttons should be disabled
       expect(screen.getByTestId('cache-current-page')).toBeDisabled();
       expect(screen.getByTestId('clear-all-caches')).toBeDisabled();
+
+      // Restore cache API
+      (window as Window & { caches?: CacheStorage }).caches = originalCaches;
     });
   });
 
@@ -1129,7 +1205,7 @@ describe('Offline Functionality and Service Worker Tests', () => {
       ServiceWorkerTestUtils.mockNetworkStatus(false);
 
       const BackgroundSyncComponent = () => {
-        const [syncQueue, setSyncQueue] = React.useState<any[]>([]);
+        const [syncQueue, setSyncQueue] = React.useState<unknown[]>([]);
         const [isOnline, setIsOnline] = React.useState(navigator.onLine);
 
         React.useEffect(() => {
@@ -1145,7 +1221,7 @@ describe('Offline Functionality and Service Worker Tests', () => {
           };
         }, []);
 
-        const addToSyncQueue = (operation: any) => {
+        const addToSyncQueue = (operation: unknown) => {
           setSyncQueue(prev => [...prev, operation]);
         };
 
@@ -1226,13 +1302,16 @@ describe('Offline Functionality and Service Worker Tests', () => {
       });
 
       const StorageWarningComponent = () => {
-        const [storageInfo, setStorageInfo] = React.useState<any>(null);
+        const [storageInfo, setStorageInfo] = React.useState<Record<
+          string,
+          unknown
+        > | null>(null);
         const [warning, setWarning] = React.useState<string | null>(null);
 
         React.useEffect(() => {
           if ('storage' in navigator) {
-            navigator.storage.estimate().then(estimate => {
-              setStorageInfo(estimate);
+            navigator.storage.estimate().then((estimate: StorageEstimate) => {
+              setStorageInfo(estimate as Record<string, unknown>);
               const usage = estimate.usage || 0;
               const quota = estimate.quota || 0;
               const percentage = quota > 0 ? (usage / quota) * 100 : 0;
@@ -1253,8 +1332,12 @@ describe('Offline Functionality and Service Worker Tests', () => {
             )}
             {storageInfo && (
               <div data-testid="storage-percentage">
-                {((storageInfo.usage / storageInfo.quota) * 100).toFixed(1)}%
-                used
+                {(
+                  (((storageInfo as StorageEstimate).usage || 0) /
+                    ((storageInfo as StorageEstimate).quota || 1)) *
+                  100
+                ).toFixed(1)}
+                % used
               </div>
             )}
           </div>

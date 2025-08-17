@@ -75,7 +75,9 @@ export function CsvImportDialog({
       if (file) {
         const reader = new FileReader();
         reader.onload = e => {
-          const content = e.target?.result as string;
+          const result = e.target?.result;
+          if (typeof result !== 'string') return;
+          const content = result;
           setCsvContent(content);
           setActiveStep(1);
         };

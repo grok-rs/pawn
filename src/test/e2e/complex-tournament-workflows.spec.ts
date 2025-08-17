@@ -77,6 +77,7 @@ class TournamentWorkflow {
     phone?: string;
     birthDate?: string;
     gender?: 'M' | 'F' | 'O';
+    team?: string;
   }) {
     await this.page.click('[data-testid="add-player-button"]');
 
@@ -591,7 +592,7 @@ Sarah Wilson,1650,AU,sarah@example.com,555-3456,`;
       await fileInput.setInputFiles({
         name: 'players.csv',
         mimeType: 'text/csv',
-        buffer: Buffer.from(csvContent),
+        buffer: new TextEncoder().encode(csvContent),
       });
 
       // Validate import data

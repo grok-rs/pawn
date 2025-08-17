@@ -1,19 +1,129 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+// Note: Tournament types are defined inline below to avoid circular dependencies
+
+// Types for tournament rules engine
+interface TournamentConfig {
+  format: string;
+  playerCount: number;
+  rounds?: number;
+  previousPairings?: PreviousPairing[];
+  players?: TournamentPlayer[];
+}
+
+interface PreviousPairing {
+  whitePlayerId: number;
+  blackPlayerId: number;
+}
+
+interface TournamentPlayer {
+  id: number;
+  rating: number;
+}
+
+interface PlayerStandingData {
+  id: number;
+  name: string;
+  score: number;
+  rating: number;
+  gameCount: number;
+  age?: number;
+  whiteGames?: number;
+  blackGames?: number;
+  consecutiveWhite?: number;
+  consecutiveBlack?: number;
+  byesReceived?: number;
+  games?: GameMove[];
+}
+
+interface PairingData {
+  whitePlayerId: number;
+  blackPlayerId: number | null;
+  boardNumber?: number;
+  bye: boolean;
+}
+
+interface KnockoutBracketData {
+  rounds: PairingData[][];
+}
+
+interface TimeControlData {
+  mainTime: number;
+  increment: number;
+  type: string;
+}
+
+interface GameMove {
+  result: string;
+  timeUsed?: number;
+  evaluation?: number;
+  moves?: MoveData[];
+  opponent?: {
+    rating: number;
+  };
+}
+
+interface MoveData {
+  timeUsed?: number;
+  evaluation?: number;
+}
+
+interface TournamentRulesValidationResult {
+  valid: boolean;
+  violations: string[];
+  warnings?: string[];
+}
+
+interface TiebreakResult {
+  buchholz: number;
+  medianBuchholz: number;
+  sonneborn: number;
+  cumulativeScore: number;
+}
+
+interface TimeControlValidationResult {
+  valid: boolean;
+  violations: string[];
+}
+
+interface AntiCheatAnalysis {
+  suspiciousActivities: string[];
+  riskLevel: 'low' | 'medium' | 'high';
+}
+
+interface TimeUsageAnalysis {
+  suspiciousPatterns: string[];
+}
+
+interface ValidationComponentProps {
+  tournament: TournamentConfig;
+  pairings?: PairingData[];
+  standings?: PlayerStandingData[];
+  ruleSet?: 'swiss' | 'round_robin' | 'knockout';
+}
+
+interface TiebreakCalculatorProps {
+  player: PlayerStandingData | null;
+  opponents: PlayerStandingData[];
+  tournament: TournamentConfig;
+}
+
+interface CalculationResult {
+  expectedScore: string;
+  actualScore: number;
+  ratingChange: number;
+  newRating: number;
+}
 
 // Tournament rules engine utilities
 const TournamentRulesEngine = {
   // Swiss system rules validation
   validateSwissRules: (
-    _tournament: any,
-    pairings: any[],
-    standings: any[]
-  ): {
-    valid: boolean;
-    violations: string[];
-    warnings: string[];
-  } => {
+    _tournament: TournamentConfig,
+    pairings: PairingData[],
+    standings: PlayerStandingData[]
+  ): TournamentRulesValidationResult => {
     const violations: string[] = [];
     const warnings: string[] = [];
 
@@ -23,14 +133,14 @@ const TournamentRulesEngine = {
       standings
     );
     if (!colorBalance.valid) {
-      violations.push(...colorBalance.violations);
-      warnings.push(...colorBalance.warnings);
+      violations.push(...(colorBalance.violations || []));
+      warnings.push(...(colorBalance.warnings || []));
     }
 
     // Check pairing restrictions
     const pairingCheck = TournamentRulesEngine.checkPairingRestrictions(
       pairings,
-      tournament
+      _tournament
     );
     if (!pairingCheck.valid) {
       violations.push(...pairingCheck.violations);
@@ -38,25 +148,21 @@ const TournamentRulesEngine = {
 
     // Check Swiss system specific rules
     const swissCheck = TournamentRulesEngine.validateSwissSpecificRules(
-      tournament,
+      _tournament,
       pairings,
       standings
     );
-    violations.push(...swissCheck.violations);
-    warnings.push(...swissCheck.warnings);
+    violations.push(...(swissCheck.violations || []));
+    warnings.push(...(swissCheck.warnings || []));
 
     return { valid: violations.length === 0, violations, warnings };
   },
 
   // Color balance validation
   checkColorBalance: (
-    pairings: any[],
-    standings: any[]
-  ): {
-    valid: boolean;
-    violations: string[];
-    warnings: string[];
-  } => {
+    pairings: PairingData[],
+    standings: PlayerStandingData[]
+  ): TournamentRulesValidationResult => {
     const violations: string[] = [];
     const warnings: string[] = [];
 
@@ -64,28 +170,31 @@ const TournamentRulesEngine = {
       if (pairing.bye) continue;
 
       const whitePlayer = standings.find(p => p.id === pairing.whitePlayerId);
-      const blackPlayer = standings.find(p => p.id === pairing.blackPlayerId);
+      const blackPlayer = pairing.blackPlayerId
+        ? standings.find(p => p.id === pairing.blackPlayerId)
+        : undefined;
 
-      if (!whitePlayer || !blackPlayer) continue;
+      if (!whitePlayer || (pairing.blackPlayerId && !blackPlayer)) continue;
 
       // Check if a player has too many consecutive same colors
-      if (whitePlayer.consecutiveWhite >= 3) {
+      if ((whitePlayer.consecutiveWhite || 0) >= 3) {
         warnings.push(
-          `Player ${whitePlayer.name} has played white ${whitePlayer.consecutiveWhite} times in a row`
+          `Player ${whitePlayer.name} has played white ${whitePlayer.consecutiveWhite || 0} times in a row`
         );
       }
 
-      if (blackPlayer.consecutiveBlack >= 3) {
+      if (blackPlayer && (blackPlayer.consecutiveBlack || 0) >= 3) {
         warnings.push(
-          `Player ${blackPlayer.name} has played black ${blackPlayer.consecutiveBlack} times in a row`
+          `Player ${blackPlayer.name} has played black ${blackPlayer.consecutiveBlack || 0} times in a row`
         );
       }
 
       // Check color balance preference
       const whiteDifference =
         (whitePlayer.whiteGames || 0) - (whitePlayer.blackGames || 0);
-      const blackDifference =
-        (blackPlayer.whiteGames || 0) - (blackPlayer.blackGames || 0);
+      const blackDifference = blackPlayer
+        ? (blackPlayer.whiteGames || 0) - (blackPlayer.blackGames || 0)
+        : 0;
 
       if (whiteDifference >= 2 && pairing.whitePlayerId === whitePlayer.id) {
         warnings.push(
@@ -93,7 +202,11 @@ const TournamentRulesEngine = {
         );
       }
 
-      if (blackDifference >= 2 && pairing.blackPlayerId === blackPlayer.id) {
+      if (
+        blackPlayer &&
+        blackDifference >= 2 &&
+        pairing.blackPlayerId === blackPlayer.id
+      ) {
         warnings.push(
           `Player ${blackPlayer.name} already has significantly more white games but is playing black`
         );
@@ -105,8 +218,8 @@ const TournamentRulesEngine = {
 
   // Pairing restrictions validation
   checkPairingRestrictions: (
-    pairings: any[],
-    _tournament: any
+    pairings: PairingData[],
+    _tournament: TournamentConfig
   ): {
     valid: boolean;
     violations: string[];
@@ -114,21 +227,22 @@ const TournamentRulesEngine = {
     const violations: string[] = [];
 
     // Check for rematches
-    const previousPairings = tournament.previousPairings || [];
+    const previousPairings = _tournament.previousPairings || [];
     for (const pairing of pairings) {
       if (pairing.bye) continue;
 
       const hasPlayedBefore = previousPairings.some(
-        (prev: any) =>
+        (prev: PreviousPairing) =>
           (prev.whitePlayerId === pairing.whitePlayerId &&
             prev.blackPlayerId === pairing.blackPlayerId) ||
-          (prev.whitePlayerId === pairing.blackPlayerId &&
+          (pairing.blackPlayerId &&
+            prev.whitePlayerId === pairing.blackPlayerId &&
             prev.blackPlayerId === pairing.whitePlayerId)
       );
 
       if (hasPlayedBefore) {
         violations.push(
-          `Rematch detected: players ${pairing.whitePlayerId} and ${pairing.blackPlayerId} have played before`
+          `Rematch detected: players ${pairing.whitePlayerId} and ${pairing.blackPlayerId || 'bye'} have played before`
         );
       }
     }
@@ -138,7 +252,7 @@ const TournamentRulesEngine = {
     for (const pairing of pairings) {
       if (pairing.bye) continue;
 
-      const pairingKey = [pairing.whitePlayerId, pairing.blackPlayerId]
+      const pairingKey = [pairing.whitePlayerId, pairing.blackPlayerId || 0]
         .sort()
         .join('-');
       if (pairingSet.has(pairingKey)) {
@@ -152,9 +266,9 @@ const TournamentRulesEngine = {
 
   // Swiss system specific rules
   validateSwissSpecificRules: (
-    _tournament: any,
-    pairings: any[],
-    standings: any[]
+    _tournament: TournamentConfig,
+    pairings: PairingData[],
+    standings: PlayerStandingData[]
   ): {
     violations: string[];
     warnings: string[];
@@ -167,30 +281,30 @@ const TournamentRulesEngine = {
       pairings,
       standings
     );
-    violations.push(...byeCheck.violations);
-    warnings.push(...byeCheck.warnings);
+    violations.push(...(byeCheck.violations || []));
+    warnings.push(...(byeCheck.warnings || []));
 
     // Check score groups pairing
     const scoreGroupCheck = TournamentRulesEngine.validateScoreGroups(
       pairings,
       standings
     );
-    warnings.push(...scoreGroupCheck.warnings);
+    warnings.push(...(scoreGroupCheck.warnings || []));
 
     // Check floating rules
     const floatingCheck = TournamentRulesEngine.validateFloatingRules(
       pairings,
       standings
     );
-    warnings.push(...floatingCheck.warnings);
+    warnings.push(...(floatingCheck.warnings || []));
 
     return { violations, warnings };
   },
 
   // Bye distribution validation
   validateByeDistribution: (
-    pairings: any[],
-    standings: any[]
+    pairings: PairingData[],
+    standings: PlayerStandingData[]
   ): {
     violations: string[];
     warnings: string[];
@@ -200,7 +314,8 @@ const TournamentRulesEngine = {
 
     const byePlayers = pairings
       .filter(p => p.bye)
-      .map(p => p.whitePlayerId || p.blackPlayerId);
+      .map(p => p.whitePlayerId || p.blackPlayerId)
+      .filter((id): id is number => id !== null && id !== undefined);
 
     for (const playerId of byePlayers) {
       const player = standings.find(p => p.id === playerId);
@@ -227,15 +342,15 @@ const TournamentRulesEngine = {
 
   // Score groups validation
   validateScoreGroups: (
-    pairings: any[],
-    standings: any[]
+    pairings: PairingData[],
+    standings: PlayerStandingData[]
   ): {
     warnings: string[];
   } => {
     const warnings: string[] = [];
 
     // Group players by score
-    const scoreGroups: { [score: string]: any[] } = {};
+    const scoreGroups: { [score: string]: PlayerStandingData[] } = {};
     standings.forEach(player => {
       const score = (player.score || 0).toString();
       if (!scoreGroups[score]) scoreGroups[score] = [];
@@ -247,16 +362,18 @@ const TournamentRulesEngine = {
       if (pairing.bye) continue;
 
       const whitePlayer = standings.find(p => p.id === pairing.whitePlayerId);
-      const blackPlayer = standings.find(p => p.id === pairing.blackPlayerId);
+      const blackPlayer = pairing.blackPlayerId
+        ? standings.find(p => p.id === pairing.blackPlayerId)
+        : undefined;
 
-      if (!whitePlayer || !blackPlayer) continue;
+      if (!whitePlayer || (pairing.blackPlayerId && !blackPlayer)) continue;
 
       const scoreDifference = Math.abs(
-        (whitePlayer.score || 0) - (blackPlayer.score || 0)
+        (whitePlayer.score || 0) - (blackPlayer?.score || 0)
       );
       if (scoreDifference > 1) {
         warnings.push(
-          `Large score difference in pairing: ${whitePlayer.name} (${whitePlayer.score}) vs ${blackPlayer.name} (${blackPlayer.score})`
+          `Large score difference in pairing: ${whitePlayer.name} (${whitePlayer.score}) vs ${blackPlayer?.name} (${blackPlayer?.score})`
         );
       }
     }
@@ -266,8 +383,8 @@ const TournamentRulesEngine = {
 
   // Floating rules validation
   validateFloatingRules: (
-    pairings: any[],
-    standings: any[]
+    pairings: PairingData[],
+    standings: PlayerStandingData[]
   ): {
     warnings: string[];
   } => {
@@ -278,12 +395,14 @@ const TournamentRulesEngine = {
       if (pairing.bye) continue;
 
       const whitePlayer = standings.find(p => p.id === pairing.whitePlayerId);
-      const blackPlayer = standings.find(p => p.id === pairing.blackPlayerId);
+      const blackPlayer = pairing.blackPlayerId
+        ? standings.find(p => p.id === pairing.blackPlayerId)
+        : undefined;
 
-      if (!whitePlayer || !blackPlayer) continue;
+      if (!whitePlayer || (pairing.blackPlayerId && !blackPlayer)) continue;
 
       const whiteRank = standings.indexOf(whitePlayer) + 1;
-      const blackRank = standings.indexOf(blackPlayer) + 1;
+      const blackRank = blackPlayer ? standings.indexOf(blackPlayer) + 1 : 0;
       const rankDifference = Math.abs(whiteRank - blackRank);
 
       if (rankDifference > standings.length / 4) {
@@ -298,14 +417,14 @@ const TournamentRulesEngine = {
 
   // Round Robin rules validation
   validateRoundRobinRules: (
-    _tournament: any,
-    schedule: any[][]
+    _tournament: TournamentConfig,
+    schedule: PairingData[][]
   ): {
     valid: boolean;
     violations: string[];
   } => {
     const violations: string[] = [];
-    const playerCount = tournament.playerCount;
+    const playerCount = _tournament.playerCount;
 
     // Check that each player plays every other player exactly once
     const pairingsMatrix: boolean[][] = Array(playerCount)
@@ -314,7 +433,7 @@ const TournamentRulesEngine = {
 
     for (const round of schedule) {
       for (const pairing of round) {
-        if (pairing.bye) continue;
+        if (pairing.bye || !pairing.blackPlayerId) continue;
 
         const whiteIdx = pairing.whitePlayerId - 1;
         const blackIdx = pairing.blackPlayerId - 1;
@@ -347,8 +466,8 @@ const TournamentRulesEngine = {
 
   // Knockout rules validation
   validateKnockoutRules: (
-    _tournament: any,
-    bracket: any
+    _tournament: TournamentConfig,
+    bracket: KnockoutBracketData
   ): {
     valid: boolean;
     violations: string[];
@@ -356,10 +475,10 @@ const TournamentRulesEngine = {
     const violations: string[] = [];
 
     // Validate bracket structure
-    const expectedRounds = Math.ceil(Math.log2(tournament.playerCount));
+    const expectedRounds = Math.ceil(Math.log2(_tournament.playerCount));
     if (bracket.rounds.length !== expectedRounds) {
       violations.push(
-        `Expected ${expectedRounds} rounds for ${tournament.playerCount} players, got ${bracket.rounds.length}`
+        `Expected ${expectedRounds} rounds for ${_tournament.playerCount} players, got ${bracket.rounds.length}`
       );
     }
 
@@ -378,18 +497,18 @@ const TournamentRulesEngine = {
 
     // Validate seeding
     const seedingCheck = TournamentRulesEngine.validateKnockoutSeeding(
-      tournament,
+      _tournament,
       bracket
     );
-    violations.push(...seedingCheck.violations);
+    violations.push(...(seedingCheck.violations || []));
 
     return { valid: violations.length === 0, violations };
   },
 
   // Knockout seeding validation
   validateKnockoutSeeding: (
-    _tournament: any,
-    bracket: any
+    _tournament: TournamentConfig,
+    bracket: KnockoutBracketData
   ): {
     violations: string[];
   } => {
@@ -402,7 +521,7 @@ const TournamentRulesEngine = {
 
     // Check that highest seeds are separated in first round
     const firstRound = bracket.rounds[0];
-    const players = tournament.players || [];
+    const players = _tournament.players || [];
 
     // Sort players by rating (assuming higher rating = higher seed)
     const sortedPlayers = [...players].sort(
@@ -410,12 +529,12 @@ const TournamentRulesEngine = {
     );
 
     // Check if top seeds meet too early
-    const topSeedsInSameHalf = firstRound.some((pairing: any) => {
+    const topSeedsInSameHalf = firstRound.some((pairing: PairingData) => {
       const whitePlayer = players.find(
-        (p: any) => p.id === pairing.whitePlayerId
+        (p: TournamentPlayer) => p.id === pairing.whitePlayerId
       );
       const blackPlayer = players.find(
-        (p: any) => p.id === pairing.blackPlayerId
+        (p: TournamentPlayer) => p.id === pairing.blackPlayerId
       );
 
       if (!whitePlayer || !blackPlayer) return false;
@@ -457,25 +576,20 @@ const TournamentRulesEngine = {
   },
 
   // K-factor determination
-  getKFactor: (player: any): number => {
+  getKFactor: (player: PlayerStandingData): number => {
     // FIDE K-factor rules
-    if (player.rating >= 2400) return 10; // Strong players
-    if (player.gameCount < 30) return 40; // New players
+    if ((player.rating || 0) >= 2400) return 10; // Strong players
+    if ((player.gameCount || 0) < 30) return 40; // New players
     if (player.age && player.age < 18) return 40; // Juniors
     return 20; // Standard
   },
 
   // Tiebreak calculations
   calculateTiebreaks: (
-    player: any,
-    opponents: any[],
-    _tournament: any
-  ): {
-    buchholz: number;
-    medianBuchholz: number;
-    sonneborn: number;
-    cumulativeScore: number;
-  } => {
+    player: PlayerStandingData,
+    opponents: PlayerStandingData[],
+    _tournament: TournamentConfig
+  ): TiebreakResult => {
     // Buchholz: sum of opponents' final scores
     const buchholz = opponents.reduce((sum, opp) => sum + (opp.score || 0), 0);
 
@@ -490,7 +604,7 @@ const TournamentRulesEngine = {
 
     // Sonneborn-Berger: sum of defeated opponents' scores + half the score of drawn opponents
     let sonneborn = 0;
-    player.games?.forEach((game: any, index: number) => {
+    player.games?.forEach((game: GameMove, index: number) => {
       const opponent = opponents[index];
       if (!opponent) return;
 
@@ -503,7 +617,7 @@ const TournamentRulesEngine = {
 
     // Cumulative score: sum of scores after each round
     let cumulativeScore = 0;
-    player.games?.forEach((game: any) => {
+    player.games?.forEach((game: GameMove) => {
       if (game.result === 'win') cumulativeScore += 1;
       else if (game.result === 'draw') cumulativeScore += 0.5;
     });
@@ -513,12 +627,9 @@ const TournamentRulesEngine = {
 
   // Time control validation
   validateTimeControl: (
-    timeControl: any,
-    moves: any[]
-  ): {
-    valid: boolean;
-    violations: string[];
-  } => {
+    timeControl: TimeControlData,
+    moves: MoveData[]
+  ): TimeControlValidationResult => {
     const violations: string[] = [];
 
     if (!timeControl || !moves || moves.length === 0) {
@@ -563,16 +674,13 @@ const TournamentRulesEngine = {
 
   // Anti-cheating rules validation
   validateAntiCheatRules: (
-    player: any,
-    games: any[]
-  ): {
-    suspiciousActivities: string[];
-    riskLevel: 'low' | 'medium' | 'high';
-  } => {
+    player: PlayerStandingData,
+    games: GameMove[]
+  ): AntiCheatAnalysis => {
     const suspiciousActivities: string[] = [];
 
     // Check for unusual rating performance
-    const expectedPerformance = player.rating;
+    const expectedPerformance = player.rating || 1500;
     const actualPerformance =
       TournamentRulesEngine.calculatePerformanceRating(games);
 
@@ -585,7 +693,7 @@ const TournamentRulesEngine = {
     // Check for consistent high-level moves
     let strongMoveCount = 0;
     games.forEach(game => {
-      game.moves?.forEach((move: any) => {
+      game.moves?.forEach((move: MoveData) => {
         if (move.evaluation && Math.abs(move.evaluation) < 0.1) {
           strongMoveCount++;
         }
@@ -612,7 +720,7 @@ const TournamentRulesEngine = {
   },
 
   // Performance rating calculation
-  calculatePerformanceRating: (games: any[]): number => {
+  calculatePerformanceRating: (games: GameMove[]): number => {
     if (games.length === 0) return 0;
 
     let totalScore = 0;
@@ -620,8 +728,9 @@ const TournamentRulesEngine = {
     let validGames = 0;
 
     games.forEach(game => {
-      if (game.opponent && game.opponent.rating && game.result !== 'bye') {
-        totalOpponentRating += game.opponent.rating;
+      const opponent = game.opponent;
+      if (opponent && opponent.rating && game.result !== 'bye') {
+        totalOpponentRating += opponent.rating;
 
         if (game.result === 'win') totalScore += 1;
         else if (game.result === 'draw') totalScore += 0.5;
@@ -644,18 +753,14 @@ const TournamentRulesEngine = {
   },
 
   // Time usage analysis
-  analyzeTimeUsage: (
-    games: any[]
-  ): {
-    suspiciousPatterns: string[];
-  } => {
+  analyzeTimeUsage: (games: GameMove[]): TimeUsageAnalysis => {
     const suspiciousPatterns: string[] = [];
 
     // Analyze time consistency across games
     const timingData: number[] = [];
 
     games.forEach(game => {
-      game.moves?.forEach((move: any, index: number) => {
+      game.moves?.forEach((move: MoveData, index: number) => {
         if (move.timeUsed && index < 30) {
           // Focus on opening/middlegame
           timingData.push(move.timeUsed);
@@ -703,13 +808,9 @@ const TournamentRulesValidator = ({
   pairings = [],
   standings = [],
   ruleSet = 'swiss',
-}: {
-  tournament: any;
-  pairings?: any[];
-  standings?: any[];
-  ruleSet?: 'swiss' | 'round_robin' | 'knockout';
-}) => {
-  const [validation, setValidation] = React.useState<any>(null);
+}: ValidationComponentProps) => {
+  const [validation, setValidation] =
+    React.useState<TournamentRulesValidationResult | null>(null);
   const [showDetails, setShowDetails] = React.useState(false);
 
   React.useEffect(() => {
@@ -826,7 +927,8 @@ const RatingCalculator = () => {
   const [player2Rating, setPlayer2Rating] = React.useState(1600);
   const [result, setResult] = React.useState<'win' | 'draw' | 'loss'>('win');
   const [kFactor, setKFactor] = React.useState(20);
-  const [calculation, setCalculation] = React.useState<any>(null);
+  const [calculation, setCalculation] =
+    React.useState<CalculationResult | null>(null);
 
   const calculateRating = () => {
     const score = result === 'win' ? 1 : result === 'draw' ? 0.5 : 0;
@@ -878,7 +980,12 @@ const RatingCalculator = () => {
           <select
             data-testid="result-select"
             value={result}
-            onChange={e => setResult(e.target.value as any)}
+            onChange={e => {
+              const value = e.target.value;
+              if (value === 'win' || value === 'draw' || value === 'loss') {
+                setResult(value);
+              }
+            }}
           >
             <option value="win">Win</option>
             <option value="draw">Draw</option>
@@ -928,12 +1035,8 @@ const TiebreakCalculator = ({
   player,
   opponents,
   tournament,
-}: {
-  player: any;
-  opponents: any[];
-  tournament: any;
-}) => {
-  const [tiebreaks, setTiebreaks] = React.useState<any>(null);
+}: TiebreakCalculatorProps) => {
+  const [tiebreaks, setTiebreaks] = React.useState<TiebreakResult | null>(null);
 
   React.useEffect(() => {
     if (player && opponents.length > 0) {
@@ -946,7 +1049,7 @@ const TiebreakCalculator = ({
     }
   }, [player, opponents, tournament]);
 
-  if (!tiebreaks) {
+  if (!tiebreaks || !player) {
     return (
       <div data-testid="tiebreak-calculator-loading">
         Calculating tiebreaks...
@@ -1002,6 +1105,8 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
           id: 1,
           name: 'Player 1',
           score: 2.5,
+          rating: 1500,
+          gameCount: 2,
           whiteGames: 1,
           blackGames: 1,
           consecutiveWhite: 0,
@@ -1011,6 +1116,8 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
           id: 2,
           name: 'Player 2',
           score: 2.0,
+          rating: 1450,
+          gameCount: 2,
           whiteGames: 1,
           blackGames: 1,
           consecutiveWhite: 1,
@@ -1020,6 +1127,8 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
           id: 3,
           name: 'Player 3',
           score: 1.5,
+          rating: 1400,
+          gameCount: 2,
           whiteGames: 2,
           blackGames: 0,
           consecutiveWhite: 0,
@@ -1029,6 +1138,8 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
           id: 4,
           name: 'Player 4',
           score: 1.0,
+          rating: 1350,
+          gameCount: 2,
           whiteGames: 0,
           blackGames: 2,
           consecutiveWhite: 0,
@@ -1077,7 +1188,14 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
 
     test('should detect duplicate bye violations', () => {
       const standings = [
-        { id: 1, name: 'Player 1', score: 1.0, byesReceived: 1 },
+        {
+          id: 1,
+          name: 'Player 1',
+          score: 1.0,
+          rating: 1500,
+          gameCount: 2,
+          byesReceived: 1,
+        },
       ];
 
       const pairings = [
@@ -1085,7 +1203,7 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
       ];
 
       const result = TournamentRulesEngine.validateSwissRules(
-        {},
+        { format: 'swiss', playerCount: 4 },
         pairings,
         standings
       );
@@ -1102,6 +1220,8 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
           id: 1,
           name: 'Player 1',
           score: 2.0,
+          rating: 1500,
+          gameCount: 3,
           consecutiveWhite: 3,
           whiteGames: 3,
           blackGames: 0,
@@ -1110,6 +1230,8 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
           id: 2,
           name: 'Player 2',
           score: 2.0,
+          rating: 1450,
+          gameCount: 3,
           consecutiveBlack: 0,
           whiteGames: 0,
           blackGames: 3,
@@ -1121,7 +1243,7 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
       ];
 
       const result = TournamentRulesEngine.validateSwissRules(
-        {},
+        { format: 'swiss', playerCount: 4 },
         pairings,
         standings
       );
@@ -1136,8 +1258,8 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
 
     test('should warn about large score differences', () => {
       const standings = [
-        { id: 1, name: 'Player 1', score: 3.0 },
-        { id: 2, name: 'Player 2', score: 1.0 },
+        { id: 1, name: 'Player 1', score: 3.0, rating: 1600, gameCount: 3 },
+        { id: 2, name: 'Player 2', score: 1.0, rating: 1400, gameCount: 3 },
       ];
 
       const pairings = [
@@ -1145,7 +1267,7 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
       ];
 
       const result = TournamentRulesEngine.validateSwissRules(
-        {},
+        { format: 'swiss', playerCount: 4 },
         pairings,
         standings
       );
@@ -1158,7 +1280,7 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
 
   describe('Round Robin Rules Validation', () => {
     test('should validate complete round robin schedule', () => {
-      const tournament = { playerCount: 4 };
+      const tournament = { format: 'round_robin', playerCount: 4 };
       const schedule = [
         [
           { whitePlayerId: 1, blackPlayerId: 2, bye: false },
@@ -1184,7 +1306,7 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
     });
 
     test('should detect missing pairings in round robin', () => {
-      const tournament = { playerCount: 4 };
+      const tournament = { format: 'round_robin', playerCount: 4 };
       const schedule = [[{ whitePlayerId: 1, blackPlayerId: 2, bye: false }]];
 
       const result = TournamentRulesEngine.validateRoundRobinRules(
@@ -1201,7 +1323,7 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
     });
 
     test('should detect repeated pairings in round robin', () => {
-      const tournament = { playerCount: 4 };
+      const tournament = { format: 'round_robin', playerCount: 4 };
       const schedule = [
         [
           { whitePlayerId: 1, blackPlayerId: 2, bye: false },
@@ -1227,20 +1349,20 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
 
   describe('Knockout Rules Validation', () => {
     test('should validate knockout bracket structure', () => {
-      const tournament = { playerCount: 8 };
+      const tournament = { format: 'knockout', playerCount: 8 };
       const bracket = {
         rounds: [
           [
-            { whitePlayerId: 1, blackPlayerId: 8 },
-            { whitePlayerId: 2, blackPlayerId: 7 },
-            { whitePlayerId: 3, blackPlayerId: 6 },
-            { whitePlayerId: 4, blackPlayerId: 5 },
+            { whitePlayerId: 1, blackPlayerId: 8, bye: false },
+            { whitePlayerId: 2, blackPlayerId: 7, bye: false },
+            { whitePlayerId: 3, blackPlayerId: 6, bye: false },
+            { whitePlayerId: 4, blackPlayerId: 5, bye: false },
           ],
           [
-            { whitePlayerId: 1, blackPlayerId: 2 },
-            { whitePlayerId: 3, blackPlayerId: 4 },
+            { whitePlayerId: 1, blackPlayerId: 2, bye: false },
+            { whitePlayerId: 3, blackPlayerId: 4, bye: false },
           ],
-          [{ whitePlayerId: 1, blackPlayerId: 3 }],
+          [{ whitePlayerId: 1, blackPlayerId: 3, bye: false }],
         ],
       };
 
@@ -1254,9 +1376,9 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
     });
 
     test('should detect incorrect number of rounds', () => {
-      const tournament = { playerCount: 8 };
+      const tournament = { format: 'knockout', playerCount: 8 };
       const bracket = {
-        rounds: [[{ whitePlayerId: 1, blackPlayerId: 2 }]],
+        rounds: [[{ whitePlayerId: 1, blackPlayerId: 2, bye: false }]],
       };
 
       const result = TournamentRulesEngine.validateKnockoutRules(
@@ -1272,6 +1394,7 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
 
     test('should validate knockout seeding', () => {
       const tournament = {
+        format: 'knockout',
         playerCount: 4,
         players: [
           { id: 1, rating: 2200 },
@@ -1284,7 +1407,7 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
       const bracket = {
         rounds: [
           [
-            { whitePlayerId: 1, blackPlayerId: 2 }, // Top seeds meeting too early
+            { whitePlayerId: 1, blackPlayerId: 2, bye: false }, // Top seeds meeting too early
           ],
         ],
       };
@@ -1348,9 +1471,30 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
     });
 
     test('should determine K-factors correctly', () => {
-      const strongPlayer = { rating: 2500, gameCount: 100, age: 30 };
-      const newPlayer = { rating: 1200, gameCount: 10, age: 25 };
-      const juniorPlayer = { rating: 1500, gameCount: 50, age: 16 };
+      const strongPlayer = {
+        id: 1,
+        name: 'Strong Player',
+        score: 5,
+        rating: 2500,
+        gameCount: 100,
+        age: 30,
+      };
+      const newPlayer = {
+        id: 2,
+        name: 'New Player',
+        score: 2,
+        rating: 1200,
+        gameCount: 10,
+        age: 25,
+      };
+      const juniorPlayer = {
+        id: 3,
+        name: 'Junior Player',
+        score: 3,
+        rating: 1500,
+        gameCount: 50,
+        age: 16,
+      };
 
       expect(TournamentRulesEngine.getKFactor(strongPlayer)).toBe(10);
       expect(TournamentRulesEngine.getKFactor(newPlayer)).toBe(40);
@@ -1360,26 +1504,46 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
 
   describe('Tiebreak Calculations', () => {
     test('should calculate Buchholz tiebreak', () => {
-      const player = { score: 3.0 };
-      const opponents = [{ score: 2.5 }, { score: 2.0 }, { score: 1.5 }];
+      const player = {
+        id: 1,
+        name: 'Player 1',
+        score: 3.0,
+        rating: 1500,
+        gameCount: 3,
+      };
+      const opponents = [
+        { id: 2, name: 'Opponent 1', score: 2.5, rating: 1450, gameCount: 3 },
+        { id: 3, name: 'Opponent 2', score: 2.0, rating: 1400, gameCount: 3 },
+        { id: 4, name: 'Opponent 3', score: 1.5, rating: 1350, gameCount: 3 },
+      ];
 
       const tiebreaks = TournamentRulesEngine.calculateTiebreaks(
         player,
         opponents,
-        {}
+        { format: 'swiss', playerCount: 4 }
       );
 
       expect(tiebreaks.buchholz).toBe(6.0); // 2.5 + 2.0 + 1.5
     });
 
     test('should calculate Median Buchholz tiebreak', () => {
-      const player = { score: 3.0 };
-      const opponents = [{ score: 3.0 }, { score: 2.0 }, { score: 1.0 }];
+      const player = {
+        id: 1,
+        name: 'Player 1',
+        score: 3.0,
+        rating: 1500,
+        gameCount: 3,
+      };
+      const opponents = [
+        { id: 2, name: 'Opponent 1', score: 3.0, rating: 1550, gameCount: 3 },
+        { id: 3, name: 'Opponent 2', score: 2.0, rating: 1450, gameCount: 3 },
+        { id: 4, name: 'Opponent 3', score: 1.0, rating: 1350, gameCount: 3 },
+      ];
 
       const tiebreaks = TournamentRulesEngine.calculateTiebreaks(
         player,
         opponents,
-        {}
+        { format: 'swiss', playerCount: 4 }
       );
 
       expect(tiebreaks.medianBuchholz).toBe(2.0); // Remove highest (3.0) and lowest (1.0)
@@ -1387,19 +1551,23 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
 
     test('should calculate Sonneborn-Berger tiebreak', () => {
       const player = {
+        id: 1,
+        name: 'Player 1',
         score: 2.5,
+        rating: 1500,
+        gameCount: 3,
         games: [{ result: 'win' }, { result: 'draw' }, { result: 'loss' }],
       };
       const opponents = [
-        { score: 2.0 }, // Won against this player
-        { score: 1.5 }, // Drew against this player
-        { score: 1.0 }, // Lost against this player
+        { id: 2, name: 'Opponent 1', score: 2.0, rating: 1450, gameCount: 3 }, // Won against this player
+        { id: 3, name: 'Opponent 2', score: 1.5, rating: 1400, gameCount: 3 }, // Drew against this player
+        { id: 4, name: 'Opponent 3', score: 1.0, rating: 1350, gameCount: 3 }, // Lost against this player
       ];
 
       const tiebreaks = TournamentRulesEngine.calculateTiebreaks(
         player,
         opponents,
-        {}
+        { format: 'swiss', playerCount: 4 }
       );
 
       expect(tiebreaks.sonneborn).toBe(2.75); // 2.0 + (1.5/2) + 0
@@ -1460,7 +1628,13 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
 
   describe('Anti-Cheating Rules', () => {
     test('should detect suspicious performance rating', () => {
-      const player = { rating: 1500 };
+      const player = {
+        id: 1,
+        name: 'Player 1',
+        score: 2.5,
+        rating: 1500,
+        gameCount: 3,
+      };
       const games = [
         { result: 'win', opponent: { rating: 2000 } },
         { result: 'win', opponent: { rating: 1900 } },
@@ -1493,6 +1667,7 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
     test('should detect suspicious timing patterns', () => {
       const games = [
         {
+          result: 'win',
           moves: [
             { timeUsed: 2 },
             { timeUsed: 2 },
@@ -1519,8 +1694,8 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
         { whitePlayerId: 1, blackPlayerId: 2, boardNumber: 1, bye: false },
       ];
       const standings = [
-        { id: 1, name: 'Player 1', score: 1.0 },
-        { id: 2, name: 'Player 2', score: 1.0 },
+        { id: 1, name: 'Player 1', score: 1.0, rating: 1500, gameCount: 1 },
+        { id: 2, name: 'Player 2', score: 1.0, rating: 1450, gameCount: 1 },
       ];
 
       render(
@@ -1572,6 +1747,7 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
 
       const tournament = {
         format: 'swiss',
+        playerCount: 4,
         previousPairings: [{ whitePlayerId: 1, blackPlayerId: 2 }],
       };
       const pairings = [
@@ -1665,22 +1841,25 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
   describe('Tiebreak Calculator Component', () => {
     test('should calculate and display tiebreak values', () => {
       const player = {
+        id: 1,
         name: 'Test Player',
         score: 2.5,
+        rating: 1500,
+        gameCount: 3,
         games: [{ result: 'win' }, { result: 'draw' }, { result: 'loss' }],
       };
 
       const opponents = [
-        { name: 'Opponent 1', score: 2.0 },
-        { name: 'Opponent 2', score: 1.5 },
-        { name: 'Opponent 3', score: 1.0 },
+        { id: 2, name: 'Opponent 1', score: 2.0, rating: 1450, gameCount: 3 },
+        { id: 3, name: 'Opponent 2', score: 1.5, rating: 1400, gameCount: 3 },
+        { id: 4, name: 'Opponent 3', score: 1.0, rating: 1350, gameCount: 3 },
       ];
 
       render(
         <TiebreakCalculator
           player={player}
           opponents={opponents}
-          tournament={{}}
+          tournament={{ format: 'swiss', playerCount: 4 }}
         />
       );
 
@@ -1706,7 +1885,11 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
 
     test('should show loading state when data is incomplete', () => {
       render(
-        <TiebreakCalculator player={null} opponents={[]} tournament={{}} />
+        <TiebreakCalculator
+          player={null}
+          opponents={[]}
+          tournament={{ format: 'swiss', playerCount: 4 }}
+        />
       );
 
       expect(
@@ -1729,6 +1912,8 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
         id: i + 1,
         name: `Player ${i + 1}`,
         score: Math.max(0, 3 - Math.abs(i - 8) * 0.5),
+        rating: 1500 + Math.floor(Math.random() * 400),
+        gameCount: 3,
         whiteGames: Math.floor(Math.random() * 3),
         blackGames: 2,
         consecutiveWhite: 0,
@@ -1769,14 +1954,14 @@ describe('Tournament Rule Variations and Chess-Specific Logic Tests', () => {
 
       // After round 1, standings should be sorted by score
       const round2Standings = [
-        { id: 1, name: 'Player 1', score: 1.0 },
-        { id: 2, name: 'Player 2', score: 1.0 },
-        { id: 7, name: 'Player 7', score: 1.0 },
-        { id: 4, name: 'Player 4', score: 0.5 },
-        { id: 8, name: 'Player 8', score: 0.5 },
-        { id: 3, name: 'Player 3', score: 0.0 },
-        { id: 5, name: 'Player 5', score: 0.0 },
-        { id: 6, name: 'Player 6', score: 0.0 },
+        { id: 1, name: 'Player 1', score: 1.0, rating: 1600, gameCount: 1 },
+        { id: 2, name: 'Player 2', score: 1.0, rating: 1580, gameCount: 1 },
+        { id: 7, name: 'Player 7', score: 1.0, rating: 1620, gameCount: 1 },
+        { id: 4, name: 'Player 4', score: 0.5, rating: 1550, gameCount: 1 },
+        { id: 8, name: 'Player 8', score: 0.5, rating: 1540, gameCount: 1 },
+        { id: 3, name: 'Player 3', score: 0.0, rating: 1500, gameCount: 1 },
+        { id: 5, name: 'Player 5', score: 0.0, rating: 1480, gameCount: 1 },
+        { id: 6, name: 'Player 6', score: 0.0, rating: 1460, gameCount: 1 },
       ];
 
       // Round 2 pairings should pair players with similar scores

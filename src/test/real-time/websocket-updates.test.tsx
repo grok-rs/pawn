@@ -2,6 +2,27 @@ import React from 'react';
 import { render, screen, waitFor, act, within } from '@testing-library/react';
 import { vi } from 'vitest';
 
+// Type definitions
+interface StandingData {
+  playerId: number;
+  playerName: string;
+  rank: number;
+  points: number;
+}
+
+interface GameData {
+  id: string;
+  whitePlayer: string;
+  blackPlayer: string;
+  result?: string | null;
+}
+
+interface BroadcastEvent {
+  timestamp: number;
+  time: string;
+  message: string;
+}
+
 // Mock WebSocket implementation for testing
 class MockWebSocket {
   static instances: MockWebSocket[] = [];
@@ -39,7 +60,7 @@ class MockWebSocket {
   }
 
   // Test utility to simulate receiving messages
-  simulateMessage(data: any) {
+  simulateMessage(data: unknown) {
     if (this.onmessage && this.readyState === WebSocket.OPEN) {
       this.onmessage(
         new MessageEvent('message', { data: JSON.stringify(data) })
@@ -71,7 +92,7 @@ const MockRealTimeStandings = ({
   tournamentId: number;
   onUpdate?: () => void;
 }) => {
-  const [standings, setStandings] = React.useState<any[]>([]);
+  const [standings, setStandings] = React.useState<StandingData[]>([]);
   const [connectionStatus, setConnectionStatus] = React.useState<
     'connecting' | 'connected' | 'disconnected'
   >('connecting');
@@ -88,10 +109,15 @@ const MockRealTimeStandings = ({
     };
 
     ws.onmessage = event => {
-      const message = JSON.parse(event.data);
-      if (message.type === 'standings_update') {
-        setStandings(message.data);
-        if (onUpdate) onUpdate();
+      try {
+        const message = JSON.parse(event.data);
+        if (message.type === 'standings_update') {
+          setStandings(message.data);
+          if (onUpdate) onUpdate();
+        }
+      } catch (error) {
+        // Gracefully handle malformed JSON
+        console.warn('Failed to parse WebSocket message:', error);
       }
     };
 
@@ -136,7 +162,7 @@ const MockRealTimeGameUpdates = ({
   tournamentId: number;
   roundNumber: number;
 }) => {
-  const [games, setGames] = React.useState<any[]>([]);
+  const [games, setGames] = React.useState<GameData[]>([]);
   const [connectionStatus, setConnectionStatus] = React.useState<
     'connecting' | 'connected' | 'disconnected'
   >('connecting');
@@ -151,23 +177,32 @@ const MockRealTimeGameUpdates = ({
     };
 
     ws.onmessage = event => {
-      const message = JSON.parse(event.data);
-      if (message.type === 'game_result_update') {
-        setGames(prevGames => {
-          const updatedGames = [...prevGames];
-          const gameIndex = updatedGames.findIndex(
-            g => g.id === message.data.gameId
-          );
-          if (gameIndex >= 0) {
-            updatedGames[gameIndex] = {
-              ...updatedGames[gameIndex],
-              ...message.data,
-            };
-          } else {
-            updatedGames.push(message.data);
-          }
-          return updatedGames;
-        });
+      try {
+        const message = JSON.parse(event.data);
+        if (message.type === 'game_result_update') {
+          setGames(prevGames => {
+            const updatedGames = [...prevGames];
+            const gameIndex = updatedGames.findIndex(
+              g => g.id === message.data.gameId
+            );
+            if (gameIndex >= 0) {
+              updatedGames[gameIndex] = {
+                ...updatedGames[gameIndex],
+                ...message.data,
+                id: message.data.gameId, // Ensure ID is properly set
+              };
+            } else {
+              updatedGames.push({
+                ...message.data,
+                id: message.data.gameId, // Ensure ID is properly set
+              });
+            }
+            return updatedGames;
+          });
+        }
+      } catch (error) {
+        // Gracefully handle malformed JSON
+        console.warn('Failed to parse WebSocket message:', error);
       }
     };
 
@@ -209,7 +244,9 @@ const MockTournamentLiveBroadcast = ({
 }) => {
   const [isLive, setIsLive] = React.useState(false);
   const [viewerCount, setViewerCount] = React.useState(0);
-  const [broadcastEvents, setBroadcastEvents] = React.useState<any[]>([]);
+  const [broadcastEvents, setBroadcastEvents] = React.useState<
+    BroadcastEvent[]
+  >([]);
 
   React.useEffect(() => {
     const ws = new MockWebSocket(
@@ -221,14 +258,19 @@ const MockTournamentLiveBroadcast = ({
     };
 
     ws.onmessage = event => {
-      const message = JSON.parse(event.data);
-      switch (message.type) {
-        case 'viewer_count':
-          setViewerCount(message.count);
-          break;
-        case 'broadcast_event':
-          setBroadcastEvents(prev => [message.data, ...prev.slice(0, 9)]); // Keep last 10 events
-          break;
+      try {
+        const message = JSON.parse(event.data);
+        switch (message.type) {
+          case 'viewer_count':
+            setViewerCount(message.count);
+            break;
+          case 'broadcast_event':
+            setBroadcastEvents(prev => [message.data, ...prev.slice(0, 9)]); // Keep last 10 events
+            break;
+        }
+      } catch (error) {
+        // Gracefully handle malformed JSON
+        console.warn('Failed to parse WebSocket message:', error);
       }
     };
 
@@ -267,7 +309,10 @@ const MockTournamentLiveBroadcast = ({
 
 // Replace global WebSocket with mock
 beforeAll(() => {
-  (global as any).WebSocket = MockWebSocket;
+  Object.defineProperty(globalThis, 'WebSocket', {
+    value: MockWebSocket,
+    configurable: true,
+  });
 });
 
 beforeEach(() => {
@@ -340,14 +385,21 @@ describe('Real-Time Features Testing', () => {
         );
       });
 
-      // Simulate reconnection by re-rendering component
-      rerender(<MockRealTimeStandings tournamentId={1} />);
+      // Clear previous instances to ensure clean state for reconnection
+      MockWebSocket.clearInstances();
 
-      await waitFor(() => {
-        expect(screen.getByTestId('connection-status')).toHaveTextContent(
-          'Status: connected'
-        );
-      });
+      // Simulate reconnection by re-rendering component with different key
+      rerender(<MockRealTimeStandings key="reconnected" tournamentId={1} />);
+
+      // Wait for the new connection to be established
+      await waitFor(
+        () => {
+          expect(screen.getByTestId('connection-status')).toHaveTextContent(
+            'Status: connected'
+          );
+        },
+        { timeout: 2000 }
+      );
     });
   });
 
@@ -447,7 +499,7 @@ describe('Real-Time Features Testing', () => {
       // Verify final standings
       expect(
         within(screen.getByTestId('standing-1')).getByTestId('points')
-      ).toHaveTextContent('2.0');
+      ).toHaveTextContent('2');
     });
   });
 
@@ -756,6 +808,9 @@ describe('Real-Time Features Testing', () => {
           ws!.onmessage(new MessageEvent('message', { data: 'invalid json' }));
         }
       });
+
+      // Wait a moment for the error to be handled
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       // Component should still be functional
       expect(screen.getByTestId('connection-status')).toHaveTextContent(

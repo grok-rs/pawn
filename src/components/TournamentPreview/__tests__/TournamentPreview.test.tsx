@@ -70,6 +70,8 @@ const createMockFormData = (
   pairingSystem: 'swiss',
   rounds: 7,
   timeControlTemplate: 1,
+  additionalTime: 30,
+  additionalTimeUnit: 'seconds',
   forfeitTimeMinutes: 30,
   drawOffersPolicy: 'allowed',
   mobilePhonePolicy: 'silent_only',
@@ -175,7 +177,7 @@ describe('TournamentPreview', () => {
       expect(screen.getByText('Not Set - Not Set')).toBeInTheDocument(); // dates combined
       // Location should show empty city and country as comma and space
       expect(
-        screen.getByText((content, element) => element?.textContent === ', ')
+        screen.getByText((_, element) => element?.textContent === ', ')
       ).toBeInTheDocument();
     });
   });
@@ -207,8 +209,8 @@ describe('TournamentPreview', () => {
 
     it('should handle unknown tournament types', () => {
       const formDataWithUnknownType = createMockFormData({
-        type: 'unknown_type' as any,
-        pairingSystem: 'unknown_system' as any,
+        type: 'unknown_type',
+        pairingSystem: 'unknown_system',
       });
 
       renderWithTheme(
@@ -301,7 +303,7 @@ describe('TournamentPreview', () => {
 
       testCases.forEach(({ policy, label }) => {
         const formData = createMockFormData({
-          drawOffersPolicy: policy as any,
+          drawOffersPolicy: policy,
         });
         const { unmount } = renderWithTheme(
           <TournamentPreview {...defaultProps} formData={formData} />
@@ -321,7 +323,7 @@ describe('TournamentPreview', () => {
 
       testCases.forEach(({ policy, label }) => {
         const formData = createMockFormData({
-          mobilePhonePolicy: policy as any,
+          mobilePhonePolicy: policy,
         });
         const { unmount } = renderWithTheme(
           <TournamentPreview {...defaultProps} formData={formData} />
@@ -340,7 +342,7 @@ describe('TournamentPreview', () => {
       ];
 
       testCases.forEach(({ policy, label }) => {
-        const formData = createMockFormData({ lateEntryPolicy: policy as any });
+        const formData = createMockFormData({ lateEntryPolicy: policy });
         const { unmount } = renderWithTheme(
           <TournamentPreview {...defaultProps} formData={formData} />
         );
@@ -352,9 +354,9 @@ describe('TournamentPreview', () => {
 
     it('should handle unknown policy values gracefully', () => {
       const formDataWithUnknownPolicies = createMockFormData({
-        drawOffersPolicy: 'unknown_draw' as any,
-        mobilePhonePolicy: 'unknown_phone' as any,
-        lateEntryPolicy: 'unknown_entry' as any,
+        drawOffersPolicy: 'unknown_draw',
+        mobilePhonePolicy: 'unknown_phone',
+        lateEntryPolicy: 'unknown_entry',
       });
 
       renderWithTheme(
@@ -462,6 +464,8 @@ describe('TournamentPreview', () => {
         pairingSystem: 'swiss',
         rounds: 0,
         timeControlTemplate: 0,
+        additionalTime: 0,
+        additionalTimeUnit: 'seconds',
         forfeitTimeMinutes: 0,
         drawOffersPolicy: 'allowed',
         mobilePhonePolicy: 'allowed',

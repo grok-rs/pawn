@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, act, waitFor } from '@testing-library/react';
+import {
+  screen,
+  act,
+  waitFor,
+  type RenderResult,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NotificationProvider } from '../NotificationProvider';
 import { useNotification } from '../../hooks/useNotification';
@@ -342,7 +347,7 @@ describe('NotificationProvider', () => {
 
   describe('Context Integration', () => {
     it('should maintain context state across re-renders', async () => {
-      let rerender: any;
+      let rerender: RenderResult['rerender'];
 
       const result = renderWithTheme(
         <NotificationProvider>

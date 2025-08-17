@@ -1,10 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
-// Unused imports removed by ESLint fix
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { FieldValues } from 'react-hook-form';
+import {
+  createMockUseFormReturn,
+  createMockFormState,
+  createMockFieldError,
+} from '../../../test/utils/form-mocks';
 import GeneralInfoStep from '../GeneralInfoStep';
-import { TournamentFormValues } from '../types';
 
 // Mock react-i18next
 vi.mock('react-i18next', () => ({
@@ -109,54 +113,30 @@ vi.mock('../../FormHelperText/FormHelperText', () => ({
 }));
 
 // Test wrapper component that provides form context
-const TestWrapper = ({
-  children,
-  defaultValues: _defaultValues = {},
-  errors: _errors = {},
-}: {
-  children: React.ReactNode;
-  defaultValues?: Partial<TournamentFormValues>;
-  errors?: Record<string, { message: string }>;
-}) => {
+const TestWrapper = ({ children }: { children: React.ReactNode }) => {
   const theme = createTheme();
 
-  // This wrapper provides the necessary context for child components
-
-  const TestForm = () => {
-    return <>{children}</>;
-  };
-
-  return (
-    <ThemeProvider theme={theme}>
-      <TestForm />
-    </ThemeProvider>
-  );
+  return <ThemeProvider theme={theme}>{children}</ThemeProvider>;
 };
 
 // Import useFormContext for mocking
 import { useFormContext } from 'react-hook-form';
 
-// Mock react-hook-form
-vi.mock('react-hook-form', () => ({
-  useFormContext: vi.fn(),
-}));
+// Mock react-hook-form using partial mock to preserve Controller
+vi.mock('react-hook-form', async importOriginal => {
+  const actual = await importOriginal<typeof import('react-hook-form')>();
+  return {
+    ...actual,
+    useFormContext: vi.fn(),
+  };
+});
 
 describe('GeneralInfoStep', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
     // Set up default mock for useFormContext
-    const mockFormMethods = {
-      register: vi.fn((name: string) => ({
-        name,
-        onChange: vi.fn(),
-        onBlur: vi.fn(),
-        ref: vi.fn(),
-      })),
-      control: {},
-      formState: { errors: {} },
-    };
-
+    const mockFormMethods = createMockUseFormReturn<FieldValues>();
     vi.mocked(useFormContext).mockReturnValue(mockFormMethods);
   });
 
@@ -228,12 +208,18 @@ describe('GeneralInfoStep', () => {
     });
 
     test('displays tournament name field errors', () => {
-      const errors = {
-        name: { message: 'Tournament name is required' },
-      };
+      const mockFormMethods = createMockUseFormReturn<FieldValues>({
+        formState: createMockFormState({
+          errors: {
+            name: createMockFieldError('Tournament name is required'),
+          },
+        }),
+      });
+
+      vi.mocked(useFormContext).mockReturnValue(mockFormMethods);
 
       render(
-        <TestWrapper errors={errors}>
+        <TestWrapper>
           <GeneralInfoStep />
         </TestWrapper>
       );
@@ -251,12 +237,10 @@ describe('GeneralInfoStep', () => {
         </TestWrapper>
       );
 
-      const nameField = screen.getByLabelText(
-        'tournamentName'
-      ) as HTMLInputElement;
+      const nameField = screen.getByLabelText('tournamentName');
       await user.type(nameField, 'Test Tournament Name');
 
-      expect(nameField.value).toBe('Test Tournament Name');
+      expect(nameField).toHaveValue('Test Tournament Name');
     });
   });
 
@@ -276,12 +260,18 @@ describe('GeneralInfoStep', () => {
     });
 
     test('displays city field errors', () => {
-      const errors = {
-        city: { message: 'City is required' },
-      };
+      const mockFormMethods = createMockUseFormReturn<FieldValues>({
+        formState: createMockFormState({
+          errors: {
+            city: createMockFieldError('City is required'),
+          },
+        }),
+      });
+
+      vi.mocked(useFormContext).mockReturnValue(mockFormMethods);
 
       render(
-        <TestWrapper errors={errors}>
+        <TestWrapper>
           <GeneralInfoStep />
         </TestWrapper>
       );
@@ -297,10 +287,10 @@ describe('GeneralInfoStep', () => {
         </TestWrapper>
       );
 
-      const cityField = screen.getByLabelText('city') as HTMLInputElement;
+      const cityField = screen.getByLabelText('city');
       await user.type(cityField, 'New York');
 
-      expect(cityField.value).toBe('New York');
+      expect(cityField).toHaveValue('New York');
     });
 
     test('renders country autocomplete field', () => {
@@ -318,12 +308,18 @@ describe('GeneralInfoStep', () => {
     });
 
     test('displays country field errors', () => {
-      const errors = {
-        country: { message: 'Country is required' },
-      };
+      const mockFormMethods = createMockUseFormReturn<FieldValues>({
+        formState: createMockFormState({
+          errors: {
+            country: createMockFieldError('Country is required'),
+          },
+        }),
+      });
+
+      vi.mocked(useFormContext).mockReturnValue(mockFormMethods);
 
       render(
-        <TestWrapper errors={errors}>
+        <TestWrapper>
           <GeneralInfoStep />
         </TestWrapper>
       );
@@ -420,18 +416,16 @@ describe('GeneralInfoStep', () => {
 
   describe('Form Integration', () => {
     test('uses react-hook-form register for text fields', () => {
-      const mockRegister = vi.fn((name: string) => ({
+      const mockRegister = vi.fn().mockImplementation((name: string) => ({
         name,
         onChange: vi.fn(),
         onBlur: vi.fn(),
         ref: vi.fn(),
       }));
 
-      vi.mocked(useFormContext).mockReturnValue({
-        register: mockRegister,
-        control: {},
-        formState: { errors: {} },
-      });
+      vi.mocked(useFormContext).mockReturnValue(
+        createMockUseFormReturn<FieldValues>({ register: mockRegister })
+      );
 
       render(
         <TestWrapper>
@@ -456,13 +450,9 @@ describe('GeneralInfoStep', () => {
     });
 
     test('passes control to CountryAutocomplete', () => {
-      const mockControl = { test: 'control' };
+      const mockFormMethods = createMockUseFormReturn<FieldValues>();
 
-      vi.mocked(useFormContext).mockReturnValue({
-        register: vi.fn(),
-        control: mockControl,
-        formState: { errors: {} },
-      });
+      vi.mocked(useFormContext).mockReturnValue(mockFormMethods);
 
       render(
         <TestWrapper>
@@ -478,14 +468,20 @@ describe('GeneralInfoStep', () => {
 
   describe('Error Display', () => {
     test('shows error styling when fields have errors', () => {
-      const errors = {
-        name: { message: 'Name error' },
-        city: { message: 'City error' },
-        country: { message: 'Country error' },
-      };
+      const mockFormMethods = createMockUseFormReturn<FieldValues>({
+        formState: createMockFormState({
+          errors: {
+            name: createMockFieldError('Name error'),
+            city: createMockFieldError('City error'),
+            country: createMockFieldError('Country error'),
+          },
+        }),
+      });
+
+      vi.mocked(useFormContext).mockReturnValue(mockFormMethods);
 
       render(
-        <TestWrapper errors={errors}>
+        <TestWrapper>
           <GeneralInfoStep />
         </TestWrapper>
       );
@@ -497,14 +493,20 @@ describe('GeneralInfoStep', () => {
     });
 
     test('displays custom helper text for errors', () => {
-      const errors = {
-        name: { message: 'Tournament name is required' },
-        city: { message: 'City name is required' },
-        country: { message: 'Please select a country' },
-      };
+      const mockFormMethods = createMockUseFormReturn<FieldValues>({
+        formState: createMockFormState({
+          errors: {
+            name: createMockFieldError('Tournament name is required'),
+            city: createMockFieldError('City name is required'),
+            country: createMockFieldError('Please select a country'),
+          },
+        }),
+      });
+
+      vi.mocked(useFormContext).mockReturnValue(mockFormMethods);
 
       render(
-        <TestWrapper errors={errors}>
+        <TestWrapper>
           <GeneralInfoStep />
         </TestWrapper>
       );

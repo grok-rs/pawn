@@ -101,7 +101,7 @@ describe('FormStepperNavigation', () => {
 
   const renderWithContext = (
     contextValue: FormStepperContextType<FieldValues>,
-    component?: React.ComponentType<NavigationComponentProps>
+    component?: React.FunctionComponent<NavigationComponentProps>
   ) => {
     return render(
       <FormStepperContext.Provider value={contextValue}>
@@ -263,14 +263,13 @@ describe('FormStepperNavigation', () => {
 
       renderWithContext(mockContext, CustomNavigation);
 
-      if (receivedProps) {
-        expect(typeof receivedProps.onStepBack).toBe('function');
-        expect(typeof receivedProps.isSubmitting).toBe('boolean');
-        expect(typeof receivedProps.isSubmitButtonDisabled).toBe('boolean');
-        expect(typeof receivedProps.isLastStep).toBe('boolean');
-        expect(typeof receivedProps.isFirstStep).toBe('boolean');
-        expect(typeof receivedProps.onCancel).toBe('function');
-      }
+      expect(receivedProps).not.toBeNull();
+      expect(typeof receivedProps!.onStepBack).toBe('function');
+      expect(typeof receivedProps!.isSubmitting).toBe('boolean');
+      expect(typeof receivedProps!.isSubmitButtonDisabled).toBe('boolean');
+      expect(typeof receivedProps!.isLastStep).toBe('boolean');
+      expect(typeof receivedProps!.isFirstStep).toBe('boolean');
+      expect(typeof receivedProps!.onCancel).toBe('function');
     });
 
     test('custom navigation handles undefined onCancel gracefully', () => {
@@ -341,18 +340,20 @@ describe('FormStepperNavigation', () => {
 
   describe('Edge Cases', () => {
     test('handles falsy onCancel without crashing', () => {
-      const mockContext = createMockContext({ onCancel: null as any });
+      const mockContext = createMockContext({ onCancel: undefined });
 
       expect(() => renderWithContext(mockContext)).not.toThrow();
       expect(screen.getByText('Cancel')).toBeInTheDocument();
     });
 
     test('handles falsy onStepBack in custom component without crashing', () => {
-      const CustomNavigation = ({ onStepBack }: any) => (
-        <button onClick={onStepBack}>Back</button>
-      );
+      const CustomNavigation = ({
+        onStepBack,
+      }: {
+        onStepBack?: () => void;
+      }) => <button onClick={onStepBack}>Back</button>;
 
-      const mockContext = createMockContext({ onStepBack: null as any });
+      const mockContext = createMockContext({ onStepBack: undefined });
 
       expect(() =>
         renderWithContext(mockContext, CustomNavigation)

@@ -3,6 +3,28 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMockTournament, createMockPlayer } from '../utils/test-utils';
 
+interface ScreenshotData {
+  name: string;
+  timestamp: string;
+  viewport: { width: number; height: number };
+  element: string;
+  innerHTML: number;
+  hash: string;
+  dimensions: { width: number; height: number };
+}
+
+interface VisualTestConfig {
+  componentName: string;
+  variants: Array<{ name: string; props: Record<string, unknown> }>;
+  viewports: Array<{ name: string; width: number; height: number }>;
+  themes: string[];
+  interactions: Array<{
+    name: string;
+    action: string;
+    selector: string;
+  }>;
+}
+
 // Screenshot testing utilities
 const ScreenshotTestUtils = {
   // Simulate screenshot capture
@@ -33,16 +55,16 @@ const ScreenshotTestUtils = {
     };
 
     // Simulate async screenshot processing
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise<void>(resolve => setTimeout(resolve, 100));
 
     return screenshot;
   },
 
   // Compare screenshots (simulated)
   compareScreenshots: (
-    baseline: any,
-    current: any,
-    threshold: number = 0.2
+    baseline: ScreenshotData,
+    current: ScreenshotData,
+    threshold = 0.2
   ): {
     match: boolean;
     difference: number;
@@ -82,7 +104,7 @@ const ScreenshotTestUtils = {
   },
 
   // Generate visual test configuration
-  createVisualTestConfig: (componentName: string) => ({
+  createVisualTestConfig: (componentName: string): VisualTestConfig => ({
     componentName,
     variants: [
       { name: 'default', props: {} },
@@ -144,19 +166,19 @@ const ScreenshotTestUtils = {
       await document.fonts.ready;
     }
     // Additional wait for font rendering
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise<void>(resolve => setTimeout(resolve, 100));
   },
 
   // Wait for images to load
   waitForImages: async (container: HTMLElement) => {
     const images = container.querySelectorAll('img');
-    const promises = Array.from(images).map(img => {
+    const promises = Array.from(images).map((img: HTMLImageElement) => {
       if (img.complete) return Promise.resolve();
 
-      return new Promise(resolve => {
-        img.onload = resolve;
-        img.onerror = resolve; // Resolve even on error to continue test
-        setTimeout(resolve, 5000); // Timeout after 5 seconds
+      return new Promise<void>(resolve => {
+        img.onload = () => resolve();
+        img.onerror = () => resolve(); // Resolve even on error to continue test
+        setTimeout(() => resolve(), 5000); // Timeout after 5 seconds
       });
     });
 
@@ -184,19 +206,32 @@ function generateElementHash(element: HTMLElement): string {
 }
 
 // Tournament card component for visual testing
+interface TournamentData {
+  id: number;
+  name: string;
+  status: string;
+  playerCount: number;
+  maxRounds: number;
+  currentRound: number;
+  startDate: string;
+  format: string;
+}
+
+interface TournamentCardProps {
+  tournament?: TournamentData;
+  loading?: boolean;
+  error?: string | null;
+  variant?: 'default' | 'compact' | 'detailed';
+  theme?: 'light' | 'dark';
+}
+
 const TournamentCard = ({
   tournament,
   loading = false,
   error = null,
   variant = 'default',
   theme = 'light',
-}: {
-  tournament?: any;
-  loading?: boolean;
-  error?: string | null;
-  variant?: 'default' | 'compact' | 'detailed';
-  theme?: 'light' | 'dark';
-}) => {
+}: TournamentCardProps) => {
   const [isHovered, setIsHovered] = React.useState(false);
   const [isFocused, setIsFocused] = React.useState(false);
 
@@ -433,17 +468,27 @@ const TournamentCard = ({
 };
 
 // Player list component for responsive testing
+interface PlayerData {
+  id: number;
+  name: string;
+  rating: number;
+  score: number;
+  title: string;
+}
+
+interface PlayerListProps {
+  players?: PlayerData[];
+  loading?: boolean;
+  layout?: 'grid' | 'list' | 'table';
+  theme?: 'light' | 'dark';
+}
+
 const PlayerList = ({
   players = [],
   loading = false,
   layout = 'grid',
   theme = 'light',
-}: {
-  players?: any[];
-  loading?: boolean;
-  layout?: 'grid' | 'list' | 'table';
-  theme?: 'light' | 'dark';
-}) => {
+}: PlayerListProps) => {
   const [sortBy, setSortBy] = React.useState<'name' | 'rating' | 'score'>(
     'rating'
   );
@@ -536,9 +581,17 @@ const PlayerList = ({
           <select
             value={`${sortBy}-${sortOrder}`}
             onChange={e => {
-              const [field, order] = e.target.value.split('-');
-              setSortBy(field as any);
-              setSortOrder(order as any);
+              const [field, order] = e.target.value.split('-') as [
+                string,
+                string,
+              ];
+              if (
+                (field === 'name' || field === 'rating' || field === 'score') &&
+                (order === 'asc' || order === 'desc')
+              ) {
+                setSortBy(field as 'name' | 'rating' | 'score');
+                setSortOrder(order as 'asc' | 'desc');
+              }
             }}
             style={{
               padding: '6px 12px',
@@ -776,13 +829,17 @@ describe('Automated Screenshot Testing for Regression Detection', () => {
 
   describe('Tournament Card Visual Testing', () => {
     test('should capture tournament card default state', async () => {
-      const tournament = createMockTournament({
-        name: 'World Championship 2024',
-        status: 'active',
-        playerCount: 32,
+      const tournament: TournamentData = {
+        ...createMockTournament({
+          name: 'World Championship 2024',
+          status: 'active',
+          playerCount: 32,
+          maxRounds: 11,
+        }),
         currentRound: 5,
-        maxRounds: 11,
-      });
+        startDate: '2024-01-15',
+        format: 'Swiss',
+      };
 
       render(<TournamentCard tournament={tournament} />);
 
@@ -827,12 +884,21 @@ describe('Automated Screenshot Testing for Regression Detection', () => {
     });
 
     test('should capture tournament card variants', async () => {
-      const tournament = createMockTournament();
-      const variants = ['default', 'compact', 'detailed'];
+      const tournament: TournamentData = {
+        ...createMockTournament(),
+        currentRound: 3,
+        startDate: '2024-01-15',
+        format: 'Swiss',
+      };
+      const variants: Array<'default' | 'compact' | 'detailed'> = [
+        'default',
+        'compact',
+        'detailed',
+      ];
 
       for (const variant of variants) {
         const { unmount } = render(
-          <TournamentCard tournament={tournament} variant={variant as any} />
+          <TournamentCard tournament={tournament} variant={variant} />
         );
 
         const card = screen.getByTestId('tournament-card');
@@ -846,12 +912,17 @@ describe('Automated Screenshot Testing for Regression Detection', () => {
     });
 
     test('should capture tournament card with different themes', async () => {
-      const tournament = createMockTournament();
-      const themes = ['light', 'dark'];
+      const tournament: TournamentData = {
+        ...createMockTournament(),
+        currentRound: 3,
+        startDate: '2024-01-15',
+        format: 'Swiss',
+      };
+      const themes: Array<'light' | 'dark'> = ['light', 'dark'];
 
       for (const theme of themes) {
         const { unmount } = render(
-          <TournamentCard tournament={tournament} theme={theme as any} />
+          <TournamentCard tournament={tournament} theme={theme} />
         );
 
         const card = screen.getByTestId('tournament-card');
@@ -866,7 +937,12 @@ describe('Automated Screenshot Testing for Regression Detection', () => {
 
     test('should capture tournament card interaction states', async () => {
       const user = userEvent.setup();
-      const tournament = createMockTournament();
+      const tournament: TournamentData = {
+        ...createMockTournament(),
+        currentRound: 3,
+        startDate: '2024-01-15',
+        format: 'Swiss',
+      };
 
       render(<TournamentCard tournament={tournament} />);
 
@@ -909,14 +985,14 @@ describe('Automated Screenshot Testing for Regression Detection', () => {
 
   describe('Player List Responsive Testing', () => {
     test('should capture player list across different viewports', async () => {
-      const players = Array.from({ length: 8 }, (_, i) =>
-        createMockPlayer({
+      const players: PlayerData[] = Array.from({ length: 8 }, (_, i) => ({
+        ...createMockPlayer({
           id: i + 1,
           name: `Player ${i + 1}`,
           rating: 2000 + i * 50,
-          score: (8 - i) * 0.5,
-        })
-      );
+        }),
+        score: (8 - i) * 0.5,
+      }));
 
       const viewports = [
         { name: 'mobile', width: 375, height: 667 },
@@ -942,20 +1018,24 @@ describe('Automated Screenshot Testing for Regression Detection', () => {
     });
 
     test('should capture player list layout variations', async () => {
-      const players = Array.from({ length: 5 }, (_, i) =>
-        createMockPlayer({
+      const players: PlayerData[] = Array.from({ length: 5 }, (_, i) => ({
+        ...createMockPlayer({
           id: i + 1,
           name: `Player ${i + 1}`,
           rating: 2500 - i * 50,
-          score: 4.5 - i * 0.5,
-        })
-      );
+        }),
+        score: 4.5 - i * 0.5,
+      }));
 
-      const layouts = ['grid', 'list', 'table'];
+      const layouts: Array<'grid' | 'list' | 'table'> = [
+        'grid',
+        'list',
+        'table',
+      ];
 
       for (const layout of layouts) {
         const { unmount } = render(
-          <PlayerList players={players} layout={layout as any} />
+          <PlayerList players={players} layout={layout} />
         );
 
         const list = screen.getByTestId('player-list');
@@ -969,14 +1049,15 @@ describe('Automated Screenshot Testing for Regression Detection', () => {
     });
 
     test('should capture player list themes', async () => {
-      const players = Array.from({ length: 3 }, (_, i) =>
-        createMockPlayer({ id: i + 1 })
-      );
-      const themes = ['light', 'dark'];
+      const players: PlayerData[] = Array.from({ length: 3 }, (_, i) => ({
+        ...createMockPlayer({ id: i + 1 }),
+        score: 3.5 - i * 0.5,
+      }));
+      const themes: Array<'light' | 'dark'> = ['light', 'dark'];
 
       for (const theme of themes) {
         const { unmount } = render(
-          <PlayerList players={players} theme={theme as any} />
+          <PlayerList players={players} theme={theme} />
         );
 
         const list = screen.getByTestId('player-list');
@@ -1193,7 +1274,12 @@ describe('Automated Screenshot Testing for Regression Detection', () => {
 
   describe('Screenshot Comparison Testing', () => {
     test('should compare screenshots for changes', async () => {
-      const tournament = createMockTournament({ name: 'Test Tournament' });
+      const tournament: TournamentData = {
+        ...createMockTournament({ name: 'Test Tournament' }),
+        currentRound: 3,
+        startDate: '2024-01-15',
+        format: 'Swiss',
+      };
 
       // Capture baseline
       const { unmount: unmount1 } = render(
@@ -1230,8 +1316,18 @@ describe('Automated Screenshot Testing for Regression Detection', () => {
     });
 
     test('should detect changes in screenshots', async () => {
-      const tournament1 = createMockTournament({ name: 'Original Tournament' });
-      const tournament2 = createMockTournament({ name: 'Modified Tournament' });
+      const tournament1: TournamentData = {
+        ...createMockTournament({ name: 'Original Tournament' }),
+        currentRound: 3,
+        startDate: '2024-01-15',
+        format: 'Swiss',
+      };
+      const tournament2: TournamentData = {
+        ...createMockTournament({ name: 'Modified Tournament' }),
+        currentRound: 3,
+        startDate: '2024-01-15',
+        format: 'Swiss',
+      };
 
       // Capture baseline
       const { unmount: unmount1 } = render(
@@ -1268,7 +1364,12 @@ describe('Automated Screenshot Testing for Regression Detection', () => {
     });
 
     test('should detect viewport changes', async () => {
-      const tournament = createMockTournament();
+      const tournament: TournamentData = {
+        ...createMockTournament(),
+        currentRound: 3,
+        startDate: '2024-01-15',
+        format: 'Swiss',
+      };
 
       // Capture at different viewport sizes
       ScreenshotTestUtils.setViewport(1280, 720);
@@ -1312,17 +1413,44 @@ describe('Automated Screenshot Testing for Regression Detection', () => {
     test('should run comprehensive visual regression tests', async () => {
       const testConfig =
         ScreenshotTestUtils.createVisualTestConfig('TournamentCard');
-      const results: any[] = [];
+      const results: Array<{
+        variant: string;
+        theme: string;
+        viewport: string;
+        screenshot: ScreenshotData;
+      }> = [];
 
       for (const variant of testConfig.variants) {
         for (const viewport of testConfig.viewports) {
           for (const theme of testConfig.themes) {
             ScreenshotTestUtils.setViewport(viewport.width, viewport.height);
 
-            const props = {
-              ...variant.props,
-              theme,
-              tournament: variant.props.error ? null : createMockTournament(),
+            const isLoading =
+              typeof variant.props.loading === 'boolean'
+                ? variant.props.loading
+                : undefined;
+            const errorProp =
+              typeof variant.props.error === 'string' ||
+              variant.props.error === null
+                ? (variant.props.error as string | null)
+                : undefined;
+            const themeProp =
+              theme === 'light' || theme === 'dark'
+                ? (theme as 'light' | 'dark')
+                : 'light';
+
+            const props: TournamentCardProps = {
+              loading: isLoading,
+              error: errorProp,
+              theme: themeProp,
+              tournament: variant.props.error
+                ? undefined
+                : ({
+                    ...createMockTournament(),
+                    currentRound: 3,
+                    startDate: '2024-01-15',
+                    format: 'Swiss',
+                  } as TournamentData),
             };
 
             const { unmount } = render(<TournamentCard {...props} />);

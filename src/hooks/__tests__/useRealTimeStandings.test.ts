@@ -21,25 +21,22 @@ const createMockPlayerStanding = (overrides = {}): PlayerStanding => ({
   rank: 1,
   player: {
     id: 1,
+    tournament_id: 1,
     name: 'Test Player',
-    country_code: 'US',
     rating: 1500,
-    title: '',
+    country_code: 'US',
+    title: null,
     birth_date: '1990-01-01',
     gender: 'M',
-    fide_id: null,
     email: 'test@example.com',
     phone: '+1234567890',
-    address: '123 Test St',
-    city: 'Test City',
-    state: 'Test State',
-    zip_code: '12345',
-    emergency_contact: 'Emergency Contact',
-    emergency_phone: '+0987654321',
-    medical_info: '',
-    notes: '',
-    is_active: true,
+    club: null,
+    status: 'active',
+    seed_number: null,
     pairing_number: 1,
+    initial_rating: null,
+    created_at: new Date().toISOString(),
+    updated_at: null,
   },
   points: 2.5,
   games_played: 4,
@@ -47,6 +44,7 @@ const createMockPlayerStanding = (overrides = {}): PlayerStanding => ({
   draws: 1,
   losses: 1,
   performance_rating: 1550,
+  rating_change: 10,
   tiebreak_scores: [],
   ...overrides,
 });
@@ -58,7 +56,7 @@ const createMockStandingsResult = (
   last_updated: new Date().toISOString(),
   tiebreak_config: {
     tournament_id: 1,
-    tiebreaks: ['buchholz', 'sonneborn_berger'],
+    tiebreaks: ['buchholz_full', 'sonneborn_berger'],
     use_fide_defaults: true,
     forfeit_time_minutes: null,
     draw_offers_allowed: null,
@@ -77,8 +75,12 @@ const createMockStandingsResult = (
 
 describe('useRealTimeStandings', () => {
   let mockUnlisten: ReturnType<typeof vi.fn>;
-  let mockListen: any;
-  let mockCommands: any;
+  let mockListen: ReturnType<typeof vi.fn>;
+  let mockCommands: {
+    getRealtimeStandings: ReturnType<typeof vi.fn>;
+    forceRecalculateStandings: ReturnType<typeof vi.fn>;
+    clearStandingsCache: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     vi.useFakeTimers();
@@ -354,11 +356,13 @@ describe('useRealTimeStandings', () => {
 
   describe('Real-time event handling', () => {
     it('should process standings update events', async () => {
-      let eventCallback: any;
-      mockListen.mockImplementation(async (_event, callback) => {
-        eventCallback = callback;
-        return mockUnlisten;
-      });
+      let eventCallback: ((data: unknown) => void) | undefined;
+      mockListen.mockImplementation(
+        async (_event: string, callback: (data: unknown) => void) => {
+          eventCallback = callback;
+          return mockUnlisten;
+        }
+      );
 
       const { result } = renderHook(() =>
         useRealTimeStandings({ tournamentId: 1 })
@@ -377,7 +381,7 @@ describe('useRealTimeStandings', () => {
       };
 
       act(() => {
-        eventCallback(updateEvent);
+        eventCallback?.(updateEvent);
       });
 
       await waitFor(() => {
@@ -388,11 +392,13 @@ describe('useRealTimeStandings', () => {
     });
 
     it('should ignore events for different tournaments', async () => {
-      let eventCallback: any;
-      mockListen.mockImplementation(async (_event, callback) => {
-        eventCallback = callback;
-        return mockUnlisten;
-      });
+      let eventCallback: ((data: unknown) => void) | undefined;
+      mockListen.mockImplementation(
+        async (_event: string, callback: (data: unknown) => void) => {
+          eventCallback = callback;
+          return mockUnlisten;
+        }
+      );
 
       const { result } = renderHook(() =>
         useRealTimeStandings({ tournamentId: 1 })
@@ -413,7 +419,7 @@ describe('useRealTimeStandings', () => {
       };
 
       act(() => {
-        eventCallback(updateEvent);
+        eventCallback?.(updateEvent);
       });
 
       // Standings should not change
@@ -421,12 +427,14 @@ describe('useRealTimeStandings', () => {
     });
 
     it('should call onUpdate callback for real-time events', async () => {
-      let eventCallback: any;
+      let eventCallback: ((data: unknown) => void) | undefined;
       const onUpdate = vi.fn();
-      mockListen.mockImplementation(async (_event, callback) => {
-        eventCallback = callback;
-        return mockUnlisten;
-      });
+      mockListen.mockImplementation(
+        async (_event: string, callback: (data: unknown) => void) => {
+          eventCallback = callback;
+          return mockUnlisten;
+        }
+      );
 
       renderHook(() => useRealTimeStandings({ tournamentId: 1, onUpdate }));
 
@@ -443,7 +451,7 @@ describe('useRealTimeStandings', () => {
       };
 
       act(() => {
-        eventCallback(updateEvent);
+        eventCallback?.(updateEvent);
       });
 
       await waitFor(() => {

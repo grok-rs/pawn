@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
@@ -21,14 +22,14 @@ vi.mock('@mui/x-data-grid', () => ({
     toolbar,
     ...props
   }: {
-    rows: unknown[];
+    rows: Array<{ player: { id: number } }>;
     columns: { field: string; headerName: string }[];
     loading: boolean;
     onRowClick?: (params: { row: { player: { id: number } } }) => void;
     toolbar?: React.ComponentType;
   }) => (
     <div data-testid="data-grid" data-loading={loading} {...props}>
-      {toolbar && <toolbar />}
+      {toolbar && React.createElement(toolbar)}
       <div data-testid="grid-header">
         {columns.map(col => (
           <div key={col.field} data-testid={`header-${col.field}`}>
@@ -41,9 +42,7 @@ vi.mock('@mui/x-data-grid', () => ({
           <div
             key={index}
             data-testid={`row-${index}`}
-            onClick={() =>
-              onRowClick?.({ row: row as { player: { id: number } } })
-            }
+            onClick={() => onRowClick?.({ row })}
           >
             Row {index}: {JSON.stringify(row)}
           </div>
@@ -115,10 +114,22 @@ const createMockStanding = (
 ): PlayerStanding => ({
   player: {
     id,
+    tournament_id: 1,
     name: `Player ${id}`,
     rating: 1800 + id * 50,
     country_code: id % 2 === 0 ? 'US' : 'CA',
     title: null,
+    birth_date: null,
+    gender: null,
+    email: null,
+    phone: null,
+    club: null,
+    status: 'active',
+    seed_number: null,
+    pairing_number: null,
+    initial_rating: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
     ...overrides.player,
   },
   rank: id,
@@ -127,12 +138,25 @@ const createMockStanding = (
   wins: 3,
   draws: 1,
   losses: 3,
-  buchholz: 22.5 - id,
-  buchholz_cut: 20.0 - id,
-  sonneborn_berger: 15.5 - id,
+  tiebreak_scores: [
+    {
+      tiebreak_type: 'buchholz_full',
+      value: 22.5 - id,
+      display_value: (22.5 - id).toString(),
+    },
+    {
+      tiebreak_type: 'buchholz_cut_1',
+      value: 20.0 - id,
+      display_value: (20.0 - id).toString(),
+    },
+    {
+      tiebreak_type: 'sonneborn_berger',
+      value: 15.5 - id,
+      display_value: (15.5 - id).toString(),
+    },
+  ],
   performance_rating: 1850 + id * 25,
   rating_change: id === 1 ? 15 : id === 2 ? -10 : 0,
-  streak: id <= 2 ? 'W2' : 'L1',
   ...overrides,
 });
 
@@ -140,7 +164,27 @@ describe('StandingsTable', () => {
   const mockStandings = [
     createMockStanding(1),
     createMockStanding(2),
-    createMockStanding(3, { player: { name: 'Jane Doe', rating: null } }),
+    createMockStanding(3, {
+      player: {
+        id: 3,
+        tournament_id: 1,
+        name: 'Jane Doe',
+        rating: null,
+        country_code: 'US',
+        title: null,
+        birth_date: null,
+        gender: null,
+        email: null,
+        phone: null,
+        club: null,
+        status: 'active',
+        seed_number: null,
+        pairing_number: null,
+        initial_rating: null,
+        created_at: new Date().toISOString(),
+        updated_at: null,
+      },
+    }),
   ];
 
   const mockOnPlayerClick = vi.fn();
@@ -522,7 +566,27 @@ describe('StandingsTable', () => {
 
     test('handles unrated players correctly', () => {
       const standingsWithUnrated = [
-        createMockStanding(1, { player: { rating: null } }),
+        createMockStanding(1, {
+          player: {
+            id: 1,
+            tournament_id: 1,
+            name: 'Player 1',
+            rating: null,
+            country_code: 'US',
+            title: null,
+            birth_date: null,
+            gender: null,
+            email: null,
+            phone: null,
+            club: null,
+            status: 'active',
+            seed_number: null,
+            pairing_number: null,
+            initial_rating: null,
+            created_at: new Date().toISOString(),
+            updated_at: null,
+          },
+        }),
       ];
 
       render(<StandingsTable standings={standingsWithUnrated} />);
@@ -553,7 +617,27 @@ describe('StandingsTable', () => {
 
     test('handles missing country codes gracefully', () => {
       const standingsWithoutCountry = [
-        createMockStanding(1, { player: { country_code: undefined } }),
+        createMockStanding(1, {
+          player: {
+            id: 1,
+            tournament_id: 1,
+            name: 'Player 1',
+            rating: 1800,
+            country_code: null,
+            title: null,
+            birth_date: null,
+            gender: null,
+            email: null,
+            phone: null,
+            club: null,
+            status: 'active',
+            seed_number: null,
+            pairing_number: null,
+            initial_rating: null,
+            created_at: new Date().toISOString(),
+            updated_at: null,
+          },
+        }),
       ];
 
       render(<StandingsTable standings={standingsWithoutCountry} />);

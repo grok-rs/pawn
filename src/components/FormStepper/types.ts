@@ -2,7 +2,7 @@ import { FunctionComponent } from 'react';
 import { FieldValues } from 'react-hook-form';
 import { AnyObject, ObjectSchema } from 'yup';
 
-export type FormStepComponentProps<T extends FieldValues> = {
+export type FormStepComponentProps<T extends FieldValues = FieldValues> = {
   onCancel?: () => void;
   handleNextStep: (data: T) => void;
   handleDisableSubmitButton: () => void;
@@ -13,7 +13,7 @@ type StepIntro = {
   description: string;
 };
 
-export type FormStepOption<T extends FieldValues> = {
+export type FormStepOption<T extends FieldValues = FieldValues> = {
   component: FunctionComponent<FormStepComponentProps<T>>;
   schema?: ObjectSchema<AnyObject>;
   id?: number;
@@ -21,7 +21,7 @@ export type FormStepOption<T extends FieldValues> = {
   stepIntro?: StepIntro;
 };
 
-export type FormStepperContextType<T extends FieldValues> = {
+export type FormStepperContextType<T extends FieldValues = FieldValues> = {
   activeStep: number;
   steps: FormStepOption<T>[];
   isSubmitting?: boolean;

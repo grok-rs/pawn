@@ -27,7 +27,7 @@ vi.mock('../../contexts/hooks/useNotification', () => ({
 
 vi.mock('@dto/bindings', () => ({
   commands: {
-    createTournament: mockCreateTournament,
+    createTournament: vi.fn(),
   },
 }));
 
@@ -138,6 +138,18 @@ vi.mock('../constants', () => ({
 
 // Import for mocking
 import * as validation from '../validation';
+import { commands, Tournament } from '@dto/bindings';
+
+interface MockTournamentFormValues {
+  name: string;
+  city: string;
+  country: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  type: string;
+  pairingSystem: string;
+  rounds: number;
+}
 
 vi.mock('../validation', () => ({
   DEFAULT_TOURNAMENT_FORM_VALUES: {
@@ -149,7 +161,7 @@ vi.mock('../validation', () => ({
     type: 'classical',
     pairingSystem: 'individual',
     rounds: 9,
-  },
+  } satisfies MockTournamentFormValues,
 }));
 
 const renderWithRouter = (component: React.ReactNode) => {
@@ -159,6 +171,8 @@ const renderWithRouter = (component: React.ReactNode) => {
 describe('NewTournamentSetup', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset the mocked function
+    vi.mocked(commands.createTournament).mockReset();
   });
 
   describe('Initial Rendering', () => {
@@ -202,20 +216,40 @@ describe('NewTournamentSetup', () => {
   describe('Tournament Creation', () => {
     test('creates tournament successfully on form submission', async () => {
       const user = userEvent.setup();
-      const mockTournament = {
+      const mockTournament: Tournament = {
         id: 1,
         name: 'Test Tournament',
         location: 'Test City',
+        date: '2024-01-15',
+        time_type: 'classical',
+        tournament_type: 'individual',
+        player_count: 0,
+        rounds_played: 0,
+        total_rounds: 9,
+        country_code: 'US',
+        status: null,
+        start_time: null,
+        end_time: null,
+        description: null,
+        website_url: null,
+        contact_email: null,
+        entry_fee: null,
+        currency: null,
+        is_team_tournament: null,
+        team_size: null,
+        max_teams: null,
       };
 
-      mockCreateTournament.mockResolvedValueOnce(mockTournament);
+      vi.mocked(commands.createTournament).mockResolvedValueOnce(
+        mockTournament
+      );
       renderWithRouter(<NewTournamentSetup />);
 
       const submitButton = screen.getByTestId('submit-button');
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockCreateTournament).toHaveBeenCalledWith({
+        expect(vi.mocked(commands.createTournament)).toHaveBeenCalledWith({
           name: 'Test Tournament',
           location: 'Test City',
           date: '2024-01-15',
@@ -237,7 +271,7 @@ describe('NewTournamentSetup', () => {
     test('handles tournament creation error', async () => {
       const user = userEvent.setup();
       const error = new Error('Creation failed');
-      mockCreateTournament.mockRejectedValueOnce(error);
+      vi.mocked(commands.createTournament).mockRejectedValueOnce(error);
 
       renderWithRouter(<NewTournamentSetup />);
 
@@ -245,7 +279,7 @@ describe('NewTournamentSetup', () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockCreateTournament).toHaveBeenCalled();
+        expect(vi.mocked(commands.createTournament)).toHaveBeenCalled();
       });
 
       expect(mockShowError).toHaveBeenCalledWith(
@@ -257,7 +291,7 @@ describe('NewTournamentSetup', () => {
     test('handles error with custom message', async () => {
       const user = userEvent.setup();
       const error = { message: 'Custom error message' };
-      mockCreateTournament.mockRejectedValueOnce(error);
+      vi.mocked(commands.createTournament).mockRejectedValueOnce(error);
 
       renderWithRouter(<NewTournamentSetup />);
 
@@ -265,7 +299,7 @@ describe('NewTournamentSetup', () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockCreateTournament).toHaveBeenCalled();
+        expect(vi.mocked(commands.createTournament)).toHaveBeenCalled();
       });
 
       expect(mockShowError).toHaveBeenCalledWith('Custom error message');
@@ -274,7 +308,7 @@ describe('NewTournamentSetup', () => {
     test('handles error with details property', async () => {
       const user = userEvent.setup();
       const error = { details: 'Detailed error message' };
-      mockCreateTournament.mockRejectedValueOnce(error);
+      vi.mocked(commands.createTournament).mockRejectedValueOnce(error);
 
       renderWithRouter(<NewTournamentSetup />);
 
@@ -282,7 +316,7 @@ describe('NewTournamentSetup', () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockCreateTournament).toHaveBeenCalled();
+        expect(vi.mocked(commands.createTournament)).toHaveBeenCalled();
       });
 
       expect(mockShowError).toHaveBeenCalledWith('Detailed error message');
@@ -292,8 +326,32 @@ describe('NewTournamentSetup', () => {
   describe('Form Data Processing', () => {
     test('processes form data correctly with default values', async () => {
       const user = userEvent.setup();
-      const mockTournament = { id: 1 };
-      mockCreateTournament.mockResolvedValueOnce(mockTournament);
+      const mockTournament: Tournament = {
+        id: 1,
+        name: 'Test Tournament',
+        location: 'Test City',
+        date: '2024-01-15',
+        time_type: 'classical',
+        tournament_type: 'individual',
+        player_count: 0,
+        rounds_played: 0,
+        total_rounds: 9,
+        country_code: 'US',
+        status: null,
+        start_time: null,
+        end_time: null,
+        description: null,
+        website_url: null,
+        contact_email: null,
+        entry_fee: null,
+        currency: null,
+        is_team_tournament: null,
+        team_size: null,
+        max_teams: null,
+      };
+      vi.mocked(commands.createTournament).mockResolvedValueOnce(
+        mockTournament
+      );
 
       renderWithRouter(<NewTournamentSetup />);
 
@@ -301,7 +359,7 @@ describe('NewTournamentSetup', () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockCreateTournament).toHaveBeenCalledWith({
+        expect(vi.mocked(commands.createTournament)).toHaveBeenCalledWith({
           name: 'Test Tournament',
           location: 'Test City',
           date: '2024-01-15',
@@ -317,15 +375,39 @@ describe('NewTournamentSetup', () => {
 
     test('uses current date as fallback when startDate is null', async () => {
       const user = userEvent.setup();
-      const mockTournament = { id: 1 };
-      mockCreateTournament.mockResolvedValueOnce(mockTournament);
+      const mockTournament: Tournament = {
+        id: 1,
+        name: 'Test Tournament',
+        location: 'Test City',
+        date: '2024-01-15',
+        time_type: 'classical',
+        tournament_type: 'individual',
+        player_count: 0,
+        rounds_played: 0,
+        total_rounds: 9,
+        country_code: 'US',
+        status: null,
+        start_time: null,
+        end_time: null,
+        description: null,
+        website_url: null,
+        contact_email: null,
+        entry_fee: null,
+        currency: null,
+        is_team_tournament: null,
+        team_size: null,
+        max_teams: null,
+      };
+      vi.mocked(commands.createTournament).mockResolvedValueOnce(
+        mockTournament
+      );
 
       // Mock default values with null startDate
       const mockedValidation = vi.mocked(validation);
-      mockedValidation.DEFAULT_TOURNAMENT_FORM_VALUES = {
+      Object.assign(mockedValidation.DEFAULT_TOURNAMENT_FORM_VALUES, {
         ...mockedValidation.DEFAULT_TOURNAMENT_FORM_VALUES,
         startDate: null,
-      };
+      });
 
       renderWithRouter(<NewTournamentSetup />);
 
@@ -333,17 +415,41 @@ describe('NewTournamentSetup', () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockCreateTournament).toHaveBeenCalled();
+        expect(vi.mocked(commands.createTournament)).toHaveBeenCalled();
       });
 
-      const callArgs = mockCreateTournament.mock.calls[0][0];
+      const callArgs = vi.mocked(commands.createTournament).mock.calls[0][0];
       expect(callArgs.date).toMatch(/^\d{4}-\d{2}-\d{2}$/); // Should be a valid date string
     });
 
     test('uses default country code when country is not provided', async () => {
       const user = userEvent.setup();
-      const mockTournament = { id: 1 };
-      mockCreateTournament.mockResolvedValueOnce(mockTournament);
+      const mockTournament: Tournament = {
+        id: 1,
+        name: 'Test Tournament',
+        location: 'Test City',
+        date: '2024-01-15',
+        time_type: 'classical',
+        tournament_type: 'individual',
+        player_count: 0,
+        rounds_played: 0,
+        total_rounds: 9,
+        country_code: 'US',
+        status: null,
+        start_time: null,
+        end_time: null,
+        description: null,
+        website_url: null,
+        contact_email: null,
+        entry_fee: null,
+        currency: null,
+        is_team_tournament: null,
+        team_size: null,
+        max_teams: null,
+      };
+      vi.mocked(commands.createTournament).mockResolvedValueOnce(
+        mockTournament
+      );
 
       renderWithRouter(<NewTournamentSetup />);
 
@@ -363,8 +469,32 @@ describe('NewTournamentSetup', () => {
   describe('State Management', () => {
     test('prevents duplicate tournament creation', async () => {
       const user = userEvent.setup();
-      const mockTournament = { id: 1 };
-      mockCreateTournament.mockResolvedValueOnce(mockTournament);
+      const mockTournament: Tournament = {
+        id: 1,
+        name: 'Test Tournament',
+        location: 'Test City',
+        date: '2024-01-15',
+        time_type: 'classical',
+        tournament_type: 'individual',
+        player_count: 0,
+        rounds_played: 0,
+        total_rounds: 9,
+        country_code: 'US',
+        status: null,
+        start_time: null,
+        end_time: null,
+        description: null,
+        website_url: null,
+        contact_email: null,
+        entry_fee: null,
+        currency: null,
+        is_team_tournament: null,
+        team_size: null,
+        max_teams: null,
+      };
+      vi.mocked(commands.createTournament).mockResolvedValueOnce(
+        mockTournament
+      );
 
       renderWithRouter(<NewTournamentSetup />);
 
@@ -374,21 +504,45 @@ describe('NewTournamentSetup', () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockCreateTournament).toHaveBeenCalledTimes(1);
+        expect(vi.mocked(commands.createTournament)).toHaveBeenCalledTimes(1);
       });
 
       // Second submission should use existing tournament
       await user.click(submitButton);
 
       // Should not call create tournament again
-      expect(mockCreateTournament).toHaveBeenCalledTimes(1);
+      expect(vi.mocked(commands.createTournament)).toHaveBeenCalledTimes(1);
       expect(mockNavigate).toHaveBeenCalledWith('/tournament/1');
     });
 
     test('navigates to existing tournament if already created', async () => {
       const user = userEvent.setup();
-      const mockTournament = { id: 123 };
-      mockCreateTournament.mockResolvedValueOnce(mockTournament);
+      const mockTournament: Tournament = {
+        id: 123,
+        name: 'Test Tournament',
+        location: 'Test City',
+        date: '2024-01-15',
+        time_type: 'classical',
+        tournament_type: 'individual',
+        player_count: 0,
+        rounds_played: 0,
+        total_rounds: 9,
+        country_code: 'US',
+        status: null,
+        start_time: null,
+        end_time: null,
+        description: null,
+        website_url: null,
+        contact_email: null,
+        entry_fee: null,
+        currency: null,
+        is_team_tournament: null,
+        team_size: null,
+        max_teams: null,
+      };
+      vi.mocked(commands.createTournament).mockResolvedValueOnce(
+        mockTournament
+      );
 
       renderWithRouter(<NewTournamentSetup />);
 
@@ -433,7 +587,7 @@ describe('NewTournamentSetup', () => {
         .mockImplementation(() => {});
       const user = userEvent.setup();
       const error = new Error('Test error');
-      mockCreateTournament.mockRejectedValueOnce(error);
+      vi.mocked(commands.createTournament).mockRejectedValueOnce(error);
 
       renderWithRouter(<NewTournamentSetup />);
 

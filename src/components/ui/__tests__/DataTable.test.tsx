@@ -5,7 +5,7 @@ import { vi } from 'vitest';
 import DataTable from '../DataTable';
 
 // Test data types
-interface TestUser {
+interface TestUser extends Record<string, unknown> {
   id: number;
   name: string;
   email: string;
@@ -578,15 +578,27 @@ describe('DataTable', () => {
     });
 
     test('handles invalid data gracefully', () => {
-      const invalidData = [
+      const validItem: TestUser = {
+        id: 1,
+        name: 'Valid',
+        email: 'valid@test.com',
+        age: 25,
+        status: 'active',
+      };
+      const invalidData: (TestUser | null | undefined)[] = [
         null,
         undefined,
-        { id: 1, name: 'Valid' },
-      ] as unknown as TestUser[];
+        validItem,
+      ];
 
       render(
         <TestWrapper>
-          <DataTable columns={mockColumns} data={invalidData} />
+          <DataTable
+            columns={mockColumns}
+            data={invalidData.filter(
+              (item): item is TestUser => item !== null && item !== undefined
+            )}
+          />
         </TestWrapper>
       );
 

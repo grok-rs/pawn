@@ -69,7 +69,17 @@ export const handlers = [
   // Mock Tauri commands
   http.post('/__tauri__/command', async ({ request }) => {
     const body = await request.json();
-    const { cmd, payload } = body as { cmd: string; payload?: any };
+    // Parse the command - in tests we control the input
+    const isValidBody = typeof body === 'object' && body !== null;
+    const cmd = isValidBody && 'cmd' in body ? String(body.cmd) : '';
+    const payload =
+      isValidBody &&
+      'payload' in body &&
+      typeof body.payload === 'object' &&
+      body.payload !== null
+        ? body.payload
+        : undefined;
+    // cmd and payload are already defined above
 
     // Tournament management commands
     if (cmd === 'get_tournaments') {

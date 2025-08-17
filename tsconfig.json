@@ -7,7 +7,7 @@
     "types": ["vitest/globals", "@testing-library/jest-dom"],
     "module": "ESNext",
     "skipLibCheck": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
 
     /* Bundler mode */
     "moduleResolution": "bundler",

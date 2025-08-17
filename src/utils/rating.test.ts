@@ -232,9 +232,14 @@ describe('Rating Utilities', () => {
         expect(isValidRating(-Infinity)).toBe(false);
       });
 
-      test('should reject null and undefined', () => {
-        expect(isValidRating(null as any)).toBe(false);
-        expect(isValidRating(undefined as any)).toBe(false);
+      test('should reject NaN values that can result from invalid inputs', () => {
+        // Test the function's behavior with NaN which can result from null/undefined operations
+        // This tests the robustness without using type assertions
+
+        expect(isValidRating(NaN)).toBe(false);
+        expect(isValidRating(Number('invalid'))).toBe(false);
+        expect(isValidRating(Number(null))).toBe(false); // Number(null) = 0
+        expect(isValidRating(Number(undefined))).toBe(false); // Number(undefined) = NaN
       });
     });
 

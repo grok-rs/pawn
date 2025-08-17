@@ -3,21 +3,158 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 
+// Global type definitions for testing
+declare global {
+  var gc: (() => void) | undefined;
+}
+
+// Types for test data - use actual types from bindings
+import type { Tournament, Player } from '@dto/bindings';
+
+interface OperationStats {
+  count: number;
+  failures: number;
+}
+
+interface TauriInvokeResult {
+  id?: number;
+  name?: string;
+  status?: string | null;
+  location?: string;
+  date?: string;
+  time_type?: string;
+  tournament_type?: string | null;
+  player_count?: number;
+  rounds_played?: number;
+  total_rounds?: number;
+  country_code?: string;
+  start_time?: string | null;
+  end_time?: string | null;
+  description?: string | null;
+  website_url?: string | null;
+  contact_email?: string | null;
+  entry_fee?: number | null;
+  currency?: string | null;
+  is_team_tournament?: boolean | null;
+  team_size?: number | null;
+  max_teams?: number | null;
+  tournament_id?: number;
+  rating?: number | null;
+  title?: string | null;
+  birth_date?: string | null;
+  gender?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  club?: string | null;
+  seed_number?: number | null;
+  pairing_number?: number | null;
+  initial_rating?: number | null;
+  created_at?: string;
+  updated_at?: string | null;
+  success?: boolean;
+  error?: string;
+  playerCount?: number;
+  pairings?: unknown[];
+}
+
+interface CreateTournamentPayload {
+  name: string;
+  maxPlayers?: number;
+}
+
+interface CreatePlayerPayload {
+  name: string;
+  rating: number;
+  email: string;
+}
+
+// Type guards to avoid type assertions
+const isCreateTournamentPayload = (
+  payload: unknown
+): payload is CreateTournamentPayload => {
+  return typeof payload === 'object' && payload !== null && 'name' in payload;
+};
+
+const isCreatePlayerPayload = (
+  payload: unknown
+): payload is CreatePlayerPayload => {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'name' in payload &&
+    'rating' in payload &&
+    'email' in payload
+  );
+};
+
+const isMockTournament = (value: unknown): value is Tournament => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'name' in value &&
+    'location' in value &&
+    !(value as Record<string, unknown>).error
+  );
+};
+
+const isMockPlayer = (value: unknown): value is Player => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'name' in value &&
+    'tournament_id' in value &&
+    !(value as Record<string, unknown>).error
+  );
+};
+
 // Helper functions for creating mock data
-const createMockTournament = (overrides: Partial<any> = {}) => ({
+const createMockTournament = (
+  overrides: Partial<Tournament> = {}
+): Tournament => ({
   id: Math.floor(Math.random() * 1000),
   name: 'Test Tournament',
+  location: 'Test Location',
+  date: '2024-01-01',
+  time_type: 'classical',
+  tournament_type: 'swiss',
+  player_count: 0,
+  rounds_played: 0,
+  total_rounds: 5,
+  country_code: 'US',
   status: 'draft',
-  playerCount: 0,
-  maxPlayers: 16,
+  start_time: null,
+  end_time: null,
+  description: null,
+  website_url: null,
+  contact_email: null,
+  entry_fee: null,
+  currency: null,
+  is_team_tournament: null,
+  team_size: null,
+  max_teams: null,
   ...overrides,
 });
 
-const createMockPlayer = (overrides: Partial<any> = {}) => ({
+const createMockPlayer = (overrides: Partial<Player> = {}): Player => ({
   id: Math.floor(Math.random() * 1000),
+  tournament_id: 1,
   name: 'Test Player',
   rating: 1500,
+  country_code: 'US',
+  title: null,
+  birth_date: null,
+  gender: null,
   email: 'test@example.com',
+  phone: null,
+  club: null,
+  status: 'active',
+  seed_number: null,
+  pairing_number: null,
+  initial_rating: null,
+  created_at: new Date().toISOString(),
+  updated_at: null,
   ...overrides,
 });
 
@@ -25,10 +162,13 @@ const createMockPlayer = (overrides: Partial<any> = {}) => ({
 const createStressTestMocks = () => {
   const operationDelay = (ms: number = 100) =>
     new Promise(resolve => setTimeout(resolve, ms));
-  const operations = new Map<string, { count: number; failures: number }>();
+  const operations = new Map<string, OperationStats>();
 
   const trackOperation = (operationType: string, success: boolean = true) => {
-    const stats = operations.get(operationType) || { count: 0, failures: 0 };
+    const stats: OperationStats = operations.get(operationType) || {
+      count: 0,
+      failures: 0,
+    };
     stats.count++;
     if (!success) stats.failures++;
     operations.set(operationType, stats);
@@ -36,69 +176,81 @@ const createStressTestMocks = () => {
 
   const mockInvoke = vi
     .fn()
-    .mockImplementation(async (command: string, payload?: any) => {
-      await operationDelay(Math.random() * 200 + 50); // Simulate network delay
+    .mockImplementation(
+      async (
+        command: string,
+        payload: Record<string, unknown> = {}
+      ): Promise<TauriInvokeResult> => {
+        await operationDelay(Math.random() * 200 + 50); // Simulate network delay
 
-      // Simulate occasional failures under stress
-      const failureRate = operations.get(command)?.count > 50 ? 0.05 : 0.01;
-      const shouldFail = Math.random() < failureRate;
+        // Simulate occasional failures under stress
+        const stats = operations.get(command);
+        const failureRate = (stats?.count ?? 0) > 50 ? 0.05 : 0.01;
+        const shouldFail = Math.random() < failureRate;
 
-      trackOperation(command, !shouldFail);
+        trackOperation(command, !shouldFail);
 
-      if (shouldFail) {
-        throw new Error(`Simulated failure for ${command}`);
+        if (shouldFail) {
+          throw new Error(`Simulated failure for ${command}`);
+        }
+
+        switch (command) {
+          case 'create_tournament':
+            if (isCreateTournamentPayload(payload)) {
+              return {
+                id: Date.now() + Math.random(),
+                name: payload.name,
+                status: 'draft',
+                playerCount: 0,
+              };
+            }
+            throw new Error('Invalid create_tournament payload');
+          case 'create_player_enhanced':
+            if (isCreatePlayerPayload(payload)) {
+              return {
+                id: Date.now() + Math.random(),
+                name: payload.name,
+                rating: payload.rating,
+                email: payload.email,
+              };
+            }
+            throw new Error('Invalid create_player_enhanced payload');
+          case 'update_player':
+            return { success: true };
+          case 'delete_player':
+            return { success: true };
+          case 'generate_pairings':
+            return { success: true, pairings: [] };
+          case 'update_game_result':
+            return { success: true };
+          case 'get_tournaments':
+            return Array.from({ length: 20 }, (_, i) =>
+              createMockTournament({ id: i + 1 })
+            ) as TauriInvokeResult;
+          case 'get_players_by_tournament_enhanced':
+            return Array.from({ length: 50 }, (_, i) =>
+              createMockPlayer({ id: i + 1 })
+            ) as TauriInvokeResult;
+          default:
+            return { success: true };
+        }
       }
-
-      switch (command) {
-        case 'create_tournament':
-          return {
-            id: Date.now() + Math.random(),
-            name: payload.name,
-            status: 'draft',
-            playerCount: 0,
-          };
-        case 'create_player_enhanced':
-          return {
-            id: Date.now() + Math.random(),
-            name: payload.name,
-            rating: payload.rating,
-            email: payload.email,
-          };
-        case 'update_player':
-          return { success: true };
-        case 'delete_player':
-          return { success: true };
-        case 'generate_pairings':
-          return { success: true, pairings: [] };
-        case 'update_game_result':
-          return { success: true };
-        case 'get_tournaments':
-          return Array.from({ length: 20 }, (_, i) =>
-            createMockTournament({ id: i + 1 })
-          );
-        case 'get_players_by_tournament_enhanced':
-          return Array.from({ length: 50 }, (_, i) =>
-            createMockPlayer({ id: i + 1 })
-          );
-        default:
-          return { success: true };
-      }
-    });
+    );
 
   return { mockInvoke, getOperationStats: () => operations };
 };
 
 // Stress testing utilities
-const createConcurrentOperations = (
-  operation: () => Promise<any>,
+const createConcurrentOperations = <T,>(
+  operation: () => Promise<T>,
   count: number
-): Promise<any>[] => {
+): Promise<T>[] => {
   return Array.from({ length: count }, () => operation());
 };
 
-const measureOperationTime = async (
-  operation: () => Promise<any>
-): Promise<{ result: any; duration: number }> => {
+const measureOperationTime = async <T,>(
+  operation: () => Promise<T>
+): Promise<{ result: T; duration: number }> => {
   const startTime = performance.now();
   const result = await operation();
   const duration = performance.now() - startTime;
@@ -124,7 +276,7 @@ const MockTournamentManager = ({
 }: {
   tournamentCount: number;
 }) => {
-  const [tournaments, setTournaments] = React.useState<any[]>([]);
+  const [tournaments, setTournaments] = React.useState<Tournament[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [errors, setErrors] = React.useState<string[]>([]);
 
@@ -133,39 +285,52 @@ const MockTournamentManager = ({
     setErrors([]);
 
     const operations = Array.from({ length: tournamentCount }, (_, i) =>
-      window.__TAURI_INTERNALS__
-        .invoke('create_tournament', {
-          name: `Stress Test Tournament ${i + 1}`,
-          maxPlayers: 16,
-        })
-        .catch((error: Error) => ({ error: error.message }))
+      (
+        window.__TAURI_INTERNALS__.invoke as unknown as (
+          cmd: string,
+          payload?: Record<string, unknown>
+        ) => Promise<unknown>
+      )('create_tournament', {
+        name: `Stress Test Tournament ${i + 1}`,
+        maxPlayers: 16,
+      }).catch((error: Error): TauriInvokeResult => ({ error: error.message }))
     );
 
     try {
       const results = await Promise.allSettled(operations);
       const newTournaments = results
         .filter(
-          (result): result is PromiseFulfilledResult<any> =>
-            result.status === 'fulfilled' && !result.value.error
+          (result): result is PromiseFulfilledResult<TauriInvokeResult> =>
+            result.status === 'fulfilled' &&
+            !(result.value as TauriInvokeResult).error
         )
-        .map(result => result.value);
+        .map((result): Tournament => {
+          if (isMockTournament(result.value)) {
+            return result.value;
+          }
+          throw new Error('Invalid tournament result');
+        });
 
       const failures = results
         .filter(
           result =>
             result.status === 'rejected' ||
-            (result.status === 'fulfilled' && result.value.error)
+            (result.status === 'fulfilled' &&
+              (result.value as TauriInvokeResult).error)
         )
-        .map(result =>
-          result.status === 'rejected'
-            ? result.reason.message
-            : result.value.error
-        );
+        .map(result => {
+          if (result.status === 'rejected') {
+            return result.reason?.message || 'Unknown error';
+          }
+          return (result.value as TauriInvokeResult).error || 'Unknown error';
+        });
 
       setTournaments(prev => [...prev, ...newTournaments]);
       setErrors(failures);
-    } catch (error: any) {
-      setErrors([error.message]);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      setErrors([errorMessage]);
     } finally {
       setLoading(false);
     }
@@ -199,22 +364,24 @@ const MockTournamentManager = ({
 };
 
 const MockPlayerBulkOperations = ({ playerCount }: { playerCount: number }) => {
-  const [players, setPlayers] = React.useState<any[]>([]);
+  const [players, setPlayers] = React.useState<Player[]>([]);
   const [operationsInProgress, setOperationsInProgress] = React.useState(0);
 
   const performBulkOperations = async () => {
-    const operations: Promise<any>[] = [];
+    const operations: Promise<TauriInvokeResult>[] = [];
 
     // Create players
     for (let i = 0; i < playerCount; i++) {
-      const operation = window.__TAURI_INTERNALS__.invoke(
-        'create_player_enhanced',
-        {
-          name: `Player ${i + 1}`,
-          rating: 1200 + Math.random() * 800,
-          email: `player${i + 1}@test.com`,
-        }
-      );
+      const operation = (
+        window.__TAURI_INTERNALS__.invoke as unknown as (
+          cmd: string,
+          payload?: Record<string, unknown>
+        ) => Promise<unknown>
+      )('create_player_enhanced', {
+        name: `Player ${i + 1}`,
+        rating: 1200 + Math.random() * 800,
+        email: `player${i + 1}@test.com`,
+      }) as Promise<TauriInvokeResult>;
       operations.push(operation);
     }
 
@@ -223,10 +390,15 @@ const MockPlayerBulkOperations = ({ playerCount }: { playerCount: number }) => {
     const results = await Promise.allSettled(operations);
     const successfulPlayers = results
       .filter(
-        (result): result is PromiseFulfilledResult<any> =>
+        (result): result is PromiseFulfilledResult<TauriInvokeResult> =>
           result.status === 'fulfilled'
       )
-      .map(result => result.value);
+      .map((result): Player => {
+        if (isMockPlayer(result.value)) {
+          return result.value;
+        }
+        throw new Error('Invalid player result');
+      });
 
     setPlayers(successfulPlayers);
     setOperationsInProgress(0);
@@ -250,7 +422,9 @@ const MockRealTimeUpdates = ({
 }: {
   updateFrequency: number;
 }) => {
-  const [updates, setUpdates] = React.useState<any[]>([]);
+  const [updates, setUpdates] = React.useState<
+    Array<{ id: number; timestamp: string; data: { value: number } }>
+  >([]);
   const [isActive, setIsActive] = React.useState(false);
 
   React.useEffect(() => {
@@ -300,10 +474,15 @@ describe('Stress Testing for Concurrent Operations', () => {
       const concurrentOperations = 100;
       const operations = createConcurrentOperations(
         () =>
-          window.__TAURI_INTERNALS__.invoke('create_tournament', {
+          (
+            window.__TAURI_INTERNALS__.invoke as unknown as (
+              cmd: string,
+              payload?: Record<string, unknown>
+            ) => Promise<unknown>
+          )('create_tournament', {
             name: `Tournament ${Math.random()}`,
             maxPlayers: 16,
-          }),
+          }) as Promise<TauriInvokeResult>,
         concurrentOperations
       );
 
@@ -313,9 +492,12 @@ describe('Stress Testing for Concurrent Operations', () => {
       });
 
       const successful = result.filter(
-        (r: any) => r.status === 'fulfilled'
+        (r): r is PromiseFulfilledResult<TauriInvokeResult> =>
+          r.status === 'fulfilled'
       ).length;
-      const failed = result.filter((r: any) => r.status === 'rejected').length;
+      const failed = result.filter(
+        (r): r is PromiseRejectedResult => r.status === 'rejected'
+      ).length;
 
       console.log(
         `Concurrent operations: ${concurrentOperations}, Successful: ${successful}, Failed: ${failed}, Duration: ${duration.toFixed(2)}ms`
@@ -329,17 +511,33 @@ describe('Stress Testing for Concurrent Operations', () => {
     test('should handle concurrent player operations without race conditions', async () => {
       const playerOperations = Array.from({ length: 50 }, (_, i) => [
         () =>
-          window.__TAURI_INTERNALS__.invoke('create_player_enhanced', {
+          (
+            window.__TAURI_INTERNALS__.invoke as unknown as (
+              cmd: string,
+              payload?: Record<string, unknown>
+            ) => Promise<unknown>
+          )('create_player_enhanced', {
             name: `Player ${i}`,
             rating: 1500,
             email: `player${i}@test.com`,
-          }),
+          }) as Promise<TauriInvokeResult>,
         () =>
-          window.__TAURI_INTERNALS__.invoke('update_player', {
+          (
+            window.__TAURI_INTERNALS__.invoke as unknown as (
+              cmd: string,
+              payload?: Record<string, unknown>
+            ) => Promise<unknown>
+          )('update_player', {
             id: i,
             rating: 1600,
-          }),
-        () => window.__TAURI_INTERNALS__.invoke('delete_player', { id: i }),
+          }) as Promise<TauriInvokeResult>,
+        () =>
+          (
+            window.__TAURI_INTERNALS__.invoke as unknown as (
+              cmd: string,
+              payload?: Record<string, unknown>
+            ) => Promise<unknown>
+          )('delete_player', { id: i }) as Promise<TauriInvokeResult>,
       ]).flat();
 
       const results = await Promise.allSettled(
@@ -352,11 +550,18 @@ describe('Stress Testing for Concurrent Operations', () => {
     });
 
     test('should maintain data consistency under concurrent modifications', async () => {
-      const concurrentUpdates = Array.from({ length: 20 }, (_, i) =>
-        window.__TAURI_INTERNALS__.invoke('update_game_result', {
-          gameId: `game-${i}`,
-          result: Math.random() > 0.5 ? 'white_wins' : 'black_wins',
-        })
+      const concurrentUpdates = Array.from(
+        { length: 20 },
+        (_, i) =>
+          (
+            window.__TAURI_INTERNALS__.invoke as unknown as (
+              cmd: string,
+              payload?: Record<string, unknown>
+            ) => Promise<unknown>
+          )('update_game_result', {
+            gameId: `game-${i}`,
+            result: Math.random() > 0.5 ? 'white_wins' : 'black_wins',
+          }) as Promise<TauriInvokeResult>
       );
 
       const results = await Promise.allSettled(concurrentUpdates);
@@ -376,10 +581,15 @@ describe('Stress Testing for Concurrent Operations', () => {
       try {
         const operations = createConcurrentOperations(
           () =>
-            window.__TAURI_INTERNALS__.invoke('create_tournament', {
+            (
+              window.__TAURI_INTERNALS__.invoke as unknown as (
+                cmd: string,
+                payload?: Record<string, unknown>
+              ) => Promise<unknown>
+            )('create_tournament', {
               name: `Memory Test Tournament ${Math.random()}`,
               maxPlayers: 32,
-            }),
+            }) as Promise<TauriInvokeResult>,
           50
         );
 
@@ -388,7 +598,8 @@ describe('Stress Testing for Concurrent Operations', () => {
         });
 
         const successful = result.filter(
-          (r: any) => r.status === 'fulfilled'
+          (r): r is PromiseFulfilledResult<TauriInvokeResult> =>
+            r.status === 'fulfilled'
         ).length;
 
         // Should still handle operations under memory pressure
@@ -403,18 +614,30 @@ describe('Stress Testing for Concurrent Operations', () => {
       const initialMemory = measureMemoryUsage();
 
       // Perform many operations
-      const operations = Array.from({ length: 200 }, () =>
-        window.__TAURI_INTERNALS__.invoke('create_player_enhanced', {
-          name: `Memory Test Player ${Math.random()}`,
-          rating: 1500,
-        })
+      const operations = Array.from(
+        { length: 200 },
+        () =>
+          (
+            window.__TAURI_INTERNALS__.invoke as unknown as (
+              cmd: string,
+              payload?: Record<string, unknown>
+            ) => Promise<unknown>
+          )('create_player_enhanced', {
+            name: `Memory Test Player ${Math.random()}`,
+            rating: 1500,
+          }) as Promise<TauriInvokeResult>
       );
 
       await Promise.allSettled(operations);
 
       // Force garbage collection if available
-      if (global.gc) {
-        global.gc();
+      if (
+        typeof globalThis !== 'undefined' &&
+        'gc' in globalThis &&
+        typeof (globalThis as typeof globalThis & { gc?: () => void }).gc ===
+          'function'
+      ) {
+        (globalThis as typeof globalThis & { gc: () => void }).gc();
       }
 
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -524,19 +747,26 @@ describe('Stress Testing for Concurrent Operations', () => {
   describe('Error Recovery Under Stress', () => {
     test('should gracefully handle cascading failures', async () => {
       // Simulate high failure rate
-      mockSetup.mockInvoke.mockImplementation(async (command: string) => {
-        if (Math.random() < 0.3) {
-          // 30% failure rate
-          throw new Error(`Simulated ${command} failure`);
+      mockSetup.mockInvoke.mockImplementation(
+        async (command: string): Promise<TauriInvokeResult> => {
+          if (Math.random() < 0.3) {
+            // 30% failure rate
+            throw new Error(`Simulated ${command} failure`);
+          }
+          return { success: true, id: Math.random() };
         }
-        return { success: true, id: Math.random() };
-      });
+      );
 
       const operations = createConcurrentOperations(
         () =>
-          window.__TAURI_INTERNALS__.invoke('create_tournament', {
+          (
+            window.__TAURI_INTERNALS__.invoke as unknown as (
+              cmd: string,
+              payload?: Record<string, unknown>
+            ) => Promise<unknown>
+          )('create_tournament', {
             name: `Failure Test Tournament ${Math.random()}`,
-          }),
+          }) as Promise<TauriInvokeResult>,
         50
       );
 
@@ -550,20 +780,27 @@ describe('Stress Testing for Concurrent Operations', () => {
     });
 
     test('should handle timeout scenarios', async () => {
-      mockSetup.mockInvoke.mockImplementation(async () => {
-        // Simulate slow operations
-        await new Promise(resolve =>
-          setTimeout(resolve, Math.random() * 2000 + 1000)
-        );
-        return { success: true };
-      });
+      mockSetup.mockInvoke.mockImplementation(
+        async (): Promise<TauriInvokeResult> => {
+          // Simulate slow operations
+          await new Promise(resolve =>
+            setTimeout(resolve, Math.random() * 2000 + 1000)
+          );
+          return { success: true };
+        }
+      );
 
       const operations = createConcurrentOperations(
         () =>
           Promise.race([
-            window.__TAURI_INTERNALS__.invoke('create_tournament', {
+            (
+              window.__TAURI_INTERNALS__.invoke as unknown as (
+                cmd: string,
+                payload?: Record<string, unknown>
+              ) => Promise<unknown>
+            )('create_tournament', {
               name: 'Timeout Test',
-            }),
+            }) as Promise<TauriInvokeResult>,
             new Promise((_, reject) =>
               setTimeout(() => reject(new Error('Timeout')), 1500)
             ),
@@ -591,9 +828,14 @@ describe('Stress Testing for Concurrent Operations', () => {
 
       const openConnections = connections.map(async conn => {
         try {
-          await window.__TAURI_INTERNALS__.invoke('connect_to_server', {
+          (await (
+            window.__TAURI_INTERNALS__.invoke as unknown as (
+              cmd: string,
+              payload?: Record<string, unknown>
+            ) => Promise<unknown>
+          )('connect_to_server', {
             id: conn.id,
-          });
+          })) as Promise<TauriInvokeResult>;
           return { ...conn, status: 'connected' };
         } catch {
           return { ...conn, status: 'failed' };
@@ -618,11 +860,16 @@ describe('Stress Testing for Concurrent Operations', () => {
           rating: Math.random() * 2000 + 1000,
         }));
 
-        return window.__TAURI_INTERNALS__.invoke('generate_pairings', {
+        return (
+          window.__TAURI_INTERNALS__.invoke as unknown as (
+            cmd: string,
+            payload?: Record<string, unknown>
+          ) => Promise<unknown>
+        )('generate_pairings', {
           players,
           algorithm: 'swiss',
           complexity: 'high',
-        });
+        }) as Promise<TauriInvokeResult>;
       };
 
       const operations = createConcurrentOperations(cpuIntensiveOperation, 10);
@@ -632,7 +879,8 @@ describe('Stress Testing for Concurrent Operations', () => {
       });
 
       const successful = result.filter(
-        (r: any) => r.status === 'fulfilled'
+        (r): r is PromiseFulfilledResult<TauriInvokeResult> =>
+          r.status === 'fulfilled'
       ).length;
 
       // Should complete CPU intensive operations
@@ -655,21 +903,41 @@ describe('Stress Testing for Concurrent Operations', () => {
           // Each user performs various actions
           for (let i = 0; i < actionsPerUser; i++) {
             const actions = [
-              () => window.__TAURI_INTERNALS__.invoke('get_tournaments'),
               () =>
-                window.__TAURI_INTERNALS__.invoke(
-                  'get_players_by_tournament_enhanced',
-                  { tournamentId: 1 }
-                ),
+                (
+                  window.__TAURI_INTERNALS__.invoke as unknown as (
+                    cmd: string,
+                    payload?: Record<string, unknown>
+                  ) => Promise<unknown>
+                )('get_tournaments') as Promise<TauriInvokeResult>,
               () =>
-                window.__TAURI_INTERNALS__.invoke('update_game_result', {
+                (
+                  window.__TAURI_INTERNALS__.invoke as unknown as (
+                    cmd: string,
+                    payload?: Record<string, unknown>
+                  ) => Promise<unknown>
+                )('get_players_by_tournament_enhanced', {
+                  tournamentId: 1,
+                }) as Promise<TauriInvokeResult>,
+              () =>
+                (
+                  window.__TAURI_INTERNALS__.invoke as unknown as (
+                    cmd: string,
+                    payload?: Record<string, unknown>
+                  ) => Promise<unknown>
+                )('update_game_result', {
                   gameId: `user-${userId}-game-${i}`,
                   result: 'white_wins',
-                }),
+                }) as Promise<TauriInvokeResult>,
               () =>
-                window.__TAURI_INTERNALS__.invoke('get_tournament_standings', {
+                (
+                  window.__TAURI_INTERNALS__.invoke as unknown as (
+                    cmd: string,
+                    payload?: Record<string, unknown>
+                  ) => Promise<unknown>
+                )('get_tournament_standings', {
                   tournamentId: 1,
-                }),
+                }) as Promise<TauriInvokeResult>,
             ];
 
             const randomAction =
@@ -691,11 +959,16 @@ describe('Stress Testing for Concurrent Operations', () => {
       });
 
       const totalOperations = simultaneousUsers * actionsPerUser;
-      const successful = result.reduce((sum: number, userResult: any) => {
+      const successful = result.reduce((sum: number, userResult) => {
         if (userResult.status === 'fulfilled') {
           return (
             sum +
-            userResult.value.filter((r: any) => r.status === 'fulfilled').length
+            userResult.value.filter(
+              (
+                r: PromiseSettledResult<TauriInvokeResult>
+              ): r is PromiseFulfilledResult<TauriInvokeResult> =>
+                r.status === 'fulfilled'
+            ).length
           );
         }
         return sum;
@@ -714,8 +987,23 @@ describe('Stress Testing for Concurrent Operations', () => {
 
 // Helper function for memory measurement
 function measureMemoryUsage(): number {
-  if ('memory' in performance) {
-    return (performance as any).memory.usedJSHeapSize;
+  // Check if performance.memory exists using property access without type assertion
+  if (
+    typeof performance === 'object' &&
+    performance !== null &&
+    'memory' in performance
+  ) {
+    const memory = performance.memory;
+    if (
+      typeof memory === 'object' &&
+      memory !== null &&
+      'usedJSHeapSize' in memory
+    ) {
+      const usedMemory = memory.usedJSHeapSize;
+      if (typeof usedMemory === 'number') {
+        return usedMemory;
+      }
+    }
   }
   return 0;
 }

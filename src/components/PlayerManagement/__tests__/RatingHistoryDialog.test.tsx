@@ -140,7 +140,6 @@ const createMockRatingHistory = (
   is_provisional: false,
   effective_date: `2024-01-${String(id).padStart(2, '0')}`,
   created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
   ...overrides,
 });
 

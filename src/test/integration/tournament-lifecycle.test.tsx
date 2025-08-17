@@ -1,9 +1,119 @@
-import React from 'react';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import { renderWithAllProviders } from '../utils/test-utils';
 import App from '../../App';
+
+// Type definitions for mock payloads
+interface MockTournamentPayload {
+  name: string;
+  description: string;
+  maxPlayers?: number;
+  maxRounds?: number;
+  pairingMethod?: string;
+  timeControl?: object;
+}
+
+interface MockPlayerPayload {
+  name: string;
+  rating: number;
+  email: string;
+  tournamentId?: number;
+}
+
+interface MockTeamTournamentPayload {
+  name: string;
+  maxTeams: number;
+  tournamentType: string;
+}
+
+interface MockTeamPayload {
+  name: string;
+  tournamentId?: number;
+}
+
+interface MockBulkImportPayload {
+  players: unknown[];
+  tournamentId?: number;
+}
+
+interface MockExportPayload {
+  tournamentId: number;
+  format: string;
+}
+
+type MockCommand =
+  | 'get_tournaments'
+  | 'create_tournament'
+  | 'get_tournament'
+  | 'get_players_by_tournament_enhanced'
+  | 'create_player_enhanced'
+  | 'get_rounds_by_tournament'
+  | 'generate_pairings'
+  | 'create_round'
+  | 'update_game_result'
+  | 'get_tournament_standings'
+  | 'validate_bulk_import'
+  | 'bulk_import_players'
+  | 'get_teams_by_tournament'
+  | 'create_team'
+  | 'get_available_export_formats'
+  | 'export_tournament_data'
+  | string;
+
+// Type guard functions to avoid type assertions
+function isMockTournamentPayload(
+  payload: unknown
+): payload is MockTournamentPayload {
+  return typeof payload === 'object' && payload !== null && 'name' in payload;
+}
+
+function isMockPlayerPayload(payload: unknown): payload is MockPlayerPayload {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'name' in payload &&
+    'rating' in payload
+  );
+}
+
+function isMockBulkImportPayload(
+  payload: unknown
+): payload is MockBulkImportPayload {
+  return (
+    typeof payload === 'object' && payload !== null && 'players' in payload
+  );
+}
+
+function isMockTeamTournamentPayload(
+  payload: unknown
+): payload is MockTeamTournamentPayload {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'name' in payload &&
+    'maxTeams' in payload &&
+    'tournamentType' in payload
+  );
+}
+
+function isMockTeamPayload(payload: unknown): payload is MockTeamPayload {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'name' in payload &&
+    !('maxTeams' in payload)
+  );
+}
+
+function isMockExportPayload(payload: unknown): payload is MockExportPayload {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'tournamentId' in payload &&
+    'format' in payload
+  );
+}
 
 // Mock Tauri API
 const mockInvoke = vi.fn();
@@ -40,71 +150,83 @@ describe('Tournament Lifecycle Integration Tests', () => {
     mockListen.mockClear();
 
     // Default mock responses
-    mockInvoke.mockImplementation((command: string, _payload?: any) => {
-      switch (command) {
-        case 'get_tournaments':
-          return Promise.resolve([]);
-        case 'create_tournament':
-          return Promise.resolve({
-            id: 1,
-            name: payload.name,
-            description: payload.description,
-            status: 'draft',
-            playerCount: 0,
-            maxPlayers: payload.maxPlayers || 16,
-            rounds: 0,
-            maxRounds: payload.maxRounds || 5,
-            pairingMethod: payload.pairingMethod || 'swiss',
-            timeControl: payload.timeControl,
-            tiebreaks: ['buchholz', 'sonneborn_berger'],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          });
-        case 'get_tournament':
-          return Promise.resolve({
-            id: 1,
-            name: 'Test Tournament',
-            status: 'draft',
-            playerCount: 0,
-            maxPlayers: 16,
-          });
-        case 'get_players_by_tournament_enhanced':
-          return Promise.resolve([]);
-        case 'create_player_enhanced':
-          return Promise.resolve({
-            id: Date.now(),
-            name: payload.name,
-            rating: payload.rating,
-            email: payload.email,
-            isActive: true,
-            pairingNumber: 1,
-            ...payload,
-          });
-        case 'get_rounds_by_tournament':
-          return Promise.resolve([]);
-        case 'generate_pairings':
-          return Promise.resolve({
-            success: true,
-            pairings: [{ whitePlayerId: 1, blackPlayerId: 2, boardNumber: 1 }],
-          });
-        case 'create_round':
-          return Promise.resolve({
-            id: 1,
-            tournamentId: 1,
-            roundNumber: 1,
-            status: 'active',
-          });
-        case 'update_game_result':
-          return Promise.resolve({ success: true });
-        case 'get_tournament_standings':
-          return Promise.resolve([
-            { playerId: 1, rank: 1, points: 1.0, tiebreaks: [2.0, 1.0] },
-            { playerId: 2, rank: 2, points: 0.0, tiebreaks: [1.0, 0.0] },
-          ]);
-        default:
-          return Promise.resolve(null);
+    mockInvoke.mockImplementation(
+      (command: MockCommand, _payload?: unknown) => {
+        switch (command) {
+          case 'get_tournaments':
+            return Promise.resolve([]);
+          case 'create_tournament': {
+            if (isMockTournamentPayload(_payload)) {
+              return Promise.resolve({
+                id: 1,
+                name: _payload.name,
+                description: _payload.description,
+                status: 'draft',
+                playerCount: 0,
+                maxPlayers: _payload.maxPlayers || 16,
+                rounds: 0,
+                maxRounds: _payload.maxRounds || 5,
+                pairingMethod: _payload.pairingMethod || 'swiss',
+                timeControl: _payload.timeControl,
+                tiebreaks: ['buchholz', 'sonneborn_berger'],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              });
+            }
+            return Promise.resolve({});
+          }
+          case 'get_tournament':
+            return Promise.resolve({
+              id: 1,
+              name: 'Test Tournament',
+              status: 'draft',
+              playerCount: 0,
+              maxPlayers: 16,
+            });
+          case 'get_players_by_tournament_enhanced':
+            return Promise.resolve([]);
+          case 'create_player_enhanced': {
+            if (isMockPlayerPayload(_payload)) {
+              return Promise.resolve({
+                id: Date.now(),
+                name: _payload.name,
+                rating: _payload.rating,
+                email: _payload.email,
+                isActive: true,
+                pairingNumber: 1,
+                tournamentId: _payload.tournamentId,
+              });
+            }
+            return Promise.resolve({});
+          }
+          case 'get_rounds_by_tournament':
+            return Promise.resolve([]);
+          case 'generate_pairings':
+            return Promise.resolve({
+              success: true,
+              pairings: [
+                { whitePlayerId: 1, blackPlayerId: 2, boardNumber: 1 },
+              ],
+            });
+          case 'create_round':
+            return Promise.resolve({
+              id: 1,
+              tournamentId: 1,
+              roundNumber: 1,
+              status: 'active',
+            });
+          case 'update_game_result':
+            return Promise.resolve({ success: true });
+          case 'get_tournament_standings':
+            return Promise.resolve([
+              { playerId: 1, rank: 1, points: 1.0, tiebreaks: [2.0, 1.0] },
+              { playerId: 2, rank: 2, points: 0.0, tiebreaks: [1.0, 0.0] },
+            ]);
+          default:
+            return Promise.resolve(null);
+        }
       }
-    });
+    );
   });
 
   describe('Complete Tournament Workflow', () => {
@@ -153,21 +275,23 @@ describe('Tournament Lifecycle Integration Tests', () => {
 
       // Step 2: Navigate to tournament and add players
       // Mock tournament exists for navigation
-      mockInvoke.mockImplementation((command: string, _payload?: any) => {
-        if (command === 'get_tournament') {
-          return Promise.resolve({
-            id: 1,
-            name: 'Integration Test Tournament',
-            status: 'draft',
-            playerCount: 0,
-            maxPlayers: 8,
-          });
+      mockInvoke.mockImplementation(
+        (command: MockCommand, _payload?: unknown) => {
+          if (command === 'get_tournament') {
+            return Promise.resolve({
+              id: 1,
+              name: 'Integration Test Tournament',
+              status: 'draft',
+              playerCount: 0,
+              maxPlayers: 8,
+            });
+          }
+          if (command === 'get_players_by_tournament_enhanced') {
+            return Promise.resolve([]);
+          }
+          return Promise.resolve(null);
         }
-        if (command === 'get_players_by_tournament_enhanced') {
-          return Promise.resolve([]);
-        }
-        return Promise.resolve(null);
-      });
+      );
 
       // Navigate to tournament info page
       const tournamentLink = await screen.findByText(
@@ -219,44 +343,48 @@ describe('Tournament Lifecycle Integration Tests', () => {
       await user.click(savePlayerButton);
 
       // Step 4: Generate pairings for round 1
-      mockInvoke.mockImplementation((command: string, _payload?: any) => {
-        if (command === 'get_players_by_tournament_enhanced') {
-          return Promise.resolve([
-            {
+      mockInvoke.mockImplementation(
+        (command: MockCommand, _payload?: unknown) => {
+          if (command === 'get_players_by_tournament_enhanced') {
+            return Promise.resolve([
+              {
+                id: 1,
+                name: 'Alice Johnson',
+                rating: 1650,
+                email: 'alice@example.com',
+                isActive: true,
+              },
+              {
+                id: 2,
+                name: 'Bob Smith',
+                rating: 1480,
+                email: 'bob@example.com',
+                isActive: true,
+              },
+            ]);
+          }
+          if (command === 'get_rounds_by_tournament') {
+            return Promise.resolve([]);
+          }
+          if (command === 'generate_pairings') {
+            return Promise.resolve({
+              success: true,
+              pairings: [
+                { whitePlayerId: 1, blackPlayerId: 2, boardNumber: 1 },
+              ],
+            });
+          }
+          if (command === 'create_round') {
+            return Promise.resolve({
               id: 1,
-              name: 'Alice Johnson',
-              rating: 1650,
-              email: 'alice@example.com',
-              isActive: true,
-            },
-            {
-              id: 2,
-              name: 'Bob Smith',
-              rating: 1480,
-              email: 'bob@example.com',
-              isActive: true,
-            },
-          ]);
+              tournamentId: 1,
+              roundNumber: 1,
+              status: 'active',
+            });
+          }
+          return Promise.resolve(null);
         }
-        if (command === 'get_rounds_by_tournament') {
-          return Promise.resolve([]);
-        }
-        if (command === 'generate_pairings') {
-          return Promise.resolve({
-            success: true,
-            pairings: [{ whitePlayerId: 1, blackPlayerId: 2, boardNumber: 1 }],
-          });
-        }
-        if (command === 'create_round') {
-          return Promise.resolve({
-            id: 1,
-            tournamentId: 1,
-            roundNumber: 1,
-            status: 'active',
-          });
-        }
-        return Promise.resolve(null);
-      });
+      );
 
       const pairingsTab = await screen.findByRole('tab', { name: /pairings/i });
       await user.click(pairingsTab);
@@ -274,31 +402,33 @@ describe('Tournament Lifecycle Integration Tests', () => {
       });
 
       // Step 5: Enter game results
-      mockInvoke.mockImplementation((command: string, _payload?: any) => {
-        if (command === 'get_rounds_by_tournament') {
-          return Promise.resolve([
-            {
-              id: 1,
-              tournamentId: 1,
-              roundNumber: 1,
-              status: 'active',
-              pairings: [
-                {
-                  id: 1,
-                  whitePlayerId: 1,
-                  blackPlayerId: 2,
-                  boardNumber: 1,
-                  result: null,
-                },
-              ],
-            },
-          ]);
+      mockInvoke.mockImplementation(
+        (command: MockCommand, _payload?: unknown) => {
+          if (command === 'get_rounds_by_tournament') {
+            return Promise.resolve([
+              {
+                id: 1,
+                tournamentId: 1,
+                roundNumber: 1,
+                status: 'active',
+                pairings: [
+                  {
+                    id: 1,
+                    whitePlayerId: 1,
+                    blackPlayerId: 2,
+                    boardNumber: 1,
+                    result: null,
+                  },
+                ],
+              },
+            ]);
+          }
+          if (command === 'update_game_result') {
+            return Promise.resolve({ success: true });
+          }
+          return Promise.resolve(null);
         }
-        if (command === 'update_game_result') {
-          return Promise.resolve({ success: true });
-        }
-        return Promise.resolve(null);
-      });
+      );
 
       const resultsTab = await screen.findByRole('tab', { name: /results/i });
       await user.click(resultsTab);
@@ -328,27 +458,29 @@ describe('Tournament Lifecycle Integration Tests', () => {
       });
 
       // Step 6: View standings
-      mockInvoke.mockImplementation((command: string, _payload?: any) => {
-        if (command === 'get_tournament_standings') {
-          return Promise.resolve([
-            {
-              playerId: 1,
-              playerName: 'Alice Johnson',
-              rank: 1,
-              points: 1.0,
-              tiebreaks: [2.0, 1.0],
-            },
-            {
-              playerId: 2,
-              playerName: 'Bob Smith',
-              rank: 2,
-              points: 0.0,
-              tiebreaks: [1.0, 0.0],
-            },
-          ]);
+      mockInvoke.mockImplementation(
+        (command: MockCommand, _payload?: unknown) => {
+          if (command === 'get_tournament_standings') {
+            return Promise.resolve([
+              {
+                playerId: 1,
+                playerName: 'Alice Johnson',
+                rank: 1,
+                points: 1.0,
+                tiebreaks: [2.0, 1.0],
+              },
+              {
+                playerId: 2,
+                playerName: 'Bob Smith',
+                rank: 2,
+                points: 0.0,
+                tiebreaks: [1.0, 0.0],
+              },
+            ]);
+          }
+          return Promise.resolve(null);
         }
-        return Promise.resolve(null);
-      });
+      );
 
       const standingsTab = await screen.findByRole('tab', {
         name: /standings/i,
@@ -372,12 +504,14 @@ describe('Tournament Lifecycle Integration Tests', () => {
       renderWithAllProviders(<App />, { initialEntries: ['/'] });
 
       // Mock API error for tournament creation
-      mockInvoke.mockImplementation((command: string, _payload?: any) => {
-        if (command === 'create_tournament') {
-          return Promise.reject(new Error('Database connection failed'));
+      mockInvoke.mockImplementation(
+        (command: MockCommand, _payload?: unknown) => {
+          if (command === 'create_tournament') {
+            return Promise.reject(new Error('Database connection failed'));
+          }
+          return Promise.resolve([]);
         }
-        return Promise.resolve([]);
-      });
+      );
 
       const newTournamentButton = await screen.findByRole('button', {
         name: /new tournament|create tournament/i,
@@ -401,32 +535,37 @@ describe('Tournament Lifecycle Integration Tests', () => {
     test('should handle bulk player import workflow', async () => {
       renderWithAllProviders(<App />, { initialEntries: ['/tournament/1'] });
 
-      mockInvoke.mockImplementation((command: string, _payload?: any) => {
-        if (command === 'get_tournament') {
-          return Promise.resolve({
-            id: 1,
-            name: 'Bulk Import Tournament',
-            status: 'draft',
-            playerCount: 0,
-            maxPlayers: 50,
-          });
+      mockInvoke.mockImplementation(
+        (command: MockCommand, _payload?: unknown) => {
+          if (command === 'get_tournament') {
+            return Promise.resolve({
+              id: 1,
+              name: 'Bulk Import Tournament',
+              status: 'draft',
+              playerCount: 0,
+              maxPlayers: 50,
+            });
+          }
+          if (command === 'validate_bulk_import') {
+            return Promise.resolve({
+              valid: true,
+              errors: [],
+              warnings: ['Player "John Doe" has no rating'],
+            });
+          }
+          if (command === 'bulk_import_players') {
+            if (isMockBulkImportPayload(_payload)) {
+              return Promise.resolve({
+                success: true,
+                imported: _payload.players.length,
+                errors: [],
+              });
+            }
+            return Promise.resolve({ success: false, imported: 0, errors: [] });
+          }
+          return Promise.resolve([]);
         }
-        if (command === 'validate_bulk_import') {
-          return Promise.resolve({
-            valid: true,
-            errors: [],
-            warnings: ['Player "John Doe" has no rating'],
-          });
-        }
-        if (command === 'bulk_import_players') {
-          return Promise.resolve({
-            success: true,
-            imported: payload.players.length,
-            errors: [],
-          });
-        }
-        return Promise.resolve([]);
-      });
+      );
 
       const playersTab = await screen.findByRole('tab', { name: /players/i });
       await user.click(playersTab);
@@ -479,29 +618,47 @@ Charlie Brown,1520,charlie@example.com`;
     test('should handle team tournament creation and management', async () => {
       renderWithAllProviders(<App />, { initialEntries: ['/'] });
 
-      mockInvoke.mockImplementation((command: string, _payload?: any) => {
-        if (command === 'create_tournament') {
-          return Promise.resolve({
-            id: 2,
-            name: payload.name,
-            tournamentType: 'team',
-            status: 'draft',
-            teamCount: 0,
-            maxTeams: payload.maxTeams,
-          });
-        }
-        if (command === 'get_teams_by_tournament') {
+      mockInvoke.mockImplementation(
+        (command: MockCommand, _payload?: unknown) => {
+          if (command === 'create_tournament') {
+            if (isMockTeamTournamentPayload(_payload)) {
+              return Promise.resolve({
+                id: 2,
+                name: _payload.name,
+                tournamentType: _payload.tournamentType,
+                status: 'draft',
+                teamCount: 0,
+                maxTeams: _payload.maxTeams,
+              });
+            }
+            return Promise.resolve({});
+          }
+          if (command === 'get_teams_by_tournament') {
+            return Promise.resolve([]);
+          }
+          if (command === 'create_team') {
+            if (isMockTeamPayload(_payload)) {
+              return Promise.resolve({
+                id: Date.now(),
+                tournament_id: _payload.tournamentId || 2,
+                name: _payload.name,
+                captain: null,
+                description: null,
+                color: null,
+                club_affiliation: null,
+                contact_email: null,
+                contact_phone: null,
+                max_board_count: 4,
+                status: 'active',
+                created_at: new Date().toISOString(),
+                updated_at: null,
+              });
+            }
+            return Promise.resolve({});
+          }
           return Promise.resolve([]);
         }
-        if (command === 'create_team') {
-          return Promise.resolve({
-            id: Date.now(),
-            name: payload.name,
-            memberCount: 0,
-          });
-        }
-        return Promise.resolve([]);
-      });
+      );
 
       const newTournamentButton = await screen.findByRole('button', {
         name: /new tournament/i,
@@ -562,27 +719,32 @@ Charlie Brown,1520,charlie@example.com`;
     test('should handle tournament data export workflow', async () => {
       renderWithAllProviders(<App />, { initialEntries: ['/tournament/1'] });
 
-      mockInvoke.mockImplementation((command: string, _payload?: any) => {
-        if (command === 'get_tournament') {
-          return Promise.resolve({
-            id: 1,
-            name: 'Export Test Tournament',
-            status: 'completed',
-            playerCount: 16,
-          });
+      mockInvoke.mockImplementation(
+        (command: MockCommand, _payload?: unknown) => {
+          if (command === 'get_tournament') {
+            return Promise.resolve({
+              id: 1,
+              name: 'Export Test Tournament',
+              status: 'completed',
+              playerCount: 16,
+            });
+          }
+          if (command === 'get_available_export_formats') {
+            return Promise.resolve(['json', 'csv', 'pdf', 'pgn']);
+          }
+          if (command === 'export_tournament_data') {
+            if (isMockExportPayload(_payload)) {
+              return Promise.resolve({
+                success: true,
+                filename: `tournament_${_payload.tournamentId}_export.${_payload.format}`,
+                path: '/path/to/export/file',
+              });
+            }
+            return Promise.resolve({ success: false, filename: '', path: '' });
+          }
+          return Promise.resolve([]);
         }
-        if (command === 'get_available_export_formats') {
-          return Promise.resolve(['json', 'csv', 'pdf', 'pgn']);
-        }
-        if (command === 'export_tournament_data') {
-          return Promise.resolve({
-            success: true,
-            filename: `tournament_${payload.tournamentId}_export.${payload.format}`,
-            path: '/path/to/export/file',
-          });
-        }
-        return Promise.resolve([]);
-      });
+      );
 
       const exportButton = await screen.findByRole('button', {
         name: /export/i,

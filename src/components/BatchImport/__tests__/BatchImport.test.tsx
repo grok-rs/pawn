@@ -4,7 +4,18 @@ import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { BatchImport } from '../BatchImport';
-import { commands } from '@dto/bindings';
+import { commands, GameResultValidation } from '@dto/bindings';
+
+/**
+ * Helper to create properly typed BatchValidationResult
+ */
+const createBatchValidationResult = (
+  overallValid: boolean,
+  results: Array<[number, GameResultValidation]>
+) => ({
+  overall_valid: overallValid,
+  results,
+});
 
 // Mock the Tauri commands
 vi.mock('@dto/bindings', () => ({
@@ -213,9 +224,11 @@ describe('BatchImport', () => {
 
       // Find file input (it's hidden)
       const uploadButton = screen.getByText('Upload CSV');
-      const fileInput = uploadButton
+      const fileInputElement = uploadButton
         .closest('div')
-        ?.querySelector('input[type="file"]') as HTMLInputElement;
+        ?.querySelector('input[type="file"]');
+      const fileInput: HTMLInputElement | null =
+        fileInputElement instanceof HTMLInputElement ? fileInputElement : null;
 
       if (fileInput) {
         await user.upload(fileInput, file);
@@ -239,9 +252,11 @@ describe('BatchImport', () => {
       const file = new File([csvContent], 'test.csv', { type: 'text/csv' });
 
       const uploadButton = screen.getByText('Upload CSV');
-      const fileInput = uploadButton
+      const fileInputElement = uploadButton
         .closest('div')
-        ?.querySelector('input[type="file"]') as HTMLInputElement;
+        ?.querySelector('input[type="file"]');
+      const fileInput: HTMLInputElement | null =
+        fileInputElement instanceof HTMLInputElement ? fileInputElement : null;
 
       if (fileInput) {
         await user.upload(fileInput, file);
@@ -270,13 +285,9 @@ describe('BatchImport', () => {
       await user.click(screen.getByText('1-0'));
       await user.click(screen.getByText('Add'));
 
-      const mockValidationResult = {
-        overall_valid: true,
-        results: [[0, { is_valid: true, errors: [], warnings: [] }]] as [
-          number,
-          { is_valid: boolean; errors: string[]; warnings: string[] },
-        ][],
-      };
+      const mockValidationResult = createBatchValidationResult(true, [
+        [0, { is_valid: true, errors: [], warnings: [] }],
+      ]);
 
       vi.mocked(commands.batchUpdateResults).mockResolvedValue(
         mockValidationResult
@@ -314,13 +325,9 @@ describe('BatchImport', () => {
       await user.click(screen.getByText('1-0'));
       await user.click(screen.getByText('Add'));
 
-      const mockValidationResult = {
-        overall_valid: true,
-        results: [[0, { is_valid: true, errors: [], warnings: [] }]] as [
-          number,
-          { is_valid: boolean; errors: string[]; warnings: string[] },
-        ][],
-      };
+      const mockValidationResult = createBatchValidationResult(true, [
+        [0, { is_valid: true, errors: [], warnings: [] }],
+      ]);
 
       vi.mocked(commands.batchUpdateResults).mockResolvedValue(
         mockValidationResult
@@ -349,13 +356,9 @@ describe('BatchImport', () => {
       await user.click(screen.getByText('1-0'));
       await user.click(screen.getByText('Add'));
 
-      const mockValidationResult = {
-        overall_valid: true,
-        results: [[0, { is_valid: true, errors: [], warnings: [] }]] as [
-          number,
-          { is_valid: boolean; errors: string[]; warnings: string[] },
-        ][],
-      };
+      const mockValidationResult = createBatchValidationResult(true, [
+        [0, { is_valid: true, errors: [], warnings: [] }],
+      ]);
 
       vi.mocked(commands.batchUpdateResults).mockResolvedValue(
         mockValidationResult
@@ -367,13 +370,9 @@ describe('BatchImport', () => {
       });
 
       // Now test import
-      const mockImportResult = {
-        overall_valid: true,
-        results: [[0, { is_valid: true, errors: [], warnings: [] }]] as [
-          number,
-          { is_valid: boolean; errors: string[]; warnings: string[] },
-        ][],
-      };
+      const mockImportResult = createBatchValidationResult(true, [
+        [0, { is_valid: true, errors: [], warnings: [] }],
+      ]);
 
       vi.mocked(commands.batchUpdateResults).mockResolvedValue(
         mockImportResult
@@ -411,13 +410,9 @@ describe('BatchImport', () => {
       await user.click(screen.getByText('1-0'));
       await user.click(screen.getByText('Add'));
 
-      const mockResult = {
-        overall_valid: true,
-        results: [[0, { is_valid: true, errors: [], warnings: [] }]] as [
-          number,
-          { is_valid: boolean; errors: string[]; warnings: string[] },
-        ][],
-      };
+      const mockResult = createBatchValidationResult(true, [
+        [0, { is_valid: true, errors: [], warnings: [] }],
+      ]);
 
       vi.mocked(commands.batchUpdateResults).mockResolvedValue(mockResult);
       await user.click(screen.getByText('Validate All'));
@@ -451,8 +446,9 @@ describe('BatchImport', () => {
     });
 
     it('should not render close button when onClose is not provided', () => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { onClose, ...propsWithoutClose } = defaultProps;
+      const propsWithoutClose = Object.fromEntries(
+        Object.entries(defaultProps).filter(([key]) => key !== 'onClose')
+      ) as Omit<typeof defaultProps, 'onClose'>;
       renderWithTheme(<BatchImport {...propsWithoutClose} />);
 
       expect(screen.queryByText('Close')).not.toBeInTheDocument();
@@ -470,9 +466,11 @@ describe('BatchImport', () => {
       const file = new File([csvContent], 'test.csv', { type: 'text/csv' });
 
       const uploadButton = screen.getByText('Upload CSV');
-      const fileInput = uploadButton
+      const fileInputElement = uploadButton
         .closest('div')
-        ?.querySelector('input[type="file"]') as HTMLInputElement;
+        ?.querySelector('input[type="file"]');
+      const fileInput: HTMLInputElement | null =
+        fileInputElement instanceof HTMLInputElement ? fileInputElement : null;
 
       if (fileInput) {
         await user.upload(fileInput, file);
@@ -532,13 +530,9 @@ describe('BatchImport', () => {
       await user.click(screen.getByText('1-0'));
       await user.click(screen.getByText('Add'));
 
-      const mockValidationResult = {
-        overall_valid: true,
-        results: [[0, { is_valid: true, errors: [], warnings: [] }]] as [
-          number,
-          { is_valid: boolean; errors: string[]; warnings: string[] },
-        ][],
-      };
+      const mockValidationResult = createBatchValidationResult(true, [
+        [0, { is_valid: true, errors: [], warnings: [] }],
+      ]);
 
       vi.mocked(commands.batchUpdateResults).mockResolvedValue(
         mockValidationResult

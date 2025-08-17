@@ -104,7 +104,7 @@ expect.extend({
         pass: true,
       };
     } else {
-      const issues = [];
+      const issues: string[] = [];
       if (!isValidPoints) issues.push('points must be multiples of 0.5');
       if (!isConsistent)
         issues.push(
@@ -142,7 +142,7 @@ expect.extend({
         pass: true,
       };
     } else {
-      const issues = [];
+      const issues: string[] = [];
       if (!hasValidResult) issues.push(`invalid result: ${received.result}`);
       if (!hasValidType)
         issues.push(`invalid result type: ${received.resultType}`);

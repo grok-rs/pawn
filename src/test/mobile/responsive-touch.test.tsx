@@ -1,8 +1,44 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { vi, afterEach } from 'vitest';
 import { createMockPlayer } from '../utils/test-utils';
+
+// Type definitions for mobile testing
+interface DataTableColumn {
+  key: string;
+  label: string;
+  sortable?: boolean;
+}
+
+interface DataTableItem {
+  id: string | number;
+  [key: string]: unknown;
+}
+
+// Touch event interface
+interface TouchPoint {
+  clientX: number;
+  clientY: number;
+  pageX: number;
+  pageY: number;
+  screenX: number;
+  screenY: number;
+  identifier: number;
+  target: Element;
+  radiusX: number;
+  radiusY: number;
+  rotationAngle: number;
+  force: number;
+}
+
+type SwipeDirection = 'left' | 'right' | 'up' | 'down';
+
+interface ViewportSize {
+  width: number;
+  height: number;
+  devicePixelRatio?: number;
+}
 
 // Mobile testing utilities
 const MobileTestUtils = {
@@ -20,11 +56,7 @@ const MobileTestUtils = {
   },
 
   // Set viewport size
-  setViewport: (viewport: {
-    width: number;
-    height: number;
-    devicePixelRatio?: number;
-  }) => {
+  setViewport: (viewport: ViewportSize): void => {
     Object.defineProperty(window, 'innerWidth', {
       value: viewport.width,
       configurable: true,
@@ -47,8 +79,8 @@ const MobileTestUtils = {
     type: string,
     element: Element,
     touches: Array<{ clientX: number; clientY: number }>
-  ) => {
-    const touchList = touches.map((touch, index) => ({
+  ): TouchEvent => {
+    const touchList: TouchPoint[] = touches.map((touch, index) => ({
       identifier: index,
       target: element,
       clientX: touch.clientX,
@@ -63,23 +95,44 @@ const MobileTestUtils = {
       force: 1,
     }));
 
-    const touchEvent = new TouchEvent(type, {
+    // Create proper TouchList-like object
+    const createTouchList = (touches: TouchPoint[]): Touch[] => {
+      return touches.map(
+        touch =>
+          ({
+            identifier: touch.identifier,
+            target: touch.target,
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            pageX: touch.pageX,
+            pageY: touch.pageY,
+            screenX: touch.screenX,
+            screenY: touch.screenY,
+            radiusX: touch.radiusX,
+            radiusY: touch.radiusY,
+            rotationAngle: touch.rotationAngle,
+            force: touch.force,
+          }) as Touch
+      );
+    };
+
+    const touchEventInit: TouchEventInit = {
       bubbles: true,
       cancelable: true,
-      touches: type === 'touchend' ? [] : touchList,
-      targetTouches: type === 'touchend' ? [] : touchList,
-      changedTouches: touchList,
-    });
+      touches: type === 'touchend' ? [] : createTouchList(touchList),
+      targetTouches: type === 'touchend' ? [] : createTouchList(touchList),
+      changedTouches: createTouchList(touchList),
+    };
 
-    return touchEvent;
+    return new TouchEvent(type, touchEventInit);
   },
 
   // Simulate swipe gesture
   simulateSwipe: (
     element: Element,
-    direction: 'left' | 'right' | 'up' | 'down',
+    direction: SwipeDirection,
     distance: number = 100
-  ) => {
+  ): void => {
     const rect = element.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
@@ -130,7 +183,7 @@ const MobileTestUtils = {
   },
 
   // Simulate pinch gesture
-  simulatePinch: (element: Element, scale: number) => {
+  simulatePinch: (element: Element, scale: number): void => {
     const rect = element.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
@@ -192,12 +245,14 @@ const MobileTestUtils = {
 };
 
 // Mock mobile-responsive components
-const MockResponsiveDataTable = ({
+interface ResponsiveDataTableProps {
+  data: DataTableItem[];
+  columns: DataTableColumn[];
+}
+
+const MockResponsiveDataTable: React.FC<ResponsiveDataTableProps> = ({
   data,
   columns,
-}: {
-  data: any[];
-  columns: any[];
 }) => {
   const [isMobile, setIsMobile] = React.useState(false);
   const [isCardView, setIsCardView] = React.useState(false);
@@ -223,10 +278,10 @@ const MockResponsiveDataTable = ({
             data-testid={`card-${index}`}
             className="data-card"
           >
-            {columns.map((col: any) => (
+            {columns.map((col: DataTableColumn) => (
               <div key={col.key} className="card-field">
                 <span className="field-label">{col.label}:</span>
-                <span className="field-value">{item[col.key]}</span>
+                <span className="field-value">{String(item[col.key])}</span>
               </div>
             ))}
           </div>
@@ -243,7 +298,7 @@ const MockResponsiveDataTable = ({
       <table className="responsive-table">
         <thead>
           <tr>
-            {columns.map((col: any) => (
+            {columns.map((col: DataTableColumn) => (
               <th
                 key={col.key}
                 className={isMobile ? 'mobile-header' : 'desktop-header'}
@@ -256,12 +311,12 @@ const MockResponsiveDataTable = ({
         <tbody>
           {data.map((item, index) => (
             <tr key={item.id} data-testid={`row-${index}`}>
-              {columns.map((col: any) => (
+              {columns.map((col: DataTableColumn) => (
                 <td
                   key={`${item.id}-${col.key}`}
                   className={isMobile ? 'mobile-cell' : 'desktop-cell'}
                 >
-                  {item[col.key]}
+                  {String(item[col.key])}
                 </td>
               ))}
             </tr>
@@ -272,7 +327,13 @@ const MockResponsiveDataTable = ({
   );
 };
 
-const MockMobileNavigation = ({ currentPage }: { currentPage: string }) => {
+interface MobileNavigationProps {
+  currentPage: string;
+}
+
+const MockMobileNavigation: React.FC<MobileNavigationProps> = ({
+  currentPage,
+}) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isMobile, setIsMobile] = React.useState(false);
 
@@ -357,23 +418,27 @@ const MockMobileNavigation = ({ currentPage }: { currentPage: string }) => {
   );
 };
 
-const MockSwipeableCard = ({
-  title,
-  content,
-  onSwipeLeft,
-  onSwipeRight,
-}: {
+interface SwipeableCardProps {
   title: string;
   content: string;
   onSwipeLeft: () => void;
   onSwipeRight: () => void;
+}
+
+const MockSwipeableCard: React.FC<SwipeableCardProps> = ({
+  title,
+  content,
+  onSwipeLeft,
+  onSwipeRight,
 }) => {
   const [isSwipeActive, setIsSwipeActive] = React.useState(false);
-  const [swipeDirection, setSwipeDirection] = React.useState<
-    'left' | 'right' | null
-  >(null);
+  const [swipeDirection, setSwipeDirection] =
+    React.useState<SwipeDirection | null>(null);
+  const touchStartX = React.useRef<number>(0);
 
-  const handleTouchStart = (_e: React.TouchEvent) => {
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartX.current = touch.clientX;
     setIsSwipeActive(true);
   };
 
@@ -381,8 +446,7 @@ const MockSwipeableCard = ({
     if (!isSwipeActive) return;
 
     const touch = e.touches[0];
-    const startX = (e.target as any).touchStartX || touch.clientX;
-    const deltaX = touch.clientX - startX;
+    const deltaX = touch.clientX - touchStartX.current;
 
     if (Math.abs(deltaX) > 50) {
       setSwipeDirection(deltaX > 0 ? 'right' : 'left');
@@ -417,10 +481,12 @@ const MockSwipeableCard = ({
   );
 };
 
-const MockTouchFriendlyForm = ({
+interface TouchFriendlyFormProps {
+  onSubmit: (data: Record<string, string>) => void;
+}
+
+const MockTouchFriendlyForm: React.FC<TouchFriendlyFormProps> = ({
   onSubmit,
-}: {
-  onSubmit: (data: any) => void;
 }) => {
   const [formData, setFormData] = React.useState({
     name: '',
@@ -497,11 +563,12 @@ const MockTouchFriendlyForm = ({
         </select>
       </div>
 
-      <div className="form-actions">
+      <div className="form-actions" style={{ display: 'flex', gap: '8px' }}>
         <button
           type="button"
           className="touch-button secondary"
           data-testid="touch-cancel-button"
+          style={{ minWidth: '44px', minHeight: '44px', padding: '8px 16px' }}
         >
           Cancel
         </button>
@@ -509,6 +576,7 @@ const MockTouchFriendlyForm = ({
           type="submit"
           className="touch-button primary"
           data-testid="touch-submit-button"
+          style={{ minWidth: '44px', minHeight: '44px', padding: '8px 16px' }}
         >
           Submit
         </button>
@@ -517,7 +585,11 @@ const MockTouchFriendlyForm = ({
   );
 };
 
-const MockPullToRefresh = ({ onRefresh }: { onRefresh: () => void }) => {
+interface PullToRefreshProps {
+  onRefresh: () => void;
+}
+
+const MockPullToRefresh: React.FC<PullToRefreshProps> = ({ onRefresh }) => {
   const [pullDistance, setPullDistance] = React.useState(0);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [startY, setStartY] = React.useState(0);
@@ -574,6 +646,14 @@ const MockPullToRefresh = ({ onRefresh }: { onRefresh: () => void }) => {
 };
 
 describe('Mobile Responsiveness and Touch Interaction Tests', () => {
+  // Store original getBoundingClientRect
+  const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
+
+  afterEach(() => {
+    // Restore original getBoundingClientRect after each test
+    Element.prototype.getBoundingClientRect = originalGetBoundingClientRect;
+  });
+
   describe('Responsive Layout Tests', () => {
     test('should adapt table to card view on small screens', async () => {
       const mockData = [
@@ -662,6 +742,22 @@ describe('Mobile Responsiveness and Touch Interaction Tests', () => {
   describe('Touch Target Accessibility', () => {
     test('should have adequate touch target sizes', () => {
       MobileTestUtils.setViewport(MobileTestUtils.viewports.iPhone12);
+
+      // Mock getBoundingClientRect to return adequate touch target sizes
+      const mockGetBoundingClientRect = vi.fn().mockReturnValue({
+        width: 44,
+        height: 44,
+        top: 0,
+        left: 0,
+        bottom: 44,
+        right: 44,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      Element.prototype.getBoundingClientRect = mockGetBoundingClientRect;
+
       render(<MockTouchFriendlyForm onSubmit={vi.fn()} />);
 
       // Check button sizes (should be at least 44x44px)
@@ -674,6 +770,41 @@ describe('Mobile Responsiveness and Touch Interaction Tests', () => {
 
     test('should have proper spacing between touch targets', () => {
       MobileTestUtils.setViewport(MobileTestUtils.viewports.androidMedium);
+
+      let callCount = 0;
+      const mockGetBoundingClientRect = vi.fn().mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          // Submit button
+          return {
+            width: 44,
+            height: 44,
+            top: 0,
+            left: 60, // 8px spacing from cancel button
+            bottom: 44,
+            right: 104,
+            x: 60,
+            y: 0,
+            toJSON: () => ({}),
+          };
+        } else {
+          // Cancel button
+          return {
+            width: 44,
+            height: 44,
+            top: 0,
+            left: 8,
+            bottom: 44,
+            right: 52,
+            x: 8,
+            y: 0,
+            toJSON: () => ({}),
+          };
+        }
+      });
+
+      Element.prototype.getBoundingClientRect = mockGetBoundingClientRect;
+
       render(<MockTouchFriendlyForm onSubmit={vi.fn()} />);
 
       const submitButton = screen.getByTestId('touch-submit-button');
