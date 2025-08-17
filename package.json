@@ -44,7 +44,7 @@
     "quality:check": "npm run format:all:check && npm run lint && npm run type-check && npm run test:coverage && npm run performance:test",
     "quality:fix": "npm run format:all && npm run lint:fix && npm run type-check",
     "commit:frontend": "FRONTEND_ONLY=1 git commit",
-    "commit:backend": "SKIP_FRONTEND_TESTS=1 git commit", 
+    "commit:backend": "SKIP_FRONTEND_TESTS=1 git commit",
     "commit:no-backend": "SKIP_BACKEND_TESTS=1 git commit",
     "commit:no-integration": "SKIP_INTEGRATION_TESTS=1 git commit"
   },
