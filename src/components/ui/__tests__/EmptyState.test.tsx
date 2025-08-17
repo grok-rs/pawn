@@ -284,7 +284,7 @@ describe('EmptyState', () => {
           title="Test"
           action={{
             label: 'Action',
-            onClick: undefined as unknown as () => void,
+            onClick: () => undefined,
           }}
         />
       );

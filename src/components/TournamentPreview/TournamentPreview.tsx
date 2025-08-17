@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Box,
   Paper,
@@ -73,7 +72,10 @@ function TournamentPreview({
   };
 
   const getPolicyLabel = (policy: string, type: 'draw' | 'phone' | 'entry') => {
-    const policyMaps = {
+    const policyMaps: Record<
+      'draw' | 'phone' | 'entry',
+      Record<string, string>
+    > = {
       draw: {
         allowed: t('tournament.drawOffers.allowed'),
         restricted: t('tournament.drawOffers.restricted'),
@@ -90,10 +92,7 @@ function TournamentPreview({
         prohibited: t('tournament.lateEntry.prohibited'),
       },
     };
-    return (
-      policyMaps[type][policy as keyof (typeof policyMaps)[typeof type]] ||
-      policy
-    );
+    return policyMaps[type][policy] || policy;
   };
 
   return (

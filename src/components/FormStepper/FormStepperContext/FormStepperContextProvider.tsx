@@ -4,15 +4,15 @@ import { FieldValues } from 'react-hook-form';
 import { FormStepperContextType } from '../types';
 import FormStepperContext from './FormStepperContext';
 
-type Props<T extends FieldValues> = {
+type Props<T extends FieldValues = FieldValues> = {
   children: ReactNode;
   value: FormStepperContextType<T>;
 };
 
-const FormStepperContextProvider = <T extends FieldValues>({
+const FormStepperContextProvider = ({
   children,
   value,
-}: Props<T>) => {
+}: Props<FieldValues>) => {
   return (
     <FormStepperContext.Provider value={value}>
       {children}

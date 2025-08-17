@@ -1,7 +1,14 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
+import {
+  createMockFile,
+  MockFileReader,
+  setupFileReaderMock,
+  createFileReaderProgressEvent,
+} from '../../../test/utils/file-mocks';
 import BulkImportDialog from '../BulkImportDialog';
+import { commands } from '@dto/bindings';
 
 // Mock react-i18next
 vi.mock('react-i18next', () => ({
@@ -21,69 +28,18 @@ vi.mock('@mui/icons-material', () => ({
 }));
 
 // Mock commands
-const mockCommands = {
-  validateBulkImport: vi.fn(),
-  bulkImportPlayers: vi.fn(),
-};
-
 vi.mock('@dto/bindings', () => ({
-  commands: mockCommands,
+  commands: {
+    validateBulkImport: vi.fn(),
+    bulkImportPlayers: vi.fn(),
+  },
 }));
 
-// Mock File API
-interface MockFile extends Partial<File> {
-  name: string;
-  size: number;
-  type: string;
-}
+// Setup FileReader mock
+let mockFileReader: MockFileReader;
 
-const createMockFile = (content: string, filename: string): MockFile => ({
-  name: filename,
-  size: content.length,
-  type: 'text/csv',
-});
-
-// Mock FileReader
-const mockFileReader = {
-  readAsText: vi.fn(),
-  result: '',
-  onload: null as
-    | ((this: FileReader, ev: ProgressEvent<FileReader>) => void)
-    | null,
-  onerror: null as
-    | ((this: FileReader, ev: ProgressEvent<FileReader>) => void)
-    | null,
-};
-
-// Mock FileReader globally
-Object.defineProperty(globalThis, 'FileReader', {
-  writable: true,
-  value: vi.fn().mockImplementation(() => mockFileReader),
-});
-
-// Mock data types
-interface BulkImportPlayer {
-  name: string;
-  rating?: number;
-  country_code?: string;
-  title?: string;
-  birth_date?: string;
-  gender?: string;
-  email?: string;
-  phone?: string;
-  club?: string;
-}
-
-interface BulkImportResult {
-  success: boolean;
-  valid_players: BulkImportPlayer[];
-  invalid_players: { player: BulkImportPlayer; errors: string[] }[];
-  warnings: { player: BulkImportPlayer; warnings: string[] }[];
-  total_count: number;
-  valid_count: number;
-  invalid_count: number;
-  warning_count: number;
-}
+// Import types from bindings
+import type { BulkImportResult } from '@dto/bindings';
 
 // Sample CSV data
 const validCsvData = `name,rating,country_code,title,email
@@ -108,53 +64,91 @@ describe('BulkImportDialog', () => {
   };
 
   const mockValidationResult: BulkImportResult = {
-    success: true,
-    valid_players: [
+    success_count: 2,
+    error_count: 1,
+    validations: [
       {
-        name: 'John Doe',
-        rating: 1800,
-        country_code: 'US',
-        title: 'FM',
-        email: 'john@test.com',
+        is_valid: true,
+        errors: [],
+        warnings: [],
+        player_data: {
+          name: 'John Doe',
+          rating: 1800,
+          country_code: 'US',
+          title: 'FM',
+          email: 'john@test.com',
+          birth_date: null,
+          gender: null,
+          phone: null,
+          club: null,
+        },
       },
       {
-        name: 'Jane Smith',
-        rating: 2000,
-        country_code: 'CA',
-        title: 'IM',
-        email: 'jane@test.com',
+        is_valid: true,
+        errors: [],
+        warnings: [],
+        player_data: {
+          name: 'Jane Smith',
+          rating: 2000,
+          country_code: 'CA',
+          title: 'IM',
+          email: 'jane@test.com',
+          birth_date: null,
+          gender: null,
+          phone: null,
+          club: null,
+        },
       },
-    ],
-    invalid_players: [
       {
-        player: { name: '', rating: 1800, country_code: 'US' },
+        is_valid: false,
         errors: ['Name is required'],
+        warnings: [],
+        player_data: {
+          name: '',
+          rating: 1800,
+          country_code: 'US',
+          title: null,
+          birth_date: null,
+          gender: null,
+          email: null,
+          phone: null,
+          club: null,
+        },
       },
-    ],
-    warnings: [
       {
-        player: {
+        is_valid: true,
+        errors: [],
+        warnings: ['No title specified'],
+        player_data: {
           name: 'Bob Wilson',
           rating: 1600,
           country_code: 'GB',
+          title: null,
+          birth_date: null,
+          gender: null,
           email: 'bob@test.com',
+          phone: null,
+          club: null,
         },
-        warnings: ['No title specified'],
       },
     ],
-    total_count: 4,
-    valid_count: 2,
-    invalid_count: 1,
-    warning_count: 1,
+    imported_player_ids: [],
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockCommands.validateBulkImport.mockResolvedValue(mockValidationResult);
-    mockCommands.bulkImportPlayers.mockResolvedValue({
-      success: true,
-      imported_count: 2,
+    vi.mocked(commands.validateBulkImport).mockResolvedValue(
+      mockValidationResult
+    );
+    vi.mocked(commands.bulkImportPlayers).mockResolvedValue({
+      success_count: 2,
+      error_count: 0,
+      validations: [],
+      imported_player_ids: [1, 2],
     });
+
+    // Setup FileReader mock for each test
+    mockFileReader = setupFileReaderMock();
   });
 
   describe('Initial Rendering', () => {
@@ -213,10 +207,14 @@ describe('BulkImportDialog', () => {
       });
 
       // Mock FileReader behavior
-      mockFileReader.readAsText.mockImplementation(() => {
+      mockFileReader.setMockResult(validCsvData);
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = validCsvData;
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
@@ -227,7 +225,7 @@ describe('BulkImportDialog', () => {
       });
 
       // Trigger file selection
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       // Should advance to next step after processing
       await waitFor(() => {
@@ -243,14 +241,17 @@ describe('BulkImportDialog', () => {
       const file = createMockFile('invalid,csv,format\n', 'invalid.csv');
 
       // Mock FileReader with invalid CSV
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = 'invalid,csv,format\n';
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       await waitFor(() => {
         expect(screen.getByText('invalidCsvFormat')).toBeInTheDocument();
@@ -267,7 +268,7 @@ describe('BulkImportDialog', () => {
         type: 'text/plain',
       };
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       expect(screen.getByText('pleaseSelectCsvFile')).toBeInTheDocument();
     });
@@ -279,14 +280,17 @@ describe('BulkImportDialog', () => {
       const fileInput = screen.getByRole('button', { name: /uploadFile/ });
       const file = createMockFile('', 'empty.csv');
 
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = '';
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       await waitFor(() => {
         expect(screen.getByText('csvFileIsEmpty')).toBeInTheDocument();
@@ -303,21 +307,24 @@ describe('BulkImportDialog', () => {
       const fileInput = screen.getByRole('button', { name: /uploadFile/ });
       const file = createMockFile(validCsvData, 'players.csv');
 
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = validCsvData;
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       // Click validate button
       const validateButton = screen.getByText('validateData');
       await user.click(validateButton);
 
       await waitFor(() => {
-        expect(mockCommands.validateBulkImport).toHaveBeenCalledWith({
+        expect(vi.mocked(commands.validateBulkImport)).toHaveBeenCalledWith({
           tournament_id: 1,
           players: expect.any(Array),
         });
@@ -332,14 +339,17 @@ describe('BulkImportDialog', () => {
       const fileInput = screen.getByRole('button', { name: /uploadFile/ });
       const file = createMockFile(validCsvData, 'players.csv');
 
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = validCsvData;
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       const validateButton = screen.getByText('validateData');
       await user.click(validateButton);
@@ -360,14 +370,17 @@ describe('BulkImportDialog', () => {
       const fileInput = screen.getByRole('button', { name: /uploadFile/ });
       const file = createMockFile(invalidCsvData, 'players.csv');
 
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = invalidCsvData;
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       const validateButton = screen.getByText('validateData');
       await user.click(validateButton);
@@ -385,14 +398,17 @@ describe('BulkImportDialog', () => {
       const fileInput = screen.getByRole('button', { name: /uploadFile/ });
       const file = createMockFile(validCsvData, 'players.csv');
 
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = validCsvData;
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       const validateButton = screen.getByText('validateData');
       await user.click(validateButton);
@@ -404,7 +420,7 @@ describe('BulkImportDialog', () => {
     });
 
     test('handles validation API errors', async () => {
-      mockCommands.validateBulkImport.mockRejectedValue(
+      vi.mocked(commands.validateBulkImport).mockRejectedValue(
         new Error('Validation API failed')
       );
 
@@ -414,14 +430,17 @@ describe('BulkImportDialog', () => {
       const fileInput = screen.getByRole('button', { name: /uploadFile/ });
       const file = createMockFile(validCsvData, 'players.csv');
 
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = validCsvData;
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       const validateButton = screen.getByText('validateData');
       await user.click(validateButton);
@@ -441,14 +460,17 @@ describe('BulkImportDialog', () => {
       const fileInput = screen.getByRole('button', { name: /uploadFile/ });
       const file = createMockFile(validCsvData, 'players.csv');
 
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = validCsvData;
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       const validateButton = screen.getByText('validateData');
       await user.click(validateButton);
@@ -476,14 +498,17 @@ describe('BulkImportDialog', () => {
       const fileInput = screen.getByRole('button', { name: /uploadFile/ });
       const file = createMockFile(validCsvData, 'players.csv');
 
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = validCsvData;
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       const validateButton = screen.getByText('validateData');
       await user.click(validateButton);
@@ -508,14 +533,17 @@ describe('BulkImportDialog', () => {
       const fileInput = screen.getByRole('button', { name: /uploadFile/ });
       const file = createMockFile(validCsvData, 'players.csv');
 
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = validCsvData;
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       const validateButton = screen.getByText('validateData');
       await user.click(validateButton);
@@ -543,14 +571,17 @@ describe('BulkImportDialog', () => {
       const fileInput = screen.getByRole('button', { name: /uploadFile/ });
       const file = createMockFile(validCsvData, 'players.csv');
 
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = validCsvData;
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       const validateButton = screen.getByText('validateData');
       await user.click(validateButton);
@@ -566,7 +597,7 @@ describe('BulkImportDialog', () => {
       });
 
       await waitFor(() => {
-        expect(mockCommands.bulkImportPlayers).toHaveBeenCalledWith({
+        expect(vi.mocked(commands.bulkImportPlayers)).toHaveBeenCalledWith({
           tournament_id: 1,
           players: expect.any(Array),
         });
@@ -577,11 +608,8 @@ describe('BulkImportDialog', () => {
     });
 
     test('shows import progress', async () => {
-      let resolveImport: (value: {
-        success: boolean;
-        imported_count: number;
-      }) => void;
-      mockCommands.bulkImportPlayers.mockImplementation(() => {
+      let resolveImport: (value: BulkImportResult) => void;
+      vi.mocked(commands.bulkImportPlayers).mockImplementation(() => {
         return new Promise(resolve => {
           resolveImport = resolve;
         });
@@ -594,14 +622,17 @@ describe('BulkImportDialog', () => {
       const fileInput = screen.getByRole('button', { name: /uploadFile/ });
       const file = createMockFile(validCsvData, 'players.csv');
 
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = validCsvData;
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       const validateButton = screen.getByText('validateData');
       await user.click(validateButton);
@@ -621,7 +652,12 @@ describe('BulkImportDialog', () => {
       expect(screen.getByText('importingPlayers')).toBeInTheDocument();
 
       // Complete import
-      resolveImport!({ success: true, imported_count: 2 });
+      resolveImport!({
+        success_count: 2,
+        error_count: 0,
+        validations: [],
+        imported_player_ids: [1, 2],
+      });
 
       await waitFor(() => {
         expect(screen.getByText('importComplete')).toBeInTheDocument();
@@ -629,7 +665,7 @@ describe('BulkImportDialog', () => {
     });
 
     test('handles import errors', async () => {
-      mockCommands.bulkImportPlayers.mockRejectedValue(
+      vi.mocked(commands.bulkImportPlayers).mockRejectedValue(
         new Error('Import failed')
       );
 
@@ -640,14 +676,17 @@ describe('BulkImportDialog', () => {
       const fileInput = screen.getByRole('button', { name: /uploadFile/ });
       const file = createMockFile(validCsvData, 'players.csv');
 
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = validCsvData;
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
       await user.click(screen.getByText('validateData'));
 
       await waitFor(() => {
@@ -673,14 +712,17 @@ describe('BulkImportDialog', () => {
       const fileInput = screen.getByRole('button', { name: /uploadFile/ });
       const file = createMockFile(invalidCsvData, 'players.csv');
 
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = invalidCsvData;
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
       await user.click(screen.getByText('validateData'));
 
       await waitFor(() => {
@@ -694,9 +736,11 @@ describe('BulkImportDialog', () => {
       });
 
       await waitFor(() => {
-        expect(mockCommands.bulkImportPlayers).toHaveBeenCalledWith({
+        expect(vi.mocked(commands.bulkImportPlayers)).toHaveBeenCalledWith({
           tournament_id: 1,
-          players: mockValidationResult.valid_players,
+          players: mockValidationResult.validations
+            .filter(v => v.is_valid)
+            .map(v => v.player_data),
         });
       });
     });
@@ -711,14 +755,17 @@ describe('BulkImportDialog', () => {
       const fileInput = screen.getByRole('button', { name: /uploadFile/ });
       const file = createMockFile(validCsvData, 'players.csv');
 
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = validCsvData;
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       // Should advance to validation step
       await waitFor(() => {
@@ -748,14 +795,17 @@ describe('BulkImportDialog', () => {
       const fileInput = screen.getByRole('button', { name: /uploadFile/ });
       const file = createMockFile(validCsvData, 'players.csv');
 
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = validCsvData;
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       // Next button should be enabled
       await waitFor(() => {
@@ -794,13 +844,16 @@ describe('BulkImportDialog', () => {
       const file = createMockFile(validCsvData, 'players.csv');
 
       // Mock FileReader error
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         if (mockFileReader.onerror) {
-          mockFileReader.onerror({} as ProgressEvent<FileReader>);
+          mockFileReader.onerror.call(
+            mockFileReader,
+            createFileReaderProgressEvent('error')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       await waitFor(() => {
         expect(screen.getByText('failedToReadFile')).toBeInTheDocument();
@@ -815,14 +868,17 @@ describe('BulkImportDialog', () => {
       const invalidHeadersCsv = 'invalid,headers,only\ndata,data,data';
       const file = createMockFile(invalidHeadersCsv, 'players.csv');
 
-      mockFileReader.readAsText.mockImplementation(() => {
+      vi.spyOn(mockFileReader, 'readAsText').mockImplementation(() => {
         mockFileReader.result = invalidHeadersCsv;
         if (mockFileReader.onload) {
-          mockFileReader.onload({} as ProgressEvent<FileReader>);
+          mockFileReader.onload.call(
+            mockFileReader,
+            createFileReaderProgressEvent('load')
+          );
         }
       });
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       await waitFor(() => {
         expect(screen.getByText('missingRequiredColumns')).toBeInTheDocument();
@@ -834,12 +890,13 @@ describe('BulkImportDialog', () => {
       render(<BulkImportDialog {...defaultProps} />);
 
       const fileInput = screen.getByRole('button', { name: /uploadFile/ });
+      const baseFile = createMockFile(validCsvData, 'large.csv');
       const largeFile = {
-        ...createMockFile(validCsvData, 'large.csv'),
+        ...baseFile,
         size: 10 * 1024 * 1024,
       }; // 10MB
 
-      await user.upload(fileInput, largeFile as File);
+      await user.upload(fileInput, largeFile);
 
       expect(screen.getByText('fileTooLarge')).toBeInTheDocument();
     });
@@ -878,7 +935,7 @@ describe('BulkImportDialog', () => {
         type: 'text/plain',
       };
 
-      await user.upload(fileInput, file as File);
+      await user.upload(fileInput, file);
 
       const errorMessage = screen.getByText('pleaseSelectCsvFile');
       expect(errorMessage).toBeInTheDocument();

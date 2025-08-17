@@ -85,10 +85,8 @@ const BrowserTestUtils = {
 
   // Mock browser environment
   mockBrowser: (browserName: string) => {
-    const userAgent =
-      BrowserTestUtils.userAgents[
-        browserName as keyof typeof BrowserTestUtils.userAgents
-      ];
+    const userAgentMap: Record<string, string> = BrowserTestUtils.userAgents;
+    const userAgent = userAgentMap[browserName] || userAgentMap.chrome;
     Object.defineProperty(navigator, 'userAgent', {
       value: userAgent,
       configurable: true,
@@ -141,17 +139,30 @@ const BrowserTestUtils = {
 
   // Check for browser-specific APIs
   checkBrowserAPIs: () => {
+    // Extend Document interface for fullscreen API
+    interface FullscreenDocument extends Document {
+      requestFullscreen?: () => Promise<void>;
+      webkitRequestFullscreen?: () => Promise<void>;
+      mozRequestFullScreen?: () => Promise<void>;
+      msRequestFullscreen?: () => Promise<void>;
+    }
+
+    const fullscreenDoc = document as FullscreenDocument;
+
     return {
       fetch: typeof fetch !== 'undefined',
       webGL: BrowserTestUtils.features.js.webGL(),
       webRTC: typeof RTCPeerConnection !== 'undefined',
       webAudio:
-        typeof AudioContext !== 'undefined' ||
-        typeof (window as any).webkitAudioContext !== 'undefined',
+        typeof AudioContext !== 'undefined' || 'webkitAudioContext' in window,
       notification: typeof Notification !== 'undefined',
       geolocation: typeof navigator.geolocation !== 'undefined',
       camera: typeof navigator.mediaDevices !== 'undefined',
-      fullscreen: typeof document.requestFullscreen !== 'undefined',
+      fullscreen:
+        typeof fullscreenDoc.requestFullscreen !== 'undefined' ||
+        typeof fullscreenDoc.webkitRequestFullscreen !== 'undefined' ||
+        typeof fullscreenDoc.mozRequestFullScreen !== 'undefined' ||
+        typeof fullscreenDoc.msRequestFullscreen !== 'undefined',
     };
   },
 };
@@ -169,7 +180,9 @@ const ModernFeaturesComponent = ({
     intersection: false,
   });
 
-  const [browserAPIs, setBrowserAPIs] = React.useState<any>({});
+  const [browserAPIs, setBrowserAPIs] = React.useState<Record<string, boolean>>(
+    {}
+  );
 
   React.useEffect(() => {
     // Check feature support
@@ -970,10 +983,11 @@ describe('Cross-Browser Compatibility Tests', () => {
 
         const triggerError = () => {
           try {
-            // Intentional error
-            (null as any).nonExistentMethod();
-          } catch (err: any) {
-            setError(err.message);
+            // Intentional error to test error handling
+            const nullObject: { nonExistentMethod: () => void } | null = null;
+            nullObject!.nonExistentMethod();
+          } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : String(err));
           }
         };
 

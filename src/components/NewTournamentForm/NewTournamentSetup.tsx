@@ -69,7 +69,26 @@ const NewTournamentSetup = () => {
   );
 
   // Final submission - just navigate to tournament
-  const onSubmit = async (data: TournamentFormValues) => {
+  const onSubmit = async (data: Record<string, unknown>) => {
+    // Type guard to ensure data has the required properties
+    const hasRequiredFields = (
+      obj: Record<string, unknown>
+    ): obj is TournamentFormValues => {
+      return (
+        typeof obj.name === 'string' &&
+        typeof obj.city === 'string' &&
+        typeof obj.country === 'string' &&
+        obj.startDate instanceof Date &&
+        typeof obj.type === 'string' &&
+        typeof obj.pairingSystem === 'string'
+      );
+    };
+
+    if (!hasRequiredFields(data)) {
+      showError('Invalid form data');
+      return;
+    }
+
     // Tournament should already be created, just navigate to it
     if (createdTournament) {
       navigate(`/tournament/${createdTournament.id}`);

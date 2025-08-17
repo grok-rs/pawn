@@ -1,8 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
+import { useMediaQuery } from '@mui/material';
 import { ResultsGrid } from '../ResultsGrid';
-import type { GameResult } from '@dto/bindings';
+import type { GameResult, Game, Player } from '@dto/bindings';
 
 // Mock react-i18next
 vi.mock('react-i18next', () => ({
@@ -54,13 +55,13 @@ vi.mock('../MobileResultEntry', () => ({
   }) => (
     <div data-testid="mobile-result-entry">
       {games.map(game => (
-        <div key={game.id} data-testid={`mobile-game-${game.id}`}>
+        <div key={game.game.id} data-testid={`mobile-game-${game.game.id}`}>
           <button
-            onClick={() => onResultChange(game.id, '1-0')}
+            onClick={() => onResultChange(game.game.id, '1-0')}
             disabled={readOnly}
-            data-testid={`mobile-result-${game.id}`}
+            data-testid={`mobile-result-${game.game.id}`}
           >
-            {game.result || 'Set Result'}
+            {game.game.result || 'Set Result'}
           </button>
         </div>
       ))}
@@ -94,34 +95,55 @@ vi.mock('../CsvImportDialog', () => ({
 }));
 
 // Mock game data
-const createMockGame = (
-  id: number,
-  overrides: Partial<GameResult> = {}
-): GameResult => ({
+const createMockPlayer = (id: number, name: string): Player => ({
   id,
   tournament_id: 1,
-  round_number: 1,
-  white_player_id: id * 2 - 1,
-  black_player_id: id * 2,
-  white_player_name: `White Player ${id}`,
-  black_player_name: `Black Player ${id}`,
-  result: null,
-  result_type: null,
-  result_reason: null,
-  arbiter_notes: null,
-  board_number: id,
-  game_status: 'scheduled',
+  name,
+  rating: 1500,
+  country_code: 'US',
+  title: null,
+  birth_date: null,
+  gender: null,
+  email: null,
+  phone: null,
+  club: null,
+  status: 'active',
+  seed_number: null,
+  pairing_number: null,
+  initial_rating: 1500,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
-  ...overrides,
 });
+
+const createMockGame = (id: number, gameResult?: string | null): GameResult => {
+  const game: Game = {
+    id,
+    tournament_id: 1,
+    round_number: 1,
+    white_player_id: id * 2 - 1,
+    black_player_id: id * 2,
+    result: gameResult || '',
+    result_type: null,
+    result_reason: null,
+    arbiter_notes: null,
+    last_updated: null,
+    approved_by: null,
+    created_at: new Date().toISOString(),
+  };
+
+  return {
+    game,
+    white_player: createMockPlayer(id * 2 - 1, `White Player ${id}`),
+    black_player: createMockPlayer(id * 2, `Black Player ${id}`),
+  };
+};
 
 describe('ResultsGrid', () => {
   const mockOnResultsUpdated = vi.fn();
   const mockGames = [
-    createMockGame(1, { result: '1-0' }),
-    createMockGame(2, { result: null }),
-    createMockGame(3, { result: '1/2-1/2' }),
+    createMockGame(1, '1-0'),
+    createMockGame(2, ''),
+    createMockGame(3, '1/2-1/2'),
   ];
 
   beforeEach(() => {
@@ -440,11 +462,9 @@ describe('ResultsGrid', () => {
   });
 
   describe('Mobile/Desktop View', () => {
-    test('renders mobile view when screen is small', () => {
+    test('renders mobile view when screen is small', async () => {
       // Mock useMediaQuery to return true for mobile
-      vi.mocked(vi.importActual('@mui/material')).useMediaQuery.mockReturnValue(
-        true
-      );
+      vi.mocked(useMediaQuery).mockReturnValue(true);
 
       render(
         <ResultsGrid
@@ -459,9 +479,8 @@ describe('ResultsGrid', () => {
     });
 
     test('mobile view handles result changes', async () => {
-      vi.mocked(vi.importActual('@mui/material')).useMediaQuery.mockReturnValue(
-        true
-      );
+      // Mock useMediaQuery to return true for mobile
+      vi.mocked(useMediaQuery).mockReturnValue(true);
 
       const user = userEvent.setup();
       render(
@@ -486,10 +505,9 @@ describe('ResultsGrid', () => {
       });
     });
 
-    test('mobile view respects read-only mode', () => {
-      vi.mocked(vi.importActual('@mui/material')).useMediaQuery.mockReturnValue(
-        true
-      );
+    test('mobile view respects read-only mode', async () => {
+      // Mock useMediaQuery to return true for mobile
+      vi.mocked(useMediaQuery).mockReturnValue(true);
 
       render(
         <ResultsGrid
@@ -703,12 +721,7 @@ describe('ResultsGrid', () => {
 
   describe('Error Boundaries and Edge Cases', () => {
     test('handles games with missing player names', () => {
-      const gamesWithMissingNames = [
-        createMockGame(1, {
-          white_player_name: null as unknown as string,
-          black_player_name: null as unknown as string,
-        }),
-      ];
+      const gamesWithMissingNames = [createMockGame(1, '1-0')];
 
       render(
         <ResultsGrid
@@ -723,8 +736,8 @@ describe('ResultsGrid', () => {
 
     test('handles games with invalid IDs', () => {
       const gamesWithInvalidIds = [
-        createMockGame(0, { id: 0 }),
-        createMockGame(-1, { id: -1 }),
+        createMockGame(0, '1-0'),
+        createMockGame(-1, '0-1'),
       ];
 
       render(

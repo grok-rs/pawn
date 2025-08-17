@@ -129,7 +129,17 @@ function Settings() {
         userId,
         null
       );
-      setSettings(effectiveSettings as Record<string, string>);
+      // Safely handle the settings object with proper type checking
+      const settingsData = effectiveSettings ?? {};
+      const settingsObject: Record<string, string> = {};
+
+      // Convert all values to strings safely
+      for (const [key, value] of Object.entries(settingsData)) {
+        settingsObject[key] =
+          typeof value === 'string' ? value : String(value ?? '');
+      }
+
+      setSettings(settingsObject);
     } catch (err) {
       console.error('Failed to load settings:', err);
       setError('Failed to load settings');
@@ -167,7 +177,7 @@ function Settings() {
     try {
       const restartSettings =
         await commands.getSettingsRequiringRestart(userId);
-      setPendingRestart(restartSettings as string[]);
+      setPendingRestart(restartSettings);
     } catch (err) {
       console.error('Failed to load pending restart settings:', err);
     }
@@ -320,7 +330,7 @@ function Settings() {
       });
 
       // Create download link
-      const blob = new Blob([exportData as string], {
+      const blob = new Blob([exportData], {
         type: 'application/octet-stream',
       });
       const url = URL.createObjectURL(blob);

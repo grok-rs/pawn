@@ -3,6 +3,69 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 
+// Type definitions for test data
+interface Tournament extends Record<string, unknown> {
+  id: number;
+  name: string;
+  max_players?: number;
+  max_rounds?: number;
+}
+
+interface Player extends Record<string, unknown> {
+  id: number;
+  name: string;
+  email?: string;
+  tournament_id?: number;
+  team_id?: number;
+  rating?: number;
+}
+
+interface Game extends Record<string, unknown> {
+  id: number;
+  tournament_id: number;
+  white_player_id: number;
+  black_player_id: number;
+  result?: string;
+}
+
+interface Team extends Record<string, unknown> {
+  id: number;
+  name: string;
+  tournament_id: number;
+}
+
+interface Pairing extends Record<string, unknown> {
+  id: number;
+  tournament_id: number;
+  round_number: number;
+  white_player_id?: number;
+  black_player_id?: number;
+  board_number?: number;
+  result?: string;
+}
+
+interface DatabaseData {
+  tournaments: Tournament[];
+  players: Player[];
+  games: Game[];
+  teams: Team[];
+  pairings: Pairing[];
+  [key: string]: Array<Tournament | Player | Game | Team | Pairing>;
+}
+
+// interface SQLResult {
+//   success: boolean;
+//   rowsAffected: number;
+// }
+
+interface BackupData {
+  id: number;
+  timestamp: string;
+  schemaVersion: number;
+  data: DatabaseData;
+  checksum: string;
+}
+
 // Mock database migration utilities
 const DatabaseTestUtils = {
   // Schema version tracking
@@ -97,12 +160,12 @@ const DatabaseTestUtils = {
   mockDatabase: {
     currentSchema: 1,
     data: {
-      tournaments: [],
-      players: [],
-      games: [],
-      teams: [],
-      pairings: [],
-    },
+      tournaments: [] as Tournament[],
+      players: [] as Player[],
+      games: [] as Game[],
+      teams: [] as Team[],
+      pairings: [] as Pairing[],
+    } as DatabaseData,
 
     execute: async (sql: string) => {
       // Mock SQL execution
@@ -110,13 +173,13 @@ const DatabaseTestUtils = {
       return { success: true, rowsAffected: 1 };
     },
 
-    query: async (sql: string, params: any[] = []) => {
+    query: async (sql: string, params: unknown[] = []) => {
       // Mock query execution
       console.log('Querying SQL:', sql, 'Params:', params);
       return [];
     },
 
-    transaction: async (operations: Array<() => Promise<any>>) => {
+    transaction: async (operations: Array<() => Promise<unknown>>) => {
       const results = [];
       for (const operation of operations) {
         results.push(await operation());
@@ -126,15 +189,17 @@ const DatabaseTestUtils = {
   },
 
   // Data integrity checks
-  validateDataIntegrity: (data: any) => {
+  validateDataIntegrity: (data: DatabaseData) => {
     const issues: string[] = [];
 
     // Check foreign key integrity
     if (data.players) {
-      data.players.forEach((player: any) => {
+      data.players.forEach((player: Player) => {
         if (
           player.tournament_id &&
-          !data.tournaments.find((t: any) => t.id === player.tournament_id)
+          !data.tournaments.find(
+            (t: Tournament) => t.id === player.tournament_id
+          )
         ) {
           issues.push(
             `Player ${player.id} references non-existent tournament ${player.tournament_id}`
@@ -142,7 +207,7 @@ const DatabaseTestUtils = {
         }
         if (
           player.team_id &&
-          !data.teams.find((t: any) => t.id === player.team_id)
+          !data.teams.find((t: Team) => t.id === player.team_id)
         ) {
           issues.push(
             `Player ${player.id} references non-existent team ${player.team_id}`
@@ -153,18 +218,20 @@ const DatabaseTestUtils = {
 
     // Check game result integrity
     if (data.games) {
-      data.games.forEach((game: any) => {
-        if (!data.players.find((p: any) => p.id === game.white_player_id)) {
+      data.games.forEach((game: Game) => {
+        if (!data.players.find((p: Player) => p.id === game.white_player_id)) {
           issues.push(
             `Game ${game.id} references non-existent white player ${game.white_player_id}`
           );
         }
-        if (!data.players.find((p: any) => p.id === game.black_player_id)) {
+        if (!data.players.find((p: Player) => p.id === game.black_player_id)) {
           issues.push(
             `Game ${game.id} references non-existent black player ${game.black_player_id}`
           );
         }
-        if (!data.tournaments.find((t: any) => t.id === game.tournament_id)) {
+        if (
+          !data.tournaments.find((t: Tournament) => t.id === game.tournament_id)
+        ) {
           issues.push(
             `Game ${game.id} references non-existent tournament ${game.tournament_id}`
           );
@@ -180,12 +247,13 @@ const DatabaseTestUtils = {
     ];
 
     duplicateChecks.forEach(({ table, field }) => {
-      if (data[table]) {
-        const values = data[table]
-          .map((item: any) => item[field])
+      const tableData = data[table as keyof DatabaseData];
+      if (tableData && Array.isArray(tableData)) {
+        const values = tableData
+          .map((item: Record<string, unknown>) => item[field])
           .filter(Boolean);
         const duplicates = values.filter(
-          (value: any, index: number) => values.indexOf(value) !== index
+          (value: unknown, index: number) => values.indexOf(value) !== index
         );
         if (duplicates.length > 0) {
           issues.push(
@@ -220,17 +288,15 @@ const MockMigrationManager = ({
       const log = [`Starting migration from v${fromVersion} to v${toVersion}`];
 
       for (let version = fromVersion + 1; version <= toVersion; version++) {
-        const schemaInfo =
-          DatabaseTestUtils.schemaVersions[
-            `v${version}` as keyof typeof DatabaseTestUtils.schemaVersions
-          ];
+        const schemaKey =
+          `v${version}` as keyof typeof DatabaseTestUtils.schemaVersions;
+        const schemaInfo = DatabaseTestUtils.schemaVersions[schemaKey];
 
-        if (schemaInfo?.migrations) {
+        if (schemaInfo && 'migrations' in schemaInfo && schemaInfo.migrations) {
           for (const migrationName of schemaInfo.migrations) {
+            const migrationMap = DatabaseTestUtils.migrations;
             const migration =
-              DatabaseTestUtils.migrations[
-                migrationName as keyof typeof DatabaseTestUtils.migrations
-              ];
+              migrationMap[migrationName as keyof typeof migrationMap];
             if (migration) {
               log.push(`Running migration: ${migrationName}`);
               await DatabaseTestUtils.mockDatabase.execute(migration.up().sql);
@@ -256,11 +322,11 @@ const MockMigrationManager = ({
       setMigrationStatus('completed');
       log.push(`Migration to v${toVersion} completed successfully`);
       setMigrationLog(log);
-    } catch (error: any) {
+    } catch (error: unknown) {
       setMigrationStatus('failed');
       setMigrationLog(prev => [
         ...prev,
-        `❌ Migration failed: ${error.message}`,
+        `❌ Migration failed: ${error instanceof Error ? error.message : String(error)}`,
       ]);
     }
   };
@@ -272,17 +338,15 @@ const MockMigrationManager = ({
       const log = [`Starting rollback from v${fromVersion} to v${toVersion}`];
 
       for (let version = fromVersion; version > toVersion; version--) {
-        const schemaInfo =
-          DatabaseTestUtils.schemaVersions[
-            `v${version}` as keyof typeof DatabaseTestUtils.schemaVersions
-          ];
+        const schemaKey =
+          `v${version}` as keyof typeof DatabaseTestUtils.schemaVersions;
+        const schemaInfo = DatabaseTestUtils.schemaVersions[schemaKey];
 
-        if (schemaInfo?.migrations) {
+        if (schemaInfo && 'migrations' in schemaInfo && schemaInfo.migrations) {
           for (const migrationName of [...schemaInfo.migrations].reverse()) {
+            const migrationMap = DatabaseTestUtils.migrations;
             const migration =
-              DatabaseTestUtils.migrations[
-                migrationName as keyof typeof DatabaseTestUtils.migrations
-              ];
+              migrationMap[migrationName as keyof typeof migrationMap];
             if (migration) {
               log.push(`Rolling back migration: ${migrationName}`);
               await DatabaseTestUtils.mockDatabase.execute(
@@ -298,11 +362,11 @@ const MockMigrationManager = ({
       setMigrationStatus('completed');
       log.push(`Rollback to v${toVersion} completed successfully`);
       setMigrationLog(log);
-    } catch (error: any) {
+    } catch (error: unknown) {
       setMigrationStatus('failed');
       setMigrationLog(prev => [
         ...prev,
-        `❌ Rollback failed: ${error.message}`,
+        `❌ Rollback failed: ${error instanceof Error ? error.message : String(error)}`,
       ]);
     }
   };
@@ -359,8 +423,23 @@ const MockMigrationManager = ({
 };
 
 // Mock data consistency checker
-const MockDataConsistencyChecker = ({ data }: { data: any }) => {
-  const [consistencyReport, setConsistencyReport] = React.useState<any>(null);
+const MockDataConsistencyChecker = ({ data }: { data: DatabaseData }) => {
+  const [consistencyReport, setConsistencyReport] = React.useState<{
+    totalRecords: number;
+    issues: string[];
+    referentialIntegrity: {
+      tournaments: number;
+      players: number;
+      games: number;
+      teams: number;
+      orphanedPlayers: number;
+      orphanedGames: number;
+    };
+    constraints: {
+      uniqueConstraints: string[];
+      checkConstraints: string[];
+    };
+  } | null>(null);
   const [checking, setChecking] = React.useState(false);
 
   const runConsistencyCheck = async () => {
@@ -371,7 +450,7 @@ const MockDataConsistencyChecker = ({ data }: { data: any }) => {
 
     const report = {
       totalRecords: Object.values(data).reduce(
-        (sum: number, table: any) =>
+        (sum: number, table: unknown) =>
           sum + (Array.isArray(table) ? table.length : 0),
         0
       ),
@@ -383,14 +462,18 @@ const MockDataConsistencyChecker = ({ data }: { data: any }) => {
         teams: data.teams?.length || 0,
         orphanedPlayers:
           data.players?.filter(
-            (p: any) =>
+            (p: Player) =>
               p.tournament_id &&
-              !data.tournaments?.find((t: any) => t.id === p.tournament_id)
+              !data.tournaments?.find(
+                (t: Tournament) => t.id === p.tournament_id
+              )
           ).length || 0,
         orphanedGames:
           data.games?.filter(
-            (g: any) =>
-              !data.tournaments?.find((t: any) => t.id === g.tournament_id)
+            (g: Game) =>
+              !data.tournaments?.find(
+                (t: Tournament) => t.id === g.tournament_id
+              )
           ).length || 0,
       },
       constraints: {
@@ -403,12 +486,14 @@ const MockDataConsistencyChecker = ({ data }: { data: any }) => {
     setChecking(false);
   };
 
-  const checkUniqueConstraints = (data: any) => {
-    const violations = [];
+  const checkUniqueConstraints = (data: DatabaseData): string[] => {
+    const violations: string[] = [];
 
     // Check unique email addresses
     if (data.players) {
-      const emails = data.players.map((p: any) => p.email).filter(Boolean);
+      const emails = data.players
+        .map((p: Player) => p.email)
+        .filter((email): email is string => Boolean(email));
       const duplicateEmails = emails.filter(
         (email: string, index: number) => emails.indexOf(email) !== index
       );
@@ -421,7 +506,7 @@ const MockDataConsistencyChecker = ({ data }: { data: any }) => {
 
     // Check unique tournament names
     if (data.tournaments) {
-      const names = data.tournaments.map((t: any) => t.name);
+      const names = data.tournaments.map((t: Tournament) => t.name);
       const duplicateNames = names.filter(
         (name: string, index: number) => names.indexOf(name) !== index
       );
@@ -435,13 +520,16 @@ const MockDataConsistencyChecker = ({ data }: { data: any }) => {
     return violations;
   };
 
-  const checkCheckConstraints = (data: any) => {
-    const violations = [];
+  const checkCheckConstraints = (data: DatabaseData): string[] => {
+    const violations: string[] = [];
 
     // Check player rating constraints
     if (data.players) {
-      data.players.forEach((player: any) => {
-        if (player.rating < 0 || player.rating > 3500) {
+      data.players.forEach((player: Player) => {
+        if (
+          player.rating !== undefined &&
+          (player.rating < 0 || player.rating > 3500)
+        ) {
           violations.push(
             `Player ${player.name} has invalid rating: ${player.rating}`
           );
@@ -451,13 +539,16 @@ const MockDataConsistencyChecker = ({ data }: { data: any }) => {
 
     // Check tournament constraints
     if (data.tournaments) {
-      data.tournaments.forEach((tournament: any) => {
-        if (tournament.max_players <= 0) {
+      data.tournaments.forEach((tournament: Tournament) => {
+        if (
+          tournament.max_players !== undefined &&
+          tournament.max_players <= 0
+        ) {
           violations.push(
             `Tournament ${tournament.name} has invalid max_players: ${tournament.max_players}`
           );
         }
-        if (tournament.max_rounds <= 0) {
+        if (tournament.max_rounds !== undefined && tournament.max_rounds <= 0) {
           violations.push(
             `Tournament ${tournament.name} has invalid max_rounds: ${tournament.max_rounds}`
           );
@@ -571,10 +662,10 @@ const MockBackupRestore = ({
   onBackupCreated,
   onRestoreCompleted,
 }: {
-  onBackupCreated?: (backup: any) => void;
+  onBackupCreated?: (backup: BackupData) => void;
   onRestoreCompleted?: (success: boolean) => void;
 }) => {
-  const [backups, setBackups] = React.useState<any[]>([]);
+  const [backups, setBackups] = React.useState<BackupData[]>([]);
   const [operation, setOperation] = React.useState<
     'idle' | 'backing-up' | 'restoring'
   >('idle');
@@ -680,12 +771,12 @@ describe('Database Migration and Data Integrity Tests', () => {
     // Reset mock database state
     DatabaseTestUtils.mockDatabase.currentSchema = 1;
     DatabaseTestUtils.mockDatabase.data = {
-      tournaments: [],
-      players: [],
-      games: [],
-      teams: [],
-      pairings: [],
-    };
+      tournaments: [] as Tournament[],
+      players: [] as Player[],
+      games: [] as Game[],
+      teams: [] as Team[],
+      pairings: [] as Pairing[],
+    } as DatabaseData;
   });
 
   describe('Schema Migration Tests', () => {
@@ -1023,8 +1114,10 @@ describe('Database Migration and Data Integrity Tests', () => {
               },
             ]);
             setResult('Transaction completed');
-          } catch (error: any) {
-            setResult(`Transaction failed: ${error.message}`);
+          } catch (error: unknown) {
+            setResult(
+              `Transaction failed: ${error instanceof Error ? error.message : String(error)}`
+            );
           }
         };
 
@@ -1073,8 +1166,10 @@ describe('Database Migration and Data Integrity Tests', () => {
                   : `Transaction ${index + 1}: Failed`
               )
             );
-          } catch (error: any) {
-            setResults([`Error: ${error.message}`]);
+          } catch (error: unknown) {
+            setResults([
+              `Error: ${error instanceof Error ? error.message : String(error)}`,
+            ]);
           }
         };
 

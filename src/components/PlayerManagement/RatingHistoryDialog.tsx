@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -69,7 +69,7 @@ const ratingSchema = yup.object({
     .min(0, 'Rating must be positive')
     .max(4000, 'Rating must be realistic'),
   is_provisional: yup.boolean(),
-  effective_date: yup.mixed().required('Date is required'),
+  effective_date: yup.mixed<dayjs.Dayjs>().required('Date is required'),
 });
 
 type RatingFormData = yup.InferType<typeof ratingSchema>;
@@ -145,7 +145,9 @@ function RatingHistoryDialog({
         is_provisional: data.is_provisional || false,
         effective_date: dayjs.isDayjs(data.effective_date)
           ? data.effective_date.format('YYYY-MM-DD')
-          : dayjs(data.effective_date as string | Date).format('YYYY-MM-DD'),
+          : data.effective_date
+            ? dayjs(data.effective_date).format('YYYY-MM-DD')
+            : dayjs().format('YYYY-MM-DD'),
       };
 
       await commands.addPlayerRatingHistory(ratingData);

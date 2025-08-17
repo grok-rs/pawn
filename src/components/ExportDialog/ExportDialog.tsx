@@ -19,6 +19,24 @@ import {
 import { commands } from '@dto/bindings';
 import type { ExportRequest, ExportFormat, ExportType } from '@dto/bindings';
 
+// Type guard functions for safe type checking
+const isExportFormat = (value: string): value is ExportFormat => {
+  return ['Html', 'Pdf', 'Xlsx', 'Csv', 'Json', 'Txt'].includes(value);
+};
+
+const isExportType = (value: string): value is ExportType => {
+  return [
+    'Standings',
+    'CrossTable',
+    'PairingSheets',
+    'PlayerList',
+    'Results',
+    'GameResults',
+    'TournamentSummary',
+    'Complete',
+  ].includes(value);
+};
+
 interface ExportDialogProps {
   open: boolean;
   onClose: () => void;
@@ -96,7 +114,12 @@ export default function ExportDialog({
               <InputLabel>Export Format</InputLabel>
               <Select
                 value={exportFormat}
-                onChange={e => setExportFormat(e.target.value as ExportFormat)}
+                onChange={e => {
+                  const value = e.target.value;
+                  if (isExportFormat(value)) {
+                    setExportFormat(value);
+                  }
+                }}
                 label="Export Format"
               >
                 <MenuItem value="Html">HTML</MenuItem>
@@ -112,7 +135,12 @@ export default function ExportDialog({
               <InputLabel>Export Type</InputLabel>
               <Select
                 value={exportType}
-                onChange={e => setExportType(e.target.value as ExportType)}
+                onChange={e => {
+                  const value = e.target.value;
+                  if (isExportType(value)) {
+                    setExportType(value);
+                  }
+                }}
                 label="Export Type"
               >
                 <MenuItem value="Standings">Standings</MenuItem>

@@ -5,15 +5,36 @@ import { useTranslation } from 'react-i18next';
 import { vi } from 'vitest';
 import TimeInputWithUnits from '../TimeInputWithUnits';
 
-// Mock react-i18next
-const mockT = vi.fn((key: string) => key);
+// Create a mock translation function that satisfies TFunction requirements
+const createMockT = () => {
+  const mockFn = vi.fn((key: string) => key);
+
+  // Add the required $TFunctionBrand property
+  Object.defineProperty(mockFn, '$TFunctionBrand', {
+    value: undefined,
+    enumerable: false,
+    configurable: false,
+    writable: false,
+  });
+
+  return mockFn;
+};
+
+let mockT = createMockT();
+
 vi.mock('react-i18next', () => ({
   useTranslation: vi.fn(),
 }));
 
 // Mock the styled component
 vi.mock('../styled', () => ({
-  StyledTextField: ({ children, ...props }: any) => (
+  StyledTextField: ({
+    children,
+    ...props
+  }: {
+    children?: React.ReactNode;
+    [key: string]: unknown;
+  }) => (
     <div data-testid="styled-textfield" {...props}>
       {children}
     </div>
@@ -21,7 +42,7 @@ vi.mock('../styled', () => ({
 }));
 
 // Mock CustomFormHelperText
-vi.mock('../FormHelperText/FormHelperText', () => ({
+vi.mock('../../FormHelperText/FormHelperText', () => ({
   default: ({ errorMessage }: { errorMessage?: string }) =>
     errorMessage ? <span data-testid="helper-text">{errorMessage}</span> : null,
 }));
@@ -32,7 +53,7 @@ const TestWrapper = ({
   defaultValues = {},
 }: {
   children: React.ReactNode;
-  defaultValues?: Record<string, any>;
+  defaultValues?: Record<string, unknown>;
 }) => {
   const methods = useForm({
     defaultValues: {
@@ -62,18 +83,64 @@ describe('TimeInputWithUnits', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useTranslation).mockReturnValue({
+
+    // Reset the mock function with translations
+    const translations: Record<string, string> = {
+      'time.duration': 'Duration',
+      'time.minutes': 'Minutes',
+      'time.hours': 'Hours',
+      'time.days': 'Days',
+    };
+
+    mockT = createMockT();
+    mockT.mockImplementation((key: string) => translations[key] || key);
+
+    // Create a minimal mock i18n object that satisfies the required properties
+    const mockI18n = {
+      language: 'en',
+      languages: ['en'],
+      changeLanguage: vi.fn().mockResolvedValue(undefined),
+      // Add minimal required i18n properties
       t: mockT,
-    } as any);
-    mockT.mockImplementation((key: string) => {
-      const translations: Record<string, string> = {
-        'time.duration': 'Duration',
-        'time.minutes': 'Minutes',
-        'time.hours': 'Hours',
-        'time.days': 'Days',
-      };
-      return translations[key] || key;
-    });
+      init: vi.fn().mockResolvedValue(undefined),
+      loadResources: vi.fn().mockResolvedValue(undefined),
+      use: vi.fn(),
+      on: vi.fn(),
+      off: vi.fn(),
+      emit: vi.fn(),
+      store: {},
+      services: {},
+      isLanguageChangingTo: vi.fn(),
+      getFixedT: vi.fn(),
+      hasResourceBundle: vi.fn(),
+      getResourceBundle: vi.fn(),
+      getResource: vi.fn(),
+      addResource: vi.fn(),
+      addResources: vi.fn(),
+      addResourceBundle: vi.fn(),
+      removeResourceBundle: vi.fn(),
+      loadLanguages: vi.fn(),
+      loadNamespaces: vi.fn(),
+      reloadResources: vi.fn(),
+      setDefaultNamespace: vi.fn(),
+      dir: vi.fn(),
+      format: vi.fn(),
+      createInstance: vi.fn(),
+      cloneInstance: vi.fn(),
+      exists: vi.fn(),
+      getDataByLanguage: vi.fn(),
+    };
+
+    // Use a type assertion with a comment explaining why this is safe
+    // The component only uses 't', so the mock doesn't need to be complete
+    const mockReturnValue = {
+      t: mockT,
+      i18n: mockI18n,
+      ready: true,
+    };
+
+    // @ts-expect-error - Test mock doesn't need complete type implementation
+    vi.mocked(useTranslation).mockReturnValue(mockReturnValue);
   });
 
   describe('Basic Rendering', () => {

@@ -83,7 +83,8 @@ export default [
         'error',
         { argsIgnorePattern: '^_' },
       ],
-      '@typescript-eslint/no-explicit-any': 'off', // Allow any in tests
+      '@typescript-eslint/no-explicit-any': 'error', // Forbid any types
+      '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'as' }], // Allow type assertions with 'as' syntax in tests
       'no-console': 'off', // Allow console in tests
       'no-undef': 'off', // TypeScript handles this
     },
@@ -133,7 +134,8 @@ export default [
       ],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }], // Forbid type assertions
 
       // General rules
       'prefer-const': 'error',

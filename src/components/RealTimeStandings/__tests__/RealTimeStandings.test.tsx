@@ -421,7 +421,7 @@ describe('RealTimeStandings', () => {
         testError
       );
 
-      consoleSpy.mkRestore();
+      consoleSpy.mockRestore();
     });
   });
 

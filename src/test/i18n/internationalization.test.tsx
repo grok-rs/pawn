@@ -3,6 +3,45 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 
+// Type definitions for translations
+type TranslationParams = Record<string, string | number>;
+type TranslationFunction = (key: string, params?: TranslationParams) => string;
+type TranslationValue = string;
+type TranslationObject = Record<string, TranslationValue>;
+
+// Utility function to safely get translations
+const getTranslations = (lang: string): TranslationObject => {
+  const supportedLanguages = Object.keys(translationResources);
+  const langKey = supportedLanguages.includes(lang) ? lang : 'en';
+
+  if (langKey === 'en') {
+    return translationResources.en.translation;
+  }
+  if (langKey === 'es') {
+    return translationResources.es.translation;
+  }
+  if (langKey === 'fr') {
+    return translationResources.fr.translation;
+  }
+  if (langKey === 'de') {
+    return translationResources.de.translation;
+  }
+  if (langKey === 'it') {
+    return translationResources.it.translation;
+  }
+  if (langKey === 'pt') {
+    return translationResources.pt.translation;
+  }
+  if (langKey === 'ja') {
+    return translationResources.ja.translation;
+  }
+  if (langKey === 'ar') {
+    return translationResources.ar.translation;
+  }
+
+  return translationResources.en.translation;
+};
+
 // Mock translation resources
 const translationResources = {
   en: {
@@ -274,10 +313,213 @@ const translationResources = {
       'tournament.timeControl': 'Contrôle du Temps',
       'tournament.created': 'Tournoi créé avec succès',
       'tournament.deleted': 'Tournoi supprimé',
+      'tournament.round': 'Ronde {{number}}',
+      'tournament.standings': 'Classement après {{rounds}} rondes',
+
+      // Player management
+      'player.name': 'Nom du Joueur',
+      'player.rating': 'Classement',
+      'player.email': 'Courriel',
+      'player.phone': 'Téléphone',
+      'player.country': 'Pays',
+      'player.title': 'Titre',
+      'player.birthDate': 'Date de Naissance',
+      'player.added': 'Joueur ajouté avec succès',
+      'player.updated': 'Joueur mis à jour',
+
+      // Validation messages
+      'validation.required': 'Ce champ est obligatoire',
+      'validation.email': 'Veuillez entrer une adresse courriel valide',
+      'validation.minLength': 'La longueur minimale est {{min}} caractères',
+      'validation.maxLength': 'La longueur maximale est {{max}} caractères',
+      'validation.numeric': 'Ce champ doit être un nombre',
+      'validation.ratingRange':
+        'Le classement doit être entre {{min}} et {{max}}',
+
+      // Date and time
+      'dateTime.today': "Aujourd'hui",
+      'dateTime.yesterday': 'Hier',
+      'dateTime.daysAgo': 'Il y a {{days}} jours',
+      'dateTime.hoursAgo': 'Il y a {{hours}} heures',
+      'dateTime.minutesAgo': 'Il y a {{minutes}} minutes',
 
       // Numbers and pluralization
       'player.count': '{{count}} joueur',
       'player.count_other': '{{count}} joueurs',
+
+      // Chess-specific terms
+      'chess.whiteWins': 'Blancs Gagnent',
+      'chess.blackWins': 'Noirs Gagnent',
+      'chess.draw': 'Nulle',
+      'chess.bye': 'Exemption',
+      'chess.forfeit': 'Forfait',
+      'chess.timeout': 'Temps Écoulé',
+
+      // Status messages
+      'status.draft': 'Brouillon',
+      'status.active': 'Actif',
+      'status.paused': 'En Pause',
+      'status.completed': 'Terminé',
+      'status.cancelled': 'Annulé',
+    },
+  },
+  it: {
+    translation: {
+      // Navigation
+      'nav.tournaments': 'Tornei',
+      'nav.players': 'Giocatori',
+      'nav.settings': 'Impostazioni',
+      'nav.newTournament': 'Nuovo Torneo',
+
+      // Common actions
+      'common.save': 'Salva',
+      'common.cancel': 'Annulla',
+      'common.delete': 'Elimina',
+      'common.edit': 'Modifica',
+      'common.add': 'Aggiungi',
+      'common.loading': 'Caricamento...',
+      'common.error': 'Errore',
+      'common.success': 'Successo',
+      'common.yes': 'Sì',
+      'common.no': 'No',
+
+      // Tournament management
+      'tournament.name': 'Nome del Torneo',
+      'tournament.description': 'Descrizione',
+      'tournament.maxPlayers': 'Massimo Giocatori',
+      'tournament.maxRounds': 'Massimo Turni',
+      'tournament.status': 'Stato',
+      'tournament.pairingMethod': 'Metodo di Accoppiamento',
+      'tournament.timeControl': 'Controllo del Tempo',
+      'tournament.created': 'Torneo creato con successo',
+      'tournament.deleted': 'Torneo eliminato',
+      'tournament.round': 'Turno {{number}}',
+      'tournament.standings': 'Classifica dopo {{rounds}} turni',
+
+      // Player management
+      'player.name': 'Nome Giocatore',
+      'player.rating': 'Punteggio',
+      'player.email': 'Email',
+      'player.phone': 'Telefono',
+      'player.country': 'Paese',
+      'player.title': 'Titolo',
+      'player.birthDate': 'Data di Nascita',
+      'player.added': 'Giocatore aggiunto con successo',
+      'player.updated': 'Giocatore aggiornato',
+
+      // Validation messages
+      'validation.required': 'Questo campo è obbligatorio',
+      'validation.email': 'Inserisci un indirizzo email valido',
+      'validation.minLength': 'La lunghezza minima è {{min}} caratteri',
+      'validation.maxLength': 'La lunghezza massima è {{max}} caratteri',
+      'validation.numeric': 'Questo campo deve essere un numero',
+      'validation.ratingRange':
+        'Il punteggio deve essere tra {{min}} e {{max}}',
+
+      // Date and time
+      'dateTime.today': 'Oggi',
+      'dateTime.yesterday': 'Ieri',
+      'dateTime.daysAgo': '{{days}} giorni fa',
+      'dateTime.hoursAgo': '{{hours}} ore fa',
+      'dateTime.minutesAgo': '{{minutes}} minuti fa',
+
+      // Numbers and pluralization
+      'player.count': '{{count}} giocatore',
+      'player.count_other': '{{count}} giocatori',
+
+      // Chess-specific terms
+      'chess.whiteWins': 'Bianco Vince',
+      'chess.blackWins': 'Nero Vince',
+      'chess.draw': 'Patta',
+      'chess.bye': 'Riposo',
+      'chess.forfeit': 'Abbandono',
+      'chess.timeout': 'Tempo Scaduto',
+
+      // Status messages
+      'status.draft': 'Bozza',
+      'status.active': 'Attivo',
+      'status.paused': 'In Pausa',
+      'status.completed': 'Completato',
+      'status.cancelled': 'Annullato',
+    },
+  },
+  pt: {
+    translation: {
+      // Navigation
+      'nav.tournaments': 'Torneios',
+      'nav.players': 'Jogadores',
+      'nav.settings': 'Configurações',
+      'nav.newTournament': 'Novo Torneio',
+
+      // Common actions
+      'common.save': 'Salvar',
+      'common.cancel': 'Cancelar',
+      'common.delete': 'Excluir',
+      'common.edit': 'Editar',
+      'common.add': 'Adicionar',
+      'common.loading': 'Carregando...',
+      'common.error': 'Erro',
+      'common.success': 'Sucesso',
+      'common.yes': 'Sim',
+      'common.no': 'Não',
+
+      // Tournament management
+      'tournament.name': 'Nome do Torneio',
+      'tournament.description': 'Descrição',
+      'tournament.maxPlayers': 'Máximo de Jogadores',
+      'tournament.maxRounds': 'Máximo de Rodadas',
+      'tournament.status': 'Status',
+      'tournament.pairingMethod': 'Método de Emparelhamento',
+      'tournament.timeControl': 'Controle de Tempo',
+      'tournament.created': 'Torneio criado com sucesso',
+      'tournament.deleted': 'Torneio excluído',
+      'tournament.round': 'Rodada {{number}}',
+      'tournament.standings': 'Classificação após {{rounds}} rodadas',
+
+      // Player management
+      'player.name': 'Nome do Jogador',
+      'player.rating': 'Rating',
+      'player.email': 'Email',
+      'player.phone': 'Telefone',
+      'player.country': 'País',
+      'player.title': 'Título',
+      'player.birthDate': 'Data de Nascimento',
+      'player.added': 'Jogador adicionado com sucesso',
+      'player.updated': 'Jogador atualizado',
+
+      // Validation messages
+      'validation.required': 'Este campo é obrigatório',
+      'validation.email': 'Por favor, insira um endereço de email válido',
+      'validation.minLength': 'O comprimento mínimo é {{min}} caracteres',
+      'validation.maxLength': 'O comprimento máximo é {{max}} caracteres',
+      'validation.numeric': 'Este campo deve ser um número',
+      'validation.ratingRange': 'O rating deve estar entre {{min}} e {{max}}',
+
+      // Date and time
+      'dateTime.today': 'Hoje',
+      'dateTime.yesterday': 'Ontem',
+      'dateTime.daysAgo': '{{days}} dias atrás',
+      'dateTime.hoursAgo': '{{hours}} horas atrás',
+      'dateTime.minutesAgo': '{{minutes}} minutos atrás',
+
+      // Numbers and pluralization
+      'player.count': '{{count}} jogador',
+      'player.count_other': '{{count}} jogadores',
+
+      // Chess-specific terms
+      'chess.whiteWins': 'Brancas Vencem',
+      'chess.blackWins': 'Pretas Vencem',
+      'chess.draw': 'Empate',
+      'chess.bye': 'Folga',
+      'chess.forfeit': 'Abandono',
+      'chess.timeout': 'Tempo Esgotado',
+
+      // Status messages
+      'status.draft': 'Rascunho',
+      'status.active': 'Ativo',
+      'status.paused': 'Pausado',
+      'status.completed': 'Concluído',
+      'status.cancelled': 'Cancelado',
     },
   },
   ja: {
@@ -358,7 +600,11 @@ const translationResources = {
 };
 
 // Mock form with translations
-const MockI18nForm = ({ onSubmit }: { onSubmit: (data: any) => void }) => {
+const MockI18nForm = ({
+  onSubmit,
+}: {
+  onSubmit: (data: Record<string, string>) => void;
+}) => {
   const [formData, setFormData] = React.useState({
     name: '',
     email: '',
@@ -367,16 +613,17 @@ const MockI18nForm = ({ onSubmit }: { onSubmit: (data: any) => void }) => {
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
   // Mock translation function (would be useTranslation hook)
-  const t = (key: string, params?: any) => {
+  const t: TranslationFunction = (key: string, params?: TranslationParams) => {
     const lang = document.documentElement.lang || 'en';
-    const translations =
-      translationResources[lang as keyof typeof translationResources]
-        ?.translation || translationResources.en.translation;
-    let translation = (translations as any)[key] || key;
+    const translationMap = getTranslations(lang);
+    let translation = translationMap[key] || key;
 
     if (params) {
       Object.keys(params).forEach(param => {
-        translation = translation.replace(`{{${param}}}`, params[param]);
+        translation = translation.replace(
+          `{{${param}}}`,
+          String(params[param])
+        );
       });
     }
 
@@ -478,18 +725,16 @@ const MockI18nForm = ({ onSubmit }: { onSubmit: (data: any) => void }) => {
 
 // Mock component with pluralization
 const MockPlayerCounter = ({ count }: { count: number }) => {
-  const t = (key: string, options?: any) => {
+  const t = (key: string, options?: TranslationParams) => {
     const lang = document.documentElement.lang || 'en';
-    const translations =
-      translationResources[lang as keyof typeof translationResources]
-        ?.translation || translationResources.en.translation;
+    const translationMap = getTranslations(lang);
 
     // Simple pluralization logic
-    let translation = (translations as any)[key] || key;
+    let translation = translationMap[key] || key;
     if (options?.count !== undefined) {
       const pluralKey = options.count === 1 ? key : `${key}_other`;
-      translation = (translations as any)[pluralKey] || translation;
-      translation = translation.replace('{{count}}', options.count);
+      translation = translationMap[pluralKey] || translation;
+      translation = translation.replace('{{count}}', String(options.count));
     }
 
     return translation;
@@ -500,16 +745,17 @@ const MockPlayerCounter = ({ count }: { count: number }) => {
 
 // Mock date/time component
 const MockRelativeTime = ({ date }: { date: Date }) => {
-  const t = (key: string, params?: any) => {
+  const t: TranslationFunction = (key: string, params?: TranslationParams) => {
     const lang = document.documentElement.lang || 'en';
-    const translations =
-      translationResources[lang as keyof typeof translationResources]
-        ?.translation || translationResources.en.translation;
-    let translation = (translations as any)[key] || key;
+    const translationMap = getTranslations(lang);
+    let translation = translationMap[key] || key;
 
     if (params) {
       Object.keys(params).forEach(param => {
-        translation = translation.replace(`{{${param}}}`, params[param]);
+        translation = translation.replace(
+          `{{${param}}}`,
+          String(params[param])
+        );
       });
     }
 
@@ -940,9 +1186,9 @@ describe('Internationalization (i18n) Testing', () => {
       // Simulate loading a large translation object
       const startTime = performance.now();
 
-      const largeTranslations = {};
+      const largeTranslations: Record<string, string> = {};
       for (let i = 0; i < 1000; i++) {
-        (largeTranslations as any)[`key_${i}`] = `Translation ${i}`;
+        largeTranslations[`key_${i}`] = `Translation ${i}`;
       }
 
       const endTime = performance.now();
@@ -957,10 +1203,8 @@ describe('Internationalization (i18n) Testing', () => {
       const MalformedTranslationComponent = () => {
         const malformedKey = 'non.existent.key';
         const lang = document.documentElement.lang || 'en';
-        const translations =
-          translationResources[lang as keyof typeof translationResources]
-            ?.translation || translationResources.en.translation;
-        const translation = (translations as any)[malformedKey] || malformedKey;
+        const translationMap = getTranslations(lang);
+        const translation = translationMap[malformedKey] || malformedKey;
 
         return <div data-testid="malformed-translation">{translation}</div>;
       };

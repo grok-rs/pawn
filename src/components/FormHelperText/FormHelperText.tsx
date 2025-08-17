@@ -9,9 +9,19 @@ const CustomFormHelperText = ({ errorMessage }: CustomFormHelperTextProps) => {
   const message =
     typeof errorMessage === 'string'
       ? errorMessage
-      : (errorMessage as FieldError)?.message;
+      : errorMessage &&
+          typeof errorMessage === 'object' &&
+          'message' in errorMessage
+        ? errorMessage.message
+        : undefined;
 
-  return message ? <FormHelperText error>{message}</FormHelperText> : null;
+  // Ensure message is a valid React child (string) before rendering
+  const displayMessage =
+    typeof message === 'string' && message.trim() !== '' ? message : null;
+
+  return displayMessage ? (
+    <FormHelperText error>{displayMessage}</FormHelperText>
+  ) : null;
 };
 
 export default CustomFormHelperText;

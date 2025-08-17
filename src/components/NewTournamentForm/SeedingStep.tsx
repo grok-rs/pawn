@@ -317,12 +317,9 @@ const SeedingStep = () => {
                 {seedingAnalysis.seeding_conflicts.map((conflict, index) => (
                   <Alert
                     key={index}
-                    severity={
-                      getSeedingConflictSeverity(conflict.conflict_type) as
-                        | 'error'
-                        | 'warning'
-                        | 'info'
-                    }
+                    severity={getSeedingConflictSeverity(
+                      conflict.conflict_type
+                    )}
                     sx={{ mb: 1 }}
                   >
                     <Typography variant="body2">

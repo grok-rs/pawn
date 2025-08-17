@@ -89,7 +89,6 @@ const createMockCategory = (
   max_age: null,
   gender_restriction: null,
   created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
   ...overrides,
 });
 
@@ -149,7 +148,7 @@ describe('PlayerCategoryManagement', () => {
     mockCommands.createPlayerCategory.mockResolvedValue(createMockCategory(4));
     mockCommands.deletePlayerCategory.mockResolvedValue(true);
     mockCommands.assignPlayerToCategory.mockResolvedValue(true);
-    (window.confirm as ReturnType<typeof vi.fn>).mockReturnValue(true);
+    vi.mocked(window.confirm).mockReturnValue(true);
   });
 
   describe('Initial Rendering', () => {
@@ -525,7 +524,7 @@ describe('PlayerCategoryManagement', () => {
     });
 
     test('cancels deletion when user declines confirmation', async () => {
-      (window.confirm as ReturnType<typeof vi.fn>).mockReturnValue(false);
+      vi.mocked(window.confirm).mockReturnValue(false);
 
       const user = userEvent.setup();
       render(<PlayerCategoryManagement {...defaultProps} />);

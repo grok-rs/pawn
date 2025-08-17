@@ -1,11 +1,11 @@
 import { yupResolver } from '@hookform/resolvers/yup';
-import { ReactNode, useCallback, useState } from 'react';
+import { ReactNode, useCallback, useState, useMemo } from 'react';
 import {
   DefaultValues,
   FieldValues,
   FormProvider,
-  Resolver,
   useForm,
+  UseFormProps,
 } from 'react-hook-form';
 
 import FormStepperContent from './FormStepperContent';
@@ -16,23 +16,26 @@ import FormStepperStepIndicator from './FormStepperStepIndicator';
 import StyledForm from './styled';
 import { FormStepOption } from './types';
 
-type Props<T extends FieldValues> = {
-  steps: FormStepOption<T>[];
-  defaultValues?: DefaultValues<T>;
+type Props = {
+  steps: FormStepOption<FieldValues>[];
+  defaultValues?: DefaultValues<FieldValues>;
   isSubmitting?: boolean;
   onCancel?: () => void;
-  onLastStep: (data: T) => Promise<void>;
+  onLastStep: (data: FieldValues) => Promise<void>;
   children?: ReactNode;
 };
 
-const FormStepperComponent = <T extends FieldValues>({
+// Helper type to ensure proper typing throughout
+type FormData = FieldValues;
+
+const FormStepperComponent = ({
   steps,
   defaultValues,
   onLastStep,
   isSubmitting,
   onCancel,
   children,
-}: Props<T>) => {
+}: Props) => {
   const [activeStep, setActiveStep] = useState<number>(0);
   const [isSubmitButtonDisabled, setIsSubmitButtonDisabled] =
     useState<boolean>(false);
@@ -42,19 +45,32 @@ const FormStepperComponent = <T extends FieldValues>({
 
   const activeSchema = steps[activeStep].schema;
 
-  const resolver = activeSchema
-    ? (yupResolver(activeSchema) as unknown as Resolver<T>)
-    : undefined;
+  // Create form options using useMemo to avoid recreating on each render
+  const formOptions = useMemo<UseFormProps<FormData>>(() => {
+    const baseOptions: UseFormProps<FormData> = {
+      defaultValues: defaultValues || {},
+    };
 
-  const methods = useForm<T>({
-    defaultValues,
-    resolver,
-  });
+    if (activeSchema) {
+      // When schema exists, add the resolver
+      // yupResolver returns a resolver for FieldValues which is compatible
+      return {
+        ...baseOptions,
+        resolver: yupResolver(activeSchema),
+      };
+    }
+
+    return baseOptions;
+  }, [defaultValues, activeSchema]);
+
+  // Use the form with the computed options
+  // This avoids conditional hook calls and type conflicts
+  const methods = useForm<FormData>(formOptions);
 
   const { clearErrors: clearFormErrors } = methods;
 
   const onSubmit = useCallback(
-    async (data: T) => {
+    async (data: FormData) => {
       if (isLastStep) {
         await onLastStep(data);
       } else {

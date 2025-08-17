@@ -1,16 +1,25 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import { createMockTournament, createMockPlayer } from '../utils/test-utils';
+import { describe, test, expect } from 'vitest';
 
 // Mock components for visual testing - import actual components as needed
 // These would normally import the real components from your app
+interface MockButtonProps {
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'success' | 'danger';
+  size?: 'small' | 'medium' | 'large';
+  disabled?: boolean;
+  [key: string]: unknown;
+}
+
 const MockButton = ({
   children,
   variant = 'primary',
   size = 'medium',
   disabled = false,
   ...props
-}: any) => (
+}: MockButtonProps): JSX.Element => (
   <button
     className={`btn btn-${variant} btn-${size} ${disabled ? 'btn-disabled' : ''}`}
     disabled={disabled}
@@ -20,6 +29,15 @@ const MockButton = ({
   </button>
 );
 
+interface MockStatCardProps {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  trend?: number;
+  color?: 'primary' | 'success' | 'warning';
+  [key: string]: unknown;
+}
+
 const MockStatCard = ({
   title,
   value,
@@ -27,7 +45,7 @@ const MockStatCard = ({
   trend,
   color = 'primary',
   ...props
-}: any) => (
+}: MockStatCardProps): JSX.Element => (
   <div className={`stat-card stat-card-${color}`} {...props}>
     <div className="stat-card-header">
       <h3 className="stat-card-title">{title}</h3>
@@ -44,13 +62,21 @@ const MockStatCard = ({
   </div>
 );
 
+interface MockEmptyStateProps {
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+  icon?: string;
+  [key: string]: unknown;
+}
+
 const MockEmptyState = ({
   title,
   description,
   action,
   icon,
   ...props
-}: any) => (
+}: MockEmptyStateProps): JSX.Element => (
   <div className="empty-state" {...props}>
     {icon && <div className="empty-state-icon">{icon}</div>}
     <h3 className="empty-state-title">{title}</h3>
@@ -59,7 +85,17 @@ const MockEmptyState = ({
   </div>
 );
 
-const MockLoadingButton = ({ loading = false, children, ...props }: any) => (
+interface MockLoadingButtonProps {
+  loading?: boolean;
+  children: React.ReactNode;
+  [key: string]: unknown;
+}
+
+const MockLoadingButton = ({
+  loading = false,
+  children,
+  ...props
+}: MockLoadingButtonProps): JSX.Element => (
   <button
     className={`loading-btn ${loading ? 'loading' : ''}`}
     disabled={loading}
@@ -75,7 +111,7 @@ const MockLoadingButton = ({ loading = false, children, ...props }: any) => (
 const createResponsiveVisualTest = (
   name: string,
   component: React.ReactElement
-) => {
+): void => {
   const breakpoints = [
     { name: 'mobile', width: 375 },
     { name: 'tablet', width: 768 },
@@ -107,7 +143,7 @@ const createResponsiveVisualTest = (
 const createStateVisualTest = (
   name: string,
   componentStates: Array<{ stateName: string; component: React.ReactElement }>
-) => {
+): void => {
   componentStates.forEach(({ stateName, component }) => {
     test(`${name} - ${stateName} state visual snapshot`, () => {
       const { container } = render(component);
@@ -263,7 +299,34 @@ describe('Visual Regression Tests - Component Snapshots', () => {
         countryCode: 'US',
       });
 
-      const PlayerCard = ({ player }: { player: any }) => (
+      interface MockPlayerType {
+        id: number;
+        name: string;
+        rating: number;
+        title?: string;
+        countryCode: string;
+        email: string;
+        phone: string;
+        birthDate: string;
+        gender: string;
+        fideId: string | null;
+        address: string;
+        city: string;
+        state: string;
+        zipCode: string;
+        emergencyContact: string;
+        emergencyPhone: string;
+        medicalInfo: string;
+        notes: string;
+        isActive: boolean;
+        pairingNumber: number;
+      }
+
+      const PlayerCard = ({
+        player,
+      }: {
+        player: MockPlayerType;
+      }): JSX.Element => (
         <div className="player-card">
           <div className="player-card-header">
             <div className="player-name">
@@ -294,7 +357,31 @@ describe('Visual Regression Tests - Component Snapshots', () => {
         maxRounds: 7,
       });
 
-      const TournamentCard = ({ tournament }: { tournament: any }) => (
+      interface MockTournamentType {
+        id: number;
+        name: string;
+        description: string;
+        status: string;
+        playerCount: number;
+        maxPlayers: number;
+        rounds: number;
+        maxRounds: number;
+        pairingMethod: string;
+        timeControl: {
+          mainTime: number;
+          increment: number;
+          type: string;
+        };
+        tiebreaks: string[];
+        createdAt: string;
+        updatedAt: string;
+      }
+
+      const TournamentCard = ({
+        tournament,
+      }: {
+        tournament: MockTournamentType;
+      }): JSX.Element => (
         <div className="tournament-card">
           <div className="tournament-card-header">
             <h3 className="tournament-name">{tournament.name}</h3>
@@ -334,7 +421,7 @@ describe('Visual Regression Tests - Component Snapshots', () => {
 
   describe('Form Components', () => {
     test('Tournament form - visual snapshot', () => {
-      const TournamentForm = () => (
+      const TournamentForm = (): JSX.Element => (
         <form className="tournament-form">
           <div className="form-section">
             <h3>Basic Information</h3>
@@ -390,7 +477,7 @@ describe('Visual Regression Tests - Component Snapshots', () => {
     });
 
     test('Player form - visual snapshot', () => {
-      const PlayerForm = () => (
+      const PlayerForm = (): JSX.Element => (
         <form className="player-form">
           <div className="form-section">
             <h3>Personal Information</h3>
@@ -470,7 +557,7 @@ describe('Visual Regression Tests - Component Snapshots', () => {
 
   describe('Layout Components', () => {
     test('Navigation header - visual snapshot', () => {
-      const Navigation = () => (
+      const Navigation = (): JSX.Element => (
         <header className="app-header">
           <div className="nav-brand">
             <h1>♜ Pawn</h1>
@@ -519,7 +606,7 @@ describe('Visual Regression Tests - Component Snapshots', () => {
     );
 
     test('Sidebar layout - visual snapshot', () => {
-      const SidebarLayout = () => (
+      const SidebarLayout = (): JSX.Element => (
         <div className="app-layout">
           <aside className="sidebar">
             <div className="sidebar-header">
@@ -562,7 +649,7 @@ describe('Visual Regression Tests - Component Snapshots', () => {
 
   describe('Theme Variations', () => {
     test('Dark theme components - visual snapshot', () => {
-      const DarkThemeDemo = () => (
+      const DarkThemeDemo = (): JSX.Element => (
         <div className="theme-dark">
           <div className="card">
             <h3>Dark Theme Card</h3>
@@ -586,7 +673,7 @@ describe('Visual Regression Tests - Component Snapshots', () => {
     });
 
     test('High contrast theme - visual snapshot', () => {
-      const HighContrastDemo = () => (
+      const HighContrastDemo = (): JSX.Element => (
         <div className="theme-high-contrast">
           <div className="card">
             <h3>High Contrast Theme</h3>
@@ -611,7 +698,7 @@ describe('Visual Regression Tests - Component Snapshots', () => {
 
   describe('Error States', () => {
     test('Error message components - visual snapshot', () => {
-      const ErrorStates = () => (
+      const ErrorStates = (): JSX.Element => (
         <div className="error-states">
           <div className="error-banner error-banner-danger">
             <strong>Error:</strong> Failed to save tournament data.

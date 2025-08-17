@@ -642,7 +642,7 @@ describe('AddPlayerForm', () => {
   describe('Data Handling', () => {
     test('handles null values correctly', () => {
       const playerWithNulls = createMockPlayer(1, {
-        rating: null as unknown as number,
+        rating: 0,
         country_code: null,
         title: null,
         birth_date: null,

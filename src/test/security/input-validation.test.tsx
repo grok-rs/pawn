@@ -3,6 +3,17 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 
+// Type definitions
+interface PlayerFormData {
+  name: string;
+  email: string;
+  phone: string;
+  rating: string;
+  notes: string;
+  fideId: string;
+  birthDate: string;
+}
+
 // Security test utilities
 const SecurityTestUtils = {
   // XSS attack vectors
@@ -124,7 +135,7 @@ const SecurityTestUtils = {
 const MockSecurePlayerForm = ({
   onSubmit,
 }: {
-  onSubmit: (data: any) => void;
+  onSubmit: (data: PlayerFormData) => void;
 }) => {
   const [formData, setFormData] = React.useState({
     name: '',
@@ -765,13 +776,15 @@ describe('Security Testing - Input Validation', () => {
       const user = userEvent.setup();
       render(<MockSecurePlayerForm onSubmit={vi.fn()} />);
 
-      const nameInput = screen.getByTestId('name-input') as HTMLInputElement;
+      const nameInput = screen.getByTestId('name-input');
       const longName = 'A'.repeat(200); // Longer than maxLength
 
       await user.type(nameInput, longName);
 
       // Input should be truncated at maxLength
-      expect(nameInput.value.length).toBeLessThanOrEqual(100);
+      expect((nameInput as HTMLInputElement).value.length).toBeLessThanOrEqual(
+        100
+      );
     });
   });
 
@@ -809,7 +822,9 @@ describe('Security Testing - Input Validation', () => {
       await user.type(nameInput, inputWithNulls);
 
       // Null bytes should be filtered out
-      expect(nameInput.value).not.toContain(String.fromCharCode(0));
+      expect((nameInput as HTMLInputElement).value).not.toContain(
+        String.fromCharCode(0)
+      );
     });
   });
 
@@ -1002,7 +1017,9 @@ describe('Security Testing - Input Validation', () => {
         '<script>window.xssExecuted = true;</script><p>Test content</p>';
 
       // Script should not execute
-      expect((window as any).xssExecuted).toBeUndefined();
+      expect(Object.prototype.hasOwnProperty.call(window, 'xssExecuted')).toBe(
+        false
+      );
     });
 
     test('should sanitize dynamic content', () => {

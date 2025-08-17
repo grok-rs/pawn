@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   // Paper,
@@ -38,6 +38,7 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { commands } from '@dto/bindings';
+import type { Player } from '@dto/bindings';
 
 // Types from bindings - these will be auto-generated once bindings are updated
 interface Team {
@@ -51,23 +52,6 @@ interface Team {
   contact_email?: string;
   contact_phone?: string;
   max_board_count: number;
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface Player {
-  id: number;
-  tournament_id: number;
-  name: string;
-  rating?: number;
-  title?: string;
-  country_code?: string;
-  birth_date?: string;
-  gender?: string;
-  email?: string;
-  phone?: string;
-  club?: string;
   status: string;
   created_at: string;
   updated_at: string;
@@ -164,8 +148,9 @@ function TeamManagement({ tournamentId, onTeamsChange }: TeamManagementProps) {
         setError(null);
 
         // Load players from API
-        const playersData = await commands.getPlayersByTournament(tournamentId);
-        setPlayers(playersData as Player[]);
+        const playersData: Player[] =
+          await commands.getPlayersByTournament(tournamentId);
+        setPlayers(playersData);
 
         // TODO: Load teams and memberships once bindings are regenerated
         // const teamsData = await commands.getTeamsByTournament(tournamentId);

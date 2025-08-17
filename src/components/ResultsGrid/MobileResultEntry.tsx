@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -326,9 +326,7 @@ export function MobileResultEntry({
                       ? 'contained'
                       : 'outlined'
                   }
-                  color={
-                    button.color as 'success' | 'info' | 'error' | 'warning'
-                  }
+                  color={button.color}
                   size="large"
                   onClick={() =>
                     handleResultChange(currentGame.game.id, button.value)

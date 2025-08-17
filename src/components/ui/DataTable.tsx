@@ -79,7 +79,7 @@ function DataTable<T extends Record<string, unknown>>({
           <TableHead>
             <TableRow>
               {columns.map(column => (
-                <TableCell key={column.id as string}>
+                <TableCell key={String(column.id)}>
                   <Skeleton width="60%" />
                 </TableCell>
               ))}
@@ -89,7 +89,7 @@ function DataTable<T extends Record<string, unknown>>({
             {[...Array(5)].map((_, index) => (
               <TableRow key={index}>
                 {columns.map(column => (
-                  <TableCell key={column.id as string}>
+                  <TableCell key={String(column.id)}>
                     <Skeleton />
                   </TableCell>
                 ))}
@@ -117,7 +117,7 @@ function DataTable<T extends Record<string, unknown>>({
           <TableRow>
             {visibleColumns.map(column => (
               <TableCell
-                key={column.id as string}
+                key={String(column.id)}
                 align={column.align || 'left'}
                 sx={{
                   fontWeight: 600,
@@ -161,18 +161,48 @@ function DataTable<T extends Record<string, unknown>>({
               >
                 {visibleColumns.map(column => {
                   const columnId = String(column.id);
+
+                  const getNestedValue = (
+                    obj: unknown,
+                    path: string
+                  ): unknown => {
+                    return path
+                      .split('.')
+                      .reduce((current: unknown, key: string) => {
+                        if (current === null || current === undefined)
+                          return undefined;
+                        if (
+                          typeof current === 'object' &&
+                          current !== null &&
+                          key in current
+                        ) {
+                          return Object.getOwnPropertyDescriptor(current, key)
+                            ?.value;
+                        }
+                        return undefined;
+                      }, obj);
+                  };
+
+                  const getDirectValue = (
+                    obj: T,
+                    key: string | number
+                  ): unknown => {
+                    if (typeof obj === 'object' && obj !== null && key in obj) {
+                      return Object.getOwnPropertyDescriptor(obj, key)?.value;
+                    }
+                    return undefined;
+                  };
+
                   const value = columnId.includes('.')
-                    ? columnId
-                        .split('.')
-                        .reduce((obj: unknown, key: string) => {
-                          const record = obj as Record<string, unknown> | null;
-                          return record?.[key];
-                        }, row)
-                    : row[column.id as keyof T];
+                    ? getNestedValue(row, columnId)
+                    : typeof column.id === 'string' ||
+                        typeof column.id === 'number'
+                      ? getDirectValue(row, column.id)
+                      : undefined;
 
                   return (
                     <TableCell
-                      key={column.id as string}
+                      key={String(column.id)}
                       align={column.align || 'left'}
                       sx={{
                         fontSize: { mobile: '0.875rem', tablet: '1rem' },
@@ -181,7 +211,7 @@ function DataTable<T extends Record<string, unknown>>({
                     >
                       {column.format
                         ? column.format(value, row)
-                        : (value as ReactNode)}
+                        : String(value)}
                     </TableCell>
                   );
                 })}

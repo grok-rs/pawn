@@ -56,6 +56,7 @@ function TournamentConfigurationExport({
       config: {
         // Exclude non-exportable fields like dates that should be set fresh
         type: formData.type,
+        mainReferee: formData.mainReferee,
         pairingSystem: formData.pairingSystem,
         timeControlTemplate: formData.timeControlTemplate,
         rounds: formData.rounds,
@@ -101,7 +102,7 @@ function TournamentConfigurationExport({
   const handleImport = () => {
     try {
       setImportError('');
-      const parsed = JSON.parse(importText) as TournamentConfiguration;
+      const parsed: TournamentConfiguration = JSON.parse(importText);
 
       // Validate the structure
       if (!parsed.version || !parsed.config) {
@@ -109,8 +110,31 @@ function TournamentConfigurationExport({
       }
 
       // Apply the configuration
-      if (onImport) {
-        onImport(parsed.config as TournamentFormValues);
+      if (onImport && parsed.config) {
+        // Create a safe configuration with defaults for required fields
+        const safeConfig: TournamentFormValues = {
+          name: '',
+          city: '',
+          country: '',
+          startDate: null,
+          endDate: null,
+          mainReferee: '',
+          type: '',
+          pairingSystem: 'swiss',
+          timeControlTemplate: null,
+          rounds: 9,
+          additionalTime: 0,
+          additionalTimeUnit: 'minutes',
+          forfeitTimeMinutes: 0,
+          drawOffersPolicy: '',
+          mobilePhonePolicy: '',
+          lateEntryPolicy: '',
+          organizerName: '',
+          organizerEmail: '',
+          arbiterNotes: '',
+          ...parsed.config,
+        };
+        onImport(safeConfig);
       }
 
       setImportDialogOpen(false);
@@ -129,8 +153,10 @@ function TournamentConfigurationExport({
     if (file) {
       const reader = new FileReader();
       reader.onload = e => {
-        const content = e.target?.result as string;
-        setImportText(content);
+        const content = e.target?.result;
+        if (typeof content === 'string') {
+          setImportText(content);
+        }
       };
       reader.readAsText(file);
     }

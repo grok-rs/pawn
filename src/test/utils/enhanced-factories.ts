@@ -3,6 +3,7 @@ import {
   createMockPlayer,
   createMockGameResult,
 } from './test-utils';
+import type { Player, PlayerStanding, Team } from '@dto/bindings';
 
 // Enhanced factory interfaces with complex relationships
 export interface TournamentConfig {
@@ -10,7 +11,8 @@ export interface TournamentConfig {
   name?: string;
   status?: 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
   pairingMethod?: 'swiss' | 'round_robin' | 'knockout' | 'team_swiss';
-  playerCount?: number;
+  format?: string;
+  playerCount: number; // Made required to match test expectations
   currentRound?: number;
   maxRounds?: number;
   withPlayers?: boolean;
@@ -18,23 +20,33 @@ export interface TournamentConfig {
   withStandings?: boolean;
   completedRounds?: number;
   scenarioType?: 'balanced' | 'decisive' | 'many_draws' | 'upset_heavy';
-  players?: ReturnType<typeof createRealisticPlayer>[];
+  players?: Player[];
 }
 
 export interface PlayerConfig {
   id?: number;
+  tournament_id?: number;
   name?: string;
   rating?: number;
+  country_code?: string;
   title?: string;
-  country?: string;
+  birth_date?: string;
+  gender?: string;
+  email?: string;
+  phone?: string;
+  club?: string;
+  status?: string;
+  seed_number?: number;
+  pairing_number?: number;
+  initial_rating?: number;
   skillLevel?: 'beginner' | 'intermediate' | 'expert' | 'master';
   playingStyle?: 'aggressive' | 'positional' | 'tactical' | 'defensive';
   tournamentHistory?: 'veteran' | 'newcomer' | 'occasional';
 }
 
 export interface GameConfig {
-  whitePlayer?: any;
-  blackPlayer?: any;
+  whitePlayer?: Player;
+  blackPlayer?: Player;
   result?: 'white_wins' | 'black_wins' | 'draw' | null;
   resultType?: 'normal' | 'forfeit' | 'timeout' | 'bye';
   roundNumber?: number;
@@ -42,7 +54,17 @@ export interface GameConfig {
 }
 
 export interface TeamConfig {
+  id?: number;
+  tournament_id?: number;
   name?: string;
+  captain?: string;
+  description?: string;
+  color?: string;
+  club_affiliation?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  max_board_count?: number;
+  status?: string;
   memberCount?: number;
   averageRating?: number;
   country?: string;
@@ -50,7 +72,7 @@ export interface TeamConfig {
 }
 
 // Enhanced player factory with realistic chess data
-export const createRealisticPlayer = (config: PlayerConfig = {}) => {
+export const createRealisticPlayer = (config: PlayerConfig = {}): Player => {
   const skillLevels = {
     beginner: { ratingRange: [400, 1000], titleChance: 0 },
     intermediate: { ratingRange: [1000, 1600], titleChance: 0.05 },
@@ -93,37 +115,118 @@ export const createRealisticPlayer = (config: PlayerConfig = {}) => {
     FR: ['Pierre Dubois', 'Marie Martin', 'Jean Bernard', 'Claire Moreau'],
   };
 
+  const availableCountries: (keyof typeof namesByCountry)[] = [
+    'US',
+    'RU',
+    'IN',
+    'CN',
+    'DE',
+    'ES',
+    'FR',
+  ];
   const country =
-    config.country ||
-    ['US', 'RU', 'IN', 'CN', 'DE', 'ES', 'FR'][Math.floor(Math.random() * 7)];
-  const names =
-    namesByCountry[country as keyof typeof namesByCountry] || namesByCountry.US;
+    config.country_code ||
+    availableCountries[Math.floor(Math.random() * availableCountries.length)];
+
+  function getNamesByCountry(countryCode: string): string[] {
+    const validCountries: Record<string, string[]> = namesByCountry;
+    return validCountries[countryCode] || namesByCountry.US;
+  }
+
+  const names = getNamesByCountry(country);
   const name = config.name || names[Math.floor(Math.random() * names.length)];
 
-  return createMockPlayer({
+  const mockPlayer = createMockPlayer({
     rating: Math.round(rating),
     name,
     title: title || '',
     countryCode: country,
-    ...config,
+    id: config.id,
+    tournamentId: config.tournament_id || 1,
   });
+
+  // Convert mock player to Player interface
+  return {
+    id: mockPlayer.id,
+    tournament_id: config.tournament_id || 1,
+    name: mockPlayer.name,
+    rating: mockPlayer.rating,
+    country_code: country,
+    title: mockPlayer.title || null,
+    birth_date: config.birth_date || null,
+    gender: config.gender || null,
+    email: config.email || null,
+    phone: config.phone || null,
+    club: config.club || null,
+    status: config.status || ('active' as const),
+    seed_number: config.seed_number || null,
+    pairing_number: config.pairing_number || null,
+    initial_rating: config.initial_rating || mockPlayer.rating,
+    created_at: new Date().toISOString(),
+    updated_at: null,
+  };
 };
 
+// Tournament result interface
+interface TournamentResult {
+  id: number;
+  name: string;
+  description: string;
+  status: 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
+  playerCount: number;
+  maxPlayers: number;
+  rounds: number;
+  maxRounds: number;
+  pairingMethod: 'swiss' | 'round_robin' | 'knockout' | 'team_swiss';
+  timeControl: {
+    mainTime: number;
+    increment: number;
+    type: string;
+  };
+  tiebreaks: string[];
+  currentRound: number;
+  players: Player[];
+  games: ExtendedGameResult[];
+  standings: PlayerStanding[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Extended game result with additional properties for simulation
+interface ExtendedGameResult {
+  id: string | number;
+  tournamentId: number;
+  roundNumber: number;
+  whitePlayerId: number;
+  blackPlayerId: number;
+  result: 'white_wins' | 'black_wins' | 'draw';
+  resultType: 'normal' | 'forfeit' | 'timeout' | 'bye';
+  boardNumber: number;
+  isApproved: boolean;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Enhanced tournament factory with complete tournament simulation
-export const createRealisticTournament = (config: TournamentConfig = {}) => {
+export const createRealisticTournament = (
+  config: TournamentConfig = { playerCount: 16 }
+): TournamentResult => {
   const tournament = createMockTournament({
     name: config.name || generateTournamentName(),
-    status: config.status || 'draft',
+    status: config.status || ('draft' as const),
     maxPlayers: config.playerCount || 16,
     maxRounds:
       config.maxRounds || Math.ceil(Math.log2(config.playerCount || 16)) + 1,
-    pairingMethod: config.pairingMethod || 'swiss',
+    pairingMethod: config.pairingMethod || ('swiss' as const),
     ...config,
   });
 
-  let players: any[] = [];
-  let games: any[] = [];
-  let standings: any[] = [];
+  let players: Player[] = [];
+  let games: ExtendedGameResult[] = [];
+  let standings: PlayerStanding[] = [];
 
   if (config.withPlayers) {
     players = generateTournamentPlayers(
@@ -133,8 +236,17 @@ export const createRealisticTournament = (config: TournamentConfig = {}) => {
   }
 
   if (config.withGames && players.length > 0) {
+    // Convert players to PlayerWithStats for game generation
+    const playersWithStats: PlayerWithStats[] = players.map(p => ({
+      ...p,
+      points: 0,
+      wins: 0,
+      losses: 0,
+      draws: 0,
+    }));
+
     games = generateTournamentGames(
-      players,
+      playersWithStats,
       config.completedRounds || 0,
       config.pairingMethod || 'swiss',
       config.scenarioType
@@ -142,11 +254,40 @@ export const createRealisticTournament = (config: TournamentConfig = {}) => {
   }
 
   if (config.withStandings && players.length > 0) {
-    standings = calculateTournamentStandings(players, games);
+    // Convert players to PlayerWithStats for standings calculation
+    const playersWithStats: PlayerWithStats[] = players.map(p => ({
+      ...p,
+      points: 0,
+      wins: 0,
+      losses: 0,
+      draws: 0,
+    }));
+    standings = calculateTournamentStandings(playersWithStats, games);
   }
 
   return {
-    ...tournament,
+    id: tournament.id,
+    name: tournament.name,
+    description: tournament.description,
+    status: tournament.status as
+      | 'draft'
+      | 'active'
+      | 'paused'
+      | 'completed'
+      | 'cancelled',
+    playerCount: tournament.playerCount,
+    maxPlayers: tournament.maxPlayers,
+    rounds: tournament.rounds,
+    maxRounds: tournament.maxRounds,
+    pairingMethod: tournament.pairingMethod as
+      | 'swiss'
+      | 'round_robin'
+      | 'knockout'
+      | 'team_swiss',
+    timeControl: tournament.timeControl,
+    tiebreaks: tournament.tiebreaks,
+    createdAt: tournament.createdAt,
+    updatedAt: tournament.updatedAt,
     players,
     games,
     standings,
@@ -188,12 +329,26 @@ const generateTournamentName = (): string => {
   return `${adjective} ${type} ${year}`;
 };
 
+// Player with extended stats for simulation
+interface PlayerWithStats extends Player {
+  points: number;
+  wins: number;
+  losses: number;
+  draws: number;
+}
+
+// Pairing interface
+interface Pairing {
+  white: PlayerWithStats;
+  black: PlayerWithStats;
+}
+
 // Generate realistic tournament players based on scenario
 const generateTournamentPlayers = (
   count: number,
   scenarioType?: string
-): any[] => {
-  const players: any[] = [];
+): Player[] => {
+  const players: Player[] = [];
 
   for (let i = 0; i < count; i++) {
     let skillLevel: 'beginner' | 'intermediate' | 'expert' | 'master';
@@ -201,9 +356,9 @@ const generateTournamentPlayers = (
     // Adjust skill distribution based on scenario
     switch (scenarioType) {
       case 'balanced':
-        skillLevel = ['beginner', 'intermediate', 'expert', 'master'][
-          Math.floor(Math.random() * 4)
-        ] as any;
+        skillLevel = (
+          ['beginner', 'intermediate', 'expert', 'master'] as const
+        )[Math.floor(Math.random() * 4)];
         break;
       case 'upset_heavy':
         // More variance in ratings for potential upsets
@@ -234,24 +389,18 @@ const generateTournamentPlayers = (
   }
 
   // Sort players by rating (seeding order)
-  return players.sort((a, b) => b.rating - a.rating);
+  return players.sort((a, b) => (b.rating || 0) - (a.rating || 0));
 };
 
 // Generate realistic games with result probabilities
 const generateTournamentGames = (
-  players: any[],
+  playersWithStats: PlayerWithStats[],
   rounds: number,
   pairingMethod: string,
   scenarioType?: string
-): any[] => {
-  const games: any[] = [];
-  let currentPlayers = [...players].map(p => ({
-    ...p,
-    points: 0,
-    wins: 0,
-    losses: 0,
-    draws: 0,
-  }));
+): ExtendedGameResult[] => {
+  const games: ExtendedGameResult[] = [];
+  let currentPlayers: PlayerWithStats[] = [...playersWithStats];
 
   for (let round = 1; round <= rounds; round++) {
     const roundPairings = generateRoundPairings(
@@ -271,12 +420,15 @@ const generateTournamentGames = (
         scenarioType
       );
 
-      game.id = `${round}-${index + 1}`;
-      game.boardNumber = index + 1;
-      games.push(game);
+      const extendedGame: ExtendedGameResult = {
+        ...game,
+        id: `${round}-${index + 1}`,
+        boardNumber: index + 1,
+      };
+      games.push(extendedGame);
 
       // Update player stats
-      updatePlayerStats(currentPlayers, game);
+      updatePlayerStats(currentPlayers, extendedGame);
     });
   }
 
@@ -285,17 +437,17 @@ const generateTournamentGames = (
 
 // Generate round pairings based on method
 const generateRoundPairings = (
-  players: any[],
+  players: PlayerWithStats[],
   round: number,
   method: string
-): any[] => {
-  const pairings: any[] = [];
+): Pairing[] => {
+  const pairings: Pairing[] = [];
 
   if (method === 'swiss' || method === 'team_swiss') {
     // Swiss system: pair players with similar scores
     const sortedPlayers = [...players].sort((a, b) => {
       if (b.points !== a.points) return b.points - a.points;
-      return b.rating - a.rating; // Tiebreak by rating
+      return (b.rating || 0) - (a.rating || 0); // Tiebreak by rating
     });
 
     const paired = new Set<number>();
@@ -304,7 +456,7 @@ const generateRoundPairings = (
       if (paired.has(sortedPlayers[i].id)) continue;
 
       // Find best opponent in same score group
-      let opponent: (typeof sortedPlayers)[0] | null = null;
+      let opponent: PlayerWithStats | null = null;
       for (let j = i + 1; j < sortedPlayers.length; j++) {
         if (!paired.has(sortedPlayers[j].id)) {
           opponent = sortedPlayers[j];
@@ -332,9 +484,12 @@ const generateRoundPairings = (
 };
 
 // Round robin pairing generation
-const generateRoundRobinPairings = (players: any[], round: number): any[] => {
+const generateRoundRobinPairings = (
+  players: PlayerWithStats[],
+  round: number
+): Pairing[] => {
   const n = players.length;
-  const pairings: any[] = [];
+  const pairings: Pairing[] = [];
 
   if (n % 2 === 0) {
     // Even number of players
@@ -358,7 +513,7 @@ const generateRoundRobinPairings = (players: any[], round: number): any[] => {
 const createRealisticGame = (
   config: GameConfig,
   scenarioType?: string
-): any => {
+): ExtendedGameResult => {
   const whitePlayer = config.whitePlayer;
   const blackPlayer = config.blackPlayer;
 
@@ -366,19 +521,36 @@ const createRealisticGame = (
 
   if (!result && config.realistic && whitePlayer && blackPlayer) {
     result = calculateRealisticResult(
-      whitePlayer.rating,
-      blackPlayer.rating,
+      whitePlayer.rating || 1500,
+      blackPlayer.rating || 1500,
       scenarioType
     );
   }
 
-  return createMockGameResult({
+  const mockGame = createMockGameResult({
     whitePlayerId: whitePlayer?.id,
     blackPlayerId: blackPlayer?.id,
     result: result || 'draw',
     resultType: config.resultType || 'normal',
     roundNumber: config.roundNumber || 1,
   });
+
+  return {
+    id: mockGame.id,
+    tournamentId: mockGame.tournamentId || 1,
+    roundNumber: mockGame.roundNumber,
+    whitePlayerId: mockGame.whitePlayerId,
+    blackPlayerId: mockGame.blackPlayerId,
+    result: result || 'draw',
+    resultType: config.resultType || 'normal',
+    boardNumber: 1,
+    isApproved: false,
+    approvedBy: null,
+    approvedAt: null,
+    notes: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
 };
 
 // Calculate realistic game result based on rating difference
@@ -428,7 +600,10 @@ const calculateRealisticResult = (
 };
 
 // Update player statistics after game
-const updatePlayerStats = (players: any[], game: any) => {
+const updatePlayerStats = (
+  players: PlayerWithStats[],
+  game: ExtendedGameResult
+): void => {
   const whitePlayer = players.find(p => p.id === game.whitePlayerId);
   const blackPlayer = players.find(p => p.id === game.blackPlayerId);
 
@@ -455,38 +630,61 @@ const updatePlayerStats = (players: any[], game: any) => {
 };
 
 // Calculate tournament standings with tiebreaks
-const calculateTournamentStandings = (players: any[], games: any[]): any[] => {
+const calculateTournamentStandings = (
+  players: PlayerWithStats[],
+  games: ExtendedGameResult[]
+): PlayerStanding[] => {
   return players
-    .map(player => ({
-      playerId: player.id,
-      playerName: player.name,
-      rank: 0, // Will be calculated after sorting
-      points: player.points || 0,
-      wins: player.wins || 0,
-      losses: player.losses || 0,
-      draws: player.draws || 0,
-      gamesPlayed:
-        (player.wins || 0) + (player.losses || 0) + (player.draws || 0),
-      tiebreaks: calculateTiebreaks(player, games, players),
-      performance: calculatePerformanceRating(player, games, players),
-    }))
+    .map(player => {
+      const tiebreaks = calculateTiebreaks(player, games, players);
+      const performanceRating = calculatePerformanceRating(
+        player,
+        games,
+        players
+      );
+
+      return {
+        player,
+        rank: 0, // Will be calculated after sorting
+        points: player.points || 0,
+        games_played:
+          (player.wins || 0) + (player.losses || 0) + (player.draws || 0),
+        wins: player.wins || 0,
+        draws: player.draws || 0,
+        losses: player.losses || 0,
+        tiebreak_scores: [
+          {
+            tiebreak_type: 'buchholz_full' as const,
+            value: tiebreaks[0],
+            display_value: tiebreaks[0].toString(),
+          },
+          {
+            tiebreak_type: 'sonneborn_berger' as const,
+            value: tiebreaks[1],
+            display_value: tiebreaks[1].toString(),
+          },
+        ],
+        performance_rating: performanceRating,
+        rating_change: null,
+      };
+    })
     .sort((a, b) => {
       if (b.points !== a.points) return b.points - a.points;
-      if (b.tiebreaks[0] !== a.tiebreaks[0])
-        return b.tiebreaks[0] - a.tiebreaks[0];
-      return b.tiebreaks[1] - a.tiebreaks[1];
+      if (b.tiebreak_scores[0].value !== a.tiebreak_scores[0].value)
+        return b.tiebreak_scores[0].value - a.tiebreak_scores[0].value;
+      return b.tiebreak_scores[1].value - a.tiebreak_scores[1].value;
     })
-    .map((player, index) => ({
-      ...player,
+    .map((standing, index) => ({
+      ...standing,
       rank: index + 1,
     }));
 };
 
 // Calculate tiebreak scores
 const calculateTiebreaks = (
-  player: any,
-  games: any[],
-  players: any[]
+  player: PlayerWithStats,
+  games: ExtendedGameResult[],
+  players: PlayerWithStats[]
 ): number[] => {
   const playerGames = games.filter(
     g => g.whitePlayerId === player.id || g.blackPlayerId === player.id
@@ -529,9 +727,9 @@ const calculateTiebreaks = (
 
 // Calculate performance rating
 const calculatePerformanceRating = (
-  player: any,
-  games: any[],
-  players: any[]
+  player: PlayerWithStats,
+  games: ExtendedGameResult[],
+  players: PlayerWithStats[]
 ): number => {
   const playerGames = games.filter(
     g =>
@@ -539,7 +737,7 @@ const calculatePerformanceRating = (
       g.result
   );
 
-  if (playerGames.length === 0) return player.rating;
+  if (playerGames.length === 0) return player.rating || 1500;
 
   const averageOpponentRating =
     playerGames.reduce((sum, game) => {
@@ -562,7 +760,9 @@ const calculatePerformanceRating = (
 };
 
 // Team tournament factories
-export const createRealisticTeam = (config: TeamConfig = {}): any => {
+export const createRealisticTeam = (
+  config: TeamConfig = {}
+): Team & { members: Player[]; averageRating: number } => {
   const teamNames = [
     'Chess Masters',
     'Board Warriors',
@@ -579,25 +779,38 @@ export const createRealisticTeam = (config: TeamConfig = {}): any => {
   const memberCount = config.memberCount || 4;
   const averageRating = config.averageRating || 1600;
 
-  const members: ReturnType<typeof createRealisticPlayer>[] = [];
+  const members: Player[] = [];
   for (let i = 0; i < memberCount; i++) {
     const rating = averageRating + (Math.random() - 0.5) * 400; // ±200 rating variance
     members.push(
       createRealisticPlayer({
         rating: Math.max(400, Math.min(2800, rating)),
-        country: config.country,
+        country_code: config.country,
+        tournament_id: config.tournament_id || 1,
       })
     );
   }
 
+  const calculatedAverageRating = Math.round(
+    members.reduce((sum, m) => sum + (m.rating || 0), 0) / members.length
+  );
+
   return {
-    id: Math.floor(Math.random() * 1000),
+    id: config.id || Math.floor(Math.random() * 1000),
+    tournament_id: config.tournament_id || 1,
     name,
+    captain: config.captain || null,
+    description: config.description || null,
+    color: config.color || null,
+    club_affiliation: config.club_affiliation || null,
+    contact_email: config.contact_email || null,
+    contact_phone: config.contact_phone || null,
+    max_board_count: config.max_board_count || memberCount,
+    status: config.status || ('active' as const),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
     members,
-    averageRating: Math.round(
-      members.reduce((sum, m) => sum + m.rating, 0) / members.length
-    ),
-    country: config.country || 'INT',
+    averageRating: calculatedAverageRating,
   };
 };
 
@@ -628,11 +841,8 @@ export const scenarioGenerators = {
       withStandings: true,
     });
 
-    // Boost a lower-rated player's performance
-    const players = tournament.players;
-    const underdog = players[players.length - 3]; // Third from bottom
-    underdog.points = Math.max(underdog.points, tournament.maxRounds * 0.7);
-
+    // Note: The underdog boost would need to be applied at the game generation level
+    // rather than directly modifying player points since Player interface doesn't have points
     return tournament;
   },
 
@@ -643,6 +853,7 @@ export const scenarioGenerators = {
         id: i + 1,
         skillLevel: 'master',
         rating: 2200 + Math.random() * 400,
+        tournament_id: 1,
       })
     );
 

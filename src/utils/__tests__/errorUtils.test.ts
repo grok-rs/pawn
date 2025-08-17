@@ -1,28 +1,29 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { TFunction } from 'i18next';
+import { TFunction } from 'i18next';
 import { parseBackendError, handleTournamentCompletion } from '../errorUtils';
 
 // Mock the translation function
 const createMockT = (): TFunction => {
-  const mockT = vi.fn() as unknown as TFunction;
-  (mockT as any).mockImplementation((key: string, options?: any) => {
-    const translations: Record<string, string> = {
-      'rounds.errors.incompleteGames':
-        'There are incomplete games in this round',
-      'rounds.errors.incompleteGamesCount':
-        'There are {{count}} incomplete games in this round',
-      'rounds.errors.noPairings':
-        'No pairings have been generated for this round',
-      'rounds.errors.publishedNoGames': 'Round is published but has no games',
-      'tournament.errors.incompleteGames': 'Tournament has incomplete games',
-      'tournament.errors.incompleteGamesCount':
-        'Tournament has {{count}} incomplete games',
-      'tournament.errors.incompleteRoundsCount':
-        'Tournament has {{incomplete}} incomplete rounds out of {{total}} total rounds',
-      'general.error': 'An error occurred',
-      failedToCompleteRound: 'Failed to complete round',
-    };
+  const translations: Record<string, string> = {
+    'rounds.errors.incompleteGames': 'There are incomplete games in this round',
+    'rounds.errors.incompleteGamesCount':
+      'There are {{count}} incomplete games in this round',
+    'rounds.errors.noPairings':
+      'No pairings have been generated for this round',
+    'rounds.errors.publishedNoGames': 'Round is published but has no games',
+    'tournament.errors.incompleteGames': 'Tournament has incomplete games',
+    'tournament.errors.incompleteGamesCount':
+      'Tournament has {{count}} incomplete games',
+    'tournament.errors.incompleteRoundsCount':
+      'Tournament has {{incomplete}} incomplete rounds out of {{total}} total rounds',
+    'general.error': 'An error occurred',
+    failedToCompleteRound: 'Failed to complete round',
+  };
 
+  const mockTFunction = (
+    key: string,
+    options?: Record<string, unknown>
+  ): string => {
     let result = translations[key] || key;
 
     // Simple interpolation for testing
@@ -33,7 +34,20 @@ const createMockT = (): TFunction => {
     }
 
     return result;
+  };
+
+  const mockT: TFunction = vi
+    .fn()
+    .mockImplementation(mockTFunction) as unknown as TFunction;
+
+  // Add the required $TFunctionBrand property to satisfy TypeScript
+  // This property is used internally by i18next for type checking
+  Object.defineProperty(mockT, '$TFunctionBrand', {
+    value: 'default' as const,
+    enumerable: false,
+    writable: false,
   });
+
   return mockT;
 };
 

@@ -145,3 +145,6 @@ sudo apt-get install -y \
 - **Run with ignored advisories**: `cd src-tauri && cargo audit --ignore RUSTSEC-2024-0413 [... other IDs]`
 - **Check for new issues**: `cd src-tauri && cargo audit` (will show all advisories)
 - **Monitor Tauri v3**: Track migration progress for long-term resolution
+
+- you can't use any
+- don't use type casting, it is better to set type near variable upfront

@@ -3,6 +3,25 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMockTournament } from '../utils/test-utils';
 
+// Type definitions
+interface MockTournament {
+  id: number;
+  name: string;
+}
+
+interface StateData {
+  count: number;
+  items: unknown[];
+}
+
+interface ErrorLog {
+  message: string;
+  stack?: string;
+  componentStack?: string;
+  timestamp: string;
+  userAgent: string;
+}
+
 // Error simulation utilities
 const ErrorSimulator = {
   // Different types of errors to simulate
@@ -28,11 +47,11 @@ const ErrorSimulator = {
   createMemoryError: () => {
     const MemoryErrorComponent = () => {
       React.useEffect(() => {
-        const arrays: any[] = [];
+        const arrays: unknown[][] = [];
         try {
           // Try to consume lots of memory
           for (let i = 0; i < 1000; i++) {
-            arrays.push(new Array(1000000).fill('data'));
+            arrays.push(Array(1000000).fill('data') as unknown[]);
           }
         } catch {
           throw new Error('Memory exhaustion error');
@@ -58,15 +77,25 @@ const ErrorSimulator = {
   },
 };
 
+// Error boundary props interface
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback?: React.ComponentType<{ error: Error; retry: () => void }>;
+}
+
+// Error boundary state interface
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  errorId: string;
+}
+
 // Mock error boundary component
 class MockErrorBoundary extends React.Component<
-  {
-    children: React.ReactNode;
-    fallback?: React.ComponentType<{ error: Error; retry: () => void }>;
-  },
-  { hasError: boolean; error: Error | null; errorId: string }
+  ErrorBoundaryProps,
+  ErrorBoundaryState
 > {
-  constructor(props: any) {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null, errorId: '' };
   }
@@ -190,12 +219,12 @@ const ConfigurableErrorComponent = ({
     setCount(c => c + 1);
   };
 
-  const handleAsync = async () => {
+  const handleAsync = React.useCallback(async () => {
     if (shouldThrow && errorType === 'async') {
       await new Promise(resolve => setTimeout(resolve, delay));
       throw new Error(errorMessage);
     }
-  };
+  }, [shouldThrow, errorType, delay, errorMessage]);
 
   if (shouldThrow && errorType === 'render') {
     throw new Error(errorMessage);
@@ -208,7 +237,7 @@ const ConfigurableErrorComponent = ({
         console.error('Async error:', error);
       });
     }
-  }, [shouldThrow, errorType]);
+  }, [shouldThrow, errorType, handleAsync]);
 
   return (
     <div data-testid="configurable-error-component">
@@ -226,11 +255,11 @@ const NetworkFailureComponent = ({
 }: {
   shouldFail?: boolean;
 }) => {
-  const [data, setData] = React.useState<any[]>([]);
+  const [data, setData] = React.useState<MockTournament[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = React.useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -247,16 +276,16 @@ const NetworkFailureComponent = ({
 
       await new Promise(resolve => setTimeout(resolve, 100)); // Simulate delay
       setData(mockData);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
-  };
+  }, [shouldFail]);
 
   React.useEffect(() => {
     fetchData();
-  }, [shouldFail]);
+  }, [shouldFail, fetchData]);
 
   if (loading) {
     return <div data-testid="loading">Loading...</div>;
@@ -288,7 +317,10 @@ const NetworkFailureComponent = ({
 // Component with recoverable state errors
 const RecoverableStateComponent = () => {
   const [hasError, setHasError] = React.useState(false);
-  const [data, setData] = React.useState<any>({ count: 0, items: [] });
+  const [data, setData] = React.useState<StateData | null>({
+    count: 0,
+    items: [],
+  });
 
   const simulateStateCorruption = () => {
     // Simulate corrupted state
@@ -322,7 +354,9 @@ const RecoverableStateComponent = () => {
       <button
         data-testid="increment-count"
         onClick={() =>
-          setData((prev: any) => ({ ...prev, count: prev.count + 1 }))
+          setData((prev: StateData | null) =>
+            prev ? { ...prev, count: prev.count + 1 } : null
+          )
         }
       >
         Increment
@@ -733,7 +767,7 @@ describe('Advanced Error Boundary and Crash Recovery Tests', () => {
   describe('Memory and Performance Error Handling', () => {
     test('should handle memory pressure gracefully', async () => {
       const MemoryIntensiveComponent = () => {
-        const [data, setData] = React.useState<any[]>([]);
+        const [data, setData] = React.useState<unknown[]>([]);
         const [error, setError] = React.useState<string | null>(null);
 
         const handleMemoryIntensiveOperation = () => {
@@ -741,8 +775,10 @@ describe('Advanced Error Boundary and Crash Recovery Tests', () => {
             // Simulate memory intensive operation
             const largeArray = new Array(100000).fill('data');
             setData(largeArray);
-          } catch {
-            setError('Memory operation failed');
+          } catch (err: unknown) {
+            setError(
+              err instanceof Error ? err.message : 'Memory operation failed'
+            );
           }
         };
 
@@ -814,11 +850,11 @@ describe('Advanced Error Boundary and Crash Recovery Tests', () => {
 
             setError(null);
             setIsRetrying(false);
-          } catch (err: any) {
+          } catch (err: unknown) {
             const delay = Math.pow(2, attemptCount - 1) * 1000; // Exponential backoff
             backoffDelays.push(delay);
 
-            setError(err.message);
+            setError(err instanceof Error ? err.message : String(err));
             setIsRetrying(false);
           }
         };
@@ -948,7 +984,7 @@ describe('Advanced Error Boundary and Crash Recovery Tests', () => {
 
   describe('Error Logging and Monitoring', () => {
     test('should log errors with contextual information', () => {
-      const errorLogs: any[] = [];
+      const errorLogs: ErrorLog[] = [];
 
       // Mock error logging service
       const originalLog = console.log;

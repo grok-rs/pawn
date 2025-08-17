@@ -1,16 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
-import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../LanguageSwitcher';
-
-// Mock react-i18next
-const mockChangeLanguage = vi.fn();
-const mockT = vi.fn((key: string) => key);
-
-vi.mock('react-i18next', () => ({
-  useTranslation: vi.fn(),
-}));
+import { render, createTestI18n } from '../../../test/utils/test-utils';
 
 // Mock localStorage
 Object.defineProperty(window, 'localStorage', {
@@ -22,42 +14,45 @@ Object.defineProperty(window, 'localStorage', {
 });
 
 describe('LanguageSwitcher', () => {
-  const mockI18n = {
-    language: 'en',
-    changeLanguage: mockChangeLanguage,
-  };
+  let testI18n: ReturnType<typeof createTestI18n>;
+  const mockChangeLanguage = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useTranslation).mockReturnValue({
-      t: mockT,
-      i18n: mockI18n,
-    } as any);
-    mockT.mockImplementation((key: string) => {
-      const translations: Record<string, string> = {
+    testI18n = createTestI18n();
+
+    // Add the language switching translations
+    testI18n.addResourceBundle(
+      'en',
+      'translation',
+      {
         'language.changeLanguage': 'Change Language',
-      };
-      return translations[key] || key;
-    });
+      },
+      true,
+      true
+    );
+
+    // Mock changeLanguage to avoid actual language changes during tests
+    vi.spyOn(testI18n, 'changeLanguage').mockImplementation(mockChangeLanguage);
   });
 
   describe('Basic Rendering', () => {
     test('renders language switcher button', () => {
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button', { name: 'Change Language' });
       expect(button).toBeInTheDocument();
     });
 
     test('displays current language flag', () => {
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       // English flag should be displayed (default)
       expect(screen.getByText('🇬🇧')).toBeInTheDocument();
     });
 
     test('displays language icon', () => {
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const languageIcon = document.querySelector(
         '[data-testid="LanguageIcon"]'
@@ -68,7 +63,7 @@ describe('LanguageSwitcher', () => {
     test('has tooltip with change language text', async () => {
       const user = userEvent.setup();
 
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       await user.hover(button);
@@ -79,7 +74,7 @@ describe('LanguageSwitcher', () => {
     });
 
     test('button has correct accessibility attributes', () => {
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       expect(button).toHaveAttribute('aria-label', 'Change Language');
@@ -88,45 +83,29 @@ describe('LanguageSwitcher', () => {
 
   describe('Language Detection', () => {
     test('displays correct flag for English', () => {
-      vi.mocked(useTranslation).mockReturnValue({
-        t: mockT,
-        i18n: { ...mockI18n, language: 'en' },
-      } as any);
-
-      render(<LanguageSwitcher />);
+      testI18n.changeLanguage('en');
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       expect(screen.getByText('🇬🇧')).toBeInTheDocument();
     });
 
     test('displays correct flag for Russian', () => {
-      vi.mocked(useTranslation).mockReturnValue({
-        t: mockT,
-        i18n: { ...mockI18n, language: 'ru' },
-      } as any);
-
-      render(<LanguageSwitcher />);
+      testI18n.changeLanguage('ru');
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       expect(screen.getByText('🇷🇺')).toBeInTheDocument();
     });
 
     test('displays correct flag for Ukrainian', () => {
-      vi.mocked(useTranslation).mockReturnValue({
-        t: mockT,
-        i18n: { ...mockI18n, language: 'ua' },
-      } as any);
-
-      render(<LanguageSwitcher />);
+      testI18n.changeLanguage('ua');
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       expect(screen.getByText('🇺🇦')).toBeInTheDocument();
     });
 
     test('falls back to English for unknown language', () => {
-      vi.mocked(useTranslation).mockReturnValue({
-        t: mockT,
-        i18n: { ...mockI18n, language: 'unknown' },
-      } as any);
-
-      render(<LanguageSwitcher />);
+      testI18n.changeLanguage('unknown');
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       // Should default to English flag
       expect(screen.getByText('🇬🇧')).toBeInTheDocument();
@@ -137,7 +116,7 @@ describe('LanguageSwitcher', () => {
     test('opens menu when button is clicked', async () => {
       const user = userEvent.setup();
 
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       await user.click(button);
@@ -150,7 +129,7 @@ describe('LanguageSwitcher', () => {
     test('displays all language options in menu', async () => {
       const user = userEvent.setup();
 
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       await user.click(button);
@@ -165,7 +144,7 @@ describe('LanguageSwitcher', () => {
     test('displays correct flags in menu items', async () => {
       const user = userEvent.setup();
 
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       await user.click(button);
@@ -185,12 +164,8 @@ describe('LanguageSwitcher', () => {
     test('highlights current language in menu', async () => {
       const user = userEvent.setup();
 
-      vi.mocked(useTranslation).mockReturnValue({
-        t: mockT,
-        i18n: { ...mockI18n, language: 'ru' },
-      } as any);
-
-      render(<LanguageSwitcher />);
+      testI18n.changeLanguage('ru');
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       await user.click(button);
@@ -211,7 +186,8 @@ describe('LanguageSwitcher', () => {
         <div>
           <LanguageSwitcher />
           <div data-testid="outside-element">Outside</div>
-        </div>
+        </div>,
+        { i18nInstance: testI18n }
       );
 
       const button = screen.getByRole('button');
@@ -233,7 +209,7 @@ describe('LanguageSwitcher', () => {
     test('changes language when menu item is clicked', async () => {
       const user = userEvent.setup();
 
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       await user.click(button);
@@ -250,7 +226,7 @@ describe('LanguageSwitcher', () => {
     test('saves language preference to localStorage', async () => {
       const user = userEvent.setup();
 
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       await user.click(button);
@@ -267,7 +243,7 @@ describe('LanguageSwitcher', () => {
     test('closes menu after language selection', async () => {
       const user = userEvent.setup();
 
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       await user.click(button);
@@ -293,7 +269,7 @@ describe('LanguageSwitcher', () => {
       ];
 
       for (const language of languages) {
-        render(<LanguageSwitcher />);
+        render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
         const button = screen.getByRole('button');
         await user.click(button);
@@ -317,7 +293,7 @@ describe('LanguageSwitcher', () => {
     test('menu has correct anchor origin', async () => {
       const user = userEvent.setup();
 
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       await user.click(button);
@@ -333,7 +309,7 @@ describe('LanguageSwitcher', () => {
       const user = userEvent.setup();
 
       // This test ensures the menu renders without errors in different contexts
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       await user.click(button);
@@ -348,7 +324,7 @@ describe('LanguageSwitcher', () => {
     test('opens menu with Enter key', async () => {
       const user = userEvent.setup();
 
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       button.focus();
@@ -363,7 +339,7 @@ describe('LanguageSwitcher', () => {
     test('opens menu with Space key', async () => {
       const user = userEvent.setup();
 
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       button.focus();
@@ -378,7 +354,7 @@ describe('LanguageSwitcher', () => {
     test('navigates menu items with arrow keys', async () => {
       const user = userEvent.setup();
 
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       await user.click(button);
@@ -397,7 +373,7 @@ describe('LanguageSwitcher', () => {
     test('selects language with Enter key in menu', async () => {
       const user = userEvent.setup();
 
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       await user.click(button);
@@ -416,7 +392,7 @@ describe('LanguageSwitcher', () => {
 
   describe('Accessibility', () => {
     test('has proper ARIA attributes', () => {
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       expect(button).toHaveAttribute('aria-label', 'Change Language');
@@ -425,7 +401,7 @@ describe('LanguageSwitcher', () => {
     test('menu items have proper roles', async () => {
       const user = userEvent.setup();
 
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       await user.click(button);
@@ -443,7 +419,7 @@ describe('LanguageSwitcher', () => {
     test('current language is marked as selected', async () => {
       const user = userEvent.setup();
 
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       await user.click(button);
@@ -460,7 +436,7 @@ describe('LanguageSwitcher', () => {
     test('maintains focus management', async () => {
       const user = userEvent.setup();
 
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       await user.click(button);
@@ -480,24 +456,19 @@ describe('LanguageSwitcher', () => {
 
   describe('Error Handling', () => {
     test('handles i18n errors gracefully', () => {
-      vi.mocked(useTranslation).mockReturnValue({
-        t: vi.fn().mockImplementation(() => {
-          throw new Error('Translation error');
-        }),
-        i18n: mockI18n,
-      } as any);
+      // Remove the translation to simulate missing key
+      testI18n.removeResourceBundle('en', 'translation');
 
       // Should render without crashing
-      expect(() => render(<LanguageSwitcher />)).not.toThrow();
+      expect(() =>
+        render(<LanguageSwitcher />, { i18nInstance: testI18n })
+      ).not.toThrow();
     });
 
     test('handles missing translation gracefully', () => {
-      vi.mocked(useTranslation).mockReturnValue({
-        t: vi.fn().mockReturnValue(''),
-        i18n: mockI18n,
-      } as any);
-
-      render(<LanguageSwitcher />);
+      // Create test i18n without the specific translation
+      const emptyI18n = createTestI18n();
+      render(<LanguageSwitcher />, { i18nInstance: emptyI18n });
 
       // Button should still be rendered even with empty translation
       expect(screen.getByRole('button')).toBeInTheDocument();
@@ -511,7 +482,7 @@ describe('LanguageSwitcher', () => {
         throw new Error('LocalStorage error');
       });
 
-      render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />, { i18nInstance: testI18n });
 
       const button = screen.getByRole('button');
       await user.click(button);

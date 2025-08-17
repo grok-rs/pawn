@@ -111,20 +111,20 @@ describe('NewTournamentForm', () => {
       const user = userEvent.setup();
       render(<TournamentForm />);
 
-      const nameField = screen.getByLabelText('name') as HTMLInputElement;
+      const nameField = screen.getByLabelText('name');
       await user.type(nameField, 'Test Tournament');
 
-      expect(nameField.value).toBe('Test Tournament');
+      expect(nameField).toHaveValue('Test Tournament');
     });
 
     test('city field accepts user input', async () => {
       const user = userEvent.setup();
       render(<TournamentForm />);
 
-      const cityField = screen.getByLabelText('city') as HTMLInputElement;
+      const cityField = screen.getByLabelText('city');
       await user.type(cityField, 'Test City');
 
-      expect(cityField.value).toBe('Test City');
+      expect(cityField).toHaveValue('Test City');
     });
 
     test('name field shows as required', () => {
