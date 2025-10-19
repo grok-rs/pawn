@@ -528,13 +528,13 @@ impl PairingOptimizer {
                 )));
             }
 
-            if let Some(ref black_player) = pairing.black_player {
-                if !seen_players.insert(black_player.id) {
-                    return Err(PawnError::InvalidInput(format!(
-                        "Player {} paired multiple times",
-                        black_player.name
-                    )));
-                }
+            if let Some(ref black_player) = pairing.black_player
+                && !seen_players.insert(black_player.id)
+            {
+                return Err(PawnError::InvalidInput(format!(
+                    "Player {} paired multiple times",
+                    black_player.name
+                )));
             }
         }
 

@@ -691,16 +691,15 @@ impl SwissPairingEngine {
                 // Handle bye case - just validate the white player (who gets the bye)
                 if let Some(white_swiss) = players.iter().find(|p| p.player.id == white_player.id) {
                     // For byes, we don't assign colors, so only validate existing color balance
-                    if round_number >= 9 {
-                        if let Err(e) = self
+                    if round_number >= 9
+                        && let Err(e) = self
                             .validate_color_balance_limit(&white_swiss.color_history, round_number)
-                        {
-                            validation_errors.push(format!(
-                                "Player {name} (bye): {error}",
-                                name = white_player.name,
-                                error = e
-                            ));
-                        }
+                    {
+                        validation_errors.push(format!(
+                            "Player {name} (bye): {error}",
+                            name = white_player.name,
+                            error = e
+                        ));
                     }
                 }
             }
@@ -950,31 +949,31 @@ impl SwissPairingEngine {
         params: &mut OddGroupParams,
     ) -> Result<bool, PawnError> {
         // Try to get a downfloater if float limit allows
-        if *params.float_count < params.max_floats_allowed {
-            if let Some(floater) = self.find_suitable_downfloater(
+        if *params.float_count < params.max_floats_allowed
+            && let Some(floater) = self.find_suitable_downfloater(
                 params.all_players,
                 score_group.points,
                 params.paired_ids,
                 params.group_index,
-            ) {
-                // Mark the floated player as paired to prevent duplicate processing
-                let floater_id = floater.player.id;
-                params.paired_ids.insert(floater_id);
-                params.floated_players.insert(floater_id);
-                score_group.players.push(floater);
-                *params.float_count += 1;
-                tracing::info!(
-                    "Floated player {} to group {}",
-                    floater_id,
-                    params.group_index
-                );
-                tracing::debug!(
-                    "Added downfloater to group {}, total floats: {}",
-                    params.group_index,
-                    *params.float_count
-                );
-                return Ok(true);
-            }
+            )
+        {
+            // Mark the floated player as paired to prevent duplicate processing
+            let floater_id = floater.player.id;
+            params.paired_ids.insert(floater_id);
+            params.floated_players.insert(floater_id);
+            score_group.players.push(floater);
+            *params.float_count += 1;
+            tracing::info!(
+                "Floated player {} to group {}",
+                floater_id,
+                params.group_index
+            );
+            tracing::debug!(
+                "Added downfloater to group {}, total floats: {}",
+                params.group_index,
+                *params.float_count
+            );
+            return Ok(true);
         }
 
         // Try to send an upfloater to the group above
@@ -1486,10 +1485,10 @@ impl SwissPairingEngine {
     fn should_avoid_same_federation(&self, player1: &SwissPlayer, player2: &SwissPlayer) -> bool {
         if let (Some(country1), Some(country2)) =
             (&player1.player.country_code, &player2.player.country_code)
+            && country1 == country2
+            && !country1.is_empty()
         {
-            if country1 == country2 && !country1.is_empty() {
-                return self.get_federation_avoidance_level(country1);
-            }
+            return self.get_federation_avoidance_level(country1);
         }
         false
     }
@@ -1562,15 +1561,13 @@ impl SwissPairingEngine {
         }
 
         // Level 2: Same federation/country
-        if self.should_avoid_same_federation(player1, player2) {
-            if let (Some(country1), Some(country2)) =
+        if self.should_avoid_same_federation(player1, player2)
+            && let (Some(country1), Some(country2)) =
                 (&player1.player.country_code, &player2.player.country_code)
-            {
-                if country1 == country2 {
-                    // Variable penalty based on federation size and tournament type
-                    return self.calculate_federation_penalty(country1);
-                }
-            }
+            && country1 == country2
+        {
+            // Variable penalty based on federation size and tournament type
+            return self.calculate_federation_penalty(country1);
         }
 
         0.0 // No penalty

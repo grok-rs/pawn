@@ -421,25 +421,25 @@ impl SeedingService {
             let player1 = window[0];
             let player2 = window[1];
 
-            if let (Some(rating1), Some(rating2)) = (player1.rating, player2.rating) {
-                if rating1 < rating2 {
-                    conflicts.push(SeedingConflict {
-                        player_id: player1.id,
-                        player_name: player1.name.clone(),
-                        conflict_type: "rating_mismatch".to_string(),
-                        description: format!(
-                            "{} (seed {}, rating {}) is seeded higher than {} (seed {}, rating {})",
-                            player1.name,
-                            player1.seed_number.unwrap(),
-                            rating1,
-                            player2.name,
-                            player2.seed_number.unwrap(),
-                            rating2
-                        ),
-                        suggested_action: "Consider adjusting seed numbers to match rating order"
-                            .to_string(),
-                    });
-                }
+            if let (Some(rating1), Some(rating2)) = (player1.rating, player2.rating)
+                && rating1 < rating2
+            {
+                conflicts.push(SeedingConflict {
+                    player_id: player1.id,
+                    player_name: player1.name.clone(),
+                    conflict_type: "rating_mismatch".to_string(),
+                    description: format!(
+                        "{} (seed {}, rating {}) is seeded higher than {} (seed {}, rating {})",
+                        player1.name,
+                        player1.seed_number.unwrap(),
+                        rating1,
+                        player2.name,
+                        player2.seed_number.unwrap(),
+                        rating2
+                    ),
+                    suggested_action: "Consider adjusting seed numbers to match rating order"
+                        .to_string(),
+                });
             }
         }
 
@@ -604,25 +604,25 @@ mod tests {
                 let player1 = window[0];
                 let player2 = window[1];
 
-                if let (Some(rating1), Some(rating2)) = (player1.rating, player2.rating) {
-                    if rating1 < rating2 {
-                        conflicts.push(SeedingConflict {
-                            player_id: player1.id,
-                            player_name: player1.name.clone(),
-                            conflict_type: "rating_mismatch".to_string(),
-                            description: format!(
-                                "{} (seed {}, rating {}) is seeded higher than {} (seed {}, rating {})",
-                                player1.name,
-                                player1.seed_number.unwrap(),
-                                rating1,
-                                player2.name,
-                                player2.seed_number.unwrap(),
-                                rating2
-                            ),
-                            suggested_action: "Consider adjusting seed numbers to match rating order"
-                                .to_string(),
-                        });
-                    }
+                if let (Some(rating1), Some(rating2)) = (player1.rating, player2.rating)
+                    && rating1 < rating2
+                {
+                    conflicts.push(SeedingConflict {
+                        player_id: player1.id,
+                        player_name: player1.name.clone(),
+                        conflict_type: "rating_mismatch".to_string(),
+                        description: format!(
+                            "{} (seed {}, rating {}) is seeded higher than {} (seed {}, rating {})",
+                            player1.name,
+                            player1.seed_number.unwrap(),
+                            rating1,
+                            player2.name,
+                            player2.seed_number.unwrap(),
+                            rating2
+                        ),
+                        suggested_action: "Consider adjusting seed numbers to match rating order"
+                            .to_string(),
+                    });
                 }
             }
 

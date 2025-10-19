@@ -145,33 +145,32 @@ impl<D: Db> TeamService<D> {
             }
 
             // Check if new name is unique (if different from current)
-            if let Ok(existing_team) = self.db.get_team_by_id(data.id).await {
-                if existing_team.name != *name
-                    && self
-                        .is_team_name_taken(existing_team.tournament_id, name)
-                        .await?
-                {
-                    return Err(PawnError::ValidationError(format!(
-                        "Team name '{name}' is already taken in this tournament"
-                    )));
-                }
+            if let Ok(existing_team) = self.db.get_team_by_id(data.id).await
+                && existing_team.name != *name
+                && self
+                    .is_team_name_taken(existing_team.tournament_id, name)
+                    .await?
+            {
+                return Err(PawnError::ValidationError(format!(
+                    "Team name '{name}' is already taken in this tournament"
+                )));
             }
         }
 
-        if let Some(max_board_count) = data.max_board_count {
-            if !(1..=12).contains(&max_board_count) {
-                return Err(PawnError::ValidationError(
-                    "Max board count must be between 1 and 12".to_string(),
-                ));
-            }
+        if let Some(max_board_count) = data.max_board_count
+            && !(1..=12).contains(&max_board_count)
+        {
+            return Err(PawnError::ValidationError(
+                "Max board count must be between 1 and 12".to_string(),
+            ));
         }
 
-        if let Some(ref status) = data.status {
-            if !["active", "withdrawn", "disqualified"].contains(&status.as_str()) {
-                return Err(PawnError::ValidationError(
-                    "Status must be active, withdrawn, or disqualified".to_string(),
-                ));
-            }
+        if let Some(ref status) = data.status
+            && !["active", "withdrawn", "disqualified"].contains(&status.as_str())
+        {
+            return Err(PawnError::ValidationError(
+                "Status must be active, withdrawn, or disqualified".to_string(),
+            ));
         }
 
         let team = self.db.update_team(data).await.map_err(PawnError::from)?;
@@ -494,30 +493,30 @@ impl<D: Db> TeamService<D> {
             .map_err(PawnError::from)?;
 
         // Validate status transition
-        if let Some(ref new_status) = data.status {
-            if !self.is_valid_status_transition(&existing_match.status, new_status) {
-                return Err(PawnError::ValidationError(format!(
-                    "Invalid status transition from {} to {}",
-                    existing_match.status, new_status
-                )));
-            }
+        if let Some(ref new_status) = data.status
+            && !self.is_valid_status_transition(&existing_match.status, new_status)
+        {
+            return Err(PawnError::ValidationError(format!(
+                "Invalid status transition from {} to {}",
+                existing_match.status, new_status
+            )));
         }
 
         // Validate match points
-        if let Some(team_a_points) = data.team_a_match_points {
-            if !(0.0..=3.0).contains(&team_a_points) {
-                return Err(PawnError::ValidationError(
-                    "Team match points must be between 0 and 3".to_string(),
-                ));
-            }
+        if let Some(team_a_points) = data.team_a_match_points
+            && !(0.0..=3.0).contains(&team_a_points)
+        {
+            return Err(PawnError::ValidationError(
+                "Team match points must be between 0 and 3".to_string(),
+            ));
         }
 
-        if let Some(team_b_points) = data.team_b_match_points {
-            if !(0.0..=3.0).contains(&team_b_points) {
-                return Err(PawnError::ValidationError(
-                    "Team match points must be between 0 and 3".to_string(),
-                ));
-            }
+        if let Some(team_b_points) = data.team_b_match_points
+            && !(0.0..=3.0).contains(&team_b_points)
+        {
+            return Err(PawnError::ValidationError(
+                "Team match points must be between 0 and 3".to_string(),
+            ));
         }
 
         // Validate board points consistency
@@ -842,20 +841,20 @@ impl<D: Db> TeamService<D> {
             ));
         }
 
-        if let Some(ref captain) = data.captain {
-            if captain.trim().is_empty() {
-                return Err(PawnError::ValidationError(
-                    "Captain name cannot be empty".to_string(),
-                ));
-            }
+        if let Some(ref captain) = data.captain
+            && captain.trim().is_empty()
+        {
+            return Err(PawnError::ValidationError(
+                "Captain name cannot be empty".to_string(),
+            ));
         }
 
-        if let Some(ref email) = data.contact_email {
-            if !email.contains('@') {
-                return Err(PawnError::ValidationError(
-                    "Invalid email format".to_string(),
-                ));
-            }
+        if let Some(ref email) = data.contact_email
+            && !email.contains('@')
+        {
+            return Err(PawnError::ValidationError(
+                "Invalid email format".to_string(),
+            ));
         }
 
         Ok(())
@@ -873,12 +872,12 @@ impl<D: Db> TeamService<D> {
             ));
         }
 
-        if let Some(max_teams) = data.max_teams {
-            if !(2..=100).contains(&max_teams) {
-                return Err(PawnError::ValidationError(
-                    "Max teams must be between 2 and 100".to_string(),
-                ));
-            }
+        if let Some(max_teams) = data.max_teams
+            && !(2..=100).contains(&max_teams)
+        {
+            return Err(PawnError::ValidationError(
+                "Max teams must be between 2 and 100".to_string(),
+            ));
         }
 
         if !["match_points", "board_points", "olympic_points", "custom"]
@@ -1156,20 +1155,20 @@ pub fn validate_team_data_static(data: &CreateTeam) -> Result<(), PawnError> {
         ));
     }
 
-    if let Some(ref captain) = data.captain {
-        if captain.trim().is_empty() {
-            return Err(PawnError::ValidationError(
-                "Captain name cannot be empty".to_string(),
-            ));
-        }
+    if let Some(ref captain) = data.captain
+        && captain.trim().is_empty()
+    {
+        return Err(PawnError::ValidationError(
+            "Captain name cannot be empty".to_string(),
+        ));
     }
 
-    if let Some(ref email) = data.contact_email {
-        if !email.contains('@') {
-            return Err(PawnError::ValidationError(
-                "Invalid email format".to_string(),
-            ));
-        }
+    if let Some(ref email) = data.contact_email
+        && !email.contains('@')
+    {
+        return Err(PawnError::ValidationError(
+            "Invalid email format".to_string(),
+        ));
     }
 
     #[allow(dead_code)]

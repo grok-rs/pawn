@@ -36,10 +36,10 @@ impl SettingsService {
                 query.push_str(" AND setting_key = ?");
                 params.push(setting_key);
             }
-            if let Some(user_configurable) = filter.user_configurable_only {
-                if user_configurable {
-                    query.push_str(" AND is_user_configurable = 1");
-                }
+            if let Some(user_configurable) = filter.user_configurable_only
+                && user_configurable
+            {
+                query.push_str(" AND is_user_configurable = 1");
             }
         }
 
@@ -542,10 +542,10 @@ impl SettingsService {
                 let setting_key = parts[1];
 
                 // Skip if categories filter is specified and this category is not included
-                if let Some(categories) = &data.categories {
-                    if !categories.contains(&category.to_string()) {
-                        continue;
-                    }
+                if let Some(categories) = &data.categories
+                    && !categories.contains(&category.to_string())
+                {
+                    continue;
                 }
 
                 let preference_data = CreateUserPreference {
@@ -962,11 +962,11 @@ impl SettingsService {
         for (setting_key, value) in template_data {
             if let Some((category, key)) = setting_key.split_once('.') {
                 // Skip if category filter specified and doesn't match
-                if let Some(ref categories) = request.categories {
-                    if !categories.contains(&category.to_string()) {
-                        skipped_count += 1;
-                        continue;
-                    }
+                if let Some(ref categories) = request.categories
+                    && !categories.contains(&category.to_string())
+                {
+                    skipped_count += 1;
+                    continue;
                 }
 
                 let preference_data = CreateUserPreference {
@@ -978,12 +978,11 @@ impl SettingsService {
 
                 if request.override_existing {
                     // Delete existing preference if it exists
-                    if let Some(ref user_id) = request.user_id {
-                        if let Ok(Some(existing)) =
+                    if let Some(ref user_id) = request.user_id
+                        && let Ok(Some(existing)) =
                             self.get_user_preference(user_id, category, key).await
-                        {
-                            let _ = self.delete_user_preference(existing.id).await;
-                        }
+                    {
+                        let _ = self.delete_user_preference(existing.id).await;
                     }
                 }
 

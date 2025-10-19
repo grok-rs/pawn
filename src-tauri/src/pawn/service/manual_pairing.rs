@@ -197,10 +197,10 @@ impl ManualPairingController {
                 )
             {
                 // Check if constraint applies to this round
-                if let Some(constraint_round) = constraint.round_number {
-                    if constraint_round != request.round_number {
-                        continue;
-                    }
+                if let Some(constraint_round) = constraint.round_number
+                    && constraint_round != request.round_number
+                {
+                    continue;
                 }
 
                 if let Some(player2_id) = constraint.player2_id {
@@ -256,10 +256,10 @@ impl ManualPairingController {
             for constraint in &request.constraints {
                 if constraint.constraint_type == ConstraintType::ForbidMatch {
                     // Check if constraint applies to this round
-                    if let Some(constraint_round) = constraint.round_number {
-                        if constraint_round != request.round_number {
-                            continue;
-                        }
+                    if let Some(constraint_round) = constraint.round_number
+                        && constraint_round != request.round_number
+                    {
+                        continue;
                     }
 
                     if let Some(player2_id) = constraint.player2_id {
@@ -421,10 +421,10 @@ impl ManualPairingController {
         for constraint in constraints {
             if constraint.constraint_type == ConstraintType::ForbidMatch {
                 // Check if constraint applies to this round
-                if let Some(constraint_round) = constraint.round_number {
-                    if constraint_round != round_number {
-                        continue;
-                    }
+                if let Some(constraint_round) = constraint.round_number
+                    && constraint_round != round_number
+                {
+                    continue;
                 }
 
                 if let Some(player2_id) = constraint.player2_id {
@@ -568,18 +568,15 @@ impl ManualPairingController {
                 });
             }
 
-            if let Some(ref black_player) = pairing.black_player {
-                if !seen_players.insert(black_player.id) {
-                    errors.push(ValidationError {
-                        error_type: ValidationErrorType::PlayerPairedTwice,
-                        message: format!(
-                            "Player {} appears in multiple pairings",
-                            black_player.name
-                        ),
-                        affected_players: vec![black_player.id],
-                        severity: ErrorSeverity::Critical,
-                    });
-                }
+            if let Some(ref black_player) = pairing.black_player
+                && !seen_players.insert(black_player.id)
+            {
+                errors.push(ValidationError {
+                    error_type: ValidationErrorType::PlayerPairedTwice,
+                    message: format!("Player {} appears in multiple pairings", black_player.name),
+                    affected_players: vec![black_player.id],
+                    severity: ErrorSeverity::Critical,
+                });
             }
         }
     }
@@ -610,17 +607,17 @@ impl ManualPairingController {
                 let white_id = pairing.white_player.id;
                 let black_id = black_player.id;
 
-                if let Some(opponents) = opponent_map.get(&white_id) {
-                    if opponents.contains(&black_id) {
-                        warnings.push(ValidationWarning {
-                            warning_type: WarningType::TeamConflict,
-                            message: format!(
-                                "Rematch: {} vs {} have played before",
-                                pairing.white_player.name, black_player.name
-                            ),
-                            affected_players: vec![white_id, black_id],
-                        });
-                    }
+                if let Some(opponents) = opponent_map.get(&white_id)
+                    && opponents.contains(&black_id)
+                {
+                    warnings.push(ValidationWarning {
+                        warning_type: WarningType::TeamConflict,
+                        message: format!(
+                            "Rematch: {} vs {} have played before",
+                            pairing.white_player.name, black_player.name
+                        ),
+                        affected_players: vec![white_id, black_id],
+                    });
                 }
             }
         }

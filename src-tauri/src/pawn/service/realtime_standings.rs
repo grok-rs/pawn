@@ -56,17 +56,16 @@ impl<D: Db> RealTimeStandingsService<D> {
         tournament_id: i32,
     ) -> Result<StandingsCalculationResult, PawnError> {
         // Check cache first
-        if let Some(cached) = self.get_cached_standings(tournament_id).await {
-            if cached.last_updated.elapsed()
+        if let Some(cached) = self.get_cached_standings(tournament_id).await
+            && cached.last_updated.elapsed()
                 < Duration::from_secs(self.config.cache_duration_seconds)
-            {
-                debug!("Serving cached standings for tournament {}", tournament_id);
-                return Ok(StandingsCalculationResult {
-                    standings: cached.standings,
-                    last_updated: chrono::Utc::now().to_rfc3339(),
-                    tiebreak_config: self.get_tournament_config(tournament_id).await?,
-                });
-            }
+        {
+            debug!("Serving cached standings for tournament {}", tournament_id);
+            return Ok(StandingsCalculationResult {
+                standings: cached.standings,
+                last_updated: chrono::Utc::now().to_rfc3339(),
+                tiebreak_config: self.get_tournament_config(tournament_id).await?,
+            });
         }
 
         // Calculate fresh standings

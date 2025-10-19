@@ -82,7 +82,7 @@ impl<D: Db> RoundRobinAnalysisService<D> {
         match options.tournament_type.as_str() {
             "single" => {
                 // Single round-robin: each player plays every other player once
-                if player_count % 2 == 0 {
+                if player_count.is_multiple_of(2) {
                     (player_count - 1) as i32
                 } else {
                     player_count as i32 // Odd number needs extra round for byes
@@ -90,7 +90,7 @@ impl<D: Db> RoundRobinAnalysisService<D> {
             }
             "double" => {
                 // Double round-robin: each player plays every other player twice
-                if player_count % 2 == 0 {
+                if player_count.is_multiple_of(2) {
                     (2 * (player_count - 1)) as i32
                 } else {
                     (2 * player_count) as i32
@@ -118,7 +118,7 @@ impl<D: Db> RoundRobinAnalysisService<D> {
         options: &RoundRobinOptions,
     ) -> BergerTableInfoDto {
         let player_count = players.len();
-        let table_size = if player_count % 2 == 0 {
+        let table_size = if player_count.is_multiple_of(2) {
             player_count
         } else {
             player_count + 1 // Add bye player
@@ -295,14 +295,14 @@ mod tests {
 
             match options.tournament_type.as_str() {
                 "single" => {
-                    if player_count % 2 == 0 {
+                    if player_count.is_multiple_of(2) {
                         (player_count - 1) as i32
                     } else {
                         player_count as i32
                     }
                 }
                 "double" => {
-                    if player_count % 2 == 0 {
+                    if player_count.is_multiple_of(2) {
                         (2 * (player_count - 1)) as i32
                     } else {
                         (2 * player_count) as i32

@@ -645,7 +645,7 @@ impl PairingService {
             }
 
             // Alternate colors based on round number
-            let (white, black) = if (i + round_idx) % 2 == 0 {
+            let (white, black) = if (i + round_idx).is_multiple_of(2) {
                 (player1.clone(), player2.clone())
             } else {
                 (player2.clone(), player1.clone())
