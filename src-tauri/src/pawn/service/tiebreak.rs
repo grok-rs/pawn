@@ -457,11 +457,11 @@ impl<D: Db> TiebreakCalculator<D> {
         let mut rated_opponents = 0;
 
         for opponent_id in opponent_ids {
-            if let Some(opponent) = all_players.iter().find(|p| p.id == opponent_id) {
-                if let Some(rating) = opponent.rating {
-                    total_rating += rating;
-                    rated_opponents += 1;
-                }
+            if let Some(opponent) = all_players.iter().find(|p| p.id == opponent_id)
+                && let Some(rating) = opponent.rating
+            {
+                total_rating += rating;
+                rated_opponents += 1;
             }
         }
 
@@ -509,12 +509,12 @@ impl<D: Db> TiebreakCalculator<D> {
                 continue;
             };
 
-            if let Some(opponent) = all_players.iter().find(|p| p.id == opponent_id) {
-                if let Some(rating) = opponent.rating {
-                    opponent_ratings.push(rating);
-                    score += game_score;
-                    games_count += 1;
-                }
+            if let Some(opponent) = all_players.iter().find(|p| p.id == opponent_id)
+                && let Some(rating) = opponent.rating
+            {
+                opponent_ratings.push(rating);
+                score += game_score;
+                games_count += 1;
             }
         }
 
@@ -640,7 +640,7 @@ impl<D: Db> TiebreakCalculator<D> {
             scores.pop(); // Remove highest
         }
 
-        let median = if scores.len() % 2 == 0 {
+        let median = if scores.len().is_multiple_of(2) {
             let mid = scores.len() / 2;
             (scores[mid - 1] + scores[mid]) / 2.0
         } else {
@@ -728,12 +728,12 @@ impl<D: Db> TiebreakCalculator<D> {
                 continue;
             };
 
-            if let Some(opponent) = all_players.iter().find(|p| p.id == opponent_id) {
-                if let Some(rating) = opponent.rating {
-                    opponent_ratings.push(rating);
-                    total_score += game_score;
-                    games_count += 1;
-                }
+            if let Some(opponent) = all_players.iter().find(|p| p.id == opponent_id)
+                && let Some(rating) = opponent.rating
+            {
+                opponent_ratings.push(rating);
+                total_score += game_score;
+                games_count += 1;
             }
         }
 
@@ -942,16 +942,16 @@ impl<D: Db> TiebreakCalculator<D> {
                 continue;
             };
 
-            if let Some(opponent) = all_players.iter().find(|p| p.id == opponent_id) {
-                if let Some(opponent_rating) = opponent.rating {
-                    // Calculate expected score using ELO formula
-                    let rating_diff = opponent_rating - player_rating;
-                    let expected_score = 1.0 / (1.0 + 10.0_f64.powf(rating_diff as f64 / 400.0));
+            if let Some(opponent) = all_players.iter().find(|p| p.id == opponent_id)
+                && let Some(opponent_rating) = opponent.rating
+            {
+                // Calculate expected score using ELO formula
+                let rating_diff = opponent_rating - player_rating;
+                let expected_score = 1.0 / (1.0 + 10.0_f64.powf(rating_diff as f64 / 400.0));
 
-                    total_expected += expected_score;
-                    total_actual += actual_score;
-                    rated_games += 1;
-                }
+                total_expected += expected_score;
+                total_actual += actual_score;
+                rated_games += 1;
             }
         }
 
@@ -1189,20 +1189,20 @@ impl<D: Db> TiebreakCalculator<D> {
 
         // Step 2: Collect opponent scores
         for &opponent_id in &opponent_ids {
-            if let Some(opponent_result) = results.get(&opponent_id) {
-                if let Some(opponent_player) = all_players.iter().find(|p| p.id == opponent_id) {
-                    let points = opponent_result.points as f64;
-                    total_points += points;
+            if let Some(opponent_result) = results.get(&opponent_id)
+                && let Some(opponent_player) = all_players.iter().find(|p| p.id == opponent_id)
+            {
+                let points = opponent_result.points as f64;
+                total_points += points;
 
-                    opponents_involved.push(OpponentContribution {
-                        opponent_id,
-                        opponent_name: opponent_player.name.clone(),
-                        opponent_rating: opponent_player.rating,
-                        contribution_value: points,
-                        game_result: self.get_game_result_against(player, opponent_player, games),
-                        explanation: format!("Opponent scored {points:.1} points"),
-                    });
-                }
+                opponents_involved.push(OpponentContribution {
+                    opponent_id,
+                    opponent_name: opponent_player.name.clone(),
+                    opponent_rating: opponent_player.rating,
+                    contribution_value: points,
+                    game_result: self.get_game_result_against(player, opponent_player, games),
+                    explanation: format!("Opponent scored {points:.1} points"),
+                });
             }
         }
 
@@ -1310,33 +1310,33 @@ impl<D: Db> TiebreakCalculator<D> {
                 continue;
             };
 
-            if let Some(opponent_result) = results.get(&opponent_id) {
-                if let Some(opponent_player) = all_players.iter().find(|p| p.id == opponent_id) {
-                    let opponent_total = opponent_result.points as f64;
-                    let sb_contribution = game_points * opponent_total;
-                    total_sb += sb_contribution;
+            if let Some(opponent_result) = results.get(&opponent_id)
+                && let Some(opponent_player) = all_players.iter().find(|p| p.id == opponent_id)
+            {
+                let opponent_total = opponent_result.points as f64;
+                let sb_contribution = game_points * opponent_total;
+                total_sb += sb_contribution;
 
-                    opponents_involved.push(OpponentContribution {
-                        opponent_id,
-                        opponent_name: opponent_player.name.clone(),
-                        opponent_rating: opponent_player.rating,
-                        contribution_value: sb_contribution,
-                        game_result: Some(game.result.clone()),
-                        explanation: format!(
-                            "{game_points:.1} × {opponent_total:.1} = {sb_contribution:.1}"
-                        ),
-                    });
+                opponents_involved.push(OpponentContribution {
+                    opponent_id,
+                    opponent_name: opponent_player.name.clone(),
+                    opponent_rating: opponent_player.rating,
+                    contribution_value: sb_contribution,
+                    game_result: Some(game.result.clone()),
+                    explanation: format!(
+                        "{game_points:.1} × {opponent_total:.1} = {sb_contribution:.1}"
+                    ),
+                });
 
-                    calculation_details.push(TiebreakCalculationStep {
-                        step_number,
-                        description: format!("vs {name}", name = opponent_player.name),
-                        calculation: format!(
-                            "{game_points:.1} × {opponent_total:.1} = {sb_contribution:.1}"
-                        ),
-                        intermediate_result: sb_contribution,
-                    });
-                    step_number += 1;
-                }
+                calculation_details.push(TiebreakCalculationStep {
+                    step_number,
+                    description: format!("vs {name}", name = opponent_player.name),
+                    calculation: format!(
+                        "{game_points:.1} × {opponent_total:.1} = {sb_contribution:.1}"
+                    ),
+                    intermediate_result: sb_contribution,
+                });
+                step_number += 1;
             }
         }
 
@@ -1424,30 +1424,28 @@ impl<D: Db> TiebreakCalculator<D> {
             };
 
             // Only count games against tied players
-            if tied_players.contains(&opponent_id) && opponent_id != player.id {
-                if let Some(opponent_player) = all_players.iter().find(|p| p.id == opponent_id) {
-                    total_de += game_points;
+            if tied_players.contains(&opponent_id)
+                && opponent_id != player.id
+                && let Some(opponent_player) = all_players.iter().find(|p| p.id == opponent_id)
+            {
+                total_de += game_points;
 
-                    opponents_involved.push(OpponentContribution {
-                        opponent_id,
-                        opponent_name: opponent_player.name.clone(),
-                        opponent_rating: opponent_player.rating,
-                        contribution_value: game_points,
-                        game_result: Some(game.result.clone()),
-                        explanation: format!("Head-to-head: {game_points:.1} points"),
-                    });
+                opponents_involved.push(OpponentContribution {
+                    opponent_id,
+                    opponent_name: opponent_player.name.clone(),
+                    opponent_rating: opponent_player.rating,
+                    contribution_value: game_points,
+                    game_result: Some(game.result.clone()),
+                    explanation: format!("Head-to-head: {game_points:.1} points"),
+                });
 
-                    calculation_details.push(TiebreakCalculationStep {
-                        step_number,
-                        description: format!(
-                            "vs {name} (tied player)",
-                            name = opponent_player.name
-                        ),
-                        calculation: format!("Result: {game_points:.1} points"),
-                        intermediate_result: game_points,
-                    });
-                    step_number += 1;
-                }
+                calculation_details.push(TiebreakCalculationStep {
+                    step_number,
+                    description: format!("vs {name} (tied player)", name = opponent_player.name),
+                    calculation: format!("Result: {game_points:.1} points"),
+                    intermediate_result: game_points,
+                });
+                step_number += 1;
             }
         }
 
@@ -1493,20 +1491,20 @@ impl<D: Db> TiebreakCalculator<D> {
         step_number += 1;
 
         for &opponent_id in &opponent_ids {
-            if let Some(opponent_player) = all_players.iter().find(|p| p.id == opponent_id) {
-                if let Some(rating) = opponent_player.rating {
-                    total_rating += rating;
-                    rated_opponents += 1;
+            if let Some(opponent_player) = all_players.iter().find(|p| p.id == opponent_id)
+                && let Some(rating) = opponent_player.rating
+            {
+                total_rating += rating;
+                rated_opponents += 1;
 
-                    opponents_involved.push(OpponentContribution {
-                        opponent_id,
-                        opponent_name: opponent_player.name.clone(),
-                        opponent_rating: Some(rating),
-                        contribution_value: rating as f64,
-                        game_result: self.get_game_result_against(player, opponent_player, games),
-                        explanation: format!("Rating: {rating}"),
-                    });
-                }
+                opponents_involved.push(OpponentContribution {
+                    opponent_id,
+                    opponent_name: opponent_player.name.clone(),
+                    opponent_rating: Some(rating),
+                    contribution_value: rating as f64,
+                    game_result: self.get_game_result_against(player, opponent_player, games),
+                    explanation: format!("Rating: {rating}"),
+                });
             }
         }
 
@@ -1585,21 +1583,21 @@ impl<D: Db> TiebreakCalculator<D> {
                 continue;
             };
 
-            if let Some(opponent_player) = all_players.iter().find(|p| p.id == opponent_id) {
-                if let Some(rating) = opponent_player.rating {
-                    total_rating += rating;
-                    total_score += game_score;
-                    games_count += 1;
+            if let Some(opponent_player) = all_players.iter().find(|p| p.id == opponent_id)
+                && let Some(rating) = opponent_player.rating
+            {
+                total_rating += rating;
+                total_score += game_score;
+                games_count += 1;
 
-                    opponents_involved.push(OpponentContribution {
-                        opponent_id,
-                        opponent_name: opponent_player.name.clone(),
-                        opponent_rating: Some(rating),
-                        contribution_value: game_score,
-                        game_result: Some(game.result.clone()),
-                        explanation: format!("Rating: {rating}, Score: {game_score:.1}"),
-                    });
-                }
+                opponents_involved.push(OpponentContribution {
+                    opponent_id,
+                    opponent_name: opponent_player.name.clone(),
+                    opponent_rating: Some(rating),
+                    contribution_value: game_score,
+                    game_result: Some(game.result.clone()),
+                    explanation: format!("Rating: {rating}, Score: {game_score:.1}"),
+                });
             }
         }
 

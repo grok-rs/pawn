@@ -287,7 +287,7 @@ impl<D: Db> TeamPairingEngine<D> {
         }
 
         // Calculate total rounds needed
-        let total_rounds = if total_teams % 2 == 0 {
+        let total_rounds = if total_teams.is_multiple_of(2) {
             total_teams - 1
         } else {
             total_teams
@@ -374,7 +374,7 @@ impl<D: Db> TeamPairingEngine<D> {
             teams.len()
         );
 
-        if teams.len() % 2 != 0 {
+        if !teams.len().is_multiple_of(2) {
             return Err(PawnError::InvalidInput(
                 "Scheveningen requires even number of teams".to_string(),
             ));
@@ -548,7 +548,7 @@ impl<D: Db> TeamPairingEngine<D> {
         }
 
         // Calculate total rounds needed (each team plays each other twice)
-        let single_round_robin_rounds = if total_teams % 2 == 0 {
+        let single_round_robin_rounds = if total_teams.is_multiple_of(2) {
             total_teams - 1
         } else {
             total_teams
@@ -634,13 +634,13 @@ impl<D: Db> TeamPairingEngine<D> {
 
             // Determine colors based on configuration
             let team_a_white = match config.color_allocation {
-                ColorAllocation::AlternatingBoards => board % 2 == 0,
+                ColorAllocation::AlternatingBoards => board.is_multiple_of(2),
                 ColorAllocation::AlternatingRounds => round_number % 2 == 1,
                 ColorAllocation::BalancedRotation => {
                     // More complex logic for optimal color balance
-                    (board + round_number as usize) % 2 == 0
+                    (board + round_number as usize).is_multiple_of(2)
                 }
-                ColorAllocation::FixedBoards => board % 2 == 0,
+                ColorAllocation::FixedBoards => board.is_multiple_of(2),
             };
 
             let (white_player, black_player) = if team_a_white {

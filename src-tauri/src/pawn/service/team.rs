@@ -525,14 +525,13 @@ impl<D: Db> TeamService<D> {
             data.team_b_match_points,
             data.team_a_board_points,
             data.team_b_board_points,
-        ) {
-            if (a_board + b_board) < (a_match + b_match) {
-                warn!(
-                    "Board points ({}) less than match points ({})",
-                    a_board + b_board,
-                    a_match + b_match
-                );
-            }
+        ) && (a_board + b_board) < (a_match + b_match)
+        {
+            warn!(
+                "Board points ({}) less than match points ({})",
+                a_board + b_board,
+                a_match + b_match
+            );
         }
 
         let team_match = self
