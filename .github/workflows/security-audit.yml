@@ -27,19 +27,25 @@ jobs:
         with:
           toolchain: ${{ matrix.rust-version }}
 
+      # Optimized: Use Swatinem/rust-cache for faster builds
       - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "src-tauri -> target"
+          cache-on-failure: true
+
+      # Optimized: Cache cargo-audit binary (saves 1-2min)
+      - name: Cache cargo-audit
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            src-tauri/target
-          key: ${{ runner.os }}-cargo-audit-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-audit-
+          path: ~/.cargo/bin/cargo-audit
+          key: ${{ runner.os }}-cargo-audit-v1
 
       - name: Install cargo-audit
-        run: cargo install --force cargo-audit
+        run: |
+          if ! command -v cargo-audit &> /dev/null; then
+            cargo install cargo-audit --locked
+          fi
 
       - name: Run cargo audit for security vulnerabilities
         working-directory: src-tauri
