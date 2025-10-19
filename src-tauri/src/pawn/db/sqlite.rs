@@ -386,21 +386,6 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_round_by_number(
-        &self,
-        tournament_id: i32,
-        round_number: i32,
-    ) -> Result<Round, sqlx::Error> {
-        let round =
-            sqlx::query_as("SELECT * FROM rounds WHERE tournament_id = ? AND round_number = ?")
-                .bind(tournament_id)
-                .bind(round_number)
-                .fetch_one(&self.pool)
-                .await?;
-
-        Ok(round)
-    }
-
     #[instrument(ret, skip(self))]
     async fn get_player_results(
         &self,
@@ -949,26 +934,6 @@ impl Db for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn update_bracket_position(
-        &self,
-        position_id: i32,
-        player_id: Option<i32>,
-        status: String,
-    ) -> Result<(), sqlx::Error> {
-        sqlx::query(
-            "UPDATE bracket_positions 
-             SET player_id = ?, status = ?
-             WHERE id = ?",
-        )
-        .bind(player_id)
-        .bind(&status)
-        .bind(position_id)
-        .execute(&self.pool)
-        .await?;
-
-        Ok(())
-    }
-
     // Time control operations
     #[instrument(ret, skip(self))]
     async fn get_time_controls(&self) -> Result<Vec<TimeControl>, sqlx::Error> {
