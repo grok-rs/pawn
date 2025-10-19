@@ -3,8 +3,6 @@ import {
   Box,
   Typography,
   Button,
-  Card,
-  CardContent,
   Chip,
   TextField,
   InputAdornment,
@@ -40,6 +38,7 @@ import {
   isOngoingTournament,
 } from '../../utils';
 import { APP_ROUTES } from '../../constants/appRoutes';
+import { StatCard } from './StatCard';
 
 import type { Tournament } from '@dto/bindings';
 import { commands } from '@dto/bindings';
@@ -113,129 +112,84 @@ const TournamentsPage = () => {
     setFilteredTournaments(filtered);
   }, [filter, searchQuery, tournaments]);
 
-  const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+  const handleFilterClick = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      setAnchorEl(event.currentTarget);
+    },
+    []
+  );
 
-  const handleFilterClose = () => {
+  const handleFilterClose = useCallback(() => {
     setAnchorEl(null);
-  };
+  }, []);
 
-  const handleFilterSelect = (newFilter: string) => {
-    setFilter(newFilter);
-    handleFilterClose();
-  };
+  const handleDeleteClick = useCallback(
+    (id: number) => {
+      const tournament = tournaments.find(t => t.id === id);
+      if (tournament) {
+        setTournamentToDelete(tournament);
+        setDeleteDialogOpen(true);
+      }
+    },
+    [tournaments]
+  );
 
-  const handleDeleteClick = (id: number) => {
-    const tournament = tournaments.find(t => t.id === id);
-    if (tournament) {
-      setTournamentToDelete(tournament);
-      setDeleteDialogOpen(true);
-    }
-  };
-
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (!tournamentToDelete) return;
 
     try {
       await commands.deleteTournament(tournamentToDelete.id);
-      // Refresh the tournaments list
       await fetchTournaments();
     } catch (error) {
       console.error('Failed to delete tournament:', error);
     }
     setDeleteDialogOpen(false);
     setTournamentToDelete(null);
-  };
+  }, [tournamentToDelete, fetchTournaments]);
 
-  const handleCancelDelete = () => {
+  const handleCancelDelete = useCallback(() => {
     setDeleteDialogOpen(false);
     setTournamentToDelete(null);
-  };
+  }, []);
 
-  const handlePopulateSampleTournaments = async () => {
+  const handlePopulateSampleTournaments = useCallback(async () => {
     setPopulatingTournaments(true);
     try {
       await commands.populateMockTournaments();
-      // Refresh the tournaments list
       await fetchTournaments();
     } catch (error) {
       console.error('Failed to populate sample tournaments:', error);
     }
     setPopulatingTournaments(false);
-  };
+  }, [fetchTournaments]);
 
-  const StatCard = ({
-    title,
-    value,
-    icon,
-    color,
-  }: {
-    title: string;
-    value: string | number;
-    icon: React.ReactNode;
-    color: string;
-  }) => (
-    <Card
-      sx={{
-        transition: 'all 0.3s ease',
-        height: '100%',
-        '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: theme.shadows[4],
-        },
-      }}
-    >
-      <CardContent
-        sx={{
-          p: { mobile: 2, tablet: 3 },
-          height: '100%',
-          display: 'flex',
-          flexDirection: { mobile: 'row', tablet: 'column' },
-          alignItems: { mobile: 'center', tablet: 'flex-start' },
-          gap: { mobile: 2, tablet: 1.5 },
-        }}
-      >
-        <Box
-          sx={{
-            p: { mobile: 1.5, tablet: 2 },
-            borderRadius: 2,
-            backgroundColor: color + '20',
-            color: color,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minWidth: { mobile: 'auto', tablet: '56px' },
-            minHeight: { mobile: 'auto', tablet: '56px' },
-          }}
-        >
-          {icon}
-        </Box>
-        <Box sx={{ flex: 1, textAlign: { mobile: 'left', tablet: 'left' } }}>
-          <Typography
-            variant="h4"
-            fontWeight={700}
-            sx={{
-              fontSize: { mobile: '1.75rem', tablet: '2rem', laptop: '2.5rem' },
-              mb: 0.5,
-            }}
-          >
-            {value}
-          </Typography>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              fontSize: { mobile: '0.875rem', tablet: '1rem' },
-              fontWeight: 500,
-            }}
-          >
-            {title}
-          </Typography>
-        </Box>
-      </CardContent>
-    </Card>
-  );
+  const handleNavigateToNewTournament = useCallback(() => {
+    navigate(APP_ROUTES.NEW_TOURNAMENT);
+  }, [navigate]);
+
+  // Memoized filter handlers to prevent re-renders
+  const handleFilterAll = useCallback(() => setFilter('all'), []);
+  const handleFilterOngoing = useCallback(() => setFilter('ongoing'), []);
+  const handleFilterDraft = useCallback(() => setFilter('draft'), []);
+  const handleFilterFinished = useCallback(() => setFilter('finished'), []);
+
+  // Menu item handlers that also close the menu
+  const handleMenuFilterAll = useCallback(() => {
+    setFilter('all');
+    setAnchorEl(null);
+  }, []);
+  const handleMenuFilterOngoing = useCallback(() => {
+    setFilter('ongoing');
+    setAnchorEl(null);
+  }, []);
+  const handleMenuFilterDraft = useCallback(() => {
+    setFilter('draft');
+    setAnchorEl(null);
+  }, []);
+  const handleMenuFilterFinished = useCallback(() => {
+    setFilter('finished');
+    setAnchorEl(null);
+  }, []);
 
   return (
     <BaseLayout>
@@ -261,7 +215,7 @@ const TournamentsPage = () => {
               <Button
                 variant="contained"
                 startIcon={<Add />}
-                onClick={() => navigate(APP_ROUTES.NEW_TOURNAMENT)}
+                onClick={handleNavigateToNewTournament}
                 sx={{
                   backgroundColor: theme.palette.secondary.main,
                   color: theme.palette.secondary.contrastText,
@@ -366,28 +320,28 @@ const TournamentsPage = () => {
             >
               <Chip
                 label={t('all')}
-                onClick={() => setFilter('all')}
+                onClick={handleFilterAll}
                 color={filter === 'all' ? 'primary' : 'default'}
                 variant={filter === 'all' ? 'filled' : 'outlined'}
                 clickable
               />
               <Chip
                 label={t('ongoing')}
-                onClick={() => setFilter('ongoing')}
+                onClick={handleFilterOngoing}
                 color={filter === 'ongoing' ? 'success' : 'default'}
                 variant={filter === 'ongoing' ? 'filled' : 'outlined'}
                 clickable
               />
               <Chip
                 label={t('notStarted')}
-                onClick={() => setFilter('draft')}
+                onClick={handleFilterDraft}
                 color={filter === 'draft' ? 'warning' : 'default'}
                 variant={filter === 'draft' ? 'filled' : 'outlined'}
                 clickable
               />
               <Chip
                 label={t('finished')}
-                onClick={() => setFilter('finished')}
+                onClick={handleFilterFinished}
                 color={filter === 'finished' ? 'info' : 'default'}
                 variant={filter === 'finished' ? 'filled' : 'outlined'}
                 clickable
@@ -408,16 +362,14 @@ const TournamentsPage = () => {
               open={Boolean(anchorEl)}
               onClose={handleFilterClose}
             >
-              <MenuItem onClick={() => handleFilterSelect('all')}>
-                {t('all')}
-              </MenuItem>
-              <MenuItem onClick={() => handleFilterSelect('ongoing')}>
+              <MenuItem onClick={handleMenuFilterAll}>{t('all')}</MenuItem>
+              <MenuItem onClick={handleMenuFilterOngoing}>
                 {t('ongoing')}
               </MenuItem>
-              <MenuItem onClick={() => handleFilterSelect('draft')}>
+              <MenuItem onClick={handleMenuFilterDraft}>
                 {t('notStarted')}
               </MenuItem>
-              <MenuItem onClick={() => handleFilterSelect('finished')}>
+              <MenuItem onClick={handleMenuFilterFinished}>
                 {t('finished')}
               </MenuItem>
             </Menu>
@@ -465,7 +417,7 @@ const TournamentsPage = () => {
                 <Button
                   variant="contained"
                   startIcon={<Add />}
-                  onClick={() => navigate(APP_ROUTES.NEW_TOURNAMENT)}
+                  onClick={handleNavigateToNewTournament}
                 >
                   Create Tournament
                 </Button>

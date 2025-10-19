@@ -13,6 +13,7 @@ use super::domain::{
 };
 
 pub mod sqlite;
+pub mod traits;
 
 pub trait Db: Send + Sync {
     // Tournament operations
@@ -351,3 +352,8 @@ pub trait Db: Send + Sync {
         Output = Result<super::domain::model::TeamTournamentSettings, sqlx::Error>,
     > + Send;
 }
+
+// Note: Modular repository traits are available in the `traits` module.
+// They are not yet integrated with SqliteDb to avoid method conflicts.
+// Future work: Explicitly implement repository traits for SqliteDb when migrating
+// services away from the monolithic Db trait.
