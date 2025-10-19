@@ -118,7 +118,7 @@ impl<D: Db> RoundRobinAnalysisService<D> {
         options: &RoundRobinOptions,
     ) -> BergerTableInfoDto {
         let player_count = players.len();
-        let table_size = if player_count.is_multiple_of(2) {
+        let table_size: usize = if player_count.is_multiple_of(2) {
             player_count
         } else {
             player_count + 1 // Add bye player
@@ -329,7 +329,7 @@ mod tests {
             options: &RoundRobinOptions,
         ) -> BergerTableInfoDto {
             let player_count = players.len();
-            let table_size = if player_count % 2 == 0 {
+            let table_size: usize = if player_count.is_multiple_of(2) {
                 player_count
             } else {
                 player_count + 1
