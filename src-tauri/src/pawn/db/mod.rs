@@ -13,7 +13,6 @@ use super::domain::{
 };
 
 pub mod sqlite;
-pub mod traits;
 
 pub trait Db: Send + Sync {
     // Tournament operations
@@ -99,14 +98,6 @@ pub trait Db: Send + Sync {
         &self,
         tournament_id: i32,
     ) -> impl std::future::Future<Output = Result<Vec<EnhancedGameResult>, sqlx::Error>> + Send;
-
-    // Round operations extended
-    #[allow(dead_code)]
-    fn get_round_by_number(
-        &self,
-        tournament_id: i32,
-        round_number: i32,
-    ) -> impl std::future::Future<Output = Result<Round, sqlx::Error>> + Send;
 
     // Statistics
     fn get_player_results(
@@ -204,13 +195,6 @@ pub trait Db: Send + Sync {
         bracket_id: i32,
         round_number: i32,
     ) -> impl std::future::Future<Output = Result<Vec<BracketPosition>, sqlx::Error>> + Send;
-    #[allow(dead_code)]
-    fn update_bracket_position(
-        &self,
-        position_id: i32,
-        player_id: Option<i32>,
-        status: String,
-    ) -> impl std::future::Future<Output = Result<(), sqlx::Error>> + Send;
 
     // Time control operations
     fn get_time_controls(
@@ -236,7 +220,6 @@ pub trait Db: Send + Sync {
         &self,
         time_control_id: i32,
     ) -> impl std::future::Future<Output = Result<Vec<Tournament>, sqlx::Error>> + Send;
-    #[allow(dead_code)]
     fn unset_default_time_controls(
         &self,
         time_control_type: &str,
@@ -352,8 +335,3 @@ pub trait Db: Send + Sync {
         Output = Result<super::domain::model::TeamTournamentSettings, sqlx::Error>,
     > + Send;
 }
-
-// Note: Modular repository traits are available in the `traits` module.
-// They are not yet integrated with SqliteDb to avoid method conflicts.
-// Future work: Explicitly implement repository traits for SqliteDb when migrating
-// services away from the monolithic Db trait.
