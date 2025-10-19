@@ -114,8 +114,9 @@ jobs:
           yarn audit --level moderate || true
           
           # Test JSON audit for parsing
-          yarn audit --level moderate --json > audit-results.json
-          AUDIT_EXIT_CODE=$?
+          # Use || true to prevent bash -e from exiting early on non-zero exit codes
+          yarn audit --level moderate --json > audit-results.json || true
+          AUDIT_EXIT_CODE=${PIPESTATUS[0]}
           
           if [ "$AUDIT_EXIT_CODE" -ne 0 ]; then
             echo "Yarn audit found vulnerabilities. Analyzing..."
@@ -141,9 +142,13 @@ jobs:
               echo "Please review and fix these vulnerabilities:"
               grep -E '"severity":"(critical|high)"' audit-results.json || true
               exit 1
-            else
-              echo "⚠️ Only moderate vulnerabilities found (acceptable for CI)"
+            elif [ "$MODERATE_COUNT" -gt 0 ]; then
+              echo "⚠️ Only moderate severity vulnerabilities found (acceptable for CI)"
               echo "Consider upgrading dependencies in next maintenance cycle"
+              exit 0
+            else
+              echo "✅ Only low severity vulnerabilities found (acceptable for CI)"
+              echo "No action required for low severity issues"
               exit 0
             fi
           else
