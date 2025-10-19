@@ -487,19 +487,16 @@ pub async fn import_results_csv(
                 } else {
                     // Add batch validation errors to our errors
                     for (index, validation) in batch_result.results {
-                        if !validation.is_valid {
-                            if let Some(csv_row) = csv_rows.get(index) {
-                                for error in validation.errors {
-                                    errors.push(CsvImportError {
-                                        row_number: csv_row.row_number,
-                                        field: None,
-                                        message: error,
-                                        row_data: format!(
-                                            "result: {result}",
-                                            result = csv_row.result
-                                        ),
-                                    });
-                                }
+                        if !validation.is_valid
+                            && let Some(csv_row) = csv_rows.get(index)
+                        {
+                            for error in validation.errors {
+                                errors.push(CsvImportError {
+                                    row_number: csv_row.row_number,
+                                    field: None,
+                                    message: error,
+                                    row_data: format!("result: {result}", result = csv_row.result),
+                                });
                             }
                         }
                     }
@@ -2277,16 +2274,16 @@ mod tests {
             } else {
                 // Cover validation error processing (lines 489-506)
                 for (index, validation) in mock_batch_result.results {
-                    if !validation.is_valid {
-                        if let Some(csv_row) = csv_rows.get(index) {
-                            for error in validation.errors {
-                                errors.push(CsvImportError {
-                                    row_number: csv_row.row_number,
-                                    field: None,
-                                    message: error,
-                                    row_data: format!("result: {result}", result = csv_row.result),
-                                });
-                            }
+                    if !validation.is_valid
+                        && let Some(csv_row) = csv_rows.get(index)
+                    {
+                        for error in validation.errors {
+                            errors.push(CsvImportError {
+                                row_number: csv_row.row_number,
+                                field: None,
+                                message: error,
+                                row_data: format!("result: {result}", result = csv_row.result),
+                            });
                         }
                     }
                 }

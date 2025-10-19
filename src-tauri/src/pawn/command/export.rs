@@ -970,20 +970,20 @@ mod tests {
         let export_result = result.unwrap();
 
         // Test success path logic (lines 144-146)
-        if export_result.success {
-            if let Some(file_path) = export_result.file_path {
-                // Test file reading (line 146)
-                let content_result = std::fs::read_to_string(&file_path);
+        if export_result.success
+            && let Some(file_path) = export_result.file_path
+        {
+            // Test file reading (line 146)
+            let content_result = std::fs::read_to_string(&file_path);
 
-                // Test cleanup logic (lines 149-150)
-                if let Err(_e) = std::fs::remove_file(&file_path) {
-                    // Warning would be logged here
-                }
+            // Test cleanup logic (lines 149-150)
+            if let Err(_e) = std::fs::remove_file(&file_path) {
+                // Warning would be logged here
+            }
 
-                // Test successful return (line 153)
-                if let Ok(content) = content_result {
-                    assert!(!content.is_empty());
-                }
+            // Test successful return (line 153)
+            if let Ok(content) = content_result {
+                assert!(!content.is_empty());
             }
         }
     }

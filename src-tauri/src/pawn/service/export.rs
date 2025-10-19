@@ -36,10 +36,10 @@ impl<D: Db> ExportService<D> {
         export_dir: PathBuf,
     ) -> Self {
         // Ensure export directory exists
-        if !export_dir.exists() {
-            if let Err(e) = fs::create_dir_all(&export_dir) {
-                error!("Failed to create export directory: {}", e);
-            }
+        if !export_dir.exists()
+            && let Err(e) = fs::create_dir_all(&export_dir)
+        {
+            error!("Failed to create export directory: {}", e);
         }
 
         Self {

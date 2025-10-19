@@ -295,12 +295,12 @@ impl<D: Db> NormCalculationService<D> {
                     )
                 };
 
-                if let Some(opponent) = player_map.get(&opponent_id) {
-                    if let Some(opponent_rating) = opponent.rating {
-                        total_opponent_rating += opponent_rating as f64;
-                        total_score += score;
-                        game_count += 1;
-                    }
+                if let Some(opponent) = player_map.get(&opponent_id)
+                    && let Some(opponent_rating) = opponent.rating
+                {
+                    total_opponent_rating += opponent_rating as f64;
+                    total_score += score;
+                    game_count += 1;
                 }
             }
         }

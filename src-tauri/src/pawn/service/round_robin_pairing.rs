@@ -217,8 +217,15 @@ impl RoundRobinEngine {
     ) -> Result<BergerTable, PawnError> {
         let n = players.len();
         let (rounds, _multiplier) = match tournament_type {
-            RoundRobinType::Single => (if n % 2 == 0 { n - 1 } else { n }, 1),
-            RoundRobinType::Double => (if n % 2 == 0 { 2 * (n - 1) } else { 2 * n }, 2),
+            RoundRobinType::Single => (if n.is_multiple_of(2) { n - 1 } else { n }, 1),
+            RoundRobinType::Double => (
+                if n.is_multiple_of(2) {
+                    2 * (n - 1)
+                } else {
+                    2 * n
+                },
+                2,
+            ),
             RoundRobinType::Scheveningen => (n, 1), // Each team member plays each opponent once
         };
 
@@ -230,7 +237,7 @@ impl RoundRobinEngine {
         };
 
         // Handle odd number of players by adding a "bye" position
-        let working_n = if n % 2 == 0 { n } else { n + 1 };
+        let working_n = if n.is_multiple_of(2) { n } else { n + 1 };
 
         // Generate classical round-robin using rotation method
         for round in 0..rounds {
@@ -287,7 +294,7 @@ impl RoundRobinEngine {
 
         if pos1 == 0 {
             // Fixed player alternates colors
-            if round % 2 == 0 {
+            if round.is_multiple_of(2) {
                 (pos1, pos2) // pos1 gets white
             } else {
                 (pos2, pos1) // pos2 gets white
@@ -295,7 +302,7 @@ impl RoundRobinEngine {
         } else {
             // Other pairings follow position-based pattern
             let board_number = if pos1 < pos2 { pos1 } else { pos2 };
-            if (round + board_number) % 2 == 0 {
+            if (round + board_number).is_multiple_of(2) {
                 if pos1 < pos2 {
                     (pos1, pos2)
                 } else {
@@ -360,14 +367,15 @@ impl RoundRobinEngine {
         let round_pairings = &berger_table.pairings_matrix[round_index];
 
         for (board_number, pairing_opt) in round_pairings.iter().enumerate() {
-            if let Some((white_pos, black_pos)) = pairing_opt {
-                if *white_pos < players.len() && *black_pos < players.len() {
-                    pairings.push(Pairing {
-                        white_player: players[*white_pos].player.clone(),
-                        black_player: Some(players[*black_pos].player.clone()),
-                        board_number: (board_number + 1) as i32,
-                    });
-                }
+            if let Some((white_pos, black_pos)) = pairing_opt
+                && *white_pos < players.len()
+                && *black_pos < players.len()
+            {
+                pairings.push(Pairing {
+                    white_player: players[*white_pos].player.clone(),
+                    black_player: Some(players[*black_pos].player.clone()),
+                    board_number: (board_number + 1) as i32,
+                });
             }
         }
 
@@ -386,7 +394,7 @@ impl RoundRobinEngine {
         players: &[RoundRobinPlayer],
         round_number: i32,
     ) -> Option<Player> {
-        if players.len() % 2 == 0 {
+        if players.len().is_multiple_of(2) {
             return None;
         }
 

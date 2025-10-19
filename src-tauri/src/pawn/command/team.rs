@@ -478,12 +478,12 @@ pub async fn validate_team_pairing_config(
     }
 
     // Validate score difference
-    if let Some(diff) = config.max_score_difference {
-        if !(0.0..=10.0).contains(&diff) {
-            return Err(crate::pawn::common::error::PawnError::InvalidInput(
-                "Max score difference must be between 0.0 and 10.0".to_string(),
-            ));
-        }
+    if let Some(diff) = config.max_score_difference
+        && !(0.0..=10.0).contains(&diff)
+    {
+        return Err(crate::pawn::common::error::PawnError::InvalidInput(
+            "Max score difference must be between 0.0 and 10.0".to_string(),
+        ));
     }
 
     Ok(true)

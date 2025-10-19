@@ -48,28 +48,28 @@ impl<D: Db> PlayerService<D> {
         }
 
         // Validate the data if provided
-        if let Some(ref name) = data.name {
-            if name.trim().is_empty() {
-                return Err(PawnError::ValidationError(
-                    "Player name cannot be empty".to_string(),
-                ));
-            }
+        if let Some(ref name) = data.name
+            && name.trim().is_empty()
+        {
+            return Err(PawnError::ValidationError(
+                "Player name cannot be empty".to_string(),
+            ));
         }
 
-        if let Some(rating) = data.rating {
-            if !(0..=4000).contains(&rating) {
-                return Err(PawnError::ValidationError(
-                    "Rating must be between 0 and 4000".to_string(),
-                ));
-            }
+        if let Some(rating) = data.rating
+            && !(0..=4000).contains(&rating)
+        {
+            return Err(PawnError::ValidationError(
+                "Rating must be between 0 and 4000".to_string(),
+            ));
         }
 
-        if let Some(ref gender) = data.gender {
-            if !["M", "F", "O"].contains(&gender.as_str()) {
-                return Err(PawnError::ValidationError(
-                    "Gender must be M, F, or O".to_string(),
-                ));
-            }
+        if let Some(ref gender) = data.gender
+            && !["M", "F", "O"].contains(&gender.as_str())
+        {
+            return Err(PawnError::ValidationError(
+                "Gender must be M, F, or O".to_string(),
+            ));
         }
 
         self.db.update_player(data).await.map_err(PawnError::from)
@@ -153,20 +153,20 @@ impl<D: Db> PlayerService<D> {
             ));
         }
 
-        if let Some(rating) = data.rating {
-            if !(0..=4000).contains(&rating) {
-                return Err(PawnError::ValidationError(
-                    "Rating must be between 0 and 4000".to_string(),
-                ));
-            }
+        if let Some(rating) = data.rating
+            && !(0..=4000).contains(&rating)
+        {
+            return Err(PawnError::ValidationError(
+                "Rating must be between 0 and 4000".to_string(),
+            ));
         }
 
-        if let Some(gender) = &data.gender {
-            if !["M", "F", "O"].contains(&gender.as_str()) {
-                return Err(PawnError::ValidationError(
-                    "Gender must be M, F, or O".to_string(),
-                ));
-            }
+        if let Some(gender) = &data.gender
+            && !["M", "F", "O"].contains(&gender.as_str())
+        {
+            return Err(PawnError::ValidationError(
+                "Gender must be M, F, or O".to_string(),
+            ));
         }
 
         Ok(())
@@ -184,22 +184,22 @@ impl<D: Db> PlayerService<D> {
             errors.push("Player name cannot be empty".to_string());
         }
 
-        if let Some(rating) = player_data.rating {
-            if !(0..=4000).contains(&rating) {
-                errors.push("Rating must be between 0 and 4000".to_string());
-            }
+        if let Some(rating) = player_data.rating
+            && !(0..=4000).contains(&rating)
+        {
+            errors.push("Rating must be between 0 and 4000".to_string());
         }
 
-        if let Some(gender) = &player_data.gender {
-            if !["M", "F", "O"].contains(&gender.as_str()) {
-                errors.push("Gender must be M, F, or O".to_string());
-            }
+        if let Some(gender) = &player_data.gender
+            && !["M", "F", "O"].contains(&gender.as_str())
+        {
+            errors.push("Gender must be M, F, or O".to_string());
         }
 
-        if let Some(email) = &player_data.email {
-            if !email.contains('@') {
-                warnings.push("Email format may be invalid".to_string());
-            }
+        if let Some(email) = &player_data.email
+            && !email.contains('@')
+        {
+            warnings.push("Email format may be invalid".to_string());
         }
 
         PlayerImportValidation {
@@ -233,20 +233,20 @@ impl<D: Db> PlayerService<D> {
             ));
         }
 
-        if let (Some(min_rating), Some(max_rating)) = (data.min_rating, data.max_rating) {
-            if min_rating > max_rating {
-                return Err(PawnError::ValidationError(
-                    "Minimum rating cannot be greater than maximum rating".to_string(),
-                ));
-            }
+        if let (Some(min_rating), Some(max_rating)) = (data.min_rating, data.max_rating)
+            && min_rating > max_rating
+        {
+            return Err(PawnError::ValidationError(
+                "Minimum rating cannot be greater than maximum rating".to_string(),
+            ));
         }
 
-        if let (Some(min_age), Some(max_age)) = (data.min_age, data.max_age) {
-            if min_age > max_age {
-                return Err(PawnError::ValidationError(
-                    "Minimum age cannot be greater than maximum age".to_string(),
-                ));
-            }
+        if let (Some(min_age), Some(max_age)) = (data.min_age, data.max_age)
+            && min_age > max_age
+        {
+            return Err(PawnError::ValidationError(
+                "Minimum age cannot be greater than maximum age".to_string(),
+            ));
         }
 
         self.db
@@ -377,18 +377,18 @@ mod tests {
                 return Err(PawnError::InvalidInput("Name cannot be empty".to_string()));
             }
 
-            if let Some(rating) = data.rating {
-                if !(0..=4000).contains(&rating) {
-                    return Err(PawnError::InvalidInput(
-                        "Rating must be between 0 and 4000".to_string(),
-                    ));
-                }
+            if let Some(rating) = data.rating
+                && !(0..=4000).contains(&rating)
+            {
+                return Err(PawnError::InvalidInput(
+                    "Rating must be between 0 and 4000".to_string(),
+                ));
             }
 
-            if let Some(email) = &data.email {
-                if !email.contains('@') {
-                    return Err(PawnError::InvalidInput("Invalid email format".to_string()));
-                }
+            if let Some(email) = &data.email
+                && !email.contains('@')
+            {
+                return Err(PawnError::InvalidInput("Invalid email format".to_string()));
             }
 
             Ok(())

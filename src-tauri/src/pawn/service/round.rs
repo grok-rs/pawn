@@ -57,16 +57,15 @@ impl<D: Db> RoundService<D> {
         }
 
         // Check if round already exists
-        if let Ok(existing_rounds) = self.db.get_rounds_by_tournament(data.tournament_id).await {
-            if existing_rounds
+        if let Ok(existing_rounds) = self.db.get_rounds_by_tournament(data.tournament_id).await
+            && existing_rounds
                 .iter()
                 .any(|r| r.round_number == data.round_number)
-            {
-                return Err(PawnError::InvalidInput(format!(
-                    "Round {} already exists for tournament {}",
-                    data.round_number, data.tournament_id
-                )));
-            }
+        {
+            return Err(PawnError::InvalidInput(format!(
+                "Round {} already exists for tournament {}",
+                data.round_number, data.tournament_id
+            )));
         }
 
         self.db
