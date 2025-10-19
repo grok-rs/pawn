@@ -29,16 +29,12 @@ jobs:
       with:
         components: rustfmt, clippy
 
-    - name: Cache cargo registry
-      uses: actions/cache@v4
+    # Optimized: Use Swatinem/rust-cache for 3-5min faster builds
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
       with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          src-tauri/target
-        key: ${{ runner.os }}-cargo-fmt-clippy-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
+        workspaces: "src-tauri -> target"
+        cache-on-failure: true
 
     - name: Install system dependencies
       run: |
@@ -71,24 +67,30 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Cache cargo registry
-      uses: actions/cache@v4
+    # Optimized: Use Swatinem/rust-cache (shared across jobs)
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
       with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          src-tauri/target
-        key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
+        workspaces: "src-tauri -> target"
+        cache-on-failure: true
 
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y libsqlite3-dev pkg-config libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
 
+    # Optimized: Cache cargo-tarpaulin binary (saves 2-3min)
+    - name: Cache cargo-tarpaulin
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/bin/cargo-tarpaulin
+        key: ${{ runner.os }}-cargo-tarpaulin-v1
+
     - name: Install cargo-tarpaulin
-      run: cargo install cargo-tarpaulin
+      run: |
+        if ! command -v cargo-tarpaulin &> /dev/null; then
+          cargo install cargo-tarpaulin --locked
+        fi
 
     - name: Run tests with coverage
       run: |
@@ -146,16 +148,12 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Cache cargo registry
-      uses: actions/cache@v4
+    # Optimized: Shared Rust cache
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
       with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          src-tauri/target
-        key: ${{ runner.os }}-cargo-integration-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
+        workspaces: "src-tauri -> target"
+        cache-on-failure: true
 
     - name: Install system dependencies
       run: |
@@ -191,16 +189,12 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Cache cargo registry
-      uses: actions/cache@v4
+    # Optimized: Shared Rust cache
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
       with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          src-tauri/target
-        key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
+        workspaces: "src-tauri -> target"
+        cache-on-failure: true
 
     - name: Install system dependencies
       run: |
@@ -242,24 +236,30 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Cache cargo registry
-      uses: actions/cache@v4
+    # Optimized: Shared Rust cache
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
       with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          src-tauri/target
-        key: ${{ runner.os }}-cargo-audit-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
+        workspaces: "src-tauri -> target"
+        cache-on-failure: true
 
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y libsqlite3-dev pkg-config libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
 
+    # Optimized: Cache cargo-audit binary (saves 1-2min)
+    - name: Cache cargo-audit
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/bin/cargo-audit
+        key: ${{ runner.os }}-cargo-audit-v1
+
     - name: Install cargo-audit
-      run: cargo install cargo-audit
+      run: |
+        if ! command -v cargo-audit &> /dev/null; then
+          cargo install cargo-audit --locked
+        fi
 
     - name: Security audit
       run: |

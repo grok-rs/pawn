@@ -21,16 +21,12 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Cache cargo registry
-      uses: actions/cache@v4
+    # Optimized: Use Swatinem/rust-cache for 3-5min faster builds
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
       with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          src-tauri/target
-        key: ${{ runner.os }}-cargo-db-integration-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
+        workspaces: "src-tauri -> target"
+        cache-on-failure: true
 
     - name: Install system dependencies
       run: |
@@ -60,16 +56,12 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Cache cargo registry
-      uses: actions/cache@v4
+    # Optimized: Shared Rust cache
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
       with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          src-tauri/target
-        key: ${{ runner.os }}-cargo-command-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
+        workspaces: "src-tauri -> target"
+        cache-on-failure: true
 
     - name: Install system dependencies
       run: |
@@ -94,16 +86,12 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Cache cargo registry
-      uses: actions/cache@v4
+    # Optimized: Shared Rust cache
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
       with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          src-tauri/target
-        key: ${{ runner.os }}-cargo-perf-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
+        workspaces: "src-tauri -> target"
+        cache-on-failure: true
 
     - name: Install system dependencies
       run: |
@@ -141,16 +129,12 @@ jobs:
         node-version: '20.x'
         cache: 'yarn'
 
-    - name: Cache cargo registry
-      uses: actions/cache@v4
+    # Optimized: Shared Rust cache
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
       with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          src-tauri/target
-        key: ${{ runner.os }}-cargo-fullstack-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
+        workspaces: "src-tauri -> target"
+        cache-on-failure: true
 
     - name: Install system dependencies
       run: |
@@ -197,24 +181,30 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Cache cargo registry
-      uses: actions/cache@v4
+    # Optimized: Shared Rust cache
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
       with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          src-tauri/target
-        key: ${{ runner.os }}-cargo-coverage-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
+        workspaces: "src-tauri -> target"
+        cache-on-failure: true
 
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y libsqlite3-dev pkg-config libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
 
+    # Optimized: Cache cargo-tarpaulin binary (saves 2-3min)
+    - name: Cache cargo-tarpaulin
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/bin/cargo-tarpaulin
+        key: ${{ runner.os }}-cargo-tarpaulin-v1
+
     - name: Install cargo-tarpaulin
-      run: cargo install cargo-tarpaulin
+      run: |
+        if ! command -v cargo-tarpaulin &> /dev/null; then
+          cargo install cargo-tarpaulin --locked
+        fi
 
     - name: Test Tauri command coverage
       run: |
