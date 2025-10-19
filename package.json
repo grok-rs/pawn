@@ -129,6 +129,7 @@
   },
   "resolutions": {
     "@babel/runtime": "7.27.6",
-    "esbuild": "0.25.0"
+    "esbuild": "0.25.0",
+    "tar-fs": "^2.1.4"
   }
 }
