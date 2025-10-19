@@ -30,6 +30,24 @@ This file provides comprehensive guidance to Claude Code (claude.ai/code) when w
 - **Bug Fixes**: Must include regression tests
 - **Refactoring**: All tests must pass, coverage cannot decrease
 
+### Coverage Strategy & Tauri Testing Limitation
+
+**Architectural Constraint**: Tauri command wrapper functions in `src-tauri/src/pawn/command/**` cannot be unit tested due to `tauri::State<T>` having private fields. These are thin delegates (1-2 lines) that pass requests to the service layer.
+
+**Testing Approach**:
+- ✅ **Service Layer**: Comprehensive unit and integration tests (target: 90%)
+- ✅ **Business Logic**: All domain logic is testable and tested in services
+- ⚠️ **Command Wrappers**: Untestable by design, but contain no logic
+- ✅ **Integration**: Service tests validate the actual business logic that commands delegate to
+
+**Codecov Configuration**:
+- **Project Coverage**: 70% target (overall codebase)
+- **Patch Coverage**: 40% target (accounts for untestable command wrappers in diffs)
+- **See**: `codecov.yml` for complete configuration
+
+**Why This Works**:
+Command wrappers like `pub async fn create_team(state: State<'_, PawnState>, data: CreateTeam) -> CommandResult<Team> { state.team_service.create_team(data).await }` contain zero business logic. All testable logic lives in `TeamService::create_team()`, which has comprehensive test coverage.
+
 ### TDD Workflow Commands
 
 **Backend Testing**:
