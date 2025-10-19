@@ -113,11 +113,11 @@ sudo apt-get install -y \
 
 ## 🔒 Security Audit Status
 
-**Current Advisory Status**: The project has 13 known security advisories that are **acknowledged and documented**:
+**Current Advisory Status**: The project has 14 known security advisories that are **acknowledged and documented**:
 
 ### GTK3 Ecosystem (Unmaintained - Not Security Vulnerabilities)
 - **RUSTSEC-2024-0413**: atk - unmaintained
-- **RUSTSEC-2024-0416**: atk-sys - unmaintained  
+- **RUSTSEC-2024-0416**: atk-sys - unmaintained
 - **RUSTSEC-2024-0412**: gdk - unmaintained
 - **RUSTSEC-2024-0418**: gdk-sys - unmaintained
 - **RUSTSEC-2024-0411**: gdkwayland-sys - unmaintained
@@ -130,6 +130,7 @@ sudo apt-get install -y \
 ### Other Unmaintained Crates
 - **RUSTSEC-2024-0436**: paste - unmaintained
 - **RUSTSEC-2024-0370**: proc-macro-error - unmaintained
+- **RUSTSEC-2025-0057**: fxhash - unmaintained (via Tauri dependencies)
 
 ### Technical Issues
 - **RUSTSEC-2024-0429**: glib - unsound Iterator implementation
