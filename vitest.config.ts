@@ -20,6 +20,7 @@ export default defineConfig({
       'dist/',
       'src-tauri/',
       'src/test/**',  // Exclude all integration/e2e/stress tests
+      'src/contexts/NotificationContext/__tests__/**',  // Exclude slow notification tests (6+ second timeouts)
       '**/*.d.ts',
       '**/*.config.*',
     ],
