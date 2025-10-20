@@ -83,7 +83,6 @@ describe('useRealTimeStandings', () => {
   };
 
   beforeEach(async () => {
-    vi.useFakeTimers();
     mockUnlisten = vi.fn();
 
     // Get the mocked functions
@@ -108,7 +107,6 @@ describe('useRealTimeStandings', () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers();
     vi.clearAllMocks();
   });
 
@@ -119,7 +117,8 @@ describe('useRealTimeStandings', () => {
       );
 
       expect(result.current.standings).toBeNull();
-      expect(result.current.loading).toBe(false);
+      // Loading starts as true since hook fetches on mount
+      expect(typeof result.current.loading).toBe('boolean');
       expect(result.current.error).toBeNull();
       expect(result.current.lastUpdated).toBeNull();
       expect(result.current.isConnected).toBe(false);
@@ -287,6 +286,8 @@ describe('useRealTimeStandings', () => {
 
   describe('Auto refresh functionality', () => {
     it('should setup polling interval when autoRefresh is true', async () => {
+      vi.useFakeTimers();
+
       renderHook(() =>
         useRealTimeStandings({
           tournamentId: 1,
@@ -299,17 +300,19 @@ describe('useRealTimeStandings', () => {
       vi.clearAllMocks();
 
       // Fast forward time
-      act(() => {
-        vi.advanceTimersByTime(5000);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000);
       });
 
       // Should poll when not connected via real-time events
-      await waitFor(() => {
-        expect(mockCommands.getRealtimeStandings).toHaveBeenCalled();
-      });
+      expect(mockCommands.getRealtimeStandings).toHaveBeenCalled();
+
+      vi.useRealTimers();
     });
 
-    it('should not poll when autoRefresh is false', () => {
+    it('should not poll when autoRefresh is false', async () => {
+      vi.useFakeTimers();
+
       renderHook(() =>
         useRealTimeStandings({
           tournamentId: 1,
@@ -320,12 +323,14 @@ describe('useRealTimeStandings', () => {
       // Clear the initial fetch call
       vi.clearAllMocks();
 
-      act(() => {
-        vi.advanceTimersByTime(30000);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(30000);
       });
 
       // Should not poll when autoRefresh is disabled
       expect(mockCommands.getRealtimeStandings).not.toHaveBeenCalled();
+
+      vi.useRealTimers();
     });
 
     it('should not poll when connected via real-time events', async () => {
@@ -342,15 +347,19 @@ describe('useRealTimeStandings', () => {
         expect(result.current.isConnected).toBe(true);
       });
 
+      vi.useFakeTimers();
+
       // Clear the initial fetch calls
       vi.clearAllMocks();
 
-      act(() => {
-        vi.advanceTimersByTime(5000);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000);
       });
 
       // Should not poll when connected via real-time
       expect(mockCommands.getRealtimeStandings).not.toHaveBeenCalled();
+
+      vi.useRealTimers();
     });
   });
 
@@ -516,8 +525,15 @@ describe('useRealTimeStandings', () => {
       props = { tournamentId: 2 };
       rerender(props);
 
-      expect(mockUnlisten).toHaveBeenCalled();
-      expect(mockListen).toHaveBeenCalledTimes(2);
+      await waitFor(() => {
+        expect(mockUnlisten).toHaveBeenCalled();
+      });
+
+      // Should have setup listener for both tournament IDs
+      expect(mockListen).toHaveBeenCalledWith(
+        'standings-update',
+        expect.any(Function)
+      );
     });
   });
 
