@@ -51,6 +51,7 @@ export const createMockFormState = <T extends FieldValues = FieldValues>(
   dirtyFields: {},
   touchedFields: {},
   validatingFields: {},
+  isReady: false,
   ...overrides,
 });
 
