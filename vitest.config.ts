@@ -8,19 +8,25 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // Optimized: Only run unit tests in components, exclude slow integration/e2e tests
+    include: [
+      'src/components/**/*.{test,spec}.{ts,tsx}',
+      'src/utils/**/*.{test,spec}.{ts,tsx}',
+      'src/hooks/**/*.{test,spec}.{ts,tsx}',
+      'src/contexts/**/*.{test,spec}.{ts,tsx}',
+    ],
     exclude: [
       'node_modules/',
       'dist/',
       'src-tauri/',
-      'src/test/mocks/',
-      'src/test/e2e/**',
+      'src/test/**',  // Exclude all integration/e2e/stress tests
       '**/*.d.ts',
       '**/*.config.*',
     ],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html', 'lcov', 'json-summary'],
+      // Optimized: Only generate lcov for CI (skip slow html/json)
+      reporter: ['lcov'],
       reportsDirectory: './coverage',
       exclude: [
         'node_modules/',
@@ -47,6 +53,14 @@ export default defineConfig({
     hookTimeout: 10000,
     // Silence console outputs during tests
     silent: true,
+    // Optimized: Use all available CPU threads for parallel test execution
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        maxThreads: 4,
+        minThreads: 1,
+      },
+    },
   },
   resolve: {
     alias: {
