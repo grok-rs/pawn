@@ -26,8 +26,8 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      // Optimized: Only generate lcov for CI (skip slow html/json)
-      reporter: ['lcov'],
+      // Optimized: Generate lcov for CI and json-summary for coverage checks
+      reporter: ['lcov', 'json-summary'],
       reportsDirectory: './coverage',
       exclude: [
         'node_modules/',
