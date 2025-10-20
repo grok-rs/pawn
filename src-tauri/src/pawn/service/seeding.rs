@@ -9,7 +9,7 @@ use crate::pawn::{
         model::{Player, SeedingMethod, TournamentSeedingSettings},
     },
 };
-use rand::{seq::SliceRandom, thread_rng};
+use rand::{rng, seq::SliceRandom};
 use sqlx::SqlitePool;
 use std::collections::HashMap;
 
@@ -286,7 +286,7 @@ impl SeedingService {
             }
             SeedingMethod::Random => {
                 let mut indices: Vec<usize> = (0..players.len()).collect();
-                indices.shuffle(&mut thread_rng());
+                indices.shuffle(&mut rng());
 
                 for (seed, &index) in indices.iter().enumerate() {
                     let player = &players[index];
@@ -347,7 +347,7 @@ impl SeedingService {
 
     fn generate_random_pairing_numbers(&self, players: &mut [Player], start_number: i32) {
         let mut numbers: Vec<i32> = (start_number..start_number + players.len() as i32).collect();
-        numbers.shuffle(&mut thread_rng());
+        numbers.shuffle(&mut rng());
 
         for (player, &number) in players.iter_mut().zip(numbers.iter()) {
             player.pairing_number = Some(number);
@@ -499,7 +499,7 @@ mod tests {
                 }
                 SeedingMethod::Random => {
                     let mut indices: Vec<usize> = (0..players.len()).collect();
-                    indices.shuffle(&mut thread_rng());
+                    indices.shuffle(&mut rng());
 
                     for (seed, &index) in indices.iter().enumerate() {
                         let player = &players[index];
@@ -558,7 +558,7 @@ mod tests {
         fn generate_random_pairing_numbers(&self, players: &mut [Player], start_number: i32) {
             let mut numbers: Vec<i32> =
                 (start_number..start_number + players.len() as i32).collect();
-            numbers.shuffle(&mut thread_rng());
+            numbers.shuffle(&mut rng());
 
             for (player, &number) in players.iter_mut().zip(numbers.iter()) {
                 player.pairing_number = Some(number);
