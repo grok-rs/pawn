@@ -69,7 +69,7 @@ jobs:
       run: yarn install --frozen-lockfile
 
     - name: Run unit tests with coverage
-      run: vitest --coverage --run
+      run: yarn vitest --coverage --run
       env:
         CI: true
 
