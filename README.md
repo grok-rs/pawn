@@ -1,8 +1,12 @@
-# Pawn - Chess Tournament Management System
+<div align="center">
+  <img src="./public/chess-logo.svg" alt="Pawn Logo" width="120" height="120">
 
-[![CI](https://github.com/grok-rs/pawn/workflows/CI%20Orchestration%20(Complete%20Pipeline)/badge.svg)](https://github.com/grok-rs/pawn/actions/workflows/ci-orchestration.yml)
-[![codecov](https://codecov.io/gh/grok-rs/pawn/branch/main/graph/badge.svg)](https://codecov.io/gh/grok-rs/pawn)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  # Pawn - Chess Tournament Management System
+
+  [![CI](https://github.com/grok-rs/pawn/workflows/CI%20Orchestration%20(Complete%20Pipeline)/badge.svg)](https://github.com/grok-rs/pawn/actions/workflows/ci-orchestration.yml)
+  [![codecov](https://codecov.io/gh/grok-rs/pawn/branch/main/graph/badge.svg)](https://codecov.io/gh/grok-rs/pawn)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+</div>
 
 Professional desktop application for chess tournament management. Built with Tauri, React, and Rust for native performance across Windows, macOS, and Linux.
 
@@ -105,7 +109,6 @@ pawn/
 
 - [Enhanced Player Management](./ENHANCED_PLAYER_MANAGEMENT.md) - Player system details
 - [Pairing Test Guide](./PAIRING_TEST_GUIDE.md) - Tournament pairing system
-- [CLAUDE.md](./CLAUDE.md) - Development with Claude Code
 
 ## Contributing
 
