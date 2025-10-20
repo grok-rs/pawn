@@ -49,20 +49,18 @@ jobs:
       run: yarn type-check
 
   # Unit tests with coverage
+  # Optimized: Only test on Node 20.x (current LTS) to reduce CI time
   unit-tests:
     name: Unit Tests & Coverage
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup Node.js ${{ matrix.node-version }}
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: '20.x'
         cache: 'yarn'
 
     - name: Install dependencies
@@ -80,7 +78,6 @@ jobs:
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
-      if: matrix.node-version == '20.x'
       with:
         file: ./coverage/lcov.info
         flags: frontend

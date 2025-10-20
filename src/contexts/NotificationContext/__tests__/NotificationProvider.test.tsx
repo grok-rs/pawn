@@ -40,11 +40,9 @@ describe('NotificationProvider', () => {
 
   beforeEach(() => {
     user = userEvent.setup();
-    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    vi.useRealTimers();
     vi.clearAllMocks();
   });
 
@@ -199,6 +197,8 @@ describe('NotificationProvider', () => {
     });
 
     it('should auto-hide notification after 6 seconds', async () => {
+      vi.useFakeTimers();
+
       renderWithTheme(
         <NotificationProvider>
           <TestComponent />
@@ -209,13 +209,13 @@ describe('NotificationProvider', () => {
       expect(screen.getByText('Success message')).toBeInTheDocument();
 
       // Fast forward time by 6 seconds
-      act(() => {
-        vi.advanceTimersByTime(6000);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(6000);
       });
 
-      await waitFor(() => {
-        expect(screen.queryByText('Success message')).not.toBeInTheDocument();
-      });
+      expect(screen.queryByText('Success message')).not.toBeInTheDocument();
+
+      vi.useRealTimers();
     });
 
     it('should not close notification on clickaway', async () => {
