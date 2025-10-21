@@ -69,7 +69,7 @@
     "@reduxjs/toolkit": "^2.2.7",
     "@tauri-apps/api": "^2.3.0",
     "@tauri-apps/plugin-opener": "^2",
-    "ag-grid-react": "^32.1.0",
+    "ag-grid-react": "^34.2.0",
     "better-sqlite3": "^11.2.1",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
