@@ -69,7 +69,7 @@ mockall = "0.13"
 sqlx = { version = "0.8.6", features = ["sqlite", "runtime-tokio"] }
 
 # Property-based testing
-proptest = "1.8"
+proptest = "1.9"
 quickcheck = "1.0"
 
 # Performance testing
