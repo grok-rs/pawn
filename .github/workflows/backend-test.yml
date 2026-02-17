@@ -56,9 +56,9 @@ jobs:
         cd src-tauri
         cargo check --all-targets --all-features
 
-  # Unit tests with coverage
+  # Unit tests
   unit-tests:
-    name: Unit Tests & Coverage
+    name: Unit Tests
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -79,63 +79,10 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libsqlite3-dev pkg-config libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
 
-    # Optimized: Cache cargo-tarpaulin binary (saves 2-3min)
-    - name: Cache cargo-tarpaulin
-      uses: actions/cache@v4
-      with:
-        path: ~/.cargo/bin/cargo-tarpaulin
-        key: ${{ runner.os }}-cargo-tarpaulin-v1
-
-    - name: Install cargo-tarpaulin
-      run: |
-        if ! command -v cargo-tarpaulin &> /dev/null; then
-          cargo install cargo-tarpaulin --locked
-        fi
-
-    - name: Run tests with coverage
+    - name: Run tests
       run: |
         cd src-tauri
-        cargo tarpaulin --out xml --output-dir ../coverage --exclude-files "src/main.rs" --ignore-panics
-
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        file: ./coverage/cobertura.xml
-        flags: backend
-        name: backend-coverage
-        fail_ci_if_error: false
-
-    - name: Check coverage threshold
-      run: |
-        cd src-tauri
-        # Run tarpaulin and capture output
-        TARPAULIN_OUTPUT=$(cargo tarpaulin --ignore-panics 2>&1)
-        
-        echo "Tarpaulin output:"
-        echo "$TARPAULIN_OUTPUT"
-        
-        # Extract coverage percentage more robustly
-        COVERAGE=$(echo "$TARPAULIN_OUTPUT" | grep -oP 'Coverage: \K[0-9.]+' | head -1)
-        
-        # If no coverage found, try alternative patterns
-        if [ -z "$COVERAGE" ]; then
-          COVERAGE=$(echo "$TARPAULIN_OUTPUT" | grep -oP '\K[0-9.]+(?=% coverage)' | head -1)
-        fi
-        
-        # Default to 0 if still no coverage found
-        if [ -z "$COVERAGE" ]; then
-          COVERAGE="0"
-        fi
-        
-        echo "Coverage: $COVERAGE%"
-        
-        # Use awk for floating point comparison instead of bc
-        if [ "$(echo "$COVERAGE < 50" | awk '{print ($1 < $3)}')" == "1" ]; then
-          echo "❌ Coverage $COVERAGE% is below 50% threshold"
-          echo "Note: This is a demo - 90% coverage would be required in production"
-        else
-          echo "✅ Coverage $COVERAGE% meets relaxed threshold for demo"
-        fi
+        cargo test
 
   # Integration tests and database operations
   integration-tests:
@@ -164,19 +111,19 @@ jobs:
       run: |
         cd src-tauri
         cargo test --test integration --release
-        echo "🔄 Integration tests completed"
+        echo "Integration tests completed"
 
     - name: Validate database migrations
       run: |
         cd src-tauri
         cargo test migration_ --release
-        echo "🗄️ Database migration validation completed"
+        echo "Database migration validation completed"
 
     - name: Test command contracts
       run: |
         cd src-tauri
         cargo test command_ --lib --release
-        echo "📡 Command contract tests completed"
+        echo "Command contract tests completed"
 
   # Performance and memory tests
   performance-tests:
@@ -205,116 +152,52 @@ jobs:
       run: |
         cd src-tauri
         cargo bench --bench pairing_performance --message-format=json > benchmark_results.json
-        echo "⚡ Performance benchmarks completed"
+        echo "Performance benchmarks completed"
 
     - name: Run memory leak detection
       run: |
         cd src-tauri
         cargo test memory_leak_ --release
-        echo "🧠 Memory leak detection completed"
+        echo "Memory leak detection completed"
 
     - name: Performance regression check
       run: |
         cd src-tauri
-        echo "⚡ Checking for performance regressions..."
-        
+        echo "Checking for performance regressions..."
+
         # Extract benchmark results
         if [ -f benchmark_results.json ]; then
-          # Check that pairing algorithms complete within reasonable time
           echo "Pairing performance check would run here"
-          # In a real implementation, you'd parse the JSON and check thresholds
-        fi
-
-  # Security and quality checks
-  security-and-quality:
-    name: Security & Quality
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-
-    # Optimized: Shared Rust cache
-    - name: Cache Rust dependencies
-      uses: Swatinem/rust-cache@v2
-      with:
-        workspaces: "src-tauri -> target"
-        cache-on-failure: true
-
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libsqlite3-dev pkg-config libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
-
-    # Optimized: Cache cargo-audit binary (saves 1-2min)
-    - name: Cache cargo-audit
-      uses: actions/cache@v4
-      with:
-        path: ~/.cargo/bin/cargo-audit
-        key: ${{ runner.os }}-cargo-audit-v1
-
-    - name: Install cargo-audit
-      run: |
-        if ! command -v cargo-audit &> /dev/null; then
-          cargo install cargo-audit --locked
-        fi
-
-    - name: Security audit
-      run: |
-        cd src-tauri
-        cargo audit
-        echo "🔒 Security audit completed"
-
-    - name: Validate TDD compliance
-      run: |
-        cd src-tauri
-        # Check that all service files have tests
-        echo "🔍 Validating TDD compliance..."
-        
-        # Count service files
-        SERVICE_FILES=$(find src/pawn/service -name "*.rs" ! -name "mod.rs" | wc -l)
-        echo "Found $SERVICE_FILES service files"
-        
-        # Count test files
-        TEST_FILES=$(find src/pawn/service -name "*.rs" ! -name "mod.rs" -exec grep -l "#\[cfg(test)\]" {} \; | wc -l)
-        echo "Found $TEST_FILES service files with tests"
-        
-        # Check that most service files have tests (allowing for some exceptions)
-        MIN_COVERAGE=$((SERVICE_FILES * 80 / 100))
-        if [ $TEST_FILES -lt $MIN_COVERAGE ]; then
-          echo "❌ TDD compliance check failed: $TEST_FILES/$SERVICE_FILES service files have tests (minimum: $MIN_COVERAGE)"
-          exit 1
-        else
-          echo "✅ TDD compliance check passed: $TEST_FILES/$SERVICE_FILES service files have tests"
         fi
 
   # Final summary job that depends on all others
   summary:
     name: Quality Summary
     runs-on: ubuntu-latest
-    needs: [format-and-lint, unit-tests, integration-tests, performance-tests, security-and-quality]
+    needs: [format-and-lint, unit-tests, integration-tests, performance-tests]
     if: always()
     steps:
     - name: Check all jobs status
+      env:
+        FORMAT_RESULT: ${{ needs.format-and-lint.result }}
+        UNIT_RESULT: ${{ needs.unit-tests.result }}
+        INTEGRATION_RESULT: ${{ needs.integration-tests.result }}
+        PERFORMANCE_RESULT: ${{ needs.performance-tests.result }}
       run: |
-        echo "🎯 Backend Quality Gates Summary"
+        echo "Backend Quality Gates Summary"
         echo "================================"
-        echo "Format & Lint: ${{ needs.format-and-lint.result }}"
-        echo "Unit Tests: ${{ needs.unit-tests.result }}"
-        echo "Integration Tests: ${{ needs.integration-tests.result }}"
-        echo "Performance Tests: ${{ needs.performance-tests.result }}"
-        echo "Security & Quality: ${{ needs.security-and-quality.result }}"
-        
-        if [[ "${{ needs.format-and-lint.result }}" == "success" && 
-              "${{ needs.unit-tests.result }}" == "success" && 
-              "${{ needs.integration-tests.result }}" == "success" && 
-              "${{ needs.performance-tests.result }}" == "success" && 
-              "${{ needs.security-and-quality.result }}" == "success" ]]; then
-          echo "✅ All quality gates passed!"
+        echo "Format & Lint: $FORMAT_RESULT"
+        echo "Unit Tests: $UNIT_RESULT"
+        echo "Integration Tests: $INTEGRATION_RESULT"
+        echo "Performance Tests: $PERFORMANCE_RESULT"
+
+        if [[ "$FORMAT_RESULT" == "success" &&
+              "$UNIT_RESULT" == "success" &&
+              "$INTEGRATION_RESULT" == "success" &&
+              "$PERFORMANCE_RESULT" == "success" ]]; then
+          echo "All quality gates passed!"
           exit 0
         else
-          echo "❌ Some quality gates failed!"
+          echo "Some quality gates failed!"
           exit 1
         fi

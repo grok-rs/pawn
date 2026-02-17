@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATH\"; case \"$file\" in *.ts|*.tsx|*.js|*.jsx|*.json|*.css|*.md) npx prettier --write \"$file\" 2>/dev/null ;; *.rs) cd src-tauri && cargo fmt 2>/dev/null ;; esac",
+            "timeout": 15000
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATH\"; case \"$file\" in */pnpm-lock.yaml|*/Cargo.lock|*.env|*.env.*) echo 'BLOCK: This is a protected file (lock file or env file). Do not edit directly.' >&2; exit 2 ;; esac"
+          }
+        ]
+      }
+    ]
+  }
+}

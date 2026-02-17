@@ -3,8 +3,7 @@
 
   # Pawn - Chess Tournament Management System
 
-  [![CI](https://github.com/grok-rs/pawn/workflows/CI%20Orchestration%20(Complete%20Pipeline)/badge.svg)](https://github.com/grok-rs/pawn/actions/workflows/ci-orchestration.yml)
-  [![codecov](https://codecov.io/gh/grok-rs/pawn/branch/main/graph/badge.svg)](https://codecov.io/gh/grok-rs/pawn)
+  [![CI](https://github.com/grok-rs/pawn/workflows/Backend%20Quality%20Gates%20(Parallelized)/badge.svg)](https://github.com/grok-rs/pawn/actions/workflows/backend-test.yml)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 </div>
 
@@ -25,7 +24,7 @@ Professional desktop application for chess tournament management. Built with Tau
 
 - Node.js 18+
 - Rust (latest stable)
-- Yarn
+- pnpm
 
 ### Installation
 
@@ -35,10 +34,10 @@ git clone https://github.com/grok-rs/pawn.git
 cd pawn
 
 # Install dependencies
-yarn install
+pnpm install
 
 # Run development server
-yarn tauri dev
+pnpm tauri dev
 ```
 
 The app will open automatically. Database migrations run on first launch.
@@ -46,7 +45,7 @@ The app will open automatically. Database migrations run on first launch.
 ### Build for Production
 
 ```bash
-yarn tauri build
+pnpm tauri build
 ```
 
 Installers are created in `src-tauri/target/release/bundle/`.
@@ -57,21 +56,17 @@ Installers are created in `src-tauri/target/release/bundle/`.
 
 ```bash
 # Development
-yarn tauri dev              # Full app with hot reload
-yarn dev                    # Frontend only (localhost:1420)
+pnpm tauri dev              # Full app with hot reload
+pnpm dev                    # Frontend only (localhost:1420)
 
 # Code Quality
-yarn format:all             # Format code (frontend + backend)
-yarn lint                   # Run linter
-yarn type-check             # TypeScript validation
+pnpm format:all             # Format code (frontend + backend)
+pnpm lint                   # Run linter
+pnpm type-check             # TypeScript validation
 
 # Testing
-yarn test                   # Unit tests
-yarn test:coverage          # With coverage
-yarn test:integration       # Backend integration tests
-
-# Security
-yarn security:audit         # Check dependencies
+pnpm test                   # Unit tests
+pnpm test:integration       # Backend integration tests
 ```
 
 ### Project Structure

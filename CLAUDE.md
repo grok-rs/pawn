@@ -1,169 +1,101 @@
 # CLAUDE.md
 
-This file provides comprehensive guidance to Claude Code (claude.ai/code) when working with the **Pawn** professional chess tournament management application.
+Pawn is a chess tournament management desktop app built with Tauri 2, React 18, and Rust. It supports Swiss, Round-robin, and Team tournaments with FIDE-compliant pairing, offline-first SQLite storage, and multi-language support (EN/RU/UK).
 
-## 🎯 Application Overview
+## Architecture
 
-**Pawn** is a professional-grade chess tournament management system built with Tauri, featuring a comprehensive **Enhanced Player Registration and Management System** and **Team Tournament Support** alongside advanced tournament administration capabilities.
+### Frontend (Feature-Sliced Design)
 
-## 🧪 Test-Driven Development Guidelines
-
-**Pawn follows a strict Test-Driven Development (TDD) approach. ALWAYS write tests before implementing features.**
-
-### TDD Core Principles
-
-**Red-Green-Refactor Cycle**:
-1. **🔴 RED**: Write a failing test that describes the desired functionality
-2. **🟢 GREEN**: Write the minimal code to make the test pass
-3. **🔵 REFACTOR**: Clean up code while keeping tests green
-
-### Test Categories & Coverage Requirements
-
-**Test Types** (in order of implementation):
-1. **Unit Tests**: Test individual functions/methods (90%+ coverage required)
-2. **Integration Tests**: Test service layer with database (80%+ coverage required)
-3. **Command Tests**: Test Tauri commands and API contracts (100% coverage required)
-4. **End-to-End Tests**: Test complete user workflows (critical paths only)
-
-**Coverage Standards**:
-- **New Features**: 90% minimum test coverage before code review
-- **Bug Fixes**: Must include regression tests
-- **Refactoring**: All tests must pass, coverage cannot decrease
-
-### Coverage Strategy & Tauri Testing Limitation
-
-**Architectural Constraint**: Tauri command wrapper functions in `src-tauri/src/pawn/command/**` cannot be unit tested due to `tauri::State<T>` having private fields. These are thin delegates (1-2 lines) that pass requests to the service layer.
-
-**Testing Approach**:
-- ✅ **Service Layer**: Comprehensive unit and integration tests (target: 90%)
-- ✅ **Business Logic**: All domain logic is testable and tested in services
-- ⚠️ **Command Wrappers**: Untestable by design, but contain no logic
-- ✅ **Integration**: Service tests validate the actual business logic that commands delegate to
-
-**Codecov Configuration**:
-- **Project Coverage**: 70% target (overall codebase)
-- **Patch Coverage**: 40% target (accounts for untestable command wrappers in diffs)
-- **See**: `codecov.yml` for complete configuration
-
-**Why This Works**:
-Command wrappers like `pub async fn create_team(state: State<'_, PawnState>, data: CreateTeam) -> CommandResult<Team> { state.team_service.create_team(data).await }` contain zero business logic. All testable logic lives in `TeamService::create_team()`, which has comprehensive test coverage.
-
-### TDD Workflow Commands
-
-**Backend Testing**:
-- **Run All Tests**: `cd src-tauri && cargo test`
-- **Run Specific Module**: `cd src-tauri && cargo test swiss_pairing`
-- **Run with Coverage**: `cd src-tauri && cargo tarpaulin --out Html`
-- **Watch Tests**: `cd src-tauri && cargo watch -x test`
-
-**Frontend Testing**:
-- **Run Unit Tests**: `npm test` or `yarn test`
-- **Run with Coverage**: `npm run test:coverage`
-- **Watch Tests**: `npm run test:watch`
-- **E2E Tests**: `npm run test:e2e`
-
-**Integration Testing**:
-- **Database Tests**: `cd src-tauri && cargo test --test integration`
-- **Full Stack Tests**: `npm run test:integration`
-
-## Essential Commands
-
-### Development
-- **Primary**: `yarn tauri dev` - Starts complete application with hot reload
-- **Frontend Only**: `yarn dev` - Vite dev server on port 1420 (for UI-only work)
-- **Backend Only**: `cd src-tauri && cargo build` - Compile Rust backend
-
-#### System Dependencies (Ubuntu/Debian)
-Before development, install required system libraries:
-```bash
-sudo apt-get update
-sudo apt-get install -y \
-  libsqlite3-dev \
-  pkg-config \
-  libwebkit2gtk-4.1-dev \
-  build-essential \
-  curl \
-  wget \
-  file \
-  libxdo-dev \
-  libssl-dev \
-  libayatana-appindicator3-dev \
-  librsvg2-dev
+```
+src/
+├── app/            # App entry, providers, routes, global styles
+├── pages/          # Route-level components (new-tournament, settings, tournament-info, tournaments)
+├── widgets/        # Composite UI blocks (player-management, round-manager, standings-table, etc.)
+├── features/       # Business logic slices (game, player, round, settings, standings, team, tournament)
+├── entities/       # Domain models (game, player, round, standings, team, tournament)
+├── shared/         # Shared code (config, hooks, layouts, lib, types, ui)
+├── dto/            # Auto-generated TypeScript bindings from Rust (bindings.ts)
+├── locales/        # i18n translation files
+└── test/           # E2E test infrastructure
 ```
 
-### Testing (TDD Workflow)
-- **Test First**: `cd src-tauri && cargo test [module_name] --watch` - Write failing tests
-- **Implement**: Write minimal code to pass tests
-- **Refactor**: Clean up while maintaining green tests
-- **Coverage Check**: `cd src-tauri && cargo tarpaulin --out Html`
+FSD import rule: layers can only import from layers below them (app > pages > widgets > features > entities > shared).
 
-### Development Workflow Commands
-- **Frontend-Only Commits**: `npm run commit:frontend -- -m "your message"` - Skips all backend/integration tests
-- **Skip Backend Tests**: `npm run commit:no-backend -- -m "your message"` - Skips backend tests only
-- **Skip Integration Tests**: `npm run commit:no-integration -- -m "your message"` - Skips integration tests only
-- **Manual Environment Variables**:
-  - `FRONTEND_ONLY=1 git commit -m "message"` - Complete frontend-only mode
-  - `SKIP_BACKEND_TESTS=1 git commit -m "message"` - Skip backend tests
-  - `SKIP_INTEGRATION_TESTS=1 git commit -m "message"` - Skip integration tests
-  - `SKIP_TDD_CHECK=1 git commit -m "message"` - Skip TDD compliance check
-- **Bypass All Hooks**: `git commit --no-verify -m "message"` - Emergency bypass (not recommended)
+### Backend (Rust/Tauri)
+
+```
+src-tauri/src/pawn/
+├── command/    # Tauri command handlers (thin delegates to services)
+├── service/    # Business logic layer (primary test target)
+├── domain/     # Data models and types
+├── db/         # SQLite database access (SQLx)
+├── common/     # Shared utilities
+└── templates/  # Tournament templates
+```
+
+## Coding Conventions
+
+- No `any` types - set types at variable declaration
+- No type casting (`as`) - prefer type annotations upfront
+- Auto-generated types live in `src/dto/bindings.ts` - never edit manually
+- Frontend uses Material-UI v6, react-hook-form, Redux Toolkit, i18next
+- Backend follows service pattern: command -> service -> db
+
+## Commands
+
+### Development
+
+```bash
+pnpm tauri dev          # Full app with hot reload
+pnpm dev                # Frontend only (localhost:1420)
+cd src-tauri && cargo build  # Backend only
+```
+
+### Testing
+
+```bash
+# Frontend
+pnpm test               # Unit tests (vitest)
+pnpm test:e2e           # Playwright E2E
+
+# Backend
+cd src-tauri && cargo test                    # All tests
+cd src-tauri && cargo test swiss_pairing      # Specific module
+cd src-tauri && cargo test --test integration # Integration tests
+```
 
 ### Building
-- **Frontend**: `yarn build` - TypeScript compilation and Vite build
-- **Full Application**: `yarn tauri build` - Complete desktop app with installers
-- **Development Build**: `cargo build` in src-tauri/ - Debug Rust build
 
-### Database & Types
-- **Migrations**: `cd src-tauri && sqlx migrate run --database-url sqlite:pawn.sqlite`
-- **Type Generation**: Auto-generated on dev server start (TypeScript bindings from Rust)
-- **Database Reset**: Remove `~/.local/share/pawn/db/pawn.sqlite` to reset database
+```bash
+pnpm build              # Frontend (tsc + vite)
+pnpm tauri build        # Full desktop app with installers
+```
 
-### Enhanced Features Testing
-- **Player Management**: Access comprehensive player features within tournament pages
-- **Sample Data**: Use "Create Sample Tournament" in tournaments page for testing
-- **Player Features**: All enhanced player management accessible via tournament info pages
+### Code Quality
 
-### GitHub Operations
-- **Issues & PRs**: Use `gh` command for all GitHub operations (view issues, PRs, comments)
-- **View PR Comments**: `gh api repos/owner/repo/pulls/123/comments`
-- **Analyze Issues**: `gh issue view 123` or `gh issue list`
-- **Repository Info**: `gh repo view` for repository details
+```bash
+pnpm format:check       # Prettier check
+pnpm lint               # ESLint
+pnpm type-check         # TypeScript validation
+```
 
-## 🔒 Security Audit Status
+### Database
 
-**Current Advisory Status**: The project has 14 known security advisories that are **acknowledged and documented**:
+```bash
+cd src-tauri && sqlx migrate run --database-url sqlite:pawn.sqlite  # Run migrations
+rm -f ~/.local/share/pawn/db/pawn.sqlite  # Reset database
+```
 
-### GTK3 Ecosystem (Unmaintained - Not Security Vulnerabilities)
-- **RUSTSEC-2024-0413**: atk - unmaintained
-- **RUSTSEC-2024-0416**: atk-sys - unmaintained
-- **RUSTSEC-2024-0412**: gdk - unmaintained
-- **RUSTSEC-2024-0418**: gdk-sys - unmaintained
-- **RUSTSEC-2024-0411**: gdkwayland-sys - unmaintained
-- **RUSTSEC-2024-0417**: gdkx11 - unmaintained
-- **RUSTSEC-2024-0414**: gdkx11-sys - unmaintained
-- **RUSTSEC-2024-0415**: gtk - unmaintained
-- **RUSTSEC-2024-0420**: gtk-sys - unmaintained
-- **RUSTSEC-2024-0419**: gtk3-macros - unmaintained
+### System Dependencies (Ubuntu/Debian)
 
-### Other Unmaintained Crates
-- **RUSTSEC-2024-0436**: paste - unmaintained
-- **RUSTSEC-2024-0370**: proc-macro-error - unmaintained
-- **RUSTSEC-2025-0057**: fxhash - unmaintained (via Tauri dependencies)
+```bash
+sudo apt-get install -y libsqlite3-dev pkg-config libwebkit2gtk-4.1-dev \
+  build-essential curl wget file libxdo-dev libssl-dev \
+  libayatana-appindicator3-dev librsvg2-dev
+```
 
-### Technical Issues
-- **RUSTSEC-2024-0429**: glib - unsound Iterator implementation
+## Testing Strategy
 
-### Mitigation Strategy
-1. **Dependencies come through Tauri ecosystem** - not direct project dependencies
-2. **No actual security vulnerabilities** - only "unmaintained" status
-3. **Will be resolved** when Tauri migrates to GTK4 in version 3.x
-4. **CI configured** to ignore these known advisories while monitoring for new ones
-5. **Regular monitoring** in place for Tauri v3 development progress
+Pawn follows TDD (Red-Green-Refactor). Write tests before implementation.
 
-### Security Audit Commands
-- **Run with ignored advisories**: `cd src-tauri && cargo audit --ignore RUSTSEC-2024-0413 [... other IDs]`
-- **Check for new issues**: `cd src-tauri && cargo audit` (will show all advisories)
-- **Monitor Tauri v3**: Track migration progress for long-term resolution
-
-- you can't use any
-- don't use type casting, it is better to set type near variable upfront
+**Tauri limitation**: Command wrappers in `src-tauri/src/pawn/command/` cannot be unit tested (`tauri::State<T>` has private fields). These are thin delegates with zero logic - all business logic is tested in the service layer.

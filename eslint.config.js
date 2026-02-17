@@ -14,7 +14,6 @@ export default [
       '*.config.*',
       'src/dto/bindings.ts',
       'coverage',
-      '.husky',
       'playwright-report',
       'test-results',
     ],

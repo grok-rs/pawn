@@ -7,7 +7,7 @@
 # Frontend dependencies
 package.json @grok-rs
 package-lock.json @grok-rs
-yarn.lock @grok-rs
+pnpm-lock.yaml @grok-rs
 
 # Backend dependencies  
 src-tauri/Cargo.toml @grok-rs

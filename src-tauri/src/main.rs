@@ -3,7 +3,14 @@
 
 use std::path::Path;
 
-mod pawn;
+mod command;
+mod common;
+mod db;
+mod domain;
+mod plugin;
+mod service;
+mod state;
+
 use tauri::Manager;
 
 const DEFAULT_LOG_LEVEL: &str = "pawn=info";
@@ -14,7 +21,7 @@ const LOGS_DIR: &str = "logs";
 pub fn main() {
     let tauri_builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .plugin(pawn::init_plugin())
+        .plugin(plugin::init_plugin())
         .invoke_handler(tauri::generate_handler![])
         .setup(move |app| {
             init_tracing(&app.path().app_data_dir()?);

@@ -1,0 +1,248 @@
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  useTheme,
+  TablePagination,
+  Box,
+  Skeleton,
+  Typography,
+} from '@mui/material';
+import { ReactNode, useState } from 'react';
+
+interface Column<T> {
+  id: keyof T | string;
+  label: string;
+  align?: 'left' | 'center' | 'right';
+  format?: (value: unknown, row: T) => ReactNode;
+  width?: string | number;
+}
+
+interface DataTableProps<T> {
+  columns: Column<T>[];
+  data: T[];
+  loading?: boolean;
+  emptyMessage?: string;
+  pagination?: boolean;
+  rowsPerPageOptions?: number[];
+  onRowClick?: (row: T) => void;
+  stickyHeader?: boolean;
+  hideColumnsOnTablet?: string[]; // Column IDs to hide on tablet
+}
+
+function DataTable<T extends Record<string, unknown>>({
+  columns,
+  data,
+  loading = false,
+  emptyMessage = 'No data available',
+  pagination = true,
+  rowsPerPageOptions = [10, 25, 50],
+  onRowClick,
+  stickyHeader = false,
+  hideColumnsOnTablet = [],
+}: DataTableProps<T>) {
+  const theme = useTheme();
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(rowsPerPageOptions[0]);
+
+  // Filter columns based on screen size
+  const visibleColumns = columns.filter(column => {
+    if (hideColumnsOnTablet.includes(String(column.id))) {
+      return false; // Hide on tablet and mobile
+    }
+    return true;
+  });
+
+  const handleChangePage = (_: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const paginatedData = pagination
+    ? data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+    : data;
+
+  if (loading) {
+    return (
+      <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              {columns.map(column => (
+                <TableCell key={String(column.id)}>
+                  <Skeleton width="60%" />
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {[...Array(5)].map((_, index) => (
+              <TableRow key={index}>
+                {columns.map(column => (
+                  <TableCell key={String(column.id)}>
+                    <Skeleton />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    );
+  }
+
+  return (
+    <TableContainer
+      component={Paper}
+      sx={{
+        borderRadius: 2,
+        // Enhanced scrolling for tablets
+        '& .MuiTable-root': {
+          minWidth: { xs: '100%', sm: '650px' },
+        },
+      }}
+    >
+      <Table stickyHeader={stickyHeader}>
+        <TableHead>
+          <TableRow>
+            {visibleColumns.map(column => (
+              <TableCell
+                key={String(column.id)}
+                align={column.align || 'left'}
+                sx={{
+                  fontWeight: 600,
+                  backgroundColor: theme.palette.background.default,
+                  width: column.width,
+                  // Better tablet styling
+                  fontSize: { xs: '0.875rem', sm: '1rem' },
+                  padding: { xs: '8px 12px', sm: '16px' },
+                }}
+              >
+                {column.label}
+              </TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {paginatedData.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={visibleColumns.length} align="center">
+                <Box py={4}>
+                  <Typography variant="body2" color="text.secondary">
+                    {emptyMessage}
+                  </Typography>
+                </Box>
+              </TableCell>
+            </TableRow>
+          ) : (
+            paginatedData.map((row, index) => (
+              <TableRow
+                key={index}
+                hover
+                onClick={() => onRowClick?.(row)}
+                sx={{
+                  cursor: onRowClick ? 'pointer' : 'default',
+                  '&:hover': {
+                    backgroundColor: theme.palette.action.hover,
+                  },
+                  // Better touch targets for tablet
+                  height: { xs: '56px', sm: '64px' },
+                }}
+              >
+                {visibleColumns.map(column => {
+                  const columnId = String(column.id);
+
+                  const getNestedValue = (
+                    obj: unknown,
+                    path: string
+                  ): unknown => {
+                    return path
+                      .split('.')
+                      .reduce((current: unknown, key: string) => {
+                        if (current === null || current === undefined)
+                          return undefined;
+                        if (
+                          typeof current === 'object' &&
+                          current !== null &&
+                          key in current
+                        ) {
+                          return Object.getOwnPropertyDescriptor(current, key)
+                            ?.value;
+                        }
+                        return undefined;
+                      }, obj);
+                  };
+
+                  const getDirectValue = (
+                    obj: T,
+                    key: string | number
+                  ): unknown => {
+                    if (typeof obj === 'object' && obj !== null && key in obj) {
+                      return Object.getOwnPropertyDescriptor(obj, key)?.value;
+                    }
+                    return undefined;
+                  };
+
+                  const value = columnId.includes('.')
+                    ? getNestedValue(row, columnId)
+                    : typeof column.id === 'string' ||
+                        typeof column.id === 'number'
+                      ? getDirectValue(row, column.id)
+                      : undefined;
+
+                  return (
+                    <TableCell
+                      key={String(column.id)}
+                      align={column.align || 'left'}
+                      sx={{
+                        fontSize: { xs: '0.875rem', sm: '1rem' },
+                        padding: { xs: '8px 12px', sm: '16px' },
+                      }}
+                    >
+                      {column.format
+                        ? column.format(value, row)
+                        : String(value)}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+      {pagination && data.length > 0 && (
+        <TablePagination
+          rowsPerPageOptions={rowsPerPageOptions}
+          component="div"
+          count={data.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            // Better pagination for tablets
+            '& .MuiTablePagination-toolbar': {
+              padding: { xs: '8px 16px', sm: '16px 24px' },
+            },
+            '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows':
+              {
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+              },
+          }}
+        />
+      )}
+    </TableContainer>
+  );
+}
+
+export default DataTable;

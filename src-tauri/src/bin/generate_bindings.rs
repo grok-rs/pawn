@@ -4,8 +4,8 @@ use std::fs;
 use std::path::Path;
 use tauri_specta::collect_commands;
 
-// Import the pawn module from the main crate
-use pawn::pawn::command::{
+// Import command modules from the main crate
+use pawn::command::{
     export, game_result, knockout, norm_calculation, player, round, seeding, settings, team,
     time_control, tournament,
 };

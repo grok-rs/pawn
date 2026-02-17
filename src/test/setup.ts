@@ -71,22 +71,26 @@ window.__TAURI_INTERNALS__ = {
 };
 
 // Global test utilities
+class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+
 Object.defineProperty(globalThis, 'ResizeObserver', {
-  value: vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  })),
+  value: MockResizeObserver,
   configurable: true,
 });
 
 // Mock IntersectionObserver
+class MockIntersectionObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+
 Object.defineProperty(globalThis, 'IntersectionObserver', {
-  value: vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  })),
+  value: MockIntersectionObserver,
   configurable: true,
 });
 

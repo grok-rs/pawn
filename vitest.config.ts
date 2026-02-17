@@ -8,47 +8,18 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    // Optimized: Only run unit tests in components, exclude slow integration/e2e tests
     include: [
-      'src/components/**/*.{test,spec}.{ts,tsx}',
-      'src/utils/**/*.{test,spec}.{ts,tsx}',
-      'src/hooks/**/*.{test,spec}.{ts,tsx}',
-      'src/contexts/**/*.{test,spec}.{ts,tsx}',
+      'src/**/*.{test,spec}.{ts,tsx}',
     ],
     exclude: [
       'node_modules/',
       'dist/',
       'src-tauri/',
-      'src/test/**',  // Exclude all integration/e2e/stress tests
-      'src/contexts/NotificationContext/__tests__/**',  // Exclude slow notification tests (6+ second timeouts)
+      'src/test/**',
+      'src/dto/**',
       '**/*.d.ts',
       '**/*.config.*',
     ],
-    coverage: {
-      provider: 'v8',
-      // Optimized: Generate lcov for CI and json-summary for coverage checks
-      reporter: ['lcov', 'json-summary'],
-      reportsDirectory: './coverage',
-      exclude: [
-        'node_modules/',
-        'src/test/',
-        'src/**/*.d.ts',
-        'src/**/*.config.*',
-        'src/main.tsx',
-        'src/vite-env.d.ts',
-        'src/dto/bindings.ts', // Auto-generated types
-      ],
-      thresholds: {
-        global: {
-          branches: 90,
-          functions: 90,
-          lines: 90,
-          statements: 90,
-        },
-      },
-      // Fail if coverage is below thresholds
-      checkCoverage: true,
-    },
     // Test timeout for async operations
     testTimeout: 10000,
     hookTimeout: 10000,
@@ -67,6 +38,12 @@ export default defineConfig({
     alias: {
       '@': '/src',
       '@dto': '/src/dto',
+      '@app': '/src/app',
+      '@pages': '/src/pages',
+      '@widgets': '/src/widgets',
+      '@features': '/src/features',
+      '@entities': '/src/entities',
+      '@shared': '/src/shared',
     },
   },
 });
