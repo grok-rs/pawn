@@ -2,13 +2,11 @@ use tracing::instrument;
 
 use super::SqliteDb;
 use crate::db::{
-    AddPlayerToTeam, CreateTeam, CreateTeamLineup, CreateTeamMatch,
-    CreateTeamTournamentSettings, RemovePlayerFromTeam, TeamDb, TeamSearchFilters, UpdateTeam,
-    UpdateTeamMatch, UpdateTeamTournamentSettings,
+    AddPlayerToTeam, CreateTeam, CreateTeamLineup, CreateTeamMatch, CreateTeamTournamentSettings,
+    RemovePlayerFromTeam, TeamDb, TeamSearchFilters, UpdateTeam, UpdateTeamMatch,
+    UpdateTeamTournamentSettings,
 };
-use crate::domain::model::{
-    Team, TeamLineup, TeamMatch, TeamMembership, TeamTournamentSettings,
-};
+use crate::team::model::{Team, TeamLineup, TeamMatch, TeamMembership, TeamTournamentSettings};
 
 impl TeamDb for SqliteDb {
     #[instrument(ret, skip(self))]
@@ -87,10 +85,7 @@ impl TeamDb for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_teams_by_tournament(
-        &self,
-        tournament_id: i32,
-    ) -> Result<Vec<Team>, sqlx::Error> {
+    async fn get_teams_by_tournament(&self, tournament_id: i32) -> Result<Vec<Team>, sqlx::Error> {
         let result = sqlx::query_as("SELECT * FROM teams WHERE tournament_id = ? ORDER BY name")
             .bind(tournament_id)
             .fetch_all(&self.pool)
@@ -100,10 +95,7 @@ impl TeamDb for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn search_teams(
-        &self,
-        filters: TeamSearchFilters,
-    ) -> Result<Vec<Team>, sqlx::Error> {
+    async fn search_teams(&self, filters: TeamSearchFilters) -> Result<Vec<Team>, sqlx::Error> {
         // For now, use a simple query that handles the most basic filtering
         let result = if let Some(name) = &filters.name {
             sqlx::query_as(
@@ -144,10 +136,7 @@ impl TeamDb for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn remove_player_from_team(
-        &self,
-        data: RemovePlayerFromTeam,
-    ) -> Result<(), sqlx::Error> {
+    async fn remove_player_from_team(&self, data: RemovePlayerFromTeam) -> Result<(), sqlx::Error> {
         sqlx::query("DELETE FROM team_memberships WHERE team_id = ? AND player_id = ?")
             .bind(data.team_id)
             .bind(data.player_id)
@@ -158,10 +147,7 @@ impl TeamDb for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_team_memberships(
-        &self,
-        team_id: i32,
-    ) -> Result<Vec<TeamMembership>, sqlx::Error> {
+    async fn get_team_memberships(&self, team_id: i32) -> Result<Vec<TeamMembership>, sqlx::Error> {
         let result = sqlx::query_as(
             "SELECT * FROM team_memberships WHERE team_id = ? ORDER BY board_number",
         )
@@ -191,10 +177,7 @@ impl TeamDb for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn create_team_match(
-        &self,
-        data: CreateTeamMatch,
-    ) -> Result<TeamMatch, sqlx::Error> {
+    async fn create_team_match(&self, data: CreateTeamMatch) -> Result<TeamMatch, sqlx::Error> {
         let result = sqlx::query_as(
             "INSERT INTO team_matches (tournament_id, round_number, team_a_id, team_b_id, venue, scheduled_time, status, team_a_match_points, team_b_match_points, team_a_board_points, team_b_board_points, arbiter_name, result_approved, created_at)
              VALUES (?, ?, ?, ?, ?, ?, 'scheduled', 0, 0, 0, 0, ?, 0, CURRENT_TIMESTAMP)
@@ -214,10 +197,7 @@ impl TeamDb for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn update_team_match(
-        &self,
-        data: UpdateTeamMatch,
-    ) -> Result<TeamMatch, sqlx::Error> {
+    async fn update_team_match(&self, data: UpdateTeamMatch) -> Result<TeamMatch, sqlx::Error> {
         let result = sqlx::query_as(
             "UPDATE team_matches SET
                 status = COALESCE(?, status),
@@ -254,10 +234,7 @@ impl TeamDb for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn get_team_match_by_id(
-        &self,
-        match_id: i32,
-    ) -> Result<TeamMatch, sqlx::Error> {
+    async fn get_team_match_by_id(&self, match_id: i32) -> Result<TeamMatch, sqlx::Error> {
         let result = sqlx::query_as("SELECT * FROM team_matches WHERE id = ?")
             .bind(match_id)
             .fetch_one(&self.pool)
@@ -291,10 +268,7 @@ impl TeamDb for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn create_team_lineup(
-        &self,
-        data: CreateTeamLineup,
-    ) -> Result<TeamLineup, sqlx::Error> {
+    async fn create_team_lineup(&self, data: CreateTeamLineup) -> Result<TeamLineup, sqlx::Error> {
         let result = sqlx::query_as(
             "INSERT INTO team_lineups (team_id, round_number, board_number, player_id, is_substitute, substituted_player_id, submission_deadline, submitted_at, submitted_by, notes, created_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, CURRENT_TIMESTAMP)

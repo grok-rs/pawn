@@ -1,8 +1,8 @@
 use tracing::instrument;
 
 use super::SqliteDb;
+use crate::competition::model::Round;
 use crate::db::{CreateRound, RoundDb};
-use crate::domain::model::Round;
 
 impl RoundDb for SqliteDb {
     #[instrument(ret, skip(self))]

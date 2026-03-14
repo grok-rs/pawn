@@ -5,7 +5,8 @@ use crate::db::{
     CreateTournamentSeedingSettings, SeedingDb, UpdatePlayerSeeding,
     UpdateTournamentSeedingSettings,
 };
-use crate::domain::model::{Player, TournamentSeedingSettings};
+use crate::participant::model::Player;
+use crate::tournament::model::TournamentSeedingSettings;
 
 impl SeedingDb for SqliteDb {
     #[instrument(ret, skip(self))]

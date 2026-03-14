@@ -44,7 +44,10 @@ impl fmt::Display for ErrorCode {
                 write!(f, "TOURNAMENT_INCOMPLETE_GAMES_ERROR::{count}")
             }
             Self::TournamentIncompleteRounds { incomplete, total } => {
-                write!(f, "TOURNAMENT_INCOMPLETE_ROUNDS_ERROR::{incomplete}::{total}")
+                write!(
+                    f,
+                    "TOURNAMENT_INCOMPLETE_ROUNDS_ERROR::{incomplete}::{total}"
+                )
             }
         }
     }

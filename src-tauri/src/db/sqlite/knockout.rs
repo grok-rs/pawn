@@ -1,8 +1,8 @@
 use tracing::instrument;
 
 use super::SqliteDb;
+use crate::competition::model::{BracketPosition, KnockoutBracket};
 use crate::db::KnockoutDb;
-use crate::domain::model::{BracketPosition, KnockoutBracket};
 
 impl KnockoutDb for SqliteDb {
     #[instrument(ret, skip(self))]

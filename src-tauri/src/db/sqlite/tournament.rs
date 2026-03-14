@@ -2,10 +2,8 @@ use tracing::instrument;
 
 use super::SqliteDb;
 use crate::db::{GameDb, TournamentDb, UpdateTournamentSettings};
-use crate::domain::{
-    model::{Tournament, TournamentDetails},
-    tiebreak::{TiebreakType, TournamentTiebreakConfig},
-};
+use crate::standings::model::{TiebreakType, TournamentTiebreakConfig};
+use crate::tournament::model::{Tournament, TournamentDetails};
 
 impl TournamentDb for SqliteDb {
     #[instrument(ret, skip(self))]
@@ -28,7 +26,10 @@ impl TournamentDb for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
-    async fn create_tournament(&self, data: crate::db::CreateTournament) -> Result<Tournament, sqlx::Error> {
+    async fn create_tournament(
+        &self,
+        data: crate::db::CreateTournament,
+    ) -> Result<Tournament, sqlx::Error> {
         // Validation
         if data.player_count < 0 {
             return Err(sqlx::Error::Protocol(

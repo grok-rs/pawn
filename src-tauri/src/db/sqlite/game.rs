@@ -3,10 +3,11 @@ use std::collections::HashMap;
 use tracing::instrument;
 
 use super::SqliteDb;
-use crate::db::{ApproveGameResult, CreateGame, GameDb, PlayerDb, UpdateGameResult};
-use crate::domain::model::{
-    EnhancedGameResult, Game, GameResult, GameResultAudit, GameResultType, Player, PlayerResult,
+use crate::competition::model::{
+    EnhancedGameResult, Game, GameResult, GameResultAudit, GameResultType,
 };
+use crate::db::{ApproveGameResult, CreateGame, GameDb, PlayerDb, UpdateGameResult};
+use crate::participant::model::{Player, PlayerResult};
 
 impl GameDb for SqliteDb {
     #[instrument(ret, skip(self))]
@@ -45,13 +46,11 @@ impl GameDb for SqliteDb {
         .await?;
 
         // Prefetch all players in one query instead of 2N individual queries
-        let players: Vec<Player> =
-            sqlx::query_as("SELECT * FROM players WHERE tournament_id = ?")
-                .bind(tournament_id)
-                .fetch_all(&self.pool)
-                .await?;
-        let player_map: HashMap<i32, Player> =
-            players.into_iter().map(|p| (p.id, p)).collect();
+        let players: Vec<Player> = sqlx::query_as("SELECT * FROM players WHERE tournament_id = ?")
+            .bind(tournament_id)
+            .fetch_all(&self.pool)
+            .await?;
+        let player_map: HashMap<i32, Player> = players.into_iter().map(|p| (p.id, p)).collect();
 
         let mut game_results = Vec::new();
         for game in games {
@@ -203,13 +202,11 @@ impl GameDb for SqliteDb {
             query = query.bind(id);
         }
         let players = query.fetch_all(&self.pool).await?;
-        let player_map: HashMap<i32, Player> =
-            players.into_iter().map(|p| (p.id, p)).collect();
+        let player_map: HashMap<i32, Player> = players.into_iter().map(|p| (p.id, p)).collect();
 
         // Prefetch all audit trails for these games in one query
         let game_ids: Vec<i32> = games.iter().map(|g| g.id).collect();
-        let audit_placeholders: String =
-            game_ids.iter().map(|_| "?").collect::<Vec<_>>().join(",");
+        let audit_placeholders: String = game_ids.iter().map(|_| "?").collect::<Vec<_>>().join(",");
         let audit_query = format!(
             "SELECT * FROM game_result_audit WHERE game_id IN ({audit_placeholders}) ORDER BY changed_at DESC"
         );
@@ -226,11 +223,19 @@ impl GameDb for SqliteDb {
         let mut enhanced_results = Vec::new();
         for game in games {
             let Some(white_player) = player_map.get(&game.white_player_id).cloned() else {
-                tracing::warn!("Missing white player {} for game {}", game.white_player_id, game.id);
+                tracing::warn!(
+                    "Missing white player {} for game {}",
+                    game.white_player_id,
+                    game.id
+                );
                 continue;
             };
             let Some(black_player) = player_map.get(&game.black_player_id).cloned() else {
-                tracing::warn!("Missing black player {} for game {}", game.black_player_id, game.id);
+                tracing::warn!(
+                    "Missing black player {} for game {}",
+                    game.black_player_id,
+                    game.id
+                );
                 continue;
             };
             let audit_trail = audit_map.remove(&game.id).unwrap_or_default();
@@ -319,13 +324,11 @@ impl GameDb for SqliteDb {
     async fn get_game_results(&self, tournament_id: i32) -> Result<Vec<GameResult>, sqlx::Error> {
         let games = self.get_games_by_tournament(tournament_id).await?;
         // Prefetch all players in one query instead of 2N individual queries
-        let players: Vec<Player> =
-            sqlx::query_as("SELECT * FROM players WHERE tournament_id = ?")
-                .bind(tournament_id)
-                .fetch_all(&self.pool)
-                .await?;
-        let player_map: HashMap<i32, Player> =
-            players.into_iter().map(|p| (p.id, p)).collect();
+        let players: Vec<Player> = sqlx::query_as("SELECT * FROM players WHERE tournament_id = ?")
+            .bind(tournament_id)
+            .fetch_all(&self.pool)
+            .await?;
+        let player_map: HashMap<i32, Player> = players.into_iter().map(|p| (p.id, p)).collect();
 
         let mut results = Vec::new();
         for game in games {

@@ -4,14 +4,22 @@ use sqlx::sqlite::SqlitePoolOptions;
 use tracing::info;
 
 use crate::{
+    competition::service::{
+        round::RoundService, round_robin_analysis::RoundRobinAnalysisService,
+        swiss_analysis::SwissAnalysisService,
+    },
     db::sqlite::SqliteDb,
-    service::{
-        export::ExportService, norm_calculation::NormCalculationService, player::PlayerService,
-        realtime_standings::RealTimeStandingsService, round::RoundService,
-        round_robin_analysis::RoundRobinAnalysisService, seeding::SeedingService,
-        settings::SettingsService, swiss_analysis::SwissAnalysisService, team::TeamService,
-        tiebreak::TiebreakCalculator, time_control::TimeControlService,
-        tournament::TournamentService,
+    export::service::ExportService,
+    participant::service::PlayerService,
+    settings::service::SettingsService,
+    standings::service::{
+        norm::NormCalculationService, realtime::RealTimeStandingsService,
+        tiebreak::TiebreakCalculator,
+    },
+    team::service::TeamService,
+    tournament::{
+        seeding_service::SeedingService, service::TournamentService,
+        time_control_service::TimeControlService,
     },
 };
 

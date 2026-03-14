@@ -1,23 +1,30 @@
 use std::collections::HashMap;
 
-use super::domain::{
-    dto::{
-        AddPlayerToTeam, ApproveGameResult, AssignPlayerToCategory, CreateGame, CreatePlayer,
-        CreatePlayerCategory, CreateRound, CreateTeam, CreateTeamLineup, CreateTeamMatch,
-        CreateTeamTournamentSettings, CreateTournament, CreateTournamentSeedingSettings,
-        CreateUserPreference, RemovePlayerFromTeam, SettingsCategorySummary, SettingsFilter,
-        TeamSearchFilters, UpdateGameResult, UpdatePlayer, UpdatePlayerSeeding, UpdateTeamMatch,
-        UpdateTeamTournamentSettings, UpdateTimeControl, UpdateTournamentSettings,
-        UpdateTournamentSeedingSettings, UpdateTeam,
-    },
-    model::{
-        ApplicationSetting, BracketPosition, EnhancedGameResult, Game, GameResult, GameResultAudit,
-        KnockoutBracket, Player, PlayerCategory, PlayerCategoryAssignment, PlayerResult, Round,
-        SettingsAuditLog, SettingsBackupHistory, SettingsTemplate, Team, TeamLineup, TeamMatch,
-        TeamMembership, TeamTournamentSettings, TimeControl, Tournament, TournamentDetails,
-        TournamentSeedingSettings, UserPreference,
-    },
-    tiebreak::TournamentTiebreakConfig,
+use crate::competition::dto::{ApproveGameResult, CreateGame, CreateRound, UpdateGameResult};
+use crate::competition::model::{
+    BracketPosition, EnhancedGameResult, Game, GameResult, GameResultAudit, KnockoutBracket, Round,
+};
+use crate::participant::dto::{
+    AssignPlayerToCategory, CreatePlayer, CreatePlayerCategory, UpdatePlayer,
+};
+use crate::participant::model::{Player, PlayerCategory, PlayerCategoryAssignment, PlayerResult};
+use crate::settings::dto::{CreateUserPreference, SettingsCategorySummary, SettingsFilter};
+use crate::settings::model::{
+    ApplicationSetting, SettingsAuditLog, SettingsBackupHistory, SettingsTemplate, UserPreference,
+};
+use crate::standings::model::TournamentTiebreakConfig;
+use crate::team::dto::{
+    AddPlayerToTeam, CreateTeam, CreateTeamLineup, CreateTeamMatch, CreateTeamTournamentSettings,
+    RemovePlayerFromTeam, TeamSearchFilters, UpdateTeam, UpdateTeamMatch,
+    UpdateTeamTournamentSettings,
+};
+use crate::team::model::{Team, TeamLineup, TeamMatch, TeamMembership, TeamTournamentSettings};
+use crate::tournament::dto::{
+    CreateTournament, CreateTournamentSeedingSettings, UpdatePlayerSeeding, UpdateTimeControl,
+    UpdateTournamentSeedingSettings, UpdateTournamentSettings,
+};
+use crate::tournament::model::{
+    TimeControl, Tournament, TournamentDetails, TournamentSeedingSettings,
 };
 
 pub mod sqlite;
@@ -458,15 +465,15 @@ pub trait Db:
 {
 }
 impl<
-        T: TournamentDb
-            + PlayerDb
-            + GameDb
-            + RoundDb
-            + TimeControlDb
-            + KnockoutDb
-            + TeamDb
-            + SeedingDb
-            + SettingsDb,
-    > Db for T
+    T: TournamentDb
+        + PlayerDb
+        + GameDb
+        + RoundDb
+        + TimeControlDb
+        + KnockoutDb
+        + TeamDb
+        + SeedingDb
+        + SettingsDb,
+> Db for T
 {
 }

@@ -4,10 +4,8 @@ use sqlx::Row;
 use tracing::instrument;
 
 use super::SqliteDb;
-use crate::db::{
-    CreateUserPreference, SettingsCategorySummary, SettingsDb, SettingsFilter,
-};
-use crate::domain::model::{
+use crate::db::{CreateUserPreference, SettingsCategorySummary, SettingsDb, SettingsFilter};
+use crate::settings::model::{
     ApplicationSetting, SettingsAuditLog, SettingsBackupHistory, SettingsTemplate, UserPreference,
 };
 

@@ -4,7 +4,7 @@ use super::SqliteDb;
 use crate::db::{
     AssignPlayerToCategory, CreatePlayer, CreatePlayerCategory, PlayerDb, UpdatePlayer,
 };
-use crate::domain::model::{Player, PlayerCategory, PlayerCategoryAssignment};
+use crate::participant::model::{Player, PlayerCategory, PlayerCategoryAssignment};
 
 impl PlayerDb for SqliteDb {
     #[instrument(ret, skip(self))]

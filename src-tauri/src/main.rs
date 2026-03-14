@@ -3,12 +3,22 @@
 
 use std::path::Path;
 
-mod command;
+// ── Bounded Context modules ─────────────────────────────────────────
+mod modules;
+
+// Re-export bounded contexts at crate root for ergonomic access
+use modules::competition;
+use modules::export;
+use modules::participant;
+use modules::settings;
+use modules::standings;
+use modules::team;
+use modules::tournament;
+
+// ── Infrastructure ──────────────────────────────────────────────────
 mod common;
 mod db;
-mod domain;
 mod plugin;
-mod service;
 mod state;
 
 use tauri::Manager;

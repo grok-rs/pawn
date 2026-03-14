@@ -2,7 +2,7 @@ use tracing::instrument;
 
 use super::SqliteDb;
 use crate::db::{TimeControlDb, UpdateTimeControl};
-use crate::domain::model::{TimeControl, Tournament};
+use crate::tournament::model::{TimeControl, Tournament};
 
 impl TimeControlDb for SqliteDb {
     #[instrument(ret, skip(self))]
@@ -112,5 +112,4 @@ impl TimeControlDb for SqliteDb {
 
         Ok(tournaments)
     }
-
 }
