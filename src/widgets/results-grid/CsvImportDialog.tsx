@@ -1,42 +1,43 @@
-import React, { useState, useCallback } from 'react';
+import type { CsvImportResult } from '@dto/bindings';
+import { commands } from '@dto/bindings';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Typography,
-  Box,
+  Close as CloseIcon,
+  Error as ErrorIcon,
+  Help as HelpIcon,
+  Visibility as PreviewIcon,
+  Save as SaveIcon,
+  CheckCircle as SuccessIcon,
+  Upload as UploadIcon,
+} from '@mui/icons-material';
+import {
   Alert,
-  TextField,
-  Stepper,
-  Step,
-  StepLabel,
+  Box,
+  Button,
   Card,
   CardContent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  IconButton,
+  LinearProgress,
+  Paper,
+  Step,
+  StepLabel,
+  Stepper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  LinearProgress,
-  IconButton,
+  TextField,
   Tooltip,
-  Grid,
+  Typography,
 } from '@mui/material';
-import {
-  Upload as UploadIcon,
-  Visibility as PreviewIcon,
-  Save as SaveIcon,
-  Close as CloseIcon,
-  Help as HelpIcon,
-  CheckCircle as SuccessIcon,
-  Error as ErrorIcon,
-} from '@mui/icons-material';
-import { commands } from '@dto/bindings';
-import type { CsvImportResult } from '@dto/bindings';
+import type React from 'react';
+import { useCallback, useState } from 'react';
 
 interface CsvImportDialogProps {
   open: boolean;
@@ -104,7 +105,6 @@ export function CsvImportDialog({
         setActiveStep(2);
       }
     } catch (error) {
-      console.error('Validation failed:', error);
       setValidationResult({
         success: false,
         total_rows: 0,
@@ -143,7 +143,6 @@ export function CsvImportDialog({
         onImportComplete();
       }
     } catch (error) {
-      console.error('Import failed:', error);
       setImportResult({
         success: false,
         total_rows: 0,
@@ -354,8 +353,10 @@ export function CsvImportDialog({
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {validationResult.errors.map((error, index) => (
-                            <TableRow key={index}>
+                          {validationResult.errors.map(error => (
+                            <TableRow
+                              key={`${error.row_number}-${error.field ?? 'general'}`}
+                            >
                               <TableCell>{error.row_number}</TableCell>
                               <TableCell>{error.field || '-'}</TableCell>
                               <TableCell>{error.message}</TableCell>
@@ -372,8 +373,8 @@ export function CsvImportDialog({
                     <Typography variant="subtitle2" gutterBottom>
                       Warnings ({validationResult.warnings.length})
                     </Typography>
-                    {validationResult.warnings.map((warning, index) => (
-                      <Typography key={index} variant="body2">
+                    {validationResult.warnings.map(warning => (
+                      <Typography key={warning} variant="body2">
                         • {warning}
                       </Typography>
                     ))}
@@ -486,8 +487,10 @@ export function CsvImportDialog({
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {importResult.errors.map((error, index) => (
-                            <TableRow key={index}>
+                          {importResult.errors.map(error => (
+                            <TableRow
+                              key={`${error.row_number}-${error.message}`}
+                            >
                               <TableCell>{error.row_number}</TableCell>
                               <TableCell>{error.message}</TableCell>
                             </TableRow>
@@ -560,14 +563,12 @@ export function CsvImportDialog({
             </Typography>
             <Typography variant="body2" component="div">
               • CSV files should have a header row with column names
-              <br />
-              • Board numbers are used to match games (board 1 = first game)
-              <br />
-              • Player names can be used for matching when board numbers are not
-              available
-              <br />
-              • Results can be in various formats: 1-0, 0-1, 1/2-1/2, *, draw,
-              white, black, etc.
+              <br />• Board numbers are used to match games (board 1 = first
+              game)
+              <br />• Player names can be used for matching when board numbers
+              are not available
+              <br />• Results can be in various formats: 1-0, 0-1, 1/2-1/2, *,
+              draw, white, black, etc.
               <br />• Special result types include forfeit, default, timeout,
               adjourned, cancelled
             </Typography>

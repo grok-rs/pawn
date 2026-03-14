@@ -1,20 +1,20 @@
-import { useState, useEffect, useCallback } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Box,
-  Typography,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
-import { Settings as SettingsIcon } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
+import type { TiebreakType, TournamentTiebreakConfig } from '@dto/bindings';
 import { commands } from '@dto/bindings';
+import { Settings as SettingsIcon } from '@mui/icons-material';
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Typography,
+} from '@mui/material';
 import TiebreakConfig from '@widgets/standings-table/TiebreakConfig';
-import type { TournamentTiebreakConfig, TiebreakType } from '@dto/bindings';
+import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface TournamentSettingsProps {
   open: boolean;
@@ -44,8 +44,7 @@ function TournamentSettings({
     try {
       const result = await commands.getTournamentSettings(tournamentId);
       setSettings(result);
-    } catch (err) {
-      console.error('Failed to fetch tournament settings:', err);
+    } catch (_err) {
       setError('Failed to load tournament settings');
     } finally {
       setLoading(false);
@@ -105,8 +104,7 @@ function TournamentSettings({
         onSettingsUpdated();
       }
       onClose();
-    } catch (err) {
-      console.error('Failed to save tournament settings:', err);
+    } catch (_err) {
       setError('Failed to save tournament settings');
     } finally {
       setSaving(false);

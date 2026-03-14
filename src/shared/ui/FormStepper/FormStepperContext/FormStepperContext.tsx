@@ -1,7 +1,7 @@
 import { createContext } from 'react';
-import { FieldValues } from 'react-hook-form';
+import type { FieldValues } from 'react-hook-form';
 
-import { FormStepperContextType } from '../types';
+import type { FormStepperContextType } from '../types';
 
 // Export a default context
 const FormStepperContext = createContext<

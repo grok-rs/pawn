@@ -1,57 +1,56 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import type { Player, TournamentDetails } from '@dto/bindings';
 import {
+  Add,
+  Category,
+  Delete,
+  Edit,
+  Email,
+  EmojiEvents,
+  FileUpload,
+  Flag,
+  Groups,
+  History,
+  MoreVert,
+  Person,
+  Phone,
+  Schedule,
+  Search,
+} from '@mui/icons-material';
+import {
+  Alert,
   Box,
   Button,
+  Chip,
+  CircularProgress,
+  IconButton,
+  InputAdornment,
+  Menu,
+  MenuItem,
   Paper,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Typography,
-  IconButton,
-  Menu,
-  MenuItem,
-  Chip,
-  Alert,
-  TextField,
-  InputAdornment,
-  CircularProgress,
   Tabs,
-  Tab,
+  TextField,
+  Typography,
 } from '@mui/material';
-import {
-  Add,
-  FileUpload,
-  Edit,
-  Delete,
-  MoreVert,
-  Search,
-  Flag,
-  Person,
-  Email,
-  Phone,
-  EmojiEvents,
-  Category,
-  Groups,
-  Schedule,
-  History,
-} from '@mui/icons-material';
-import { commands } from '@dto/bindings';
-import type { Player, TournamentDetails } from '@dto/bindings';
+import { useTranslation } from 'react-i18next';
 import AddPlayerForm from './AddPlayerForm';
 import BulkImportDialog from './BulkImportDialog';
-import PlayerCategoryManagement from './PlayerCategoryManagement';
 import LateEntryDialog from './LateEntryDialog';
+import PlayerCategoryManagement from './PlayerCategoryManagement';
 import PlayerWithdrawalDialog from './PlayerWithdrawalDialog';
 import RatingHistoryDialog from './RatingHistoryDialog';
+import { getStatusColor, usePlayerManagement } from './usePlayerManagement';
 
 interface PlayerManagementProps {
   tournamentId: number;
   players: Player[];
-  tournamentDetails?: TournamentDetails; // Add tournament details to check if tournament has started
+  tournamentDetails?: TournamentDetails;
   onPlayersUpdated: () => void;
 }
 
@@ -62,129 +61,41 @@ function PlayerManagement({
   onPlayersUpdated,
 }: PlayerManagementProps) {
   const { t } = useTranslation();
-  const [addPlayerOpen, setAddPlayerOpen] = useState(false);
-  const [bulkImportOpen, setBulkImportOpen] = useState(false);
-  const [lateEntryOpen, setLateEntryOpen] = useState(false);
-  const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
-  const [ratingHistoryOpen, setRatingHistoryOpen] = useState(false);
-  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
-  const [managingPlayer, setManagingPlayer] = useState<Player | null>(null);
-  const [ratingHistoryPlayer, setRatingHistoryPlayer] = useState<Player | null>(
-    null
-  );
-  const [searchTerm, setSearchTerm] = useState('');
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [tabValue, setTabValue] = useState(0);
-
-  const filteredPlayers = players.filter(
-    player =>
-      player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (player.country_code &&
-        player.country_code.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (player.title &&
-        player.title.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-
-  const handleMenuClick = (
-    event: React.MouseEvent<HTMLElement>,
-    playerId: number
-  ) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedPlayerId(playerId);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setSelectedPlayerId(null);
-  };
-
-  const handleEditPlayer = () => {
-    const player = players.find(p => p.id === selectedPlayerId);
-    if (player) {
-      setEditingPlayer(player);
-      setAddPlayerOpen(true);
-    }
-    handleMenuClose();
-  };
-
-  const handleDeletePlayer = async () => {
-    if (!selectedPlayerId) return;
-
-    setLoading(true);
-    try {
-      await commands.deletePlayer(selectedPlayerId);
-      onPlayersUpdated();
-      setError(null);
-    } catch (err) {
-      console.error('Failed to delete player:', err);
-      setError(t('failedToDeletePlayer'));
-    } finally {
-      setLoading(false);
-      handleMenuClose();
-    }
-  };
-
-  const handleManagePlayerStatus = () => {
-    const player = players.find(p => p.id === selectedPlayerId);
-    if (player) {
-      setManagingPlayer(player);
-      setWithdrawalDialogOpen(true);
-    }
-    handleMenuClose();
-  };
-
-  const handleViewRatingHistory = () => {
-    const player = players.find(p => p.id === selectedPlayerId);
-    if (player) {
-      setRatingHistoryPlayer(player);
-      setRatingHistoryOpen(true);
-    }
-    handleMenuClose();
-  };
-
-  const handleAddPlayerSuccess = () => {
-    setAddPlayerOpen(false);
-    setEditingPlayer(null);
-    onPlayersUpdated();
-    setError(null);
-  };
-
-  const handleBulkImportSuccess = () => {
-    setBulkImportOpen(false);
-    onPlayersUpdated();
-    setError(null);
-  };
-
-  const getStatusColor = (
-    status: string
-  ):
-    | 'default'
-    | 'primary'
-    | 'secondary'
-    | 'error'
-    | 'info'
-    | 'success'
-    | 'warning' => {
-    switch (status) {
-      case 'active':
-        return 'success';
-      case 'withdrawn':
-        return 'error';
-      case 'bye_requested':
-        return 'warning';
-      case 'late_entry':
-        return 'info';
-      default:
-        return 'default';
-    }
-  };
+  const {
+    addPlayerOpen,
+    bulkImportOpen,
+    lateEntryOpen,
+    withdrawalDialogOpen,
+    ratingHistoryOpen,
+    editingPlayer,
+    managingPlayer,
+    ratingHistoryPlayer,
+    searchTerm,
+    anchorEl,
+    loading,
+    error,
+    tabValue,
+    filteredPlayers,
+    setAddPlayerOpen,
+    setBulkImportOpen,
+    setLateEntryOpen,
+    setSearchTerm,
+    clearError,
+    handleTabChange,
+    handleMenuClick,
+    handleMenuClose,
+    handleEditPlayer,
+    handleDeletePlayer,
+    handleManagePlayerStatus,
+    handleViewRatingHistory,
+    handleAddPlayerSuccess,
+    handleBulkImportSuccess,
+    closeAddPlayer,
+    closeWithdrawal,
+    onWithdrawalSuccess,
+    closeRatingHistory,
+    onLateEntrySuccess,
+  } = usePlayerManagement(players, onPlayersUpdated);
 
   const formatDate = (dateString: string) => {
     try {
@@ -197,7 +108,7 @@ function PlayerManagement({
   return (
     <Box>
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+        <Alert severity="error" sx={{ mb: 2 }} onClose={clearError}>
           {error}
         </Alert>
       )}
@@ -272,7 +183,6 @@ function PlayerManagement({
               >
                 {t('importPlayers')}
               </Button>
-              {/* Show Late Entry button if tournament has started */}
               {(tournamentDetails?.tournament?.rounds_played || 0) > 0 && (
                 <Button
                   variant="outlined"
@@ -310,8 +220,8 @@ function PlayerManagement({
                 <TableRow>
                   <TableCell>{t('name')}</TableCell>
                   <TableCell>{t('rating')}</TableCell>
-                  <TableCell>{t('title')}</TableCell>
-                  <TableCell>{t('country')}</TableCell>
+                  <TableCell>{t('title.label')}</TableCell>
+                  <TableCell>{t('country.label')}</TableCell>
                   <TableCell>{t('contact')}</TableCell>
                   <TableCell>{t('status')}</TableCell>
                   <TableCell>{t('registered')}</TableCell>
@@ -504,10 +414,7 @@ function PlayerManagement({
       {/* Add/Edit Player Dialog */}
       <AddPlayerForm
         open={addPlayerOpen}
-        onClose={() => {
-          setAddPlayerOpen(false);
-          setEditingPlayer(null);
-        }}
+        onClose={closeAddPlayer}
         onSuccess={handleAddPlayerSuccess}
         tournamentId={tournamentId}
         editingPlayer={editingPlayer}
@@ -525,10 +432,7 @@ function PlayerManagement({
       <LateEntryDialog
         open={lateEntryOpen}
         onClose={() => setLateEntryOpen(false)}
-        onSuccess={() => {
-          setLateEntryOpen(false);
-          onPlayersUpdated();
-        }}
+        onSuccess={onLateEntrySuccess}
         tournamentId={tournamentId}
         tournamentDetails={tournamentDetails || null}
       />
@@ -536,25 +440,15 @@ function PlayerManagement({
       {/* Player Withdrawal Dialog */}
       <PlayerWithdrawalDialog
         open={withdrawalDialogOpen}
-        onClose={() => {
-          setWithdrawalDialogOpen(false);
-          setManagingPlayer(null);
-        }}
-        onSuccess={() => {
-          setWithdrawalDialogOpen(false);
-          setManagingPlayer(null);
-          onPlayersUpdated();
-        }}
+        onClose={closeWithdrawal}
+        onSuccess={onWithdrawalSuccess}
         player={managingPlayer}
       />
 
       {/* Rating History Dialog */}
       <RatingHistoryDialog
         open={ratingHistoryOpen}
-        onClose={() => {
-          setRatingHistoryOpen(false);
-          setRatingHistoryPlayer(null);
-        }}
+        onClose={closeRatingHistory}
         player={ratingHistoryPlayer}
       />
     </Box>

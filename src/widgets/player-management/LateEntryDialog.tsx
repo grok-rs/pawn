@@ -1,39 +1,39 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useForm, Controller } from 'react-hook-form';
+import type { CreatePlayer, Round, TournamentDetails } from '@dto/bindings';
+import { commands } from '@dto/bindings';
 import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Grid,
-  Typography,
-  Box,
-  Alert,
-  Card,
-  CardContent,
-  FormControlLabel,
-  Checkbox,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  CircularProgress,
-} from '@mui/material';
-import {
-  Warning,
+  EmojiEvents,
   Info,
   Person,
   Schedule,
-  EmojiEvents,
+  Warning,
 } from '@mui/icons-material';
-import { commands } from '@dto/bindings';
-import type { CreatePlayer, Round, TournamentDetails } from '@dto/bindings';
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Checkbox,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  FormControlLabel,
+  Grid,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { useCallback, useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import * as yup from 'yup';
 
 interface LateEntryDialogProps {
   open: boolean;
@@ -104,8 +104,7 @@ function LateEntryDialog({
     try {
       const roundsData = await commands.getRoundsByTournament(tournamentId);
       setRounds(roundsData);
-    } catch (err) {
-      console.error('Failed to fetch rounds:', err);
+    } catch (_err) {
       setError(t('failedToLoadRounds'));
     }
   }, [tournamentId, t]);
@@ -157,8 +156,7 @@ function LateEntryDialog({
       // 3. Apply any tournament-specific late entry rules
 
       onSuccess();
-    } catch (err) {
-      console.error('Failed to add late entry:', err);
+    } catch (_err) {
       setError(t('failedToAddLateEntry'));
     } finally {
       setLoading(false);
@@ -234,7 +232,7 @@ function LateEntryDialog({
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Schedule fontSize="small" />
                     <Typography variant="body2">
-                      {t('rounds')}: {tournament.rounds_played}/
+                      {t('rounds.label')}: {tournament.rounds_played}/
                       {tournament.total_rounds}
                     </Typography>
                   </Box>

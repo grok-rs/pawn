@@ -1,26 +1,27 @@
-import React, { useState } from 'react';
 import {
-  Box,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Typography,
-  Alert,
-  Chip,
-  Stack,
-  IconButton,
-  // Tooltip,
-} from '@mui/material';
-import {
-  Download,
-  Upload,
-  FileCopy,
   CheckCircle,
   Close,
+  Download,
+  FileCopy,
+  Upload,
 } from '@mui/icons-material';
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Stack,
+  TextField,
+  Typography,
+  // Tooltip,
+} from '@mui/material';
+import type React from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TournamentFormValues } from './types';
 
@@ -82,9 +83,7 @@ function TournamentConfigurationExport({
       await navigator.clipboard.writeText(exportText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
-    }
+    } catch (_error) {}
   };
 
   const handleDownload = () => {

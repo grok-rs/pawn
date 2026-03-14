@@ -1,7 +1,7 @@
-import { ReactElement } from 'react';
+import { AppRoutes } from '@app/routes';
 
 import { NotificationProvider } from '@shared/lib/notification';
-import { AppRoutes } from '@app/routes';
+import type { ReactElement } from 'react';
 
 function App(): ReactElement {
   return (

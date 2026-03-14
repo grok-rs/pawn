@@ -1,7 +1,7 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { createMockTournament, createMockPlayer } from '../utils/test-utils';
+import React from 'react';
+import { createMockPlayer, createMockTournament } from '../utils/test-utils';
 
 interface ScreenshotData {
   name: string;
@@ -331,6 +331,7 @@ const TournamentCard = ({
   };
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: test mock component
     <div
       className={`tournament-card ${variant} ${theme}`}
       data-testid="tournament-card"
@@ -339,8 +340,6 @@ const TournamentCard = ({
       onMouseLeave={() => setIsHovered(false)}
       onFocus={() => setIsFocused(true)}
       onBlur={() => setIsFocused(false)}
-      tabIndex={0}
-      role="button"
     >
       <div
         style={{
@@ -402,43 +401,41 @@ const TournamentCard = ({
             )}
 
             {variant === 'detailed' && (
-              <>
-                <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
-                  <div
-                    style={{
-                      fontSize: '12px',
-                      color: theme === 'dark' ? '#aaa' : '#666',
-                    }}
-                  >
-                    Progress:{' '}
-                    {Math.round(
-                      (defaultTournament.currentRound /
-                        defaultTournament.maxRounds) *
-                        100
-                    )}
-                    %
-                  </div>
-                  <div
-                    style={{
-                      width: '100%',
-                      height: '6px',
-                      backgroundColor: theme === 'dark' ? '#555' : '#e9ecef',
-                      borderRadius: '3px',
-                      marginTop: '4px',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: `${(defaultTournament.currentRound / defaultTournament.maxRounds) * 100}%`,
-                        height: '100%',
-                        backgroundColor: '#007bff',
-                        borderRadius: '3px',
-                        transition: 'width 0.3s ease',
-                      }}
-                    />
-                  </div>
+              <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
+                <div
+                  style={{
+                    fontSize: '12px',
+                    color: theme === 'dark' ? '#aaa' : '#666',
+                  }}
+                >
+                  Progress:{' '}
+                  {Math.round(
+                    (defaultTournament.currentRound /
+                      defaultTournament.maxRounds) *
+                      100
+                  )}
+                  %
                 </div>
-              </>
+                <div
+                  style={{
+                    width: '100%',
+                    height: '6px',
+                    backgroundColor: theme === 'dark' ? '#555' : '#e9ecef',
+                    borderRadius: '3px',
+                    marginTop: '4px',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${(defaultTournament.currentRound / defaultTournament.maxRounds) * 100}%`,
+                      height: '100%',
+                      backgroundColor: '#007bff',
+                      borderRadius: '3px',
+                      transition: 'width 0.3s ease',
+                    }}
+                  />
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -446,6 +443,7 @@ const TournamentCard = ({
         {variant !== 'compact' && (
           <div style={{ marginLeft: '16px' }}>
             <button
+              type="button"
               data-testid="primary-button"
               style={{
                 padding: '8px 16px',
@@ -613,6 +611,7 @@ const PlayerList = ({
           <div style={{ display: 'flex', gap: '4px' }}>
             {['grid', 'list', 'table'].map(layoutOption => (
               <button
+                type="button"
                 key={layoutOption}
                 onClick={() => {}}
                 data-testid={`layout-${layoutOption}`}
@@ -822,7 +821,7 @@ describe('Automated Screenshot Testing for Regression Detection', () => {
 
   afterEach(() => {
     // Clean up animation disabling
-    if (animationStyleElement && animationStyleElement.parentNode) {
+    if (animationStyleElement?.parentNode) {
       animationStyleElement.parentNode.removeChild(animationStyleElement);
     }
   });
@@ -1109,8 +1108,11 @@ describe('Automated Screenshot Testing for Regression Detection', () => {
             data-testid="button-states"
             style={{ padding: '20px', display: 'flex', gap: '12px' }}
           >
-            <button data-testid="default-button">Default</button>
+            <button type="button" data-testid="default-button">
+              Default
+            </button>
             <button
+              type="button"
               data-testid="primary-button"
               style={{
                 backgroundColor: '#007bff',
@@ -1122,10 +1124,11 @@ describe('Automated Screenshot Testing for Regression Detection', () => {
             >
               Primary
             </button>
-            <button disabled data-testid="disabled-button">
+            <button type="button" disabled data-testid="disabled-button">
               Disabled
             </button>
             <button
+              type="button"
               data-testid="clicked-button"
               onClick={() => setClicked(true)}
               style={{
@@ -1497,7 +1500,7 @@ describe('Automated Screenshot Testing for Regression Detection', () => {
 
         return (
           <div data-testid="animated-component">
-            <button onClick={() => setAnimate(!animate)}>
+            <button type="button" onClick={() => setAnimate(!animate)}>
               Toggle Animation
             </button>
             <div
@@ -1547,7 +1550,7 @@ describe('Automated Screenshot Testing for Regression Detection', () => {
         <div data-testid="image-container">
           <img
             src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23007bff'/%3E%3C/svg%3E"
-            alt="Test image"
+            alt="Test graphic"
             data-testid="test-image"
           />
         </div>

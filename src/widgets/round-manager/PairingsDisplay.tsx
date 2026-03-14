@@ -1,35 +1,35 @@
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import type { Pairing, Player } from '@dto/bindings';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Cancel,
+  CheckCircle,
+  Person,
+  PersonOff,
+  SwapHoriz,
+} from '@mui/icons-material';
+import {
+  Alert,
+  Avatar,
+  Box,
   Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  IconButton,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Typography,
-  Box,
-  Chip,
-  IconButton,
-  Alert,
-  Divider,
-  Avatar,
   Tooltip,
+  Typography,
 } from '@mui/material';
-import {
-  SwapHoriz,
-  Person,
-  PersonOff,
-  Cancel,
-  CheckCircle,
-} from '@mui/icons-material';
-import type { Pairing, Player } from '@dto/bindings';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface PairingsDisplayProps {
   open: boolean;
@@ -203,7 +203,7 @@ function PairingsDisplay({
               </TableHead>
               <TableBody>
                 {editedPairings.map((pairing, index) => (
-                  <TableRow key={index} hover>
+                  <TableRow key={pairing.board_number} hover>
                     <TableCell align="center">
                       <Chip
                         label={pairing.board_number}

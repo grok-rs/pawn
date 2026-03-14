@@ -1,9 +1,9 @@
-import React from 'react';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { render, screen } from '@testing-library/react';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-import TournamentPreview from '../TournamentPreview';
 import type { TournamentFormValues } from '@widgets/new-tournament-form/types';
+import type React from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import TournamentPreview from '../TournamentPreview';
 
 // Mock useTranslation
 vi.mock('react-i18next', () => ({
@@ -501,10 +501,10 @@ describe('TournamentPreview', () => {
 
       expect(screen.getByText(longTextFormData.name)).toBeInTheDocument();
       expect(
-        screen.getByText(longTextFormData.organizerName!)
+        screen.getByText(longTextFormData.organizerName)
       ).toBeInTheDocument();
       expect(
-        screen.getByText(longTextFormData.arbiterNotes!)
+        screen.getByText(longTextFormData.arbiterNotes)
       ).toBeInTheDocument();
     });
   });

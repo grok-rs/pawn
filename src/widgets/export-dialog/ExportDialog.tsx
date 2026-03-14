@@ -1,23 +1,26 @@
-import { useState } from 'react';
+import type { ExportFormat, ExportRequest, ExportType } from '@dto/bindings';
+import { commands } from '@dto/bindings';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Box,
   Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Select,
   Switch,
   TextField,
   Typography,
-  Box,
-  CircularProgress,
 } from '@mui/material';
-import { commands } from '@dto/bindings';
-import type { ExportRequest, ExportFormat, ExportType } from '@dto/bindings';
+import { parseBackendError } from '@shared/lib/errorUtils';
+import { useNotification } from '@shared/lib/notification';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // Type guard functions for safe type checking
 const isExportFormat = (value: string): value is ExportFormat => {
@@ -50,6 +53,8 @@ export default function ExportDialog({
   tournamentId,
   tournamentName,
 }: ExportDialogProps) {
+  const { t } = useTranslation();
+  const { showSuccess, showError } = useNotification();
   const [exportFormat, setExportFormat] = useState<ExportFormat>('Html');
   const [exportType, setExportType] = useState<ExportType>('Standings');
   const [includeTiebreaks, setIncludeTiebreaks] = useState(true);
@@ -82,16 +87,18 @@ export default function ExportDialog({
       const result = await commands.exportTournamentData(request);
 
       if (result.success) {
-        setExportMessage(
-          `Export successful! File saved as: ${result.file_name} (${(result.file_size / 1024).toFixed(2)} KB)`
-        );
+        const message = `Export successful! File saved as: ${result.file_name} (${(result.file_size / 1024).toFixed(2)} KB)`;
+        setExportMessage(message);
+        showSuccess(message);
       } else {
-        setExportMessage(
-          `Export failed: ${result.error_message || 'Unknown error'}`
-        );
+        const message = `Export failed: ${result.error_message || 'Unknown error'}`;
+        setExportMessage(message);
+        showError(message);
       }
     } catch (error) {
-      setExportMessage(`Export failed: ${error}`);
+      const errorMessage = parseBackendError(error, t, 'export.failed');
+      setExportMessage(`Export failed: ${errorMessage}`);
+      showError(errorMessage);
     } finally {
       setIsExporting(false);
     }

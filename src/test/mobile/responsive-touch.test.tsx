@@ -1,7 +1,7 @@
-import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi, afterEach } from 'vitest';
+import React from 'react';
+import { afterEach, vi } from 'vitest';
 import { createMockPlayer } from '../utils/test-utils';
 
 // Type definitions for mobile testing
@@ -137,7 +137,7 @@ const MobileTestUtils = {
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
 
-    let startX = centerX,
+    const startX = centerX,
       startY = centerY;
     let endX = centerX,
       endY = centerY;
@@ -358,6 +358,7 @@ const MockMobileNavigation: React.FC<MobileNavigationProps> = ({
       {isMobile ? (
         <>
           <button
+            type="button"
             data-testid="mobile-menu-toggle"
             className="mobile-menu-toggle"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

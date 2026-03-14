@@ -1,47 +1,47 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  Chip,
-  TextField,
-  InputAdornment,
-  IconButton,
-  Menu,
-  MenuItem,
-  Grid,
-  useTheme,
-  Paper,
-  Skeleton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-} from '@mui/material';
+import type { Tournament } from '@dto/bindings';
+import { commands } from '@dto/bindings';
 import {
   Add,
-  Search,
-  FilterList,
-  EmojiEvents,
-  Schedule,
   CheckCircle,
+  EmojiEvents,
+  FilterList,
   PlayArrow,
+  Schedule,
+  Search,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import {
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Grid,
+  IconButton,
+  InputAdornment,
+  Menu,
+  MenuItem,
+  Paper,
+  Skeleton,
+  TextField,
+  Typography,
+  useTheme,
+} from '@mui/material';
+import { APP_ROUTES } from '@shared/config/routes';
 import BaseLayout from '@shared/layouts/BaseLayout';
-import TournamentList from '@widgets/tournament-list/TournamentList';
 import {
   isDraftTournament,
   isFinishedTournament,
   isOngoingTournament,
 } from '@shared/lib/tournamentUtils';
-import { APP_ROUTES } from '@shared/config/routes';
+import TournamentList from '@widgets/tournament-list/TournamentList';
+import type React from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { StatCard } from './StatCard';
-
-import type { Tournament } from '@dto/bindings';
-import { commands } from '@dto/bindings';
 
 const TournamentsPage = () => {
   const theme = useTheme();
@@ -73,8 +73,7 @@ const TournamentsPage = () => {
       const data = await commands.getTournaments();
       setTournaments(data);
       setFilteredTournaments(data);
-    } catch (error) {
-      console.error('Failed to fetch tournaments:', error);
+    } catch (_error) {
     } finally {
       setLoading(false);
     }
@@ -140,9 +139,7 @@ const TournamentsPage = () => {
     try {
       await commands.deleteTournament(tournamentToDelete.id);
       await fetchTournaments();
-    } catch (error) {
-      console.error('Failed to delete tournament:', error);
-    }
+    } catch (_error) {}
     setDeleteDialogOpen(false);
     setTournamentToDelete(null);
   }, [tournamentToDelete, fetchTournaments]);
@@ -157,9 +154,7 @@ const TournamentsPage = () => {
     try {
       await commands.populateMockTournaments();
       await fetchTournaments();
-    } catch (error) {
-      console.error('Failed to populate sample tournaments:', error);
-    }
+    } catch (_error) {}
     setPopulatingTournaments(false);
   }, [fetchTournaments]);
 
@@ -379,8 +374,8 @@ const TournamentsPage = () => {
         {/* Tournament List */}
         {loading ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} variant="rounded" height={120} />
+            {['skeleton-1', 'skeleton-2', 'skeleton-3'].map(id => (
+              <Skeleton key={id} variant="rounded" height={120} />
             ))}
           </Box>
         ) : (

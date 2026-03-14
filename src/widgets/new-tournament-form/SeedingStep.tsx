@@ -1,39 +1,39 @@
-import { useState } from 'react';
 import {
+  type BatchUpdatePlayerSeeding,
+  type CreateTournamentSeedingSettings,
+  commands,
+  type GenerateSeedingRequest,
+  type SeedingAnalysis,
+  type SeedingPreview,
+  type UpdatePlayerSeeding,
+} from '@dto/bindings';
+import {
+  Alert,
   Box,
+  Button,
   Card,
   CardContent,
-  Typography,
+  Chip,
+  CircularProgress,
   FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
   Switch,
-  Button,
-  TextField,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Chip,
-  Alert,
-  CircularProgress,
+  TextField,
+  Typography,
 } from '@mui/material';
+import { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import {
-  commands,
-  CreateTournamentSeedingSettings,
-  GenerateSeedingRequest,
-  SeedingPreview,
-  SeedingAnalysis,
-  BatchUpdatePlayerSeeding,
-  UpdatePlayerSeeding,
-} from '@dto/bindings';
 
 const SeedingStep = () => {
   // For now, we don't have access to tournamentId in the form stepper
@@ -62,7 +62,6 @@ const SeedingStep = () => {
 
   const generateSeedingPreview = async () => {
     if (!tournamentId) {
-      console.warn('No tournament ID available for seeding preview');
       return;
     }
 
@@ -82,8 +81,7 @@ const SeedingStep = () => {
       // Also get seeding analysis
       const analysis = await commands.analyzeTournamentSeeding(tournamentId);
       setSeedingAnalysis(analysis);
-    } catch (error: unknown) {
-      console.error('Failed to generate seeding preview:', error);
+    } catch (_error: unknown) {
     } finally {
       setLoading(false);
     }
@@ -132,8 +130,7 @@ const SeedingStep = () => {
       });
 
       // Seeding applied successfully
-    } catch (error: unknown) {
-      console.error('Failed to apply seeding:', error);
+    } catch (_error: unknown) {
     } finally {
       setLoading(false);
     }
@@ -191,7 +188,9 @@ const SeedingStep = () => {
               type="number"
               label={t('seeding.protectTopSeeds')}
               value={protectTopSeeds}
-              onChange={e => setProtectTopSeeds(parseInt(e.target.value) || 0)}
+              onChange={e =>
+                setProtectTopSeeds(parseInt(e.target.value, 10) || 0)
+              }
               inputProps={{ min: 0, max: 32 }}
               helperText={t('seeding.protectTopSeedsHelp')}
             />
@@ -314,9 +313,9 @@ const SeedingStep = () => {
                 <Typography variant="subtitle2" gutterBottom>
                   {t('seeding.analysis.conflicts')}
                 </Typography>
-                {seedingAnalysis.seeding_conflicts.map((conflict, index) => (
+                {seedingAnalysis.seeding_conflicts.map(conflict => (
                   <Alert
-                    key={index}
+                    key={conflict.player_id}
                     severity={getSeedingConflictSeverity(
                       conflict.conflict_type
                     )}

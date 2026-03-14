@@ -1,6 +1,6 @@
-import { Button, Stack, CircularProgress } from '@mui/material';
-import { useTranslation } from 'react-i18next';
 import { ArrowBack, ArrowForward, Check } from '@mui/icons-material';
+import { Button, CircularProgress, Stack } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   isSubmitting?: boolean;

@@ -1,14 +1,13 @@
+import type { Tournament } from '@dto/bindings';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { useTranslation } from 'react-i18next';
-import { vi } from 'vitest';
-import type { TFunction } from 'i18next';
-import type { i18n as I18nType } from 'i18next';
+import type { i18n as I18nType, TFunction } from 'i18next';
 import type { UseTranslationResponse } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
+import { BrowserRouter } from 'react-router-dom';
+import { vi } from 'vitest';
 import TournamentSidebar from '../TournamentSidebar';
-import { Tournament } from '@dto/bindings';
 
 // Mock react-i18next with proper types
 const createMockT = () => {
@@ -65,7 +64,7 @@ vi.mock('../TournamentStatusButton', () => ({
     count: number;
     onClick: () => void;
   }) => (
-    <button data-testid="status-button" onClick={onClick}>
+    <button type="button" data-testid="status-button" onClick={onClick}>
       <span data-testid="status-label">{label}</span>
       <span data-testid="status-count">{count}</span>
     </button>

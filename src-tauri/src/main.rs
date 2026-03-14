@@ -19,7 +19,7 @@ const LOGS_DIR: &str = "logs";
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn main() {
-    let tauri_builder = tauri::Builder::default()
+    let mut tauri_builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(plugin::init_plugin())
         .invoke_handler(tauri::generate_handler![])
@@ -29,6 +29,11 @@ pub fn main() {
 
             Ok(())
         });
+
+    #[cfg(debug_assertions)]
+    {
+        tauri_builder = tauri_builder.plugin(tauri_plugin_mcp_bridge::init());
+    }
 
     tauri_builder
         .run(tauri::generate_context!())

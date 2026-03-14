@@ -1,6 +1,6 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 import { vi } from 'vitest';
 
 // Type definitions for translations
@@ -646,7 +646,7 @@ const MockI18nForm = ({
 
     if (
       formData.rating &&
-      (isNaN(Number(formData.rating)) ||
+      (Number.isNaN(Number(formData.rating)) ||
         Number(formData.rating) < 400 ||
         Number(formData.rating) > 3000)
     ) {

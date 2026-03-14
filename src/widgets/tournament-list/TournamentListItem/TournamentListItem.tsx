@@ -1,40 +1,41 @@
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Tournament } from '@dto/bindings';
+import type { Round } from '@dto/bindings';
+import { commands, type Tournament } from '@dto/bindings';
 import {
   CalendarToday,
+  Category,
+  EmojiEvents,
   LocationOn,
+  MoreVert,
   People,
   Timer,
-  EmojiEvents,
-  MoreVert,
-  Category,
 } from '@mui/icons-material';
 import {
   Box,
   Card,
   CardContent,
-  Typography,
-  IconButton,
   Chip,
+  IconButton,
   LinearProgress,
-  useTheme,
   Menu,
   MenuItem,
+  Typography,
+  useTheme,
 } from '@mui/material';
-import { useState, useEffect } from 'react';
 import {
-  isOngoingTournament,
-  isDraftTournament,
-  isFinishedTournament,
-  isOngoingTournamentActual,
-  isDraftTournamentActual,
-  isFinishedTournamentActual,
-  getTournamentProgressActual,
   calculateActualRoundsPlayed,
+  formatLocalizedDate,
+  getTournamentProgressActual,
+  isDraftTournament,
+  isDraftTournamentActual,
+  isFinishedTournament,
+  isFinishedTournamentActual,
+  isOngoingTournament,
+  isOngoingTournamentActual,
+  translateTournamentType,
 } from '@shared/lib/tournamentUtils';
-import { commands } from '@dto/bindings';
-import type { Round } from '@dto/bindings';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 type TournamentListItemProps = {
   tournament: Tournament;
@@ -47,7 +48,7 @@ const TournamentListItem = ({
 }: TournamentListItemProps) => {
   const navigate = useNavigate();
   const theme = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [actualPlayerCount, setActualPlayerCount] = useState<number | null>(
     null
@@ -66,8 +67,7 @@ const TournamentListItem = ({
         // Fetch rounds for status calculation
         const roundsData = await commands.getRoundsByTournament(tournament.id);
         setRounds(roundsData);
-      } catch (error) {
-        console.error('Failed to fetch tournament data:', error);
+      } catch (_error) {
         // Fallback to tournament.player_count if fetch fails
         setActualPlayerCount(tournament.player_count);
         setRounds([]);
@@ -90,17 +90,8 @@ const TournamentListItem = ({
     setAnchorEl(null);
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      });
-    } catch {
-      return dateString;
-    }
-  };
+  const formatDate = (dateString: string) =>
+    formatLocalizedDate(dateString, i18n.language);
 
   const useActualData = rounds !== null;
 
@@ -135,10 +126,10 @@ const TournamentListItem = ({
     <Card
       sx={{
         cursor: 'pointer',
-        transition: 'all 0.3s ease',
+        transition: 'box-shadow 0.15s ease, border-color 0.15s ease',
         '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: theme.shadows[4],
+          boxShadow: '0px 4px 20px rgba(0,0,0,0.08)',
+          borderColor: 'rgba(0,0,0,0.1)',
         },
         position: 'relative',
         overflow: 'hidden',
@@ -338,7 +329,7 @@ const TournamentListItem = ({
                     fontWeight: 500,
                   }}
                 >
-                  {tournament.tournament_type || '-'}
+                  {translateTournamentType(tournament.tournament_type, t)}
                 </Typography>
               </Box>
             </Box>
@@ -354,9 +345,7 @@ const TournamentListItem = ({
               },
             }}
           >
-            <MoreVert
-              sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}
-            />
+            <MoreVert sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }} />
           </IconButton>
         </Box>
 

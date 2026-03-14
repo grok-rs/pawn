@@ -1,4 +1,4 @@
-import { Box, Grid, styled, Divider } from '@mui/material';
+import { Box, Divider, Grid, styled } from '@mui/material';
 
 export const StyledGrid = styled(Grid)(() => ({
   width: '100%',

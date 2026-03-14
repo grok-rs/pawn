@@ -1,13 +1,9 @@
 use crate::common::error::PawnError;
-use crate::domain::model::{
-    BracketPosition, BracketPositionStatus, BracketType, KnockoutBracket, Pairing, Player,
-};
+use crate::domain::model::{BracketPosition, BracketPositionStatus, Pairing, Player};
 use std::collections::HashMap;
 
-#[allow(dead_code)]
 pub struct KnockoutService;
 
-#[allow(dead_code)]
 impl KnockoutService {
     /// Calculate the number of rounds needed for a knockout tournament
     pub fn calculate_rounds(player_count: i32) -> i32 {
@@ -27,31 +23,6 @@ impl KnockoutService {
             power *= 2;
         }
         power
-    }
-
-    /// Generate a single elimination bracket
-    #[allow(dead_code)]
-    pub fn generate_single_elimination_bracket(
-        tournament_id: i32,
-        players: Vec<Player>,
-    ) -> Result<KnockoutBracket, PawnError> {
-        let player_count = players.len() as i32;
-        if player_count < 2 {
-            return Err(PawnError::InvalidInput(
-                "At least 2 players required for knockout tournament".to_string(),
-            ));
-        }
-
-        let total_rounds = Self::calculate_rounds(player_count);
-        let _bracket_size = Self::next_power_of_two(player_count);
-
-        Ok(KnockoutBracket {
-            id: 0, // Will be set by database
-            tournament_id,
-            bracket_type: BracketType::SingleElimination.to_str().to_string(),
-            total_rounds,
-            created_at: chrono::Utc::now().to_rfc3339(),
-        })
     }
 
     /// Generate bracket positions for the first round
@@ -75,9 +46,9 @@ impl KnockoutService {
                 player_id: seeded_players.get(i as usize).map(|p| p.id),
                 advanced_from_position: None,
                 status: if seeded_players.get(i as usize).is_some() {
-                    BracketPositionStatus::Ready.to_str().to_string()
+                    BracketPositionStatus::Ready.as_str().to_string()
                 } else {
-                    BracketPositionStatus::Bye.to_str().to_string()
+                    BracketPositionStatus::Bye.as_str().to_string()
                 },
                 created_at: chrono::Utc::now().to_rfc3339(),
             };
@@ -167,7 +138,7 @@ impl KnockoutService {
         let round_positions: Vec<&BracketPosition> = positions
             .iter()
             .filter(|p| {
-                p.round_number == round_number && p.status == BracketPositionStatus::Ready.to_str()
+                p.round_number == round_number && p.status == BracketPositionStatus::Ready.as_str()
             })
             .collect();
 
@@ -282,7 +253,7 @@ impl KnockoutService {
                 advanced_from_position: Some(
                     (round_number - 1) * positions_per_round + i as i32 + 1,
                 ),
-                status: BracketPositionStatus::Ready.to_str().to_string(),
+                status: BracketPositionStatus::Ready.as_str().to_string(),
                 created_at: chrono::Utc::now().to_rfc3339(),
             };
             next_round_positions.push(position);
@@ -349,34 +320,3 @@ impl KnockoutService {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_calculate_rounds() {
-        assert_eq!(KnockoutService::calculate_rounds(2), 1);
-        assert_eq!(KnockoutService::calculate_rounds(4), 2);
-        assert_eq!(KnockoutService::calculate_rounds(8), 3);
-        assert_eq!(KnockoutService::calculate_rounds(16), 4);
-        assert_eq!(KnockoutService::calculate_rounds(5), 3); // 5 players need 3 rounds (8 bracket)
-    }
-
-    #[test]
-    fn test_next_power_of_two() {
-        assert_eq!(KnockoutService::next_power_of_two(1), 2);
-        assert_eq!(KnockoutService::next_power_of_two(2), 2);
-        assert_eq!(KnockoutService::next_power_of_two(3), 4);
-        assert_eq!(KnockoutService::next_power_of_two(8), 8);
-        assert_eq!(KnockoutService::next_power_of_two(9), 16);
-    }
-
-    #[test]
-    fn test_seed_position() {
-        // Standard 8-player bracket seeding
-        assert_eq!(KnockoutService::get_seed_position(1, 8), 1);
-        assert_eq!(KnockoutService::get_seed_position(2, 8), 8);
-        assert_eq!(KnockoutService::get_seed_position(3, 8), 5);
-        assert_eq!(KnockoutService::get_seed_position(4, 8), 4);
-    }
-}

@@ -1,6 +1,6 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 import { createMockTournament } from '../utils/test-utils';
 
 // Type definitions
@@ -137,7 +137,12 @@ class MockErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       const FallbackComponent = this.props.fallback || DefaultErrorFallback;
-      return <FallbackComponent error={this.state.error!} retry={this.retry} />;
+      return (
+        <FallbackComponent
+          error={this.state.error ?? new Error('Unknown error')}
+          retry={this.retry}
+        />
+      );
     }
 
     return this.props.children;
@@ -155,7 +160,7 @@ const DefaultErrorFallback = ({
   <div data-testid="error-fallback" role="alert">
     <h2>Something went wrong</h2>
     <p data-testid="error-message">{error.message}</p>
-    <button data-testid="retry-button" onClick={retry}>
+    <button type="button" data-testid="retry-button" onClick={retry}>
       Try Again
     </button>
   </div>
@@ -173,10 +178,11 @@ const TournamentErrorFallback = ({
     <h3>Tournament Loading Error</h3>
     <p>Unable to load tournament data: {error.message}</p>
     <div>
-      <button data-testid="retry-tournament" onClick={retry}>
+      <button type="button" data-testid="retry-tournament" onClick={retry}>
         Retry Loading
       </button>
       <button
+        type="button"
         data-testid="go-home"
         onClick={() => (window.location.href = '/')}
       >
@@ -242,7 +248,11 @@ const ConfigurableErrorComponent = ({
   return (
     <div data-testid="configurable-error-component">
       <div>Count: {count}</div>
-      <button data-testid="increment-button" onClick={handleClick}>
+      <button
+        type="button"
+        data-testid="increment-button"
+        onClick={handleClick}
+      >
         Increment
       </button>
     </div>
@@ -285,7 +295,7 @@ const NetworkFailureComponent = ({
 
   React.useEffect(() => {
     fetchData();
-  }, [shouldFail, fetchData]);
+  }, [fetchData]);
 
   if (loading) {
     return <div data-testid="loading">Loading...</div>;
@@ -295,7 +305,7 @@ const NetworkFailureComponent = ({
     return (
       <div data-testid="network-error" role="alert">
         <p>Failed to load data: {error}</p>
-        <button data-testid="retry-network" onClick={fetchData}>
+        <button type="button" data-testid="retry-network" onClick={fetchData}>
           Retry
         </button>
       </div>
@@ -337,7 +347,11 @@ const RecoverableStateComponent = () => {
     return (
       <div data-testid="state-error" role="alert">
         <p>Application state became corrupted</p>
-        <button data-testid="recover-state" onClick={recoverState}>
+        <button
+          type="button"
+          data-testid="recover-state"
+          onClick={recoverState}
+        >
           Recover
         </button>
       </div>
@@ -348,10 +362,15 @@ const RecoverableStateComponent = () => {
     <div data-testid="recoverable-state-component">
       <div>Count: {data?.count || 0}</div>
       <div>Items: {data?.items?.length || 0}</div>
-      <button data-testid="corrupt-state" onClick={simulateStateCorruption}>
+      <button
+        type="button"
+        data-testid="corrupt-state"
+        onClick={simulateStateCorruption}
+      >
         Simulate State Corruption
       </button>
       <button
+        type="button"
         data-testid="increment-count"
         onClick={() =>
           setData((prev: StateData | null) =>
@@ -395,14 +414,19 @@ const ProgressiveEnhancementComponent = ({
 
       <div data-testid="basic-features">
         <h3>Basic Tournament Management</h3>
-        <button data-testid="create-tournament">Create Tournament</button>
-        <button data-testid="view-tournaments">View Tournaments</button>
+        <button type="button" data-testid="create-tournament">
+          Create Tournament
+        </button>
+        <button type="button" data-testid="view-tournaments">
+          View Tournaments
+        </button>
       </div>
 
       {features.advancedSorting && (
         <div data-testid="advanced-sorting">
           <h4>Advanced Sorting</h4>
           <button
+            type="button"
             data-testid="advanced-sort-error"
             onClick={() => handleFeatureError('advancedSorting')}
           >
@@ -415,6 +439,7 @@ const ProgressiveEnhancementComponent = ({
         <div data-testid="real-time-updates">
           <h4>Real-time Updates</h4>
           <button
+            type="button"
             data-testid="realtime-error"
             onClick={() => handleFeatureError('realTimeUpdates')}
           >
@@ -427,6 +452,7 @@ const ProgressiveEnhancementComponent = ({
         <div data-testid="export-features">
           <h4>Export Features</h4>
           <button
+            type="button"
             data-testid="export-error"
             onClick={() => handleFeatureError('exportFeatures')}
           >
@@ -787,6 +813,7 @@ describe('Advanced Error Boundary and Crash Recovery Tests', () => {
             <div data-testid="memory-error" role="alert">
               <p>{error}</p>
               <button
+                type="button"
                 data-testid="clear-memory"
                 onClick={() => {
                   setData([]);
@@ -803,6 +830,7 @@ describe('Advanced Error Boundary and Crash Recovery Tests', () => {
           <div data-testid="memory-component">
             <p>Data items: {data.length}</p>
             <button
+              type="button"
               data-testid="memory-operation"
               onClick={handleMemoryIntensiveOperation}
             >
@@ -851,7 +879,7 @@ describe('Advanced Error Boundary and Crash Recovery Tests', () => {
             setError(null);
             setIsRetrying(false);
           } catch (err: unknown) {
-            const delay = Math.pow(2, attemptCount - 1) * 1000; // Exponential backoff
+            const delay = 2 ** (attemptCount - 1) * 1000; // Exponential backoff
             backoffDelays.push(delay);
 
             setError(err instanceof Error ? err.message : String(err));
@@ -863,6 +891,7 @@ describe('Advanced Error Boundary and Crash Recovery Tests', () => {
           performOperation(true);
         };
 
+        // biome-ignore lint/correctness/useExhaustiveDependencies: performOperation uses external test state
         React.useEffect(() => {
           performOperation();
         }, []);
@@ -876,7 +905,11 @@ describe('Advanced Error Boundary and Crash Recovery Tests', () => {
             <div data-testid="retry-error">
               <p>Error: {error}</p>
               <p>Attempt: {attemptCount}</p>
-              <button data-testid="manual-retry" onClick={handleRetry}>
+              <button
+                type="button"
+                data-testid="manual-retry"
+                onClick={handleRetry}
+              >
                 Retry
               </button>
             </div>
@@ -952,13 +985,25 @@ describe('Advanced Error Boundary and Crash Recovery Tests', () => {
           <div data-testid="multi-recovery-options" role="alert">
             <h3>Recovery Options</h3>
             <p>Choose how you want to recover from this error:</p>
-            <button data-testid="quick-fix" onClick={handleQuickFix}>
+            <button
+              type="button"
+              data-testid="quick-fix"
+              onClick={handleQuickFix}
+            >
               Quick Fix (Retry)
             </button>
-            <button data-testid="full-reset" onClick={handleFullReset}>
+            <button
+              type="button"
+              data-testid="full-reset"
+              onClick={handleFullReset}
+            >
               Full Reset
             </button>
-            <button data-testid="safe-mode" onClick={handleSafeMode}>
+            <button
+              type="button"
+              data-testid="safe-mode"
+              onClick={handleSafeMode}
+            >
               Safe Mode
             </button>
           </div>

@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TFunction } from 'i18next';
-import { parseBackendError, handleTournamentCompletion } from '../errorUtils';
+import type { TFunction } from 'i18next';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { handleTournamentCompletion, parseBackendError } from '../errorUtils';
 
 // Mock the translation function
 const createMockT = (): TFunction => {

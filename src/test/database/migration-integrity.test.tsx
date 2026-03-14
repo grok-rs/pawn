@@ -1,6 +1,6 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 import { vi } from 'vitest';
 
 // Type definitions for test data
@@ -371,6 +371,7 @@ const MockMigrationManager = ({
     }
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runMigration and rollbackMigration are stable within render
   React.useEffect(() => {
     if (targetVersion && targetVersion !== currentVersion) {
       if (targetVersion > currentVersion) {
@@ -397,7 +398,7 @@ const MockMigrationManager = ({
         <div data-testid="migration-log">
           <h4>Migration Log:</h4>
           {migrationLog.map((entry, index) => (
-            <div key={index} data-testid={`log-entry-${index}`}>
+            <div key={entry} data-testid={`log-entry-${index}`}>
               {entry}
             </div>
           ))}
@@ -409,7 +410,7 @@ const MockMigrationManager = ({
           <h4>Data Integrity Issues:</h4>
           {integrityIssues.map((issue, index) => (
             <div
-              key={index}
+              key={issue}
               data-testid={`issue-${index}`}
               className="integrity-issue"
             >
@@ -559,6 +560,7 @@ const MockDataConsistencyChecker = ({ data }: { data: DatabaseData }) => {
     return violations;
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runConsistencyCheck uses data prop
   React.useEffect(() => {
     runConsistencyCheck();
   }, [data]);
@@ -604,7 +606,7 @@ const MockDataConsistencyChecker = ({ data }: { data: DatabaseData }) => {
           <h4>Data Issues Found:</h4>
           {consistencyReport.issues.map((issue: string, index: number) => (
             <div
-              key={index}
+              key={issue}
               data-testid={`data-issue-${index}`}
               className="data-issue"
             >
@@ -619,7 +621,7 @@ const MockDataConsistencyChecker = ({ data }: { data: DatabaseData }) => {
           <h4>Unique Constraint Violations:</h4>
           {consistencyReport.constraints.uniqueConstraints.map(
             (violation: string, index: number) => (
-              <div key={index} data-testid={`unique-violation-${index}`}>
+              <div key={violation} data-testid={`unique-violation-${index}`}>
                 {violation}
               </div>
             )
@@ -632,7 +634,7 @@ const MockDataConsistencyChecker = ({ data }: { data: DatabaseData }) => {
           <h4>Check Constraint Violations:</h4>
           {consistencyReport.constraints.checkConstraints.map(
             (violation: string, index: number) => (
-              <div key={index} data-testid={`check-violation-${index}`}>
+              <div key={violation} data-testid={`check-violation-${index}`}>
                 {violation}
               </div>
             )
@@ -681,7 +683,7 @@ const MockBackupRestore = ({
       timestamp: new Date().toISOString(),
       schemaVersion: DatabaseTestUtils.mockDatabase.currentSchema,
       data: JSON.parse(JSON.stringify(DatabaseTestUtils.mockDatabase.data)),
-      checksum: 'mock-checksum-' + Math.random().toString(36),
+      checksum: `mock-checksum-${Math.random().toString(36)}`,
     };
 
     setBackups(prev => [backup, ...prev]);
@@ -732,6 +734,7 @@ const MockBackupRestore = ({
       <div data-testid="operation-status">Status: {operation}</div>
 
       <button
+        type="button"
         data-testid="create-backup"
         onClick={createBackup}
         disabled={operation !== 'idle'}
@@ -752,6 +755,7 @@ const MockBackupRestore = ({
               <div>Schema Version: {backup.schemaVersion}</div>
               <div>Checksum: {backup.checksum}</div>
               <button
+                type="button"
                 data-testid={`restore-backup-${index}`}
                 onClick={() => restoreBackup(backup.id)}
                 disabled={operation !== 'idle'}
@@ -1121,6 +1125,7 @@ describe('Database Migration and Data Integrity Tests', () => {
           }
         };
 
+        // biome-ignore lint/correctness/useExhaustiveDependencies: run once on mount
         React.useEffect(() => {
           runTransaction();
         }, []);
@@ -1173,6 +1178,7 @@ describe('Database Migration and Data Integrity Tests', () => {
           }
         };
 
+        // biome-ignore lint/correctness/useExhaustiveDependencies: run once on mount
         React.useEffect(() => {
           runConcurrentTransactions();
         }, []);
@@ -1180,7 +1186,7 @@ describe('Database Migration and Data Integrity Tests', () => {
         return (
           <div data-testid="concurrent-results">
             {results.map((result, index) => (
-              <div key={index} data-testid={`result-${index}`}>
+              <div key={result} data-testid={`result-${index}`}>
                 {result}
               </div>
             ))}

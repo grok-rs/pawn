@@ -1,31 +1,32 @@
 import {
+  CalendarToday,
+  Check,
+  EmojiEvents,
+  LocationOn,
+  Numbers,
+  Person,
+  // CompareArrows,
+  Settings,
+  Timer,
+  ViewModule,
+} from '@mui/icons-material';
+import {
   Box,
-  Paper,
-  Typography,
-  Grid,
+  Card,
+  CardContent,
   Chip,
   Divider,
+  Grid,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  Card,
-  CardContent,
+  Paper,
+  Typography,
 } from '@mui/material';
-import {
-  EmojiEvents,
-  LocationOn,
-  CalendarToday,
-  Person,
-  Timer,
-  ViewModule,
-  Numbers,
-  // CompareArrows,
-  Settings,
-  Check,
-} from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
+import { formatLocalizedDate } from '@shared/lib/tournamentUtils';
 import type { TournamentFormValues } from '@widgets/new-tournament-form/types';
+import { useTranslation } from 'react-i18next';
 
 interface TournamentPreviewProps {
   formData: TournamentFormValues;
@@ -40,7 +41,7 @@ function TournamentPreview({
   formData,
   timeControlTemplates = [],
 }: TournamentPreviewProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const selectedTimeControl = timeControlTemplates.find(
     template => template.id === formData.timeControlTemplate
@@ -48,25 +49,25 @@ function TournamentPreview({
 
   const formatDate = (date: Date | null) => {
     if (!date) return t('form.placeholders.notSet');
-    return date.toLocaleDateString();
+    return formatLocalizedDate(date.toISOString(), i18n.language);
   };
 
   const getTypeLabel = (type: string) => {
     const typeMap: Record<string, string> = {
-      rapid: t('tournament.types.rapid'),
+      rapid: t('tournament.types.rapid.label'),
       classical: t('tournament.types.classic'),
       classic: t('tournament.types.classic'),
-      blitz: t('tournament.types.blitz'),
+      blitz: t('tournament.types.blitz.label'),
     };
     return typeMap[type] || type;
   };
 
   const getPairingSystemLabel = (system: string) => {
     const systemMap: Record<string, string> = {
-      swiss: t('tournament.types.swiss'),
-      roundRobin: t('tournament.types.roundRobin'),
-      knockout: t('tournament.types.knockout'),
-      elimination: t('tournament.types.elimination'),
+      swiss: t('tournament.types.swiss.label'),
+      roundRobin: t('tournament.types.roundRobin.label'),
+      knockout: t('tournament.types.knockout.label'),
+      elimination: t('tournament.types.elimination.label'),
     };
     return systemMap[system] || system;
   };
@@ -77,19 +78,19 @@ function TournamentPreview({
       Record<string, string>
     > = {
       draw: {
-        allowed: t('tournament.drawOffers.allowed'),
-        restricted: t('tournament.drawOffers.restricted'),
-        prohibited: t('tournament.drawOffers.prohibited'),
+        allowed: t('tournament.drawOffers.allowed.label'),
+        restricted: t('tournament.drawOffers.restricted.label'),
+        prohibited: t('tournament.drawOffers.prohibited.label'),
       },
       phone: {
-        allowed: t('tournament.mobilePhone.allowed'),
-        silent_only: t('tournament.mobilePhone.silentOnly'),
-        prohibited: t('tournament.mobilePhone.prohibited'),
+        allowed: t('tournament.mobilePhone.allowed.label'),
+        silent_only: t('tournament.mobilePhone.silentOnly.label'),
+        prohibited: t('tournament.mobilePhone.prohibited.label'),
       },
       entry: {
-        allowed: t('tournament.lateEntry.allowed'),
-        restricted: t('tournament.lateEntry.restricted'),
-        prohibited: t('tournament.lateEntry.prohibited'),
+        allowed: t('tournament.lateEntry.allowed.label'),
+        restricted: t('tournament.lateEntry.restricted.label'),
+        prohibited: t('tournament.lateEntry.prohibited.label'),
       },
     };
     return policyMaps[type][policy] || policy;
@@ -237,7 +238,7 @@ function TournamentPreview({
               >
                 <Settings color="primary" />
                 <Typography variant="h6" fontWeight={600}>
-                  {t('form.sections.advancedRules')}
+                  {t('form.sections.advancedRules.label')}
                 </Typography>
               </Box>
               <Grid container spacing={2}>

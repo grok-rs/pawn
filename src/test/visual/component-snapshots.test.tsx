@@ -1,7 +1,7 @@
-import React from 'react';
 import { render } from '@testing-library/react';
-import { createMockTournament, createMockPlayer } from '../utils/test-utils';
-import { describe, test, expect } from 'vitest';
+import type React from 'react';
+import { describe, expect, test } from 'vitest';
+import { createMockPlayer, createMockTournament } from '../utils/test-utils';
 
 // Mock components for visual testing - import actual components as needed
 // These would normally import the real components from your app
@@ -19,8 +19,9 @@ const MockButton = ({
   size = 'medium',
   disabled = false,
   ...props
-}: MockButtonProps): JSX.Element => (
+}: MockButtonProps): React.JSX.Element => (
   <button
+    type="button"
     className={`btn btn-${variant} btn-${size} ${disabled ? 'btn-disabled' : ''}`}
     disabled={disabled}
     {...props}
@@ -45,7 +46,7 @@ const MockStatCard = ({
   trend,
   color = 'primary',
   ...props
-}: MockStatCardProps): JSX.Element => (
+}: MockStatCardProps): React.JSX.Element => (
   <div className={`stat-card stat-card-${color}`} {...props}>
     <div className="stat-card-header">
       <h3 className="stat-card-title">{title}</h3>
@@ -76,7 +77,7 @@ const MockEmptyState = ({
   action,
   icon,
   ...props
-}: MockEmptyStateProps): JSX.Element => (
+}: MockEmptyStateProps): React.JSX.Element => (
   <div className="empty-state" {...props}>
     {icon && <div className="empty-state-icon">{icon}</div>}
     <h3 className="empty-state-title">{title}</h3>
@@ -95,8 +96,9 @@ const MockLoadingButton = ({
   loading = false,
   children,
   ...props
-}: MockLoadingButtonProps): JSX.Element => (
+}: MockLoadingButtonProps): React.JSX.Element => (
   <button
+    type="button"
     className={`loading-btn ${loading ? 'loading' : ''}`}
     disabled={loading}
     {...props}
@@ -326,7 +328,7 @@ describe('Visual Regression Tests - Component Snapshots', () => {
         player,
       }: {
         player: MockPlayerType;
-      }): JSX.Element => (
+      }): React.JSX.Element => (
         <div className="player-card">
           <div className="player-card-header">
             <div className="player-name">
@@ -381,7 +383,7 @@ describe('Visual Regression Tests - Component Snapshots', () => {
         tournament,
       }: {
         tournament: MockTournamentType;
-      }): JSX.Element => (
+      }): React.JSX.Element => (
         <div className="tournament-card">
           <div className="tournament-card-header">
             <h3 className="tournament-name">{tournament.name}</h3>
@@ -421,21 +423,23 @@ describe('Visual Regression Tests - Component Snapshots', () => {
 
   describe('Form Components', () => {
     test('Tournament form - visual snapshot', () => {
-      const TournamentForm = (): JSX.Element => (
+      const TournamentForm = (): React.JSX.Element => (
         <form className="tournament-form">
           <div className="form-section">
             <h3>Basic Information</h3>
             <div className="form-field">
-              <label>Tournament Name</label>
+              <label htmlFor="tournament-name">Tournament Name</label>
               <input
+                id="tournament-name"
                 type="text"
                 className="form-input"
                 defaultValue="Spring Championship 2024"
               />
             </div>
             <div className="form-field">
-              <label>Description</label>
+              <label htmlFor="tournament-desc">Description</label>
               <textarea
+                id="tournament-desc"
                 className="form-textarea"
                 rows={3}
                 defaultValue="Annual spring tournament"
@@ -447,17 +451,31 @@ describe('Visual Regression Tests - Component Snapshots', () => {
             <h3>Tournament Settings</h3>
             <div className="form-row">
               <div className="form-field">
-                <label>Max Players</label>
-                <input type="number" className="form-input" defaultValue="16" />
+                <label htmlFor="max-players">Max Players</label>
+                <input
+                  id="max-players"
+                  type="number"
+                  className="form-input"
+                  defaultValue="16"
+                />
               </div>
               <div className="form-field">
-                <label>Max Rounds</label>
-                <input type="number" className="form-input" defaultValue="5" />
+                <label htmlFor="max-rounds">Max Rounds</label>
+                <input
+                  id="max-rounds"
+                  type="number"
+                  className="form-input"
+                  defaultValue="5"
+                />
               </div>
             </div>
             <div className="form-field">
-              <label>Pairing Method</label>
-              <select className="form-select" defaultValue="swiss">
+              <label htmlFor="pairing-method">Pairing Method</label>
+              <select
+                id="pairing-method"
+                className="form-select"
+                defaultValue="swiss"
+              >
                 <option value="swiss">Swiss System</option>
                 <option value="round_robin">Round Robin</option>
                 <option value="knockout">Knockout</option>
@@ -477,22 +495,27 @@ describe('Visual Regression Tests - Component Snapshots', () => {
     });
 
     test('Player form - visual snapshot', () => {
-      const PlayerForm = (): JSX.Element => (
+      const PlayerForm = (): React.JSX.Element => (
         <form className="player-form">
           <div className="form-section">
             <h3>Personal Information</h3>
             <div className="form-row">
               <div className="form-field">
-                <label>Full Name</label>
+                <label htmlFor="player-name">Full Name</label>
                 <input
+                  id="player-name"
                   type="text"
                   className="form-input"
                   defaultValue="Alice Johnson"
                 />
               </div>
               <div className="form-field">
-                <label>Title</label>
-                <select className="form-select" defaultValue="WFM">
+                <label htmlFor="player-title">Title</label>
+                <select
+                  id="player-title"
+                  className="form-select"
+                  defaultValue="WFM"
+                >
                   <option value="">No Title</option>
                   <option value="CM">CM</option>
                   <option value="FM">FM</option>
@@ -505,16 +528,21 @@ describe('Visual Regression Tests - Component Snapshots', () => {
 
             <div className="form-row">
               <div className="form-field">
-                <label>Rating</label>
+                <label htmlFor="player-rating">Rating</label>
                 <input
+                  id="player-rating"
                   type="number"
                   className="form-input"
                   defaultValue="1650"
                 />
               </div>
               <div className="form-field">
-                <label>Country</label>
-                <select className="form-select" defaultValue="US">
+                <label htmlFor="player-country">Country</label>
+                <select
+                  id="player-country"
+                  className="form-select"
+                  defaultValue="US"
+                >
                   <option value="US">United States</option>
                   <option value="CA">Canada</option>
                   <option value="UK">United Kingdom</option>
@@ -526,16 +554,18 @@ describe('Visual Regression Tests - Component Snapshots', () => {
           <div className="form-section">
             <h3>Contact Information</h3>
             <div className="form-field">
-              <label>Email</label>
+              <label htmlFor="player-email">Email</label>
               <input
+                id="player-email"
                 type="email"
                 className="form-input"
                 defaultValue="alice@example.com"
               />
             </div>
             <div className="form-field">
-              <label>Phone</label>
+              <label htmlFor="player-phone">Phone</label>
               <input
+                id="player-phone"
                 type="tel"
                 className="form-input"
                 defaultValue="+1 (555) 123-4567"
@@ -557,7 +587,7 @@ describe('Visual Regression Tests - Component Snapshots', () => {
 
   describe('Layout Components', () => {
     test('Navigation header - visual snapshot', () => {
-      const Navigation = (): JSX.Element => (
+      const Navigation = (): React.JSX.Element => (
         <header className="app-header">
           <div className="nav-brand">
             <h1>♜ Pawn</h1>
@@ -606,7 +636,7 @@ describe('Visual Regression Tests - Component Snapshots', () => {
     );
 
     test('Sidebar layout - visual snapshot', () => {
-      const SidebarLayout = (): JSX.Element => (
+      const SidebarLayout = (): React.JSX.Element => (
         <div className="app-layout">
           <aside className="sidebar">
             <div className="sidebar-header">
@@ -649,7 +679,7 @@ describe('Visual Regression Tests - Component Snapshots', () => {
 
   describe('Theme Variations', () => {
     test('Dark theme components - visual snapshot', () => {
-      const DarkThemeDemo = (): JSX.Element => (
+      const DarkThemeDemo = (): React.JSX.Element => (
         <div className="theme-dark">
           <div className="card">
             <h3>Dark Theme Card</h3>
@@ -673,7 +703,7 @@ describe('Visual Regression Tests - Component Snapshots', () => {
     });
 
     test('High contrast theme - visual snapshot', () => {
-      const HighContrastDemo = (): JSX.Element => (
+      const HighContrastDemo = (): React.JSX.Element => (
         <div className="theme-high-contrast">
           <div className="card">
             <h3>High Contrast Theme</h3>
@@ -698,7 +728,7 @@ describe('Visual Regression Tests - Component Snapshots', () => {
 
   describe('Error States', () => {
     test('Error message components - visual snapshot', () => {
-      const ErrorStates = (): JSX.Element => (
+      const ErrorStates = (): React.JSX.Element => (
         <div className="error-states">
           <div className="error-banner error-banner-danger">
             <strong>Error:</strong> Failed to save tournament data.

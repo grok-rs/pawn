@@ -1,60 +1,52 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import type { GameResult } from '@dto/bindings';
 import {
+  FlashOn as BulkIcon,
+  Clear as ClearIcon,
+  Computer as ComputerIcon,
+  ExpandMore as ExpandMoreIcon,
+  History as HistoryIcon,
+  PhoneAndroid as PhoneIcon,
+  Save as SaveIcon,
+  Upload as UploadIcon,
+  Warning as WarningIcon,
+} from '@mui/icons-material';
+import {
+  Alert,
   Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  FormControl,
+  Grid,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Paper,
+  Select,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Select,
-  MenuItem,
-  FormControl,
   TextField,
-  Button,
-  Typography,
-  Alert,
-  Grid,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
   Tooltip,
-  Card,
-  CardContent,
+  Typography,
   useMediaQuery,
   useTheme,
-  Menu,
-  Divider,
-  Chip,
-  ListItemIcon,
-  ListItemText,
 } from '@mui/material';
-import {
-  Save as SaveIcon,
-  Warning as WarningIcon,
-  History as HistoryIcon,
-  PhoneAndroid as PhoneIcon,
-  Computer as ComputerIcon,
-  FlashOn as BulkIcon,
-  ExpandMore as ExpandMoreIcon,
-  Clear as ClearIcon,
-  Upload as UploadIcon,
-} from '@mui/icons-material';
-import { commands } from '@dto/bindings';
-import type {
-  GameResult,
-  UpdateGameResult,
-  GameResultValidation,
-  BatchValidationResult,
-  GameResultAudit,
-} from '@dto/bindings';
-
-import { MobileResultEntry } from './MobileResultEntry';
+import { useTranslation } from 'react-i18next';
 import { CsvImportDialog } from './CsvImportDialog';
+import { MobileResultEntry } from './MobileResultEntry';
+import { useResultsGrid } from './useResultsGrid';
 
 interface ResultsGridProps {
   tournamentId: number;
@@ -64,19 +56,6 @@ interface ResultsGridProps {
   readOnly?: boolean;
 }
 
-interface ResultEntry {
-  gameId: number;
-  result: string;
-  resultType?: string;
-  resultReason?: string;
-  arbiterNotes?: string;
-  isModified: boolean;
-  validation?: GameResultValidation;
-  requiresApproval: boolean;
-}
-
-// RESULT_OPTIONS will be created inside the component to access translations
-
 export function ResultsGrid({
   tournamentId,
   roundNumber,
@@ -85,8 +64,9 @@ export function ResultsGrid({
   readOnly = false,
 }: ResultsGridProps) {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const isMobileScreen = useMediaQuery(theme.breakpoints.down('md'));
 
-  // Create result options with translations
   const RESULT_OPTIONS = [
     { value: '1-0', label: t('gameResults.results.whiteWins'), standard: true },
     { value: '0-1', label: t('gameResults.results.blackWins'), standard: true },
@@ -139,444 +119,36 @@ export function ResultsGrid({
     },
   ];
 
-  const [resultEntries, setResultEntries] = useState<Map<number, ResultEntry>>(
-    new Map()
-  );
-  const [selectedAuditGame, setSelectedAuditGame] = useState<number | null>(
-    null
-  );
-  const [auditTrail, setAuditTrail] = useState<GameResultAudit[]>([]);
-  const [isAuditDialogOpen, setIsAuditDialogOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [validationResults, setValidationResults] =
-    useState<BatchValidationResult | null>(null);
-  const [selectedGameIndex, setSelectedGameIndex] = useState<number>(0);
-  const [keyboardShortcutsEnabled, setKeyboardShortcutsEnabled] =
-    useState(true);
-  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
-  const [showMobileView, setShowMobileView] = useState(false);
-  const [bulkMenuAnchor, setBulkMenuAnchor] = useState<null | HTMLElement>(
-    null
-  );
-  const [showCsvImport, setShowCsvImport] = useState(false);
-  const tableRef = useRef<HTMLDivElement>(null);
-
-  const theme = useTheme();
-  const isMobileScreen = useMediaQuery(theme.breakpoints.down('md'));
-
-  // Initialize result entries from games
-  useEffect(() => {
-    const entries = new Map<number, ResultEntry>();
-    games.forEach(game => {
-      entries.set(game.game.id, {
-        gameId: game.game.id,
-        result: game.game.result,
-        resultType: game.game.result_type || undefined,
-        resultReason: game.game.result_reason || undefined,
-        arbiterNotes: game.game.arbiter_notes || undefined,
-        isModified: false,
-        requiresApproval: game.game.result_type
-          ? [
-              'white_forfeit',
-              'black_forfeit',
-              'white_default',
-              'black_default',
-              'double_forfeit',
-              'cancelled',
-            ].includes(game.game.result_type)
-          : false,
-      });
-    });
-    setResultEntries(entries);
-  }, [games]);
-
-  const updateResultEntry = useCallback(
-    (gameId: number, updates: Partial<ResultEntry>) => {
-      setResultEntries(prev => {
-        const entry = prev.get(gameId);
-        if (!entry) return prev;
-
-        const updated = { ...entry, ...updates, isModified: true };
-        const newMap = new Map(prev);
-        newMap.set(gameId, updated);
-        return newMap;
-      });
-    },
-    []
-  );
-
-  const validateResult = useCallback(
-    async (gameId: number, result: string, resultType?: string) => {
-      try {
-        const validation = await commands.validateGameResult({
-          game_id: gameId,
-          result,
-          result_type: resultType || null,
-          tournament_id: tournamentId,
-          changed_by: 'current_user', // This should come from user context
-        });
-
-        updateResultEntry(gameId, { validation });
-        return validation;
-      } catch (error) {
-        console.error('Failed to validate result:', error);
-        return {
-          is_valid: false,
-          errors: ['Validation failed'],
-          warnings: [],
-        };
-      }
-    },
-    [tournamentId, updateResultEntry]
-  );
-
-  const handleResultChange = useCallback(
-    async (gameId: number, result: string) => {
-      updateResultEntry(gameId, { result });
-
-      // Auto-validate on change
-      if (result && result !== '*') {
-        await validateResult(gameId, result);
-      }
-    },
-    [updateResultEntry, validateResult]
-  );
-
-  const handleResultTypeChange = useCallback(
-    async (gameId: number, resultType: string) => {
-      const entry = resultEntries.get(gameId);
-      if (!entry) return;
-
-      updateResultEntry(gameId, { resultType });
-
-      // Re-validate with new type
-      if (entry.result && entry.result !== '*') {
-        await validateResult(gameId, entry.result, resultType);
-      }
-    },
-    [resultEntries, updateResultEntry, validateResult]
-  );
-
-  const batchValidate = useCallback(async () => {
-    const modifiedEntries = Array.from(resultEntries.values()).filter(
-      entry => entry.isModified
-    );
-    if (modifiedEntries.length === 0) return;
-
-    try {
-      const updates: UpdateGameResult[] = modifiedEntries.map(entry => ({
-        game_id: entry.gameId,
-        result: entry.result,
-        result_type: entry.resultType || null,
-        result_reason: entry.resultReason || null,
-        arbiter_notes: entry.arbiterNotes || null,
-        changed_by: 'current_user', // This should come from user context
-      }));
-
-      const results = await commands.batchUpdateResults({
-        tournament_id: tournamentId,
-        updates,
-        validate_only: true,
-      });
-
-      setValidationResults(results);
-
-      // Update individual validations
-      results.results.forEach(([index, validation]) => {
-        const entry = modifiedEntries[index];
-        if (entry) {
-          updateResultEntry(entry.gameId, { validation });
-        }
-      });
-    } catch (error) {
-      console.error('Batch validation failed:', error);
-    }
-  }, [resultEntries, tournamentId, updateResultEntry]);
-
-  const handleSaveAll = useCallback(async () => {
-    const modifiedEntries = Array.from(resultEntries.values()).filter(
-      entry => entry.isModified
-    );
-    if (modifiedEntries.length === 0) return;
-
-    setIsSaving(true);
-    try {
-      const updates: UpdateGameResult[] = modifiedEntries.map(entry => ({
-        game_id: entry.gameId,
-        result: entry.result,
-        result_type: entry.resultType || null,
-        result_reason: entry.resultReason || null,
-        arbiter_notes: entry.arbiterNotes || null,
-        changed_by: 'current_user', // This should come from user context
-      }));
-
-      const results = await commands.batchUpdateResults({
-        tournament_id: tournamentId,
-        updates,
-        validate_only: false,
-      });
-
-      if (results.overall_valid) {
-        // Mark all entries as saved
-        setResultEntries(prev => {
-          const newMap = new Map(prev);
-          modifiedEntries.forEach(entry => {
-            newMap.set(entry.gameId, { ...entry, isModified: false });
-          });
-          return newMap;
-        });
-
-        if (onResultsUpdated) {
-          onResultsUpdated();
-        }
-      } else {
-        setValidationResults(results);
-      }
-    } catch (error) {
-      console.error('Failed to save results:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  }, [resultEntries, tournamentId, onResultsUpdated]);
-
-  // Bulk operations
-  const handleBulkOperation = useCallback(
-    async (
-      operation: 'all_draws' | 'all_ongoing' | 'clear_all' | 'reset_modified'
-    ) => {
-      setBulkMenuAnchor(null);
-
-      switch (operation) {
-        case 'all_draws': {
-          games.forEach(gameResult => {
-            if (gameResult.game.result !== '1/2-1/2') {
-              handleResultChange(gameResult.game.id, '1/2-1/2');
-            }
-          });
-          break;
-        }
-
-        case 'all_ongoing': {
-          games.forEach(gameResult => {
-            if (gameResult.game.result !== '*') {
-              handleResultChange(gameResult.game.id, '*');
-            }
-          });
-          break;
-        }
-
-        case 'clear_all': {
-          games.forEach(gameResult => {
-            if (gameResult.game.result !== '*') {
-              handleResultChange(gameResult.game.id, '*');
-            }
-          });
-          break;
-        }
-
-        case 'reset_modified': {
-          setResultEntries(prev => {
-            const newMap = new Map(prev);
-            Array.from(prev.values())
-              .filter(entry => entry.isModified)
-              .forEach(entry => {
-                const originalGame = games.find(
-                  g => g.game.id === entry.gameId
-                );
-                if (originalGame) {
-                  newMap.set(entry.gameId, {
-                    ...entry,
-                    result: originalGame.game.result,
-                    resultType: originalGame.game.result_type || undefined,
-                    resultReason: originalGame.game.result_reason || undefined,
-                    arbiterNotes: originalGame.game.arbiter_notes || undefined,
-                    isModified: false,
-                    validation: undefined,
-                  });
-                }
-              });
-            return newMap;
-          });
-          break;
-        }
-      }
-    },
-    [games, handleResultChange]
-  );
-
-  // Keyboard shortcuts functionality
-  const handleKeyboardShortcut = useCallback(
-    (key: string) => {
-      if (readOnly || !keyboardShortcutsEnabled || games.length === 0) return;
-
-      const currentGame = games[selectedGameIndex];
-      if (!currentGame) return;
-
-      let result: string | null = null;
-
-      switch (key.toLowerCase()) {
-        case '1':
-          result = '1-0';
-          break;
-        case '0':
-          result = '0-1';
-          break;
-        case '=':
-        case 'equal':
-          result = '1/2-1/2';
-          break;
-        case '*':
-          result = '*';
-          break;
-        case 'f': {
-          // Cycle through forfeit options
-          const currentEntry = resultEntries.get(currentGame.game.id);
-          if (currentEntry?.result === '0-1F') {
-            result = '1-0F';
-          } else {
-            result = '0-1F';
-          }
-          break;
-        }
-        case 'd': {
-          // Cycle through default options
-          const currentEntryD = resultEntries.get(currentGame.game.id);
-          if (currentEntryD?.result === '0-1D') {
-            result = '1-0D';
-          } else {
-            result = '0-1D';
-          }
-          break;
-        }
-        case 'a': {
-          result = 'ADJ';
-          break;
-        }
-        case 't': {
-          // Cycle through timeout options
-          const currentEntryT = resultEntries.get(currentGame.game.id);
-          if (currentEntryT?.result === '0-1T') {
-            result = '1-0T';
-          } else {
-            result = '0-1T';
-          }
-          break;
-        }
-        case 'x': {
-          result = '0-0';
-          break;
-        }
-        case 'c': {
-          result = 'CANC';
-          break;
-        }
-        default:
-          return;
-      }
-
-      if (result) {
-        handleResultChange(currentGame.game.id, result);
-      }
-    },
-    [
-      readOnly,
-      keyboardShortcutsEnabled,
-      games,
-      selectedGameIndex,
-      resultEntries,
-      handleResultChange,
-    ]
-  );
-
-  const navigateGames = useCallback(
-    (direction: 'up' | 'down') => {
-      if (games.length === 0) return;
-
-      if (direction === 'up' && selectedGameIndex > 0) {
-        setSelectedGameIndex(selectedGameIndex - 1);
-      } else if (direction === 'down' && selectedGameIndex < games.length - 1) {
-        setSelectedGameIndex(selectedGameIndex + 1);
-      }
-    },
-    [games.length, selectedGameIndex]
-  );
-
-  // Keyboard event listener
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Don't interfere with typing in input fields
-      if (
-        event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement ||
-        event.target instanceof HTMLSelectElement
-      ) {
-        return;
-      }
-
-      // Handle navigation
-      if (event.key === 'ArrowUp') {
-        event.preventDefault();
-        navigateGames('up');
-        return;
-      }
-
-      if (event.key === 'ArrowDown') {
-        event.preventDefault();
-        navigateGames('down');
-        return;
-      }
-
-      // Handle shortcuts with Ctrl/Cmd modifier for safety
-      if (event.ctrlKey || event.metaKey) {
-        switch (event.key) {
-          case 's':
-            event.preventDefault();
-            handleSaveAll();
-            break;
-          case 'Enter':
-            event.preventDefault();
-            batchValidate();
-            break;
-          case '?':
-            event.preventDefault();
-            setShowKeyboardHelp(!showKeyboardHelp);
-            break;
-        }
-        return;
-      }
-
-      // Handle result shortcuts
-      handleKeyboardShortcut(event.key);
-    };
-
-    if (keyboardShortcutsEnabled) {
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [
+  const {
+    resultEntries,
+    selectedAuditGame,
+    auditTrail,
+    isAuditDialogOpen,
+    isSaving,
+    selectedGameIndex,
     keyboardShortcutsEnabled,
-    navigateGames,
-    handleKeyboardShortcut,
-    handleSaveAll,
-    batchValidate,
     showKeyboardHelp,
-  ]);
-
-  const handleShowAuditTrail = useCallback(async (gameId: number) => {
-    try {
-      const trail = await commands.getGameAuditTrail(gameId);
-      setAuditTrail(trail);
-      setSelectedAuditGame(gameId);
-      setIsAuditDialogOpen(true);
-    } catch (error) {
-      console.error('Failed to fetch audit trail:', error);
-    }
-  }, []);
-
-  const modifiedCount = Array.from(resultEntries.values()).filter(
-    entry => entry.isModified
-  ).length;
-  const hasErrors = validationResults && !validationResults.overall_valid;
+    showMobileView,
+    bulkMenuAnchor,
+    showCsvImport,
+    tableRef,
+    modifiedCount,
+    hasErrors,
+    setIsAuditDialogOpen,
+    setSelectedGameIndex,
+    setKeyboardShortcutsEnabled,
+    setShowKeyboardHelp,
+    setShowMobileView,
+    setBulkMenuAnchor,
+    setShowCsvImport,
+    updateResultEntry,
+    handleResultChange,
+    handleResultTypeChange,
+    batchValidate,
+    handleSaveAll,
+    handleBulkOperation,
+    handleShowAuditTrail,
+  } = useResultsGrid(tournamentId, games, onResultsUpdated, readOnly);
 
   // Show mobile view if enabled or on mobile screen
   if (showMobileView || (isMobileScreen && !readOnly)) {
@@ -1103,9 +675,7 @@ export function ResultsGrid({
         tournamentId={tournamentId}
         onImportComplete={() => {
           setShowCsvImport(false);
-          if (onResultsUpdated) {
-            onResultsUpdated();
-          }
+          onResultsUpdated?.();
         }}
       />
     </Box>

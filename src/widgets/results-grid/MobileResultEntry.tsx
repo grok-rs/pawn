@@ -1,34 +1,34 @@
-import { useState, useCallback, useEffect } from 'react';
+import type {
+  GameResult,
+  GameResultValidation,
+  UpdateGameResult,
+} from '@dto/bindings';
+import { commands } from '@dto/bindings';
 import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Grid,
-  Chip,
-  IconButton,
-  TextField,
-  Alert,
-  Slide,
-  AppBar,
-  Toolbar,
-} from '@mui/material';
-import {
+  Clear as ClearIcon,
+  KeyboardArrowUp as KeyboardArrowUpIcon,
+  MoreVert as MoreIcon,
   NavigateNext as NextIcon,
   NavigateBefore as PrevIcon,
-  Clear as ClearIcon,
-  MoreVert as MoreIcon,
-  KeyboardArrowUp as KeyboardArrowUpIcon,
   Save as SaveIcon,
   Warning as WarningIcon,
 } from '@mui/icons-material';
-import { commands } from '@dto/bindings';
-import type {
-  GameResult,
-  UpdateGameResult,
-  GameResultValidation,
-} from '@dto/bindings';
+import {
+  Alert,
+  AppBar,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Grid,
+  IconButton,
+  Slide,
+  TextField,
+  Toolbar,
+  Typography,
+} from '@mui/material';
+import { useCallback, useEffect, useState } from 'react';
 
 interface MobileResultEntryProps {
   tournamentId: number;
@@ -148,8 +148,7 @@ export function MobileResultEntry({
           if (!validation.is_valid && validation.errors.length > 0) {
             setValidationError(validation.errors.join(', '));
           }
-        } catch (error) {
-          console.error('Failed to validate result:', error);
+        } catch (_error) {
           setValidationError('Validation failed');
         }
       }
@@ -184,8 +183,7 @@ export function MobileResultEntry({
       if (currentGameIndex < games.length - 1) {
         setCurrentGameIndex(currentGameIndex + 1);
       }
-    } catch (error) {
-      console.error('Failed to save result:', error);
+    } catch (_error) {
       setValidationError('Failed to save result');
     } finally {
       setIsSaving(false);

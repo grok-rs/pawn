@@ -116,6 +116,7 @@
     "pawn:allow-validate-team-scoring-config",
     "pawn:allow-get-application-settings",
     "pawn:allow-get-application-setting",
-    "pawn:allow-settings-management"
+    "pawn:allow-settings-management",
+    "mcp-bridge:default"
   ]
 }

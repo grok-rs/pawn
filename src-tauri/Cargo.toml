@@ -58,43 +58,4 @@ printpdf = "0.7"
 rust_xlsxwriter = "0.90"
 # Settings system dependencies
 serde_yaml = "0.9"
-
-[dev-dependencies]
-# Core testing framework
-tokio-test = "0.4"
-tempfile = "3.8"
-mockall = "0.13"
-
-# Database testing  
-sqlx = { version = "0.8.6", features = ["sqlite", "runtime-tokio"] }
-
-# Property-based testing
-proptest = "1.8"
-quickcheck = "1.0"
-
-# Performance testing
-criterion = "0.7"
-
-# Additional testing utilities
-serial_test = "3.0"  # For serializing database tests
-once_cell = "1.19"   # For test setup
-rstest = "0.26"      # Parameterized tests
-futures = "0.3"      # For async utilities in tests
-chrono = "0.4"       # For date/time utilities in tests
-
-# Security dependency overrides
-crossbeam-channel = "0.5.15"
-
-# Override unmaintained crates with maintained alternatives
-# paste is unmaintained, but we can't easily replace it as it's used by specta
-# For now, we acknowledge the risk and will monitor for alternatives
-# proc-macro-error has newer maintained versions
-proc-macro-error = "1.0.4"  # Keep current version until dependencies update
-
-# glib has unsound Iterator implementation - will be fixed in GTK4 migration
-# For now we acknowledge the advisory but keep current version as required by Tauri
-
-# Benchmark configuration
-[[bench]]
-name = "pairing_performance"
-harness = false
+tauri-plugin-mcp-bridge = "0.9"

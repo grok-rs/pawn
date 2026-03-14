@@ -1,5 +1,5 @@
+import { Box, Card, CardContent, Typography } from '@mui/material';
 import React from 'react';
-import { Card, CardContent, Box, Typography, useTheme } from '@mui/material';
 
 interface StatCardProps {
   title: string;
@@ -10,16 +10,14 @@ interface StatCardProps {
 
 export const StatCard = React.memo(
   ({ title, value, icon, color }: StatCardProps) => {
-    const theme = useTheme();
-
     return (
       <Card
         sx={{
-          transition: 'all 0.3s ease',
+          transition: 'box-shadow 0.15s ease, border-color 0.15s ease',
           height: '100%',
           '&:hover': {
-            transform: 'translateY(-4px)',
-            boxShadow: theme.shadows[4],
+            boxShadow: '0px 4px 20px rgba(0,0,0,0.08)',
+            borderColor: 'rgba(0,0,0,0.1)',
           },
         }}
       >

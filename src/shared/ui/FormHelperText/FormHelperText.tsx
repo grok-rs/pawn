@@ -1,5 +1,5 @@
 import { FormHelperText } from '@mui/material';
-import { FieldError, FieldErrorsImpl, Merge } from 'react-hook-form';
+import type { FieldError, FieldErrorsImpl, Merge } from 'react-hook-form';
 
 type CustomFormHelperTextProps = {
   errorMessage?: string | FieldError | Merge<FieldError, FieldErrorsImpl>;

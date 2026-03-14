@@ -1,10 +1,10 @@
 import { LoadingButton } from '@mui/lab';
 import { Button, Stack } from '@mui/material';
-import { FunctionComponent } from 'react';
-import { FieldValues } from 'react-hook-form';
+import type { FunctionComponent } from 'react';
+import type { FieldValues } from 'react-hook-form';
 
 import { useFormStepperContext } from '../hooks/useFormStepperContext';
-import { FormStepperContextType } from '../types';
+import type { FormStepperContextType } from '../types';
 
 type Props = {
   component?: FunctionComponent<

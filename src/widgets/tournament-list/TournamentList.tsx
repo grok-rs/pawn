@@ -1,7 +1,6 @@
-import { Box } from '@mui/material';
-
-import TournamentListItem from './TournamentListItem';
 import type { Tournament } from '@dto/bindings';
+import { Box } from '@mui/material';
+import TournamentListItem from './TournamentListItem';
 
 type TournamentListProps = {
   tournaments: Tournament[];

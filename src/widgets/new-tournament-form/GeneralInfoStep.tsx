@@ -1,21 +1,20 @@
+import { CalendarToday, EmojiEvents, LocationOn } from '@mui/icons-material';
 import {
   Box,
-  TextField,
-  Typography,
   InputAdornment,
   Paper,
+  TextField,
+  Typography,
   useTheme,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
+import CountryAutocomplete from '@shared/ui/CountryAutocomplete';
+import CustomFormHelperText from '@shared/ui/FormHelperText';
 import dayjs from 'dayjs';
 import { Controller, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { EmojiEvents, LocationOn, CalendarToday } from '@mui/icons-material';
-
-import CountryAutocomplete from '@shared/ui/CountryAutocomplete';
-import CustomFormHelperText from '@shared/ui/FormHelperText';
 import { StyledGrid } from './styled';
-import { TournamentFormValues } from './types';
+import type { TournamentFormValues } from './types';
 
 const GeneralInfoStep = () => {
   const { t } = useTranslation();
@@ -35,7 +34,7 @@ const GeneralInfoStep = () => {
           <Paper
             sx={{
               p: 3,
-              backgroundColor: theme.palette.primary.light + '10',
+              backgroundColor: `${theme.palette.primary.light}10`,
               border: `1px solid ${theme.palette.primary.light}30`,
             }}
           >
@@ -101,7 +100,7 @@ const GeneralInfoStep = () => {
                 <CountryAutocomplete
                   control={control}
                   name="country"
-                  label={t('country')}
+                  label={t('country.label')}
                   error={Boolean(errors.country)}
                   helperText={
                     <CustomFormHelperText errorMessage={errors.country} />

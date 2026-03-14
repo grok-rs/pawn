@@ -1,25 +1,28 @@
 import { Autocomplete, TextField } from '@mui/material';
-import { ReactNode } from 'react';
-import { Control, Controller } from 'react-hook-form';
-
-import { TournamentFormValues } from '@widgets/new-tournament-form/types';
+import type { ReactNode } from 'react';
+import {
+  type Control,
+  Controller,
+  type FieldValues,
+  type Path,
+} from 'react-hook-form';
 import { countries } from './constants';
 
-interface CountryAutocompleteProps {
-  control: Control<TournamentFormValues>;
-  name: string;
+interface CountryAutocompleteProps<T extends FieldValues> {
+  control: Control<T>;
+  name: Path<T>;
   label: string;
   error?: boolean;
   helperText?: string | ReactNode;
 }
 
-const CountryAutocomplete = ({
+function CountryAutocomplete<T extends FieldValues>({
   control,
   name,
   label,
   error,
   helperText,
-}: CountryAutocompleteProps) => {
+}: CountryAutocompleteProps<T>) {
   return (
     <Controller
       name={name}
@@ -44,6 +47,6 @@ const CountryAutocomplete = ({
       )}
     />
   );
-};
+}
 
 export default CountryAutocomplete;

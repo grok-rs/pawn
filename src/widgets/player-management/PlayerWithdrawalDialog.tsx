@@ -1,42 +1,42 @@
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useForm, Controller } from 'react-hook-form';
+import type { Player } from '@dto/bindings';
+import { commands } from '@dto/bindings';
 import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Typography,
-  Box,
+  // Schedule,
+  ExitToApp,
+  // Warning,
+  Info,
+  Pause,
+  Person,
+} from '@mui/icons-material';
+import {
   Alert,
+  Box,
+  Button,
   Card,
   CardContent,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
+  // Divider,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   FormControl,
+  FormControlLabel,
   FormLabel,
   List,
   ListItem,
-  ListItemText,
   ListItemIcon,
-  // Divider,
-  CircularProgress,
+  ListItemText,
+  Radio,
+  RadioGroup,
+  TextField,
+  Typography,
 } from '@mui/material';
-import {
-  Person,
-  // Warning,
-  Info,
-  // Schedule,
-  ExitToApp,
-  Pause,
-} from '@mui/icons-material';
-import { commands } from '@dto/bindings';
-import type { Player } from '@dto/bindings';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import * as yup from 'yup';
 
 interface PlayerWithdrawalDialogProps {
   open: boolean;
@@ -50,11 +50,13 @@ const withdrawalSchema = yup.object({
     .string()
     .required('Please select an action')
     .oneOf(['withdraw', 'bye', 'reactivate']),
-  reason: yup.string().when('action', {
-    is: 'withdraw',
-    then: schema => schema.required('Reason is required for withdrawal'),
-    otherwise: schema => schema.nullable(),
-  }),
+  reason: yup
+    .string()
+    .when('action', ([action], schema) =>
+      action === 'withdraw'
+        ? schema.required('Reason is required for withdrawal')
+        : schema.nullable()
+    ),
   notes: yup.string().nullable(),
 });
 
@@ -107,8 +109,7 @@ function PlayerWithdrawalDialog({
       }
 
       onSuccess();
-    } catch (err) {
-      console.error('Failed to update player status:', err);
+    } catch (_err) {
       setError(t('failedToUpdatePlayerStatus'));
     } finally {
       setLoading(false);
@@ -205,7 +206,8 @@ function PlayerWithdrawalDialog({
                   )}
                   {player.country_code && (
                     <Typography variant="body2" color="text.secondary">
-                      {t('country')}: {player.country_code}
+                      {t('country.label')}:{' '}
+                      {t(`country.${player.country_code}`, player.country_code)}
                     </Typography>
                   )}
                 </Box>
@@ -311,8 +313,8 @@ function PlayerWithdrawalDialog({
                         {t('consequences')}:
                       </Typography>
                       <List dense sx={{ mt: 0 }}>
-                        {actionInfo.consequences.map((consequence, index) => (
-                          <ListItem key={index} sx={{ py: 0, pl: 0 }}>
+                        {actionInfo.consequences.map(consequence => (
+                          <ListItem key={consequence} sx={{ py: 0, pl: 0 }}>
                             <ListItemIcon sx={{ minWidth: 20 }}>
                               <Info fontSize="small" />
                             </ListItemIcon>

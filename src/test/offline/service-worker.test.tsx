@@ -1,6 +1,6 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 import { vi } from 'vitest';
 
 // Type definitions for Service Worker testing
@@ -209,6 +209,20 @@ const OfflineStorageManager = () => {
     percentage: number;
   }>({ quota: 0, usage: 0, percentage: 0 });
 
+  const syncOfflineData = React.useCallback(async () => {
+    if (!navigator.onLine) return;
+
+    setSyncStatus('syncing');
+    try {
+      // Simulate syncing offline data
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setOfflineData([]);
+      setSyncStatus('idle');
+    } catch {
+      setSyncStatus('error');
+    }
+  }, []);
+
   React.useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
@@ -240,21 +254,7 @@ const OfflineStorageManager = () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
-
-  const syncOfflineData = async () => {
-    if (!isOnline) return;
-
-    setSyncStatus('syncing');
-    try {
-      // Simulate syncing offline data
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setOfflineData([]);
-      setSyncStatus('idle');
-    } catch {
-      setSyncStatus('error');
-    }
-  };
+  }, [syncOfflineData]);
 
   const addOfflineData = (data: Record<string, unknown>) => {
     setOfflineData(prev => [...prev, { ...data, timestamp: Date.now() }]);
@@ -284,6 +284,7 @@ const OfflineStorageManager = () => {
 
       <div data-testid="controls">
         <button
+          type="button"
           data-testid="add-offline-item"
           onClick={() => addOfflineData({ type: 'test', data: 'test data' })}
         >
@@ -291,6 +292,7 @@ const OfflineStorageManager = () => {
         </button>
 
         <button
+          type="button"
           data-testid="sync-data"
           onClick={syncOfflineData}
           disabled={!isOnline || syncStatus === 'syncing'}
@@ -298,14 +300,21 @@ const OfflineStorageManager = () => {
           Sync Data
         </button>
 
-        <button data-testid="clear-offline-data" onClick={clearOfflineData}>
+        <button
+          type="button"
+          data-testid="clear-offline-data"
+          onClick={clearOfflineData}
+        >
           Clear Offline Data
         </button>
       </div>
 
       <div data-testid="offline-items">
         {offlineData.map((item, index) => (
-          <div key={index} data-testid={`offline-item-${index}`}>
+          <div
+            key={(item as { type: string; timestamp: number }).timestamp}
+            data-testid={`offline-item-${index}`}
+          >
             {(item as { type: string; timestamp: number }).type}:{' '}
             {new Date(
               (item as { type: string; timestamp: number }).timestamp
@@ -387,6 +396,7 @@ const ServiceWorkerRegistration = () => {
 
       <div data-testid="sw-controls">
         <button
+          type="button"
           data-testid="register-sw"
           onClick={registerServiceWorker}
           disabled={
@@ -398,6 +408,7 @@ const ServiceWorkerRegistration = () => {
         </button>
 
         <button
+          type="button"
           data-testid="update-sw"
           onClick={updateServiceWorker}
           disabled={!registration}
@@ -406,6 +417,7 @@ const ServiceWorkerRegistration = () => {
         </button>
 
         <button
+          type="button"
           data-testid="unregister-sw"
           onClick={unregisterServiceWorker}
           disabled={!registration}
@@ -526,6 +538,7 @@ const OfflineTournamentManager = () => {
 
       <div data-testid="tournament-controls">
         <button
+          type="button"
           data-testid="create-tournament"
           onClick={() =>
             createTournament({
@@ -539,6 +552,7 @@ const OfflineTournamentManager = () => {
         </button>
 
         <button
+          type="button"
           data-testid="sync-changes"
           onClick={syncOfflineChanges}
           disabled={!isOnline || syncQueue.length === 0}
@@ -564,10 +578,11 @@ const OfflineTournamentManager = () => {
                   : 'Created Online'}
               </div>
               <button
+                type="button"
                 data-testid={`update-tournament-${tournamentData.id}`}
                 onClick={() =>
                   updateTournament(tournamentData.id, {
-                    name: tournamentData.name + ' (Updated)',
+                    name: `${tournamentData.name} (Updated)`,
                   })
                 }
               >
@@ -589,20 +604,7 @@ const CacheManager = () => {
   const [cachedResources, setCachedResources] = React.useState<string[]>([]);
   const [cacheSize, setCacheSize] = React.useState<number>(0);
 
-  React.useEffect(() => {
-    checkCacheAvailability();
-  }, []);
-
-  const checkCacheAvailability = async () => {
-    if ('caches' in window) {
-      setCacheStatus('available');
-      await updateCacheInfo();
-    } else {
-      setCacheStatus('unavailable');
-    }
-  };
-
-  const updateCacheInfo = async () => {
+  const updateCacheInfo = React.useCallback(async () => {
     try {
       const cacheNames = await caches.keys();
       const resources: string[] = [];
@@ -624,7 +626,20 @@ const CacheManager = () => {
     } catch (error) {
       console.error('Failed to update cache info:', error);
     }
-  };
+  }, []);
+
+  const checkCacheAvailability = React.useCallback(async () => {
+    if ('caches' in window) {
+      setCacheStatus('available');
+      await updateCacheInfo();
+    } else {
+      setCacheStatus('unavailable');
+    }
+  }, [updateCacheInfo]);
+
+  React.useEffect(() => {
+    checkCacheAvailability();
+  }, [checkCacheAvailability]);
 
   const addToCache = async (url: string) => {
     try {
@@ -661,6 +676,7 @@ const CacheManager = () => {
 
       <div data-testid="cache-controls">
         <button
+          type="button"
           data-testid="cache-current-page"
           onClick={() => addToCache(window.location.href)}
           disabled={cacheStatus !== 'available'}
@@ -669,6 +685,7 @@ const CacheManager = () => {
         </button>
 
         <button
+          type="button"
           data-testid="cache-assets"
           onClick={() => {
             const urls = ['/static/js/main.js', '/static/css/main.css'];
@@ -680,6 +697,7 @@ const CacheManager = () => {
         </button>
 
         <button
+          type="button"
           data-testid="clear-all-caches"
           onClick={clearCache}
           disabled={cacheStatus !== 'available'}
@@ -688,6 +706,7 @@ const CacheManager = () => {
         </button>
 
         <button
+          type="button"
           data-testid="refresh-cache-info"
           onClick={updateCacheInfo}
           disabled={cacheStatus !== 'available'}
@@ -698,7 +717,7 @@ const CacheManager = () => {
 
       <div data-testid="cached-resources-list">
         {cachedResources.slice(0, 10).map((url, index) => (
-          <div key={index} data-testid={`cached-resource-${index}`}>
+          <div key={url} data-testid={`cached-resource-${index}`}>
             {url.split('/').pop() || url}
           </div>
         ))}
@@ -1244,6 +1263,7 @@ describe('Offline Functionality and Service Worker Tests', () => {
             </div>
 
             <button
+              type="button"
               data-testid="add-operation"
               onClick={() =>
                 addToSyncQueue({ type: 'create', data: { id: Date.now() } })
@@ -1253,6 +1273,7 @@ describe('Offline Functionality and Service Worker Tests', () => {
             </button>
 
             <button
+              type="button"
               data-testid="process-queue"
               onClick={processSyncQueue}
               disabled={!isOnline || syncQueue.length === 0}

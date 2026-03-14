@@ -1,5 +1,5 @@
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import React from 'react';
-import { render, screen, waitFor, act, within } from '@testing-library/react';
 import { vi } from 'vitest';
 
 // Type definitions
@@ -76,11 +76,11 @@ class MockWebSocket {
   }
 
   static getLastInstance(): MockWebSocket | undefined {
-    return this.instances[this.instances.length - 1];
+    return MockWebSocket.instances[MockWebSocket.instances.length - 1];
   }
 
   static clearInstances() {
-    this.instances = [];
+    MockWebSocket.instances = [];
   }
 }
 
@@ -294,10 +294,7 @@ const MockTournamentLiveBroadcast = ({
       <div data-testid="viewer-count">Viewers: {viewerCount}</div>
       <div data-testid="broadcast-events">
         {broadcastEvents.map((event, index) => (
-          <div
-            key={`${event.timestamp}-${index}`}
-            data-testid={`event-${index}`}
-          >
+          <div key={`event-${event.timestamp}`} data-testid={`event-${index}`}>
             <span data-testid="event-time">{event.time}</span>
             <span data-testid="event-message">{event.message}</span>
           </div>
@@ -339,7 +336,7 @@ describe('Real-Time Features Testing', () => {
       // Verify WebSocket was created with correct URL
       const ws = MockWebSocket.getLastInstance();
       expect(ws).toBeDefined();
-      expect(ws!.url).toBe('ws://localhost:3001/tournaments/1/standings');
+      expect(ws?.url).toBe('ws://localhost:3001/tournaments/1/standings');
     });
 
     test('should handle connection errors gracefully', async () => {
@@ -354,7 +351,7 @@ describe('Real-Time Features Testing', () => {
       // Simulate connection error
       const ws = MockWebSocket.getLastInstance();
       act(() => {
-        ws!.simulateError();
+        ws?.simulateError();
       });
 
       await waitFor(() => {
@@ -376,7 +373,7 @@ describe('Real-Time Features Testing', () => {
       // Simulate connection loss
       const ws = MockWebSocket.getLastInstance();
       act(() => {
-        ws!.close();
+        ws?.close();
       });
 
       await waitFor(() => {
@@ -426,7 +423,7 @@ describe('Real-Time Features Testing', () => {
       // Simulate receiving standings update
       const ws = MockWebSocket.getLastInstance();
       act(() => {
-        ws!.simulateMessage(mockStandingsUpdate);
+        ws?.simulateMessage(mockStandingsUpdate);
       });
 
       // Verify standings are updated
@@ -484,7 +481,7 @@ describe('Real-Time Features Testing', () => {
       // Send updates with small delays
       for (let i = 0; i < updates.length; i++) {
         act(() => {
-          ws!.simulateMessage(updates[i]);
+          ws?.simulateMessage(updates[i]);
         });
         await new Promise(resolve => setTimeout(resolve, 50));
       }
@@ -527,7 +524,7 @@ describe('Real-Time Features Testing', () => {
       };
 
       act(() => {
-        ws!.simulateMessage(gameUpdate);
+        ws?.simulateMessage(gameUpdate);
       });
 
       await waitFor(() => {
@@ -569,7 +566,7 @@ describe('Real-Time Features Testing', () => {
       };
 
       act(() => {
-        ws!.simulateMessage(initialGame);
+        ws?.simulateMessage(initialGame);
       });
 
       await waitFor(() => {
@@ -588,7 +585,7 @@ describe('Real-Time Features Testing', () => {
       };
 
       act(() => {
-        ws!.simulateMessage(gameResult);
+        ws?.simulateMessage(gameResult);
       });
 
       await waitFor(() => {
@@ -618,7 +615,7 @@ describe('Real-Time Features Testing', () => {
 
       // Update viewer count
       act(() => {
-        ws!.simulateMessage({ type: 'viewer_count', count: 42 });
+        ws?.simulateMessage({ type: 'viewer_count', count: 42 });
       });
 
       await waitFor(() => {
@@ -669,7 +666,7 @@ describe('Real-Time Features Testing', () => {
 
       for (const event of events) {
         act(() => {
-          ws!.simulateMessage(event);
+          ws?.simulateMessage(event);
         });
         await new Promise(resolve => setTimeout(resolve, 10));
       }
@@ -715,7 +712,7 @@ describe('Real-Time Features Testing', () => {
         };
 
         act(() => {
-          ws!.simulateMessage(event);
+          ws?.simulateMessage(event);
         });
       }
 
@@ -746,7 +743,8 @@ describe('Real-Time Features Testing', () => {
       });
 
       const ws = MockWebSocket.getLastInstance();
-      const closeSpy = vi.spyOn(ws!, 'close');
+      expect(ws).toBeDefined();
+      const closeSpy = vi.spyOn(ws ?? new MockWebSocket(''), 'close');
 
       unmount();
 
@@ -767,7 +765,7 @@ describe('Real-Time Features Testing', () => {
       // Send many rapid updates
       for (let i = 0; i < 1000; i++) {
         act(() => {
-          ws!.simulateMessage({
+          ws?.simulateMessage({
             type: 'standings_update',
             data: [
               { playerId: 1, playerName: `Player ${i}`, rank: 1, points: i },
@@ -804,8 +802,8 @@ describe('Real-Time Features Testing', () => {
 
       // Send malformed message
       act(() => {
-        if (ws!.onmessage) {
-          ws!.onmessage(new MessageEvent('message', { data: 'invalid json' }));
+        if (ws?.onmessage) {
+          ws?.onmessage(new MessageEvent('message', { data: 'invalid json' }));
         }
       });
 
@@ -819,7 +817,7 @@ describe('Real-Time Features Testing', () => {
 
       // Send valid message after malformed one
       act(() => {
-        ws!.simulateMessage({
+        ws?.simulateMessage({
           type: 'standings_update',
           data: [{ playerId: 1, playerName: 'Alice', rank: 1, points: 1.0 }],
         });
@@ -843,7 +841,7 @@ describe('Real-Time Features Testing', () => {
 
       // Send unexpected message type
       act(() => {
-        ws!.simulateMessage({
+        ws?.simulateMessage({
           type: 'unknown_message_type',
           data: { some: 'data' },
         });
@@ -856,7 +854,7 @@ describe('Real-Time Features Testing', () => {
 
       // Valid message should still work
       act(() => {
-        ws!.simulateMessage({
+        ws?.simulateMessage({
           type: 'standings_update',
           data: [{ playerId: 1, playerName: 'Alice', rank: 1, points: 1.0 }],
         });

@@ -1,6 +1,6 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 
 // Type definitions
 interface TestResult {
@@ -542,6 +542,7 @@ const TestResultsDashboard = ({
       <div data-testid="dashboard-tabs">
         {['summary', 'coverage', 'performance', 'quality'].map(view => (
           <button
+            type="button"
             key={view}
             data-testid={`tab-${view}`}
             onClick={() => setSelectedView(view as ViewType)}
@@ -633,7 +634,7 @@ const TestResultsDashboard = ({
               <div style={{ display: 'grid', gap: '8px' }}>
                 {qualityGates.gates.map((gate, index) => (
                   <div
-                    key={index}
+                    key={gate.name}
                     data-testid={`quality-gate-${index}`}
                     style={{
                       display: 'flex',
@@ -758,7 +759,7 @@ const TestResultsDashboard = ({
                       index: number
                     ) => (
                       <li
-                        key={index}
+                        key={test.name}
                         data-testid={`slow-test-${index}`}
                         style={{
                           padding: '8px',
@@ -786,7 +787,7 @@ const TestResultsDashboard = ({
                       index: number
                     ) => (
                       <li
-                        key={index}
+                        key={test.name}
                         data-testid={`fast-test-${index}`}
                         style={{
                           padding: '8px',
@@ -852,7 +853,7 @@ const TestResultsDashboard = ({
               <div style={{ marginTop: '16px' }}>
                 {healthScore.factors.map((factor, index) => (
                   <div
-                    key={index}
+                    key={factor.name}
                     data-testid={`health-factor-${index}`}
                     style={{ marginBottom: '12px' }}
                   >
@@ -921,6 +922,7 @@ const TestResultsDashboard = ({
           </select>
 
           <button
+            type="button"
             data-testid="export-button"
             onClick={handleExport}
             style={{
@@ -962,9 +964,10 @@ const generateMockTestData = (
       status,
       duration: Math.floor(Math.random() * 2000) + 50,
       flaky: Math.random() < 0.1, // 10% flaky tests
-      category: ['unit', 'integration', 'e2e'][
-        Math.floor(Math.random() * 3)
-      ] as 'unit' | 'integration' | 'e2e',
+      category: ['unit', 'integration', 'e2e'][Math.floor(Math.random() * 3)] as
+        | 'unit'
+        | 'integration'
+        | 'e2e',
     };
   });
 };

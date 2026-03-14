@@ -1,4 +1,39 @@
-import type { Tournament, Round } from '@dto/bindings';
+import type { Round, Tournament } from '@dto/bindings';
+import type { TFunction } from 'i18next';
+
+const tournamentTypeKeys: Record<string, string> = {
+  swiss: 'tournament.types.swiss.label',
+  roundRobin: 'tournament.types.roundRobin.label',
+  round_robin: 'tournament.types.roundRobin.label',
+  knockout: 'tournament.types.knockout.label',
+  elimination: 'tournament.types.elimination.label',
+  scheveningen: 'tournament.types.scheveningen.label',
+};
+
+export const translateTournamentType = (
+  type: string | null | undefined,
+  t: TFunction
+): string => {
+  if (!type) return '-';
+  const key = tournamentTypeKeys[type];
+  return key ? t(key) : type;
+};
+
+export const formatLocalizedDate = (
+  dateString: string,
+  locale: string
+): string => {
+  try {
+    const langMap: Record<string, string> = { ua: 'uk' };
+    return new Date(dateString).toLocaleDateString(langMap[locale] || locale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  } catch {
+    return dateString;
+  }
+};
 
 export const isFinishedTournament = (tournament: Tournament): boolean => {
   return tournament.rounds_played === tournament.total_rounds;

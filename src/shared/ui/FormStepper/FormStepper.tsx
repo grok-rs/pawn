@@ -1,11 +1,11 @@
 import { yupResolver } from '@hookform/resolvers/yup';
-import { ReactNode, useCallback, useState, useMemo } from 'react';
+import { type ReactNode, useCallback, useMemo, useState } from 'react';
 import {
-  DefaultValues,
-  FieldValues,
+  type DefaultValues,
+  type FieldValues,
   FormProvider,
+  type UseFormProps,
   useForm,
-  UseFormProps,
 } from 'react-hook-form';
 
 import FormStepperContent from './FormStepperContent';
@@ -14,7 +14,7 @@ import FormStepperIntro from './FormStepperIntro';
 import FormStepperNavigation from './FormStepperNavigation';
 import FormStepperStepIndicator from './FormStepperStepIndicator';
 import StyledForm from './styled';
-import { FormStepOption } from './types';
+import type { FormStepOption } from './types';
 
 type Props = {
   steps: FormStepOption<FieldValues>[];

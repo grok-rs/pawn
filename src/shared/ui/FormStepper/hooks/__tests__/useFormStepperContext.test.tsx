@@ -1,8 +1,8 @@
 import { renderHook } from '@testing-library/react';
 import { vi } from 'vitest';
-import { useFormStepperContext } from '../useFormStepperContext';
 import FormStepperContext from '../../FormStepperContext/FormStepperContext';
-import { FormStepperContextType } from '../../types';
+import type { FormStepperContextType } from '../../types';
+import { useFormStepperContext } from '../useFormStepperContext';
 
 describe('useFormStepperContext', () => {
   test('returns context value when used within provider', () => {

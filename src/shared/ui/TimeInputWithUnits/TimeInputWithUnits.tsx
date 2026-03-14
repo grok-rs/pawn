@@ -1,8 +1,7 @@
 import { InputAdornment, MenuItem, Select } from '@mui/material';
+import CustomFormHelperText from '@shared/ui/FormHelperText/FormHelperText';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-
-import CustomFormHelperText from '@shared/ui/FormHelperText/FormHelperText';
 import { StyledTextField } from './styled';
 
 interface TimeInputWithUnitsProps {

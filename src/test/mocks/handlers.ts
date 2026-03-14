@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+import { HttpResponse, http } from 'msw';
 
 // Mock data factories
 const createMockTournament = (overrides = {}) => ({

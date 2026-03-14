@@ -1,36 +1,34 @@
-import { useState } from 'react';
 import {
+  Add,
+  ChevronLeft,
+  ChevronRight,
+  Dashboard,
+  EmojiEvents,
+  ExpandLess,
+  ExpandMore,
+  FileUpload,
+  Settings,
+} from '@mui/icons-material';
+import {
+  Avatar,
   Box,
+  Collapse,
+  Divider,
   Drawer,
+  IconButton,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   Typography,
-  IconButton,
-  Divider,
-  useTheme,
   useMediaQuery,
-  Avatar,
-  Collapse,
+  useTheme,
 } from '@mui/material';
-import {
-  EmojiEvents,
-  Add,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  ExpandLess,
-  ExpandMore,
-  Dashboard,
-  People,
-  Analytics,
-  FileUpload,
-} from '@mui/icons-material';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { APP_ROUTES } from '@shared/config/routes';
 import { LanguageSwitcher } from '@shared/ui/LanguageSwitcher';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const drawerWidth = 280;
 const collapsedWidth = 72;
@@ -89,16 +87,6 @@ const Sidebar = ({ open, onToggle }: SidebarProps) => {
         },
       ],
     },
-    {
-      text: t('players'),
-      icon: <People />,
-      path: '#players',
-    },
-    {
-      text: t('analytics'),
-      icon: <Analytics />,
-      path: '#analytics',
-    },
   ];
 
   const drawerContent = (
@@ -155,8 +143,8 @@ const Sidebar = ({ open, onToggle }: SidebarProps) => {
 
       {/* Navigation Items */}
       <List sx={{ flex: 1, px: 1, py: 2 }}>
-        {menuItems.map((item, index) => (
-          <Box key={index}>
+        {menuItems.map(item => (
+          <Box key={item.text}>
             {item.expandable ? (
               <>
                 <ListItemButton
@@ -192,9 +180,9 @@ const Sidebar = ({ open, onToggle }: SidebarProps) => {
                 {open && (
                   <Collapse in={item.expanded} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding>
-                      {item.subItems?.map((subItem, subIndex) => (
+                      {item.subItems?.map(subItem => (
                         <ListItemButton
-                          key={subIndex}
+                          key={subItem.text}
                           onClick={() => handleNavigation(subItem.path)}
                           selected={isActive(subItem.path)}
                           sx={{
@@ -202,11 +190,9 @@ const Sidebar = ({ open, onToggle }: SidebarProps) => {
                             borderRadius: 2,
                             mb: 0.5,
                             '&.Mui-selected': {
-                              backgroundColor:
-                                theme.palette.primary.light + '20',
+                              backgroundColor: `${theme.palette.primary.light}20`,
                               '&:hover': {
-                                backgroundColor:
-                                  theme.palette.primary.light + '30',
+                                backgroundColor: `${theme.palette.primary.light}30`,
                               },
                             },
                           }}
@@ -243,12 +229,12 @@ const Sidebar = ({ open, onToggle }: SidebarProps) => {
                   mb: 0.5,
                   '&.Mui-selected': {
                     backgroundColor: item.primary
-                      ? theme.palette.secondary.main + '20'
-                      : theme.palette.primary.light + '20',
+                      ? `${theme.palette.secondary.main}20`
+                      : `${theme.palette.primary.light}20`,
                     '&:hover': {
                       backgroundColor: item.primary
-                        ? theme.palette.secondary.main + '30'
-                        : theme.palette.primary.light + '30',
+                        ? `${theme.palette.secondary.main}30`
+                        : `${theme.palette.primary.light}30`,
                     },
                   },
                   '&:hover': {
@@ -285,16 +271,20 @@ const Sidebar = ({ open, onToggle }: SidebarProps) => {
       <Divider />
 
       {/* User Section */}
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ p: open ? 2 : 1 }}>
         <ListItemButton
           sx={{
             borderRadius: 2,
+            justifyContent: open ? 'initial' : 'center',
+            px: open ? 2 : 1,
             '&:hover': {
               backgroundColor: theme.palette.action.hover,
             },
           }}
         >
-          <ListItemIcon sx={{ minWidth: open ? 40 : 'auto' }}>
+          <ListItemIcon
+            sx={{ minWidth: open ? 40 : 'auto', justifyContent: 'center' }}
+          >
             <Avatar
               sx={{
                 width: 32,
@@ -316,46 +306,49 @@ const Sidebar = ({ open, onToggle }: SidebarProps) => {
           )}
         </ListItemButton>
 
-        {open && (
-          <>
-            <ListItemButton
-              onClick={() => handleNavigation(APP_ROUTES.SETTINGS)}
-              selected={isActive(APP_ROUTES.SETTINGS)}
-              sx={{
-                borderRadius: 2,
-                mt: 1,
-                '&.Mui-selected': {
-                  backgroundColor: theme.palette.primary.light + '20',
-                  '&:hover': {
-                    backgroundColor: theme.palette.primary.light + '30',
-                  },
-                },
-                '&:hover': {
-                  backgroundColor: theme.palette.action.hover,
-                },
+        <ListItemButton
+          onClick={() => handleNavigation(APP_ROUTES.SETTINGS)}
+          selected={isActive(APP_ROUTES.SETTINGS)}
+          sx={{
+            borderRadius: 2,
+            mt: 1,
+            justifyContent: open ? 'initial' : 'center',
+            px: open ? 2 : 1,
+            '&.Mui-selected': {
+              backgroundColor: `${theme.palette.primary.light}20`,
+              '&:hover': {
+                backgroundColor: `${theme.palette.primary.light}30`,
+              },
+            },
+            '&:hover': {
+              backgroundColor: theme.palette.action.hover,
+            },
+          }}
+        >
+          <ListItemIcon
+            sx={{
+              minWidth: open ? 40 : 'auto',
+              justifyContent: 'center',
+              color: isActive(APP_ROUTES.SETTINGS)
+                ? theme.palette.primary.main
+                : 'inherit',
+            }}
+          >
+            <Settings />
+          </ListItemIcon>
+          {open && (
+            <ListItemText
+              primary={t('settings')}
+              primaryTypographyProps={{
+                fontWeight: isActive(APP_ROUTES.SETTINGS) ? 600 : 400,
               }}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: 40,
-                  color: isActive(APP_ROUTES.SETTINGS)
-                    ? theme.palette.primary.main
-                    : 'inherit',
-                }}
-              >
-                <Settings />
-              </ListItemIcon>
-              <ListItemText
-                primary={t('settings')}
-                primaryTypographyProps={{
-                  fontWeight: isActive(APP_ROUTES.SETTINGS) ? 600 : 400,
-                }}
-              />
-            </ListItemButton>
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-              <LanguageSwitcher />
-            </Box>
-          </>
+            />
+          )}
+        </ListItemButton>
+        {open && (
+          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+            <LanguageSwitcher />
+          </Box>
         )}
       </Box>
     </Box>

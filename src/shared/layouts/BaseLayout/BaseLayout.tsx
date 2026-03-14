@@ -1,6 +1,6 @@
-import { Box, useTheme, useMediaQuery } from '@mui/material';
-import { ReactNode, useState, useEffect } from 'react';
+import { Box, useMediaQuery, useTheme } from '@mui/material';
 import Sidebar from '@shared/layouts/Sidebar';
+import { type ReactNode, useEffect, useState } from 'react';
 
 type BaseLayoutProps = {
   children: ReactNode;

@@ -1,10 +1,10 @@
+import { useMediaQuery } from '@mui/material';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useMediaQuery } from '@mui/material';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { vi, describe, test, beforeEach, expect } from 'vitest';
-import Sidebar from '../Sidebar';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderWithAllProviders } from '../../../../test/utils/test-utils';
+import Sidebar from '../Sidebar';
 
 // Mock external dependencies
 vi.mock('@mui/material', async () => {
@@ -74,7 +74,7 @@ describe('Sidebar', () => {
       hash: '',
       state: null,
       key: 'default',
-    });
+    } as ReturnType<typeof useLocation>);
 
     // Default to desktop
     vi.mocked(useMediaQuery).mockReturnValue(false);
@@ -112,9 +112,8 @@ describe('Sidebar', () => {
       const user = userEvent.setup();
       renderWithAllProviders(<Sidebar {...defaultProps} />);
 
-      const toggleButton = screen
-        .getByTestId('chevron-left')
-        .closest('button')!;
+      const toggleButton = screen.getByTestId('chevron-left').closest('button');
+      if (!toggleButton) throw new Error('Toggle button not found');
       await user.click(toggleButton);
 
       expect(mockOnToggle).toHaveBeenCalledTimes(1);

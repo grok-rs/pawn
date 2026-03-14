@@ -1,71 +1,73 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import type {
+  Player,
+  StandingsCalculationResult,
+  TournamentDetails,
+} from '@dto/bindings';
+import { commands, type GameResult } from '@dto/bindings';
 import {
+  ArrowBack,
+  Assignment,
+  CalendarToday,
+  Download,
+  Edit,
+  EmojiEvents,
+  Flag,
+  Games,
+  LocationOn,
+  MoreVert,
+  NavigateNext,
+  People,
+  PlayCircleOutline,
+  Print,
+  Share,
+  Timer,
+} from '@mui/icons-material';
+import {
+  Alert,
+  Avatar,
   Box,
-  Typography,
+  Breadcrumbs,
+  Button,
   Card,
   CardContent,
+  CircularProgress,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Divider,
   Grid,
+  IconButton,
+  Link,
+  Menu,
+  MenuItem,
+  Paper,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Button,
-  CircularProgress,
-  Alert,
   Tabs,
-  Tab,
-  IconButton,
-  Avatar,
-  Menu,
-  MenuItem,
-  Breadcrumbs,
-  Link,
+  Typography,
   useTheme,
-  Divider,
-  Container,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
 } from '@mui/material';
-import {
-  ArrowBack,
-  EmojiEvents,
-  People,
-  Games,
-  LocationOn,
-  CalendarToday,
-  Timer,
-  Flag,
-  NavigateNext,
-  MoreVert,
-  Download,
-  Edit,
-  Print,
-  Share,
-  PlayCircleOutline,
-  Assignment,
-} from '@mui/icons-material';
-import { commands, GameResult } from '@dto/bindings';
-import type {
-  TournamentDetails,
-  StandingsCalculationResult,
-  Player,
-} from '@dto/bindings';
 import BaseLayout from '@shared/layouts/BaseLayout';
-import { StandingsTable } from '@widgets/standings-table';
-import RoundManager from '@widgets/round-manager';
-import { ResultsGrid } from '@widgets/results-grid';
 import { exportStandingsToCsv, exportStandingsToPdf } from '@shared/lib/export';
-import TournamentSettings from './TournamentSettings';
-import PlayerManagement from '@widgets/player-management';
+import { formatLocalizedDate } from '@shared/lib/tournamentUtils';
 import ExportDialog from '@widgets/export-dialog';
+import PlayerManagement from '@widgets/player-management';
+import { ResultsGrid } from '@widgets/results-grid';
+import RoundManager from '@widgets/round-manager';
+import { StandingsTable } from '@widgets/standings-table';
+import type React from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useParams } from 'react-router-dom';
+import TournamentSettings from './TournamentSettings';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -100,7 +102,7 @@ function TournamentInfoPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [tournamentDetails, setTournamentDetails] =
     useState<TournamentDetails | null>(null);
   const [standings, setStandings] = useState<StandingsCalculationResult | null>(
@@ -134,6 +136,60 @@ function TournamentInfoPage() {
     setAnchorEl(null);
   };
 
+  const fetchStandings = useCallback(async (tournamentId: number) => {
+    setLoadingStandings(true);
+    try {
+      const standingsData = await commands.getTournamentStandings(tournamentId);
+      setStandings(standingsData);
+    } catch (_err) {
+      // Don't show error, just use regular standings
+    } finally {
+      setLoadingStandings(false);
+    }
+  }, []);
+
+  const fetchEnhancedPlayers = useCallback(async (tournamentId: number) => {
+    try {
+      const playersData =
+        await commands.getPlayersByTournamentEnhanced(tournamentId);
+      setEnhancedPlayers(playersData);
+      // Set actual player count (active players only)
+      const activePlayers = playersData.filter(
+        p => p.status === 'active' || !p.status
+      );
+      setActualPlayerCount(activePlayers.length);
+    } catch (_err) {
+      // Fall back to regular players
+      setEnhancedPlayers([]);
+      setActualPlayerCount(null);
+    }
+  }, []);
+
+  const fetchActualTournamentStats = useCallback(
+    async (tournamentId: number, gamesList?: GameResult[]) => {
+      try {
+        // Fetch rounds to calculate actual rounds played
+        const rounds = await commands.getRoundsByTournament(tournamentId);
+        const playedRounds = rounds.filter(
+          round => round.status === 'Completed'
+        ).length;
+        setActualRoundsPlayed(playedRounds);
+
+        // For completed games count, use the provided games data
+        if (gamesList) {
+          setCompletedGamesCount(
+            gamesList.filter(game => game.game.result !== null).length
+          );
+        }
+      } catch (_err) {
+        // Fallback to tournament static data
+        setActualRoundsPlayed(0);
+        setCompletedGamesCount(0);
+      }
+    },
+    []
+  );
+
   const fetchTournamentDetails = useCallback(async () => {
     if (!id) {
       setError(t('tournamentIdNotProvided'));
@@ -142,7 +198,7 @@ function TournamentInfoPage() {
     }
 
     try {
-      const tournamentId = parseInt(id);
+      const tournamentId = parseInt(id, 10);
       const details = await commands.getTournamentDetails(tournamentId);
       setTournamentDetails(details);
       setHasMockData(details.players.length > 0);
@@ -155,81 +211,22 @@ function TournamentInfoPage() {
 
       // Always fetch actual tournament stats
       fetchActualTournamentStats(tournamentId, details.games);
-    } catch (err) {
-      console.error('Failed to fetch tournament details:', err);
+    } catch (_err) {
       setError(t('failedToLoadTournamentDetails'));
     } finally {
       setLoading(false);
     }
-  }, [id, t]);
-
-  const fetchStandings = async (tournamentId: number) => {
-    setLoadingStandings(true);
-    try {
-      const standingsData = await commands.getTournamentStandings(tournamentId);
-      setStandings(standingsData);
-    } catch (err) {
-      console.error('Failed to fetch standings:', err);
-      // Don't show error, just use regular standings
-    } finally {
-      setLoadingStandings(false);
-    }
-  };
-
-  const fetchEnhancedPlayers = async (tournamentId: number) => {
-    try {
-      const playersData =
-        await commands.getPlayersByTournamentEnhanced(tournamentId);
-      setEnhancedPlayers(playersData);
-      // Set actual player count (active players only)
-      const activePlayers = playersData.filter(
-        p => p.status === 'active' || !p.status
-      );
-      setActualPlayerCount(activePlayers.length);
-    } catch (err) {
-      console.error('Failed to fetch enhanced players:', err);
-      // Fall back to regular players
-      setEnhancedPlayers([]);
-      setActualPlayerCount(null);
-    }
-  };
-
-  const fetchActualTournamentStats = async (
-    tournamentId: number,
-    gamesList?: GameResult[]
-  ) => {
-    try {
-      // Fetch rounds to calculate actual rounds played
-      const rounds = await commands.getRoundsByTournament(tournamentId);
-      const playedRounds = rounds.filter(
-        round => round.status === 'Completed'
-      ).length;
-      setActualRoundsPlayed(playedRounds);
-
-      // For completed games count, use the provided games data
-      if (gamesList) {
-        setCompletedGamesCount(
-          gamesList.filter(game => game.game.result !== null).length
-        );
-      }
-    } catch (err) {
-      console.error('Failed to fetch actual tournament stats:', err);
-      // Fallback to tournament static data
-      setActualRoundsPlayed(0);
-      setCompletedGamesCount(0);
-    }
-  };
+  }, [id, t, fetchActualTournamentStats, fetchEnhancedPlayers, fetchStandings]);
 
   const handlePopulateMockData = async () => {
     if (!id) return;
 
     try {
-      const tournamentId = parseInt(id);
+      const tournamentId = parseInt(id, 10);
       await commands.populateMockData(tournamentId);
       // Refresh the data
       await fetchTournamentDetails();
-    } catch (err) {
-      console.error('Failed to populate mock data:', err);
+    } catch (_err) {
       setError(t('failedToPopulateMockData'));
     }
   };
@@ -238,7 +235,7 @@ function TournamentInfoPage() {
     // Refresh tournament details and enhanced players
     fetchTournamentDetails();
     if (id && tournamentDetails) {
-      const tournamentId = parseInt(id);
+      const tournamentId = parseInt(id, 10);
       fetchEnhancedPlayers(tournamentId);
       fetchActualTournamentStats(tournamentId, tournamentDetails.games);
     }
@@ -275,10 +272,9 @@ function TournamentInfoPage() {
     if (!id) return;
 
     try {
-      await commands.deleteTournament(parseInt(id));
+      await commands.deleteTournament(parseInt(id, 10));
       navigate('/');
-    } catch (err) {
-      console.error('Failed to delete tournament:', err);
+    } catch (_err) {
       setError(t('failedToDeleteTournament'));
     }
     setDeleteDialogOpen(false);
@@ -292,13 +288,8 @@ function TournamentInfoPage() {
     fetchTournamentDetails();
   }, [fetchTournamentDetails]);
 
-  const formatDate = (dateString: string) => {
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch {
-      return dateString;
-    }
-  };
+  const formatDate = (dateString: string) =>
+    formatLocalizedDate(dateString, i18n.language);
 
   if (loading) {
     return (
@@ -536,7 +527,7 @@ function TournamentInfoPage() {
                           : 'N/A'}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {t('tournament.timeControl')}
+                        {t('tournament.timeControl.label')}
                       </Typography>
                     </Box>
                   </Box>
@@ -641,9 +632,9 @@ function TournamentInfoPage() {
                   <TableHead>
                     <TableRow>
                       <TableCell>{t('rank')}</TableCell>
-                      <TableCell>{t('player')}</TableCell>
+                      <TableCell>{t('player.label')}</TableCell>
                       <TableCell>{t('rating')}</TableCell>
-                      <TableCell>{t('country')}</TableCell>
+                      <TableCell>{t('country.label')}</TableCell>
                       <TableCell align="center">{t('points')}</TableCell>
                       <TableCell align="center">{t('games')}</TableCell>
                       <TableCell align="center">{t('wins')}</TableCell>
@@ -683,7 +674,12 @@ function TournamentInfoPage() {
                             }}
                           >
                             <Flag fontSize="small" />
-                            {playerResult.player.country_code || 'N/A'}
+                            {playerResult.player.country_code
+                              ? t(
+                                  `country.${playerResult.player.country_code}`,
+                                  playerResult.player.country_code
+                                )
+                              : 'N/A'}
                           </Box>
                         </TableCell>
                         <TableCell align="center">
@@ -723,14 +719,14 @@ function TournamentInfoPage() {
           <TabPanel value={tabValue} index={1}>
             {/* Round Management */}
             <RoundManager
-              tournamentId={parseInt(id!)}
+              tournamentId={parseInt(id ?? '', 10)}
               onRoundUpdate={() => {
                 // Refresh tournament details when rounds are updated
                 fetchTournamentDetails();
                 // Also refresh actual tournament stats since rounds have changed
                 if (tournamentDetails) {
                   fetchActualTournamentStats(
-                    parseInt(id!),
+                    parseInt(id ?? '', 10),
                     tournamentDetails.games
                   );
                 }
@@ -742,13 +738,13 @@ function TournamentInfoPage() {
             {/* Results Management */}
             {games.length > 0 ? (
               <ResultsGrid
-                tournamentId={parseInt(id!)}
+                tournamentId={parseInt(id ?? '', 10)}
                 games={games}
                 onResultsUpdated={() => {
                   // Refresh tournament details and standings when results are updated
                   fetchTournamentDetails();
                   if (id && tournamentDetails) {
-                    const tournamentId = parseInt(id);
+                    const tournamentId = parseInt(id, 10);
                     fetchStandings(tournamentId);
                     fetchActualTournamentStats(
                       tournamentId,
@@ -780,7 +776,7 @@ function TournamentInfoPage() {
           <TabPanel value={tabValue} index={3}>
             {/* Enhanced Player Management */}
             <PlayerManagement
-              tournamentId={parseInt(id!)}
+              tournamentId={parseInt(id ?? '', 10)}
               players={enhancedPlayers}
               tournamentDetails={tournamentDetails}
               onPlayersUpdated={handlePlayersUpdated}
@@ -837,11 +833,11 @@ function TournamentInfoPage() {
         <TournamentSettings
           open={settingsOpen}
           onClose={() => setSettingsOpen(false)}
-          tournamentId={parseInt(id!)}
+          tournamentId={parseInt(id ?? '', 10)}
           onSettingsUpdated={() => {
             // Refresh standings when settings are updated
             if (id) {
-              fetchStandings(parseInt(id));
+              fetchStandings(parseInt(id, 10));
             }
           }}
         />

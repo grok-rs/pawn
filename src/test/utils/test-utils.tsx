@@ -1,13 +1,13 @@
-import React, { type ReactElement } from 'react';
-import { render, RenderOptions } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { ThemeProvider, createTheme, type Theme } from '@mui/material/styles';
-import { I18nextProvider } from 'react-i18next';
-import type { i18n as I18nType } from 'i18next';
-import { Provider as ReduxProvider } from 'react-redux';
+import { createTheme, type Theme, ThemeProvider } from '@mui/material/styles';
 import { configureStore, type EnhancedStore } from '@reduxjs/toolkit';
+import { type RenderOptions, render } from '@testing-library/react';
+import type { i18n as I18nType } from 'i18next';
 import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import type React from 'react';
+import type { ReactElement } from 'react';
+import { I18nextProvider, initReactI18next } from 'react-i18next';
+import { Provider as ReduxProvider } from 'react-redux';
+import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 
 // Mock translations for testing
@@ -276,5 +276,4 @@ export const createMockTauriInvoke = (
 
 // Export the main render function and utilities
 export * from '@testing-library/react';
-export { customRender as render };
-export { createTestI18n, createMockStore, testTheme };
+export { createMockStore, createTestI18n, customRender as render, testTheme };

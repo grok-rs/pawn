@@ -1,16 +1,15 @@
+import type { Tournament } from '@dto/bindings';
 import AddIcon from '@mui/icons-material/Add';
 import { Box, Button, Divider, InputBase, List, Paper } from '@mui/material';
-import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
-
 import { APP_ROUTES } from '@shared/config/routes';
 import {
   isDraftTournament,
   isFinishedTournament,
   isOngoingTournament,
 } from '@shared/lib/tournamentUtils';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import TournamentStatusButton from './TournamentStatusButton';
-import { Tournament } from '@dto/bindings';
 
 type TournamentStatus = 'NotStarted' | 'InProgress' | 'Finished';
 

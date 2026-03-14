@@ -1,31 +1,30 @@
 import {
-  Box,
-  Typography,
-  Paper,
-  Breadcrumbs,
-  Link,
-  useTheme,
-  Card,
-  CardContent,
-} from '@mui/material';
-import {
-  NavigateNext,
+  ContentCopy,
   EmojiEvents,
   FileUpload,
   Info,
+  NavigateNext,
   Settings,
-  ContentCopy,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import {
+  Box,
+  Breadcrumbs,
+  Card,
+  CardContent,
+  Link,
+  Paper,
+  Typography,
+  useTheme,
+} from '@mui/material';
 import Grid from '@mui/material/Grid';
-
+import { APP_ROUTES } from '@shared/config/routes';
 import BaseLayout from '@shared/layouts/BaseLayout';
 import ImportTournamentButton from '@widgets/new-tournament-form/ImportTournamentButton';
 import NewTournamentSetup from '@widgets/new-tournament-form/NewTournamentSetup';
 import TournamentConfigurationExport from '@widgets/new-tournament-form/TournamentConfigurationExport';
 import TournamentTemplates from '@widgets/new-tournament-form/TournamentTemplates';
-import { APP_ROUTES } from '@shared/config/routes';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 const NewTournamentPage = () => {
   const theme = useTheme();
@@ -166,7 +165,7 @@ const NewTournamentPage = () => {
                 >
                   <Info color="primary" />
                   <Typography variant="h6" fontWeight={600}>
-                    {t('quickTips')}
+                    {t('quickTips.label')}
                   </Typography>
                 </Box>
                 <Box component="ul" sx={{ pl: 2, pr: 0, m: 0 }}>

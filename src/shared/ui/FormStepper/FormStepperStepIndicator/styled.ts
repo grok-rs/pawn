@@ -1,4 +1,4 @@
-import { Step, stepIconClasses, StepLabel, Stepper } from '@mui/material';
+import { Step, StepLabel, Stepper, stepIconClasses } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 export const StyledStepper = styled(Stepper)(({ theme }) => ({
@@ -19,10 +19,10 @@ export const StyledStepLabel = styled(StepLabel)(({ theme }) => ({
     color: theme.palette.common.white,
     backgroundColor: theme.palette.grey[500],
 
-    ['&:first-of-type']: {
+    '&:first-of-type': {
       marginLeft: 0,
     },
-    ['&:last-of-type']: {
+    '&:last-of-type': {
       marginRight: 0,
     },
     [`&.${stepIconClasses.completed}`]: {

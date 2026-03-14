@@ -2,7 +2,6 @@ use crate::domain::tiebreak::TiebreakType;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateTournament {
     pub name: String,
@@ -16,7 +15,6 @@ pub struct CreateTournament {
     pub country_code: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreatePlayer {
     pub tournament_id: i32,
@@ -31,7 +29,6 @@ pub struct CreatePlayer {
     pub club: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateGame {
     pub tournament_id: i32,
@@ -41,7 +38,6 @@ pub struct CreateGame {
     pub result: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct UpdateTournamentSettings {
     pub tournament_id: i32,
@@ -61,28 +57,24 @@ pub struct UpdateTournamentSettings {
     pub prize_structure: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct UpdateTournamentStatus {
     pub tournament_id: i32,
     pub status: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateRound {
     pub tournament_id: i32,
     pub round_number: i32,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct UpdateRoundStatus {
     pub round_id: i32,
     pub status: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct GeneratePairingsRequest {
     pub tournament_id: i32,
@@ -90,14 +82,12 @@ pub struct GeneratePairingsRequest {
     pub pairing_method: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct UpdateTournamentPairingMethod {
     pub tournament_id: i32,
     pub pairing_method: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct UpdateGameResult {
     pub game_id: i32,
@@ -108,7 +98,6 @@ pub struct UpdateGameResult {
     pub changed_by: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct ValidateGameResult {
     pub game_id: i32,
@@ -118,7 +107,6 @@ pub struct ValidateGameResult {
     pub changed_by: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct BatchUpdateResults {
     pub tournament_id: i32,
@@ -126,7 +114,6 @@ pub struct BatchUpdateResults {
     pub validate_only: bool,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct ApproveGameResult {
     pub game_id: i32,
@@ -134,7 +121,6 @@ pub struct ApproveGameResult {
     pub notes: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct GameResultValidation {
     pub is_valid: bool,
@@ -142,14 +128,12 @@ pub struct GameResultValidation {
     pub warnings: Vec<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct BatchValidationResult {
     pub overall_valid: bool,
     pub results: Vec<(usize, GameResultValidation)>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CsvResultImport {
     pub tournament_id: i32,
@@ -158,7 +142,6 @@ pub struct CsvResultImport {
     pub changed_by: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CsvResultRow {
     pub board_number: Option<i32>,
@@ -170,7 +153,6 @@ pub struct CsvResultRow {
     pub row_number: usize,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CsvImportResult {
     pub success: bool,
@@ -181,7 +163,6 @@ pub struct CsvImportResult {
     pub warnings: Vec<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CsvImportError {
     pub row_number: usize,
@@ -192,7 +173,6 @@ pub struct CsvImportError {
 
 // Enhanced Player Management DTOs
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct UpdatePlayer {
     pub player_id: i32,
@@ -208,7 +188,6 @@ pub struct UpdatePlayer {
     pub status: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateRatingHistory {
     pub player_id: i32,
@@ -218,7 +197,6 @@ pub struct CreateRatingHistory {
     pub effective_date: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreatePlayerCategory {
     pub tournament_id: i32,
@@ -231,7 +209,6 @@ pub struct CreatePlayerCategory {
     pub gender_restriction: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct BulkImportPlayer {
     pub name: String,
@@ -245,7 +222,6 @@ pub struct BulkImportPlayer {
     pub club: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct BulkImportRequest {
     pub tournament_id: i32,
@@ -253,7 +229,6 @@ pub struct BulkImportRequest {
     pub validate_only: bool,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct PlayerSearchFilters {
     pub tournament_id: Option<i32>,
@@ -269,7 +244,6 @@ pub struct PlayerSearchFilters {
     pub offset: Option<i32>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct PlayerImportValidation {
     pub is_valid: bool,
@@ -278,7 +252,6 @@ pub struct PlayerImportValidation {
     pub player_data: BulkImportPlayer,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct BulkImportResult {
     pub success_count: i32,
@@ -287,7 +260,6 @@ pub struct BulkImportResult {
     pub imported_player_ids: Vec<i32>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct AssignPlayerToCategory {
     pub player_id: i32,
@@ -296,42 +268,14 @@ pub struct AssignPlayerToCategory {
 
 // Knockout Tournament DTOs
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateKnockoutBracket {
     pub tournament_id: i32,
     pub bracket_type: String,
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct CreateBracketPosition {
-    pub bracket_id: i32,
-    pub round_number: i32,
-    pub position_number: i32,
-    pub player_id: Option<i32>,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct AdvancePlayerRequest {
-    pub bracket_id: i32,
-    pub position_id: i32,
-    pub player_id: i32,
-    pub next_round: i32,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct KnockoutRoundResult {
-    pub bracket_id: i32,
-    pub round_number: i32,
-    pub winner_advances: Vec<(i32, i32)>, // (position_id, player_id)
-}
-
 // Time Control DTOs
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateTimeControl {
     pub name: String,
@@ -344,7 +288,6 @@ pub struct CreateTimeControl {
     pub description: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct UpdateTimeControl {
     pub id: i32,
@@ -359,7 +302,6 @@ pub struct UpdateTimeControl {
     pub is_default: Option<bool>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct TimeControlFilter {
     pub time_control_type: Option<String>,
@@ -367,7 +309,6 @@ pub struct TimeControlFilter {
     pub is_real_time: Option<bool>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct TimeControlValidation {
     pub is_valid: bool,
@@ -378,7 +319,6 @@ pub struct TimeControlValidation {
 
 // Enhanced Pairing System DTOs
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct EnhancedPairingRequest {
     pub tournament_id: i32,
@@ -390,7 +330,6 @@ pub struct EnhancedPairingRequest {
     pub optimization_config: Option<PairingOptimizationConfig>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct ManualPairingOverrides {
     pub forced_pairings: Vec<ForcedPairingDto>,
@@ -399,7 +338,6 @@ pub struct ManualPairingOverrides {
     pub bye_assignments: Vec<i32>, // Player IDs to receive byes
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct ForcedPairingDto {
     pub white_player_id: i32,
@@ -407,7 +345,6 @@ pub struct ForcedPairingDto {
     pub board_number: Option<i32>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct ForbiddenPairingDto {
     pub player1_id: i32,
@@ -415,7 +352,6 @@ pub struct ForbiddenPairingDto {
     pub reason: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct ColorConstraintDto {
     pub player_id: i32,
@@ -423,7 +359,6 @@ pub struct ColorConstraintDto {
     pub priority: String,       // "low", "medium", "high", "critical"
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct PairingOptimizationConfig {
     pub max_players_for_basic_algorithm: Option<usize>,
@@ -434,7 +369,6 @@ pub struct PairingOptimizationConfig {
     pub use_heuristic_pruning: Option<bool>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct EnhancedPairingResult {
     pub pairings: Vec<crate::domain::model::Pairing>,
@@ -443,7 +377,6 @@ pub struct EnhancedPairingResult {
     pub warnings: Vec<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct PairingValidationResults {
     pub is_valid: bool,
@@ -452,7 +385,6 @@ pub struct PairingValidationResults {
     pub suggestions: Vec<PairingSuggestionDto>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct PairingErrorDto {
     pub error_type: String,
@@ -461,7 +393,6 @@ pub struct PairingErrorDto {
     pub severity: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct PairingWarningDto {
     pub warning_type: String,
@@ -469,7 +400,6 @@ pub struct PairingWarningDto {
     pub affected_players: Vec<i32>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct PairingSuggestionDto {
     pub suggestion_type: String,
@@ -477,7 +407,6 @@ pub struct PairingSuggestionDto {
     pub alternative_pairing: Option<crate::domain::model::Pairing>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct PairingPerformanceMetrics {
     pub total_duration_ms: u128,
@@ -492,7 +421,6 @@ pub struct PairingPerformanceMetrics {
 
 // Swiss System Specific DTOs
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SwissPairingOptions {
     pub use_accelerated_pairings: bool,
@@ -504,7 +432,6 @@ pub struct SwissPairingOptions {
     pub rating_difference_penalty: f64,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SwissPairingAnalysis {
     pub score_groups: Vec<ScoreGroupDto>,
@@ -513,7 +440,6 @@ pub struct SwissPairingAnalysis {
     pub rating_distribution: RatingDistributionDto,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct ScoreGroupDto {
     pub score: f64,
@@ -523,7 +449,6 @@ pub struct ScoreGroupDto {
     pub floats_down: usize,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct FloatStatisticsDto {
     pub total_floats: usize,
@@ -532,7 +457,6 @@ pub struct FloatStatisticsDto {
     pub float_percentage: f64,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct ColorBalanceAnalysisDto {
     pub players_with_color_imbalance: usize,
@@ -541,7 +465,6 @@ pub struct ColorBalanceAnalysisDto {
     pub players_needing_black: usize,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct RatingDistributionDto {
     pub average_rating_difference: f64,
@@ -552,7 +475,6 @@ pub struct RatingDistributionDto {
 
 // Round-Robin System DTOs
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct RoundRobinOptions {
     pub tournament_type: String, // "single", "double", "scheveningen"
@@ -561,7 +483,6 @@ pub struct RoundRobinOptions {
     pub team_size: Option<usize>, // For Scheveningen
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct RoundRobinAnalysis {
     pub total_rounds_needed: i32,
@@ -570,7 +491,6 @@ pub struct RoundRobinAnalysis {
     pub color_distribution: Vec<PlayerColorStatsDto>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct BergerTableInfoDto {
     pub table_size: usize,
@@ -578,7 +498,6 @@ pub struct BergerTableInfoDto {
     pub bye_player_position: Option<usize>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct PlayerColorStatsDto {
     pub player_id: i32,
@@ -589,7 +508,6 @@ pub struct PlayerColorStatsDto {
 }
 
 // Team Management DTOs for Scheveningen tournaments
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateTeam {
     pub tournament_id: i32,
@@ -603,7 +521,6 @@ pub struct CreateTeam {
     pub max_board_count: i32,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct UpdateTeam {
     pub id: i32,
@@ -618,7 +535,6 @@ pub struct UpdateTeam {
     pub status: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct AddPlayerToTeam {
     pub team_id: i32,
@@ -627,25 +543,13 @@ pub struct AddPlayerToTeam {
     pub is_captain: bool,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct RemovePlayerFromTeam {
     pub team_id: i32,
     pub player_id: i32,
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct GenerateSchevenigenenPairings {
-    pub tournament_id: i32,
-    pub round_number: i32,
-    pub team_a_id: i32,
-    pub team_b_id: i32,
-    pub alternate_colors: bool, // Whether to alternate colors by board number
-}
-
 // Extended Team Management DTOs for comprehensive team tournaments
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateTeamMatch {
     pub tournament_id: i32,
@@ -657,7 +561,6 @@ pub struct CreateTeamMatch {
     pub arbiter_name: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct UpdateTeamMatch {
     pub id: i32,
@@ -674,7 +577,6 @@ pub struct UpdateTeamMatch {
     pub approved_by: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateTeamLineup {
     pub team_id: i32,
@@ -688,7 +590,6 @@ pub struct CreateTeamLineup {
     pub notes: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateTeamTournamentSettings {
     pub tournament_id: i32,
@@ -705,7 +606,6 @@ pub struct CreateTeamTournamentSettings {
     pub color_allocation: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct UpdateTeamTournamentSettings {
     pub tournament_id: i32,
@@ -722,20 +622,6 @@ pub struct UpdateTeamTournamentSettings {
     pub color_allocation: Option<String>,
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct CreateTeamBoardRules {
-    pub tournament_id: i32,
-    pub rule_type: String,
-    pub rating_tolerance: i32,
-    pub allow_substitutions: bool,
-    pub substitution_deadline_minutes: i32,
-    pub max_substitutions_per_round: i32,
-    pub require_captain_approval: bool,
-    pub board_order_validation: bool,
-}
-
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct TeamSearchFilters {
     pub tournament_id: i32,
@@ -750,55 +636,8 @@ pub struct TeamSearchFilters {
     pub offset: Option<i32>,
 }
 
-// Tournament Template DTOs
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct CreateTournamentTemplate {
-    pub name: String,
-    pub description: Option<String>,
-    pub tournament_type: String,
-    pub time_type: String,
-    pub default_rounds: i32,
-    pub time_control_template_id: Option<i32>,
-    pub tiebreak_order: Vec<String>, // Will be serialized to JSON
-    pub forfeit_time_minutes: i32,
-    pub draw_offers_allowed: bool,
-    pub mobile_phone_policy: String,
-    pub late_entry_allowed: bool,
-    pub is_public: bool,
-    pub created_by: Option<String>,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct UpdateTournamentTemplate {
-    pub id: i32,
-    pub name: Option<String>,
-    pub description: Option<String>,
-    pub tournament_type: Option<String>,
-    pub time_type: Option<String>,
-    pub default_rounds: Option<i32>,
-    pub time_control_template_id: Option<i32>,
-    pub tiebreak_order: Option<Vec<String>>,
-    pub forfeit_time_minutes: Option<i32>,
-    pub draw_offers_allowed: Option<bool>,
-    pub mobile_phone_policy: Option<String>,
-    pub late_entry_allowed: Option<bool>,
-    pub is_public: Option<bool>,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct TournamentTemplateFilter {
-    pub tournament_type: Option<String>,
-    pub time_type: Option<String>,
-    pub is_public: Option<bool>,
-    pub created_by: Option<String>,
-}
-
 // Seeding and Ranking DTOs
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateTournamentSeedingSettings {
     pub tournament_id: i32,
@@ -808,7 +647,6 @@ pub struct CreateTournamentSeedingSettings {
     pub protect_top_seeds: i32,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct UpdateTournamentSeedingSettings {
     pub id: i32,
@@ -818,7 +656,6 @@ pub struct UpdateTournamentSeedingSettings {
     pub protect_top_seeds: Option<i32>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct GenerateSeedingRequest {
     pub tournament_id: i32,
@@ -827,7 +664,6 @@ pub struct GenerateSeedingRequest {
     pub category_id: Option<i32>, // For category-based seeding
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct UpdatePlayerSeeding {
     pub player_id: i32,
@@ -836,14 +672,12 @@ pub struct UpdatePlayerSeeding {
     pub initial_rating: Option<i32>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct BatchUpdatePlayerSeeding {
     pub tournament_id: i32,
     pub seeding_updates: Vec<UpdatePlayerSeeding>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SeedingPreview {
     pub player_id: i32,
@@ -855,7 +689,6 @@ pub struct SeedingPreview {
     pub category: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct GeneratePairingNumbersRequest {
     pub tournament_id: i32,
@@ -864,7 +697,6 @@ pub struct GeneratePairingNumbersRequest {
     pub preserve_existing: bool,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SeedingAnalysis {
     pub total_players: i32,
@@ -876,7 +708,6 @@ pub struct SeedingAnalysis {
     pub seeding_conflicts: Vec<SeedingConflict>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SeedingConflict {
     pub player_id: i32,
@@ -888,34 +719,6 @@ pub struct SeedingConflict {
 
 // Application Settings DTOs
 
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct CreateApplicationSetting {
-    pub category: String,
-    pub setting_key: String,
-    pub setting_value: Option<String>,
-    pub setting_type: String, // "string", "integer", "float", "boolean", "json", "array"
-    pub default_value: Option<String>,
-    pub description: Option<String>,
-    pub validation_schema: Option<String>,
-    pub requires_restart: Option<bool>,
-    pub is_user_configurable: Option<bool>,
-    pub display_order: Option<i32>,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct UpdateApplicationSetting {
-    pub id: i32,
-    pub setting_value: Option<String>,
-    pub description: Option<String>,
-    pub validation_schema: Option<String>,
-    pub requires_restart: Option<bool>,
-    pub is_user_configurable: Option<bool>,
-    pub display_order: Option<i32>,
-}
-
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateUserPreference {
     pub user_id: Option<String>,
@@ -924,14 +727,6 @@ pub struct CreateUserPreference {
     pub setting_value: Option<String>,
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct UpdateUserPreference {
-    pub id: i32,
-    pub setting_value: Option<String>,
-}
-
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SettingsFilter {
     pub category: Option<String>,
@@ -940,39 +735,6 @@ pub struct SettingsFilter {
     pub user_id: Option<String>,
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct CreateSettingsTemplate {
-    pub template_name: String,
-    pub template_description: Option<String>,
-    pub template_category: String,
-    pub template_data: String, // JSON data
-    pub is_system_template: Option<bool>,
-    pub is_default: Option<bool>,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct UpdateSettingsTemplate {
-    pub id: i32,
-    pub template_name: Option<String>,
-    pub template_description: Option<String>,
-    pub template_category: Option<String>,
-    pub template_data: Option<String>,
-    pub is_system_template: Option<bool>,
-    pub is_default: Option<bool>,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct ApplySettingsTemplate {
-    pub template_id: i32,
-    pub user_id: Option<String>,
-    pub override_existing: bool,
-    pub categories: Option<Vec<String>>, // Apply only specific categories
-}
-
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateSettingsBackup {
     pub backup_name: String,
@@ -981,7 +743,6 @@ pub struct CreateSettingsBackup {
     pub categories: Option<Vec<String>>, // Backup only specific categories
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct RestoreSettingsBackup {
     pub backup_id: i32,
@@ -990,7 +751,6 @@ pub struct RestoreSettingsBackup {
     pub create_backup_before_restore: Option<bool>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SettingsExportRequest {
     pub format: String, // "json", "yaml", "csv"
@@ -1000,7 +760,6 @@ pub struct SettingsExportRequest {
     pub include_system_settings: Option<bool>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SettingsImportRequest {
     pub format: String, // "json", "yaml", "csv"
@@ -1011,7 +770,6 @@ pub struct SettingsImportRequest {
     pub create_backup_before_import: Option<bool>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SettingsImportResult {
     pub success: bool,
@@ -1023,7 +781,6 @@ pub struct SettingsImportResult {
     pub backup_created: Option<String>, // Backup name if created
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SettingsImportError {
     pub category: String,
@@ -1033,7 +790,6 @@ pub struct SettingsImportError {
     pub suggested_action: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SettingsValidationRequest {
     pub category: String,
@@ -1043,7 +799,6 @@ pub struct SettingsValidationRequest {
     pub validation_schema: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SettingsValidationResult {
     pub is_valid: bool,
@@ -1052,37 +807,6 @@ pub struct SettingsValidationResult {
     pub sanitized_value: Option<String>,
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct SettingsSearchRequest {
-    pub query: String,
-    pub categories: Option<Vec<String>>,
-    pub user_id: Option<String>,
-    pub include_descriptions: Option<bool>,
-    pub limit: Option<i32>,
-    pub offset: Option<i32>,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct SettingsSearchResult {
-    pub total_count: i32,
-    pub results: Vec<SettingsSearchItem>,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct SettingsSearchItem {
-    pub id: i32,
-    pub category: String,
-    pub setting_key: String,
-    pub setting_value: Option<String>,
-    pub description: Option<String>,
-    pub match_type: String, // "key", "description", "value"
-    pub relevance_score: f64,
-}
-
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SettingsResetRequest {
     pub category: Option<String>,
@@ -1091,7 +815,6 @@ pub struct SettingsResetRequest {
     pub create_backup: Option<bool>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SettingsResetResult {
     pub success: bool,
@@ -1100,7 +823,6 @@ pub struct SettingsResetResult {
     pub backup_created: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SettingsCategorySummary {
     pub category: String,
@@ -1111,7 +833,6 @@ pub struct SettingsCategorySummary {
     pub last_updated: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SettingsOverview {
     pub total_settings: i32,
@@ -1121,7 +842,6 @@ pub struct SettingsOverview {
     pub pending_restart: bool,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SettingsAuditSummary {
     pub category: String,
@@ -1131,7 +851,6 @@ pub struct SettingsAuditSummary {
     pub changed_by: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct ApplySettingsTemplateRequest {
     pub template_id: i32,
@@ -1140,7 +859,6 @@ pub struct ApplySettingsTemplateRequest {
     pub categories: Option<Vec<String>>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct SettingsTemplateResult {
     pub success: bool,

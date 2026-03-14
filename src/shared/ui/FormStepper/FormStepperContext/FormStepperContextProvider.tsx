@@ -1,7 +1,7 @@
-import { ReactNode } from 'react';
-import { FieldValues } from 'react-hook-form';
+import type { ReactNode } from 'react';
+import type { FieldValues } from 'react-hook-form';
 
-import { FormStepperContextType } from '../types';
+import type { FormStepperContextType } from '../types';
 import FormStepperContext from './FormStepperContext';
 
 type Props<T extends FieldValues = FieldValues> = {

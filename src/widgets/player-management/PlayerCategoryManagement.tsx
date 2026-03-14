@@ -1,52 +1,52 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useForm, Controller } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Paper,
-  Typography,
-  IconButton,
-  Chip,
-  Alert,
-  TextField,
-  Grid,
-  MenuItem,
-  Card,
-  CardContent,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  CircularProgress,
-} from '@mui/material';
-import {
-  Add,
-  Edit,
-  Delete,
-  ExpandMore,
-  Category,
-  Person,
-  Groups,
-  Flag,
-} from '@mui/icons-material';
-import { commands } from '@dto/bindings';
 import type {
-  PlayerCategory,
+  AssignPlayerToCategory,
   CreatePlayerCategory,
   Player,
+  PlayerCategory,
   PlayerCategoryAssignment,
-  AssignPlayerToCategory,
 } from '@dto/bindings';
+import { commands } from '@dto/bindings';
+import { yupResolver } from '@hookform/resolvers/yup';
+import {
+  Add,
+  Category,
+  Delete,
+  Edit,
+  ExpandMore,
+  Flag,
+  Groups,
+  Person,
+} from '@mui/icons-material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  IconButton,
+  List,
+  ListItem,
+  ListItemSecondaryAction,
+  ListItemText,
+  MenuItem,
+  Paper,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { useCallback, useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import * as yup from 'yup';
 
 interface PlayerCategoryManagementProps {
   tournamentId: number;
@@ -111,8 +111,7 @@ function PlayerCategoryManagement({
         await commands.getTournamentCategories(tournamentId);
       setCategories(categoriesData);
       setError(null);
-    } catch (err) {
-      console.error('Failed to fetch categories:', err);
+    } catch (_err) {
       setError(t('failedToLoadCategories'));
     } finally {
       setLoading(false);
@@ -184,8 +183,7 @@ function PlayerCategoryManagement({
       fetchCategories();
       onCategoriesUpdated();
       setError(null);
-    } catch (err) {
-      console.error('Failed to save category:', err);
+    } catch (_err) {
       setError(t('failedToSaveCategory'));
     } finally {
       setLoading(false);
@@ -203,8 +201,7 @@ function PlayerCategoryManagement({
       fetchCategories();
       onCategoriesUpdated();
       setError(null);
-    } catch (err) {
-      console.error('Failed to delete category:', err);
+    } catch (_err) {
       setError(t('failedToDeleteCategory'));
     } finally {
       setLoading(false);
@@ -220,8 +217,7 @@ function PlayerCategoryManagement({
       await commands.assignPlayerToCategory(assignmentData);
       fetchCategories(); // Refresh to get updated assignments
       setError(null);
-    } catch (err) {
-      console.error('Failed to assign player to category:', err);
+    } catch (_err) {
       setError(t('failedToAssignPlayer'));
     }
   };
@@ -290,7 +286,7 @@ function PlayerCategoryManagement({
 
     if (category.gender_restriction) {
       rules.push(
-        `${t('gender')}: ${t(`gender.${category.gender_restriction}`)}`
+        `${t('gender.label')}: ${t(`gender.${category.gender_restriction}`)}`
       );
     }
 
@@ -400,9 +396,9 @@ function PlayerCategoryManagement({
                         {t('eligibilityRules')}:
                       </Typography>
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        {rules.map((rule, index) => (
+                        {rules.map(rule => (
                           <Chip
-                            key={index}
+                            key={rule}
                             label={rule}
                             size="small"
                             variant="outlined"

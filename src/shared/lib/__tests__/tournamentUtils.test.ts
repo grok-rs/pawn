@@ -1,16 +1,16 @@
-import { describe, it, expect } from 'vitest';
-import type { Tournament, Round } from '@dto/bindings';
+import type { Round, Tournament } from '@dto/bindings';
 import {
-  isFinishedTournament,
-  isOngoingTournament,
-  isDraftTournament,
   calculateActualRoundsPlayed,
-  isFinishedTournamentActual,
-  isOngoingTournamentActual,
-  isDraftTournamentActual,
-  getTournamentStatusActual,
   getTournamentProgressActual,
+  getTournamentStatusActual,
+  isDraftTournament,
+  isDraftTournamentActual,
+  isFinishedTournament,
+  isFinishedTournamentActual,
+  isOngoingTournament,
+  isOngoingTournamentActual,
 } from '@shared/lib/tournamentUtils';
+import { describe, expect, it } from 'vitest';
 
 // Mock data factories
 const createMockTournament = (

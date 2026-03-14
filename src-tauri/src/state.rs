@@ -16,8 +16,6 @@ use crate::{
 };
 
 pub struct State<D> {
-    #[allow(dead_code)]
-    pub app_data_dir: PathBuf,
     pub db: Arc<D>,
     pub tournament_service: Arc<TournamentService<D>>,
     pub tiebreak_calculator: Arc<TiebreakCalculator<D>>,
@@ -30,8 +28,8 @@ pub struct State<D> {
     pub export_service: Arc<ExportService<D>>,
     pub norm_calculation_service: Arc<NormCalculationService<D>>,
     pub team_service: Arc<TeamService<D>>,
-    pub seeding_service: Arc<SeedingService>,
-    pub settings_service: Arc<SettingsService>,
+    pub seeding_service: Arc<SeedingService<D>>,
+    pub settings_service: Arc<SettingsService<D>>,
 }
 
 pub type PawnState = State<SqliteDb>;
@@ -94,13 +92,12 @@ impl PawnState {
         let team_service = Arc::new(TeamService::new(Arc::clone(&sqlite)));
 
         // Create seeding service
-        let seeding_service = Arc::new(SeedingService::new(pool.clone()));
+        let seeding_service = Arc::new(SeedingService::new(Arc::clone(&sqlite)));
 
-        // Create settings service with pool reference
-        let settings_service = Arc::new(SettingsService::new(Arc::new(pool)));
+        // Create settings service
+        let settings_service = Arc::new(SettingsService::new(Arc::clone(&sqlite)));
 
         Self {
-            app_data_dir,
             db: sqlite,
             tournament_service,
             tiebreak_calculator,

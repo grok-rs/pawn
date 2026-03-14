@@ -1,6 +1,6 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 
 // Advanced schema validation utilities
 const DataValidationUtils = {
@@ -338,8 +338,8 @@ const DataValidationUtils = {
       return { valid: false, errors };
     }
 
-    const date = new Date(birthDate + 'T00:00:00.000Z');
-    if (isNaN(date.getTime())) {
+    const date = new Date(`${birthDate}T00:00:00.000Z`);
+    if (Number.isNaN(date.getTime())) {
       errors.push('Invalid birth date');
       return { valid: false, errors };
     }
@@ -666,21 +666,21 @@ const DataValidationTestComponent = ({
     warnings?: string[];
   } | null>(null);
 
-  const handleValidate = () => {
-    let result;
+  const handleValidate = React.useCallback(() => {
+    let result: { valid: boolean; errors: string[]; warnings?: string[] };
 
     switch (validationMode) {
       case 'player':
         result = DataValidationUtils.validatePlayerData({
           ...data,
-          rating: parseInt(data.rating || '0') || 0,
+          rating: parseInt(data.rating || '0', 10) || 0,
         });
         break;
       case 'tournament':
         result = DataValidationUtils.validateTournamentFormat(
           data.format || '',
-          parseInt(data.playerCount || '0') || 0,
-          parseInt(data.rounds || '0') || 0
+          parseInt(data.playerCount || '0', 10) || 0,
+          parseInt(data.rounds || '0', 10) || 0
         );
         break;
       case 'timeControl':
@@ -695,13 +695,13 @@ const DataValidationTestComponent = ({
     }
 
     setValidationResult(result);
-  };
+  }, [validationMode, data]);
 
   React.useEffect(() => {
     if (testData) {
       handleValidate();
     }
-  }, [testData]);
+  }, [testData, handleValidate]);
 
   const handleInputChange = (field: string, value: string) => {
     setData(prev => ({ ...prev, [field]: value }));
@@ -743,7 +743,11 @@ const DataValidationTestComponent = ({
         </div>
       )}
 
-      <button data-testid="validate-button" onClick={handleValidate}>
+      <button
+        type="button"
+        data-testid="validate-button"
+        onClick={handleValidate}
+      >
         Validate
       </button>
 
@@ -758,7 +762,7 @@ const DataValidationTestComponent = ({
               <h4>Errors:</h4>
               <ul>
                 {validationResult.errors.map((error: string, index: number) => (
-                  <li key={index} data-testid={`error-${index}`}>
+                  <li key={error} data-testid={`error-${index}`}>
                     {error}
                   </li>
                 ))}
@@ -773,7 +777,7 @@ const DataValidationTestComponent = ({
                 <ul>
                   {validationResult.warnings.map(
                     (warning: string, index: number) => (
-                      <li key={index} data-testid={`warning-${index}`}>
+                      <li key={warning} data-testid={`warning-${index}`}>
                         {warning}
                       </li>
                     )
@@ -838,7 +842,7 @@ const BulkValidationTestComponent = ({
             },
             index: number
           ) => (
-            <div key={index} data-testid={`result-${index}`}>
+            <div key={result.index} data-testid={`result-${index}`}>
               <div>
                 Player {result.index + 1}: {result.valid ? 'Valid' : 'Invalid'}
               </div>
@@ -1121,8 +1125,8 @@ describe('Advanced Data Validation and Schema Tests', () => {
         'user@domain',
         'user@.domain.com',
         'user@domain.com.',
-        'a'.repeat(65) + '@domain.com', // Local part too long
-        'user@' + 'a'.repeat(250) + '.com', // Domain too long
+        `${'a'.repeat(65)}@domain.com`, // Local part too long
+        `user@${'a'.repeat(250)}.com`, // Domain too long
       ];
 
       invalidEmails.forEach(email => {

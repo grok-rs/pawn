@@ -1,8 +1,10 @@
+use crate::common::macros::str_enum;
 use serde::{Deserialize, Serialize};
 use specta::Type as SpectaType;
 use sqlx::{FromRow, prelude::Type};
 
-#[allow(dead_code)]
+// ── Tournament ──────────────────────────────────────────────────────
+
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct Tournament {
     pub id: i32,
@@ -15,7 +17,6 @@ pub struct Tournament {
     pub rounds_played: i32,
     pub total_rounds: i32,
     pub country_code: String,
-    // Advanced tournament information
     pub status: Option<String>,
     pub start_time: Option<String>,
     pub end_time: Option<String>,
@@ -24,35 +25,103 @@ pub struct Tournament {
     pub contact_email: Option<String>,
     pub entry_fee: Option<f64>,
     pub currency: Option<String>,
-    // Team tournament fields
     pub is_team_tournament: Option<bool>,
     pub team_size: Option<i32>,
     pub max_teams: Option<i32>,
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Serialize, serde::Deserialize, FromRow, SpectaType, Clone)]
+#[derive(Debug, Serialize, SpectaType, Clone)]
+pub struct TournamentDetails {
+    pub tournament: Tournament,
+    pub players: Vec<PlayerResult>,
+    pub games: Vec<GameResult>,
+}
+
+// ── Player ──────────────────────────────────────────────────────────
+
+#[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct Player {
     pub id: i32,
     pub tournament_id: i32,
     pub name: String,
     pub rating: Option<i32>,
     pub country_code: Option<String>,
-    pub title: Option<String>,       // Chess titles: GM, IM, FM, etc.
-    pub birth_date: Option<String>,  // For age-based categories
-    pub gender: Option<String>,      // M, F, O
-    pub email: Option<String>,       // Contact information
-    pub phone: Option<String>,       // Contact information
-    pub club: Option<String>,        // Club/federation affiliation
-    pub status: String,              // Registration status
-    pub seed_number: Option<i32>,    // Manual seed assignment (1, 2, 3, etc.)
-    pub pairing_number: Option<i32>, // Sequential pairing number for tournaments
-    pub initial_rating: Option<i32>, // Rating at tournament start for seeding consistency
+    pub title: Option<String>,
+    pub birth_date: Option<String>,
+    pub gender: Option<String>,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub club: Option<String>,
+    pub status: String,
+    pub seed_number: Option<i32>,
+    pub pairing_number: Option<i32>,
+    pub initial_rating: Option<i32>,
     pub created_at: String,
     pub updated_at: Option<String>,
 }
 
-#[allow(dead_code)]
+#[derive(Debug, Serialize, SpectaType, Clone)]
+pub struct PlayerResult {
+    pub player: Player,
+    pub points: f32,
+    pub games_played: i32,
+    pub wins: i32,
+    pub draws: i32,
+    pub losses: i32,
+}
+
+str_enum! {
+    #[allow(dead_code, clippy::upper_case_acronyms)]
+    #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+    pub enum ChessTitle {
+        GM => "GM",
+        IM => "IM",
+        FM => "FM",
+        CM => "CM",
+        WGM => "WGM",
+        WIM => "WIM",
+        WFM => "WFM",
+        WCM => "WCM",
+        None => "",
+    }
+    default: None
+}
+
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct RatingHistory {
+    pub id: i32,
+    pub player_id: i32,
+    pub rating_type: String,
+    pub rating: i32,
+    pub is_provisional: bool,
+    pub effective_date: String,
+    pub created_at: String,
+}
+
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct PlayerCategory {
+    pub id: i32,
+    pub tournament_id: i32,
+    pub name: String,
+    pub description: Option<String>,
+    pub min_rating: Option<i32>,
+    pub max_rating: Option<i32>,
+    pub min_age: Option<i32>,
+    pub max_age: Option<i32>,
+    pub gender_restriction: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct PlayerCategoryAssignment {
+    pub id: i32,
+    pub player_id: i32,
+    pub category_id: i32,
+    pub assigned_at: String,
+}
+
+// ── Game ────────────────────────────────────────────────────────────
+
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct Game {
     pub id: i32,
@@ -69,18 +138,6 @@ pub struct Game {
     pub created_at: String,
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Serialize, SpectaType, Clone)]
-pub struct PlayerResult {
-    pub player: Player,
-    pub points: f32,
-    pub games_played: i32,
-    pub wins: i32,
-    pub draws: i32,
-    pub losses: i32,
-}
-
-#[allow(dead_code)]
 #[derive(Debug, Serialize, SpectaType, Clone)]
 pub struct GameResult {
     pub game: Game,
@@ -88,82 +145,6 @@ pub struct GameResult {
     pub black_player: Player,
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Serialize, SpectaType, Clone)]
-pub struct TournamentDetails {
-    pub tournament: Tournament,
-    pub players: Vec<PlayerResult>,
-    pub games: Vec<GameResult>,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
-pub struct Round {
-    pub id: i32,
-    pub tournament_id: i32,
-    pub round_number: i32,
-    pub status: String,
-    pub created_at: String,
-    pub completed_at: Option<String>,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Serialize, SpectaType, Clone)]
-pub struct RoundDetails {
-    pub round: Round,
-    pub games: Vec<GameResult>,
-    pub status: RoundStatus,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Serialize, serde::Deserialize, SpectaType, Clone)]
-pub struct Pairing {
-    pub white_player: Player,
-    pub black_player: Option<Player>, // None for bye
-    pub board_number: i32,
-}
-
-#[allow(dead_code)]
-#[derive(Serialize, Debug, Type, SpectaType)]
-pub enum TournamentStatus {
-    NotStarted,
-    InProgress,
-    Finished,
-}
-
-#[allow(dead_code)]
-#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
-pub enum RoundStatus {
-    Planned,    // Round scheduled but not started
-    Pairing,    // Actively generating pairings
-    Published,  // Pairings complete and published
-    InProgress, // Games being played
-    Finishing,  // Some games complete, waiting for others
-    Completed,  // All results entered
-    Verified,   // Results confirmed by arbiter
-}
-
-#[allow(dead_code)]
-#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
-pub enum TournamentType {
-    Swiss,
-    RoundRobin,
-    Knockout,
-    Scheveningen,
-    Arena,
-}
-
-#[allow(dead_code)]
-#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
-pub enum PairingMethod {
-    Manual,
-    Swiss,
-    RoundRobin,
-    Knockout,
-    Scheveningen,
-}
-
-#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct GameResultAudit {
     pub id: i32,
@@ -180,7 +161,6 @@ pub struct GameResultAudit {
     pub approved_at: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Serialize, SpectaType, Clone)]
 pub struct EnhancedGameResult {
     pub game: Game,
@@ -190,84 +170,26 @@ pub struct EnhancedGameResult {
     pub requires_approval: bool,
 }
 
-#[allow(dead_code)]
-#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
-pub enum GameResultType {
-    WhiteWins,     // 1-0
-    BlackWins,     // 0-1
-    Draw,          // 1/2-1/2
-    Ongoing,       // *
-    WhiteForfeit,  // 0-1 (White forfeits)
-    BlackForfeit,  // 1-0 (Black forfeits)
-    WhiteDefault,  // 0-1 (White defaults)
-    BlackDefault,  // 1-0 (Black defaults)
-    Adjourned,     // Game postponed
-    Timeout,       // Time forfeit
-    DoubleForfeit, // Both players forfeit (0-0)
-    Cancelled,     // Game cancelled
-}
-
-impl std::str::FromStr for GameResultType {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "1-0" => GameResultType::WhiteWins,
-            "0-1" => GameResultType::BlackWins,
-            "1/2-1/2" => GameResultType::Draw,
-            "*" => GameResultType::Ongoing,
-            "0-1F" | "white_forfeit" => GameResultType::WhiteForfeit,
-            "1-0F" | "black_forfeit" => GameResultType::BlackForfeit,
-            "0-1D" | "white_default" => GameResultType::WhiteDefault,
-            "1-0D" | "black_default" => GameResultType::BlackDefault,
-            "ADJ" | "adjourned" => GameResultType::Adjourned,
-            "0-1T" | "1-0T" | "timeout" => GameResultType::Timeout,
-            "0-0" | "double_forfeit" => GameResultType::DoubleForfeit,
-            "CANC" | "cancelled" => GameResultType::Cancelled,
-            _ => GameResultType::Ongoing,
-        })
+str_enum! {
+    #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+    pub enum GameResultType {
+        WhiteWins => "1-0",
+        BlackWins => "0-1",
+        Draw => "1/2-1/2",
+        Ongoing => "*",
+        WhiteForfeit => "0-1F" | "white_forfeit",
+        BlackForfeit => "1-0F" | "black_forfeit",
+        WhiteDefault => "0-1D" | "white_default",
+        BlackDefault => "1-0D" | "black_default",
+        Adjourned => "ADJ" | "adjourned",
+        Timeout => "0-1T" | "1-0T" | "timeout",
+        DoubleForfeit => "0-0" | "double_forfeit",
+        Cancelled => "CANC" | "cancelled",
     }
+    default: Ongoing
 }
 
-#[allow(dead_code)]
 impl GameResultType {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            GameResultType::WhiteWins => "1-0",
-            GameResultType::BlackWins => "0-1",
-            GameResultType::Draw => "1/2-1/2",
-            GameResultType::Ongoing => "*",
-            GameResultType::WhiteForfeit => "0-1F",
-            GameResultType::BlackForfeit => "1-0F",
-            GameResultType::WhiteDefault => "0-1D",
-            GameResultType::BlackDefault => "1-0D",
-            GameResultType::Adjourned => "ADJ",
-            GameResultType::Timeout => "0-1T",
-            GameResultType::DoubleForfeit => "0-0",
-            GameResultType::Cancelled => "CANC",
-        }
-    }
-
-    pub fn get_points(&self) -> (f32, f32) {
-        match self {
-            GameResultType::WhiteWins
-            | GameResultType::BlackForfeit
-            | GameResultType::BlackDefault => (1.0, 0.0),
-            GameResultType::BlackWins
-            | GameResultType::WhiteForfeit
-            | GameResultType::WhiteDefault => (0.0, 1.0),
-            GameResultType::Draw => (0.5, 0.5),
-            GameResultType::DoubleForfeit | GameResultType::Cancelled => (0.0, 0.0),
-            GameResultType::Ongoing | GameResultType::Adjourned | GameResultType::Timeout => {
-                (0.0, 0.0)
-            }
-        }
-    }
-
-    pub fn is_decisive(&self) -> bool {
-        !matches!(self, GameResultType::Ongoing | GameResultType::Adjourned)
-    }
-
     pub fn requires_arbiter_approval(&self) -> bool {
         matches!(
             self,
@@ -281,39 +203,47 @@ impl GameResultType {
     }
 }
 
-impl std::str::FromStr for RoundStatus {
-    type Err = String;
+// ── Round ───────────────────────────────────────────────────────────
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "planned" => RoundStatus::Planned,
-            "pairing" => RoundStatus::Pairing,
-            "published" => RoundStatus::Published,
-            "in_progress" => RoundStatus::InProgress,
-            "finishing" => RoundStatus::Finishing,
-            "completed" => RoundStatus::Completed,
-            "verified" => RoundStatus::Verified,
-            // Backward compatibility
-            "upcoming" => RoundStatus::Planned,
-            _ => RoundStatus::Planned,
-        })
-    }
+#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
+pub struct Round {
+    pub id: i32,
+    pub tournament_id: i32,
+    pub round_number: i32,
+    pub status: String,
+    pub created_at: String,
+    pub completed_at: Option<String>,
 }
 
-#[allow(dead_code)]
-impl RoundStatus {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            RoundStatus::Planned => "planned",
-            RoundStatus::Pairing => "pairing",
-            RoundStatus::Published => "published",
-            RoundStatus::InProgress => "in_progress",
-            RoundStatus::Finishing => "finishing",
-            RoundStatus::Completed => "completed",
-            RoundStatus::Verified => "verified",
-        }
-    }
+#[derive(Debug, Serialize, SpectaType, Clone)]
+pub struct RoundDetails {
+    pub round: Round,
+    pub games: Vec<GameResult>,
+    pub status: RoundStatus,
+}
 
+#[derive(Debug, Serialize, Deserialize, SpectaType, Clone)]
+pub struct Pairing {
+    pub white_player: Player,
+    pub black_player: Option<Player>,
+    pub board_number: i32,
+}
+
+str_enum! {
+    #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+    pub enum RoundStatus {
+        Planned => "planned" | "upcoming",
+        Pairing => "pairing",
+        Published => "published",
+        InProgress => "in_progress",
+        Finishing => "finishing",
+        Completed => "completed",
+        Verified => "verified",
+    }
+    default: Planned
+}
+
+impl RoundStatus {
     pub fn can_transition_to(&self, new_status: &RoundStatus) -> bool {
         match (self, new_status) {
             // Forward transitions
@@ -323,363 +253,78 @@ impl RoundStatus {
             (RoundStatus::InProgress, RoundStatus::Finishing) => true,
             (RoundStatus::Finishing, RoundStatus::Completed) => true,
             (RoundStatus::Completed, RoundStatus::Verified) => true,
-
             // Direct transitions for simpler workflows
-            (RoundStatus::Planned, RoundStatus::Published) => true, // Skip pairing step
-            (RoundStatus::Published, RoundStatus::Completed) => true, // Skip in_progress for quick entry
-            (RoundStatus::InProgress, RoundStatus::Completed) => true, // All games finished quickly
-
+            (RoundStatus::Planned, RoundStatus::Published) => true,
+            (RoundStatus::Published, RoundStatus::Completed) => true,
+            (RoundStatus::InProgress, RoundStatus::Completed) => true,
             // Backward transitions for corrections
-            (RoundStatus::Published, RoundStatus::Pairing) => true, // Re-generate pairings
-            (RoundStatus::InProgress, RoundStatus::Published) => true, // Reopen before start
-            (RoundStatus::Finishing, RoundStatus::InProgress) => true, // Reopen game
-            (RoundStatus::Completed, RoundStatus::Finishing) => true, // Reopen result
-            (RoundStatus::Verified, RoundStatus::Completed) => true, // Unverify for changes
-
+            (RoundStatus::Published, RoundStatus::Pairing) => true,
+            (RoundStatus::InProgress, RoundStatus::Published) => true,
+            (RoundStatus::Finishing, RoundStatus::InProgress) => true,
+            (RoundStatus::Completed, RoundStatus::Finishing) => true,
+            (RoundStatus::Verified, RoundStatus::Completed) => true,
             // Same status (no-op)
             (a, b) if a == b => true,
-
             _ => false,
         }
     }
 
-    pub fn is_active(&self) -> bool {
-        matches!(self, RoundStatus::InProgress | RoundStatus::Finishing)
-    }
-
-    pub fn is_final(&self) -> bool {
-        matches!(self, RoundStatus::Completed | RoundStatus::Verified)
-    }
-
-    pub fn can_generate_pairings(&self) -> bool {
-        matches!(self, RoundStatus::Planned | RoundStatus::Pairing)
-    }
-
-    pub fn can_start_games(&self) -> bool {
-        matches!(self, RoundStatus::Published)
-    }
-
-    pub fn can_enter_results(&self) -> bool {
-        matches!(self, RoundStatus::InProgress | RoundStatus::Finishing)
-    }
 }
 
-impl std::str::FromStr for TournamentType {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "swiss" => TournamentType::Swiss,
-            "round_robin" => TournamentType::RoundRobin,
-            "knockout" => TournamentType::Knockout,
-            "scheveningen" => TournamentType::Scheveningen,
-            "arena" => TournamentType::Arena,
-            _ => TournamentType::Swiss,
-        })
+str_enum! {
+    #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+    pub enum PairingMethod {
+        Manual => "manual",
+        Swiss => "swiss",
+        RoundRobin => "round_robin",
+        Knockout => "knockout",
+        Scheveningen => "scheveningen",
     }
+    default: Manual
 }
 
-#[allow(dead_code)]
-impl TournamentType {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            TournamentType::Swiss => "swiss",
-            TournamentType::RoundRobin => "round_robin",
-            TournamentType::Knockout => "knockout",
-            TournamentType::Scheveningen => "scheveningen",
-            TournamentType::Arena => "arena",
-        }
-    }
+// ── Seeding ─────────────────────────────────────────────────────────
 
-    pub fn get_default_pairing_method(&self) -> PairingMethod {
-        match self {
-            TournamentType::Swiss => PairingMethod::Swiss,
-            TournamentType::RoundRobin => PairingMethod::RoundRobin,
-            TournamentType::Knockout => PairingMethod::Knockout,
-            TournamentType::Scheveningen => PairingMethod::Scheveningen,
-            TournamentType::Arena => PairingMethod::Swiss,
-        }
-    }
-
-    pub fn supports_byes(&self) -> bool {
-        matches!(self, TournamentType::Swiss | TournamentType::Arena)
-    }
-
-    pub fn is_single_elimination(&self) -> bool {
-        matches!(self, TournamentType::Knockout)
-    }
-}
-
-impl std::str::FromStr for PairingMethod {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "manual" => PairingMethod::Manual,
-            "swiss" => PairingMethod::Swiss,
-            "round_robin" => PairingMethod::RoundRobin,
-            "knockout" => PairingMethod::Knockout,
-            "scheveningen" => PairingMethod::Scheveningen,
-            _ => PairingMethod::Manual,
-        })
-    }
-}
-
-#[allow(dead_code)]
-impl PairingMethod {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            PairingMethod::Manual => "manual",
-            PairingMethod::Swiss => "swiss",
-            PairingMethod::RoundRobin => "round_robin",
-            PairingMethod::Knockout => "knockout",
-            PairingMethod::Scheveningen => "scheveningen",
-        }
-    }
-}
-
-// Enhanced Player Management Models
-
-#[allow(dead_code)]
-#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
-pub struct RatingHistory {
-    pub id: i32,
-    pub player_id: i32,
-    pub rating_type: String, // fide, national, club, rapid, blitz
-    pub rating: i32,
-    pub is_provisional: bool,
-    pub effective_date: String,
-    pub created_at: String,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
-pub struct PlayerCategory {
-    pub id: i32,
-    pub tournament_id: i32,
-    pub name: String,
-    pub description: Option<String>,
-    pub min_rating: Option<i32>,
-    pub max_rating: Option<i32>,
-    pub min_age: Option<i32>,
-    pub max_age: Option<i32>,
-    pub gender_restriction: Option<String>,
-    pub created_at: String,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
-pub struct PlayerCategoryAssignment {
-    pub id: i32,
-    pub player_id: i32,
-    pub category_id: i32,
-    pub assigned_at: String,
-}
-
-#[allow(dead_code)]
-#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
-pub enum PlayerStatus {
-    Active,
-    LateEntry,
-    Withdrawn,
-    ByeRequested,
-}
-
-#[allow(dead_code)]
-#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
-pub enum RatingType {
-    Fide,
-    National,
-    Club,
-    Rapid,
-    Blitz,
-}
-
-#[allow(dead_code, clippy::upper_case_acronyms)]
-#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
-pub enum ChessTitle {
-    GM,  // Grandmaster
-    IM,  // International Master
-    FM,  // FIDE Master
-    CM,  // Candidate Master
-    WGM, // Woman Grandmaster
-    WIM, // Woman International Master
-    WFM, // Woman FIDE Master
-    WCM, // Woman Candidate Master
-    None,
-}
-
-impl std::str::FromStr for PlayerStatus {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "active" => PlayerStatus::Active,
-            "late_entry" => PlayerStatus::LateEntry,
-            "withdrawn" => PlayerStatus::Withdrawn,
-            "bye_requested" => PlayerStatus::ByeRequested,
-            _ => PlayerStatus::Active,
-        })
-    }
-}
-
-#[allow(dead_code)]
-impl PlayerStatus {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            PlayerStatus::Active => "active",
-            PlayerStatus::LateEntry => "late_entry",
-            PlayerStatus::Withdrawn => "withdrawn",
-            PlayerStatus::ByeRequested => "bye_requested",
-        }
-    }
-}
-
-impl std::str::FromStr for RatingType {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "fide" => RatingType::Fide,
-            "national" => RatingType::National,
-            "club" => RatingType::Club,
-            "rapid" => RatingType::Rapid,
-            "blitz" => RatingType::Blitz,
-            _ => RatingType::Fide,
-        })
-    }
-}
-
-#[allow(dead_code)]
-impl RatingType {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            RatingType::Fide => "fide",
-            RatingType::National => "national",
-            RatingType::Club => "club",
-            RatingType::Rapid => "rapid",
-            RatingType::Blitz => "blitz",
-        }
-    }
-}
-
-impl std::str::FromStr for ChessTitle {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "GM" => ChessTitle::GM,
-            "IM" => ChessTitle::IM,
-            "FM" => ChessTitle::FM,
-            "CM" => ChessTitle::CM,
-            "WGM" => ChessTitle::WGM,
-            "WIM" => ChessTitle::WIM,
-            "WFM" => ChessTitle::WFM,
-            "WCM" => ChessTitle::WCM,
-            _ => ChessTitle::None,
-        })
-    }
-}
-
-#[allow(dead_code)]
-impl ChessTitle {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            ChessTitle::GM => "GM",
-            ChessTitle::IM => "IM",
-            ChessTitle::FM => "FM",
-            ChessTitle::CM => "CM",
-            ChessTitle::WGM => "WGM",
-            ChessTitle::WIM => "WIM",
-            ChessTitle::WFM => "WFM",
-            ChessTitle::WCM => "WCM",
-            ChessTitle::None => "",
-        }
-    }
-}
-
-// Seeding and Ranking Models
-
-#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct TournamentSeedingSettings {
     pub id: i32,
     pub tournament_id: i32,
-    pub seeding_method: String,   // rating, manual, random, category_based
-    pub use_initial_rating: bool, // Use rating at tournament start
-    pub randomize_unrated: bool,  // Randomize placement of unrated players
-    pub protect_top_seeds: i32,   // Number of top seeds to protect from changes
+    pub seeding_method: String,
+    pub use_initial_rating: bool,
+    pub randomize_unrated: bool,
+    pub protect_top_seeds: i32,
     pub created_at: String,
     pub updated_at: Option<String>,
 }
 
-#[allow(dead_code)]
-#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
-pub enum SeedingMethod {
-    Rating,        // Automatic seeding by rating (highest to lowest)
-    Manual,        // Manual seed assignment by tournament director
-    Random,        // Random seeding/pairing numbers
-    CategoryBased, // Seeding within player categories
-}
-
-impl std::str::FromStr for SeedingMethod {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "rating" => SeedingMethod::Rating,
-            "manual" => SeedingMethod::Manual,
-            "random" => SeedingMethod::Random,
-            "category_based" => SeedingMethod::CategoryBased,
-            _ => SeedingMethod::Rating,
-        })
+str_enum! {
+    #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+    pub enum SeedingMethod {
+        Rating => "rating",
+        Manual => "manual",
+        Random => "random",
+        CategoryBased => "category_based",
     }
+    default: Rating
 }
 
-#[allow(dead_code)]
-impl SeedingMethod {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            SeedingMethod::Rating => "rating",
-            SeedingMethod::Manual => "manual",
-            SeedingMethod::Random => "random",
-            SeedingMethod::CategoryBased => "category_based",
-        }
-    }
-}
+// ── Time Control ────────────────────────────────────────────────────
 
-// Time Control Models
-
-#[allow(dead_code)]
-#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
-pub enum TimeControlType {
-    Classical,
-    Rapid,
-    Blitz,
-    Bullet,
-    Correspondence,
-    Fischer,   // Time added per move
-    Bronstein, // Delay before time starts running
-    Custom,
-}
-
-#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct TimeControl {
     pub id: i32,
     pub name: String,
     pub time_control_type: String,
-    pub base_time_minutes: Option<i32>,    // Base time in minutes
-    pub increment_seconds: Option<i32>,    // Increment/delay in seconds
-    pub moves_per_session: Option<i32>,    // For classical time controls
-    pub session_time_minutes: Option<i32>, // Time for each session
-    pub total_sessions: Option<i32>,       // Number of sessions
+    pub base_time_minutes: Option<i32>,
+    pub increment_seconds: Option<i32>,
+    pub moves_per_session: Option<i32>,
+    pub session_time_minutes: Option<i32>,
+    pub total_sessions: Option<i32>,
     pub is_default: bool,
     pub description: Option<String>,
     pub created_at: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Serialize, SpectaType, Clone)]
 pub struct TimeControlTemplate {
     pub id: i32,
@@ -693,87 +338,38 @@ pub struct TimeControlTemplate {
     pub description: Option<String>,
 }
 
-impl std::str::FromStr for TimeControlType {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "classical" => TimeControlType::Classical,
-            "rapid" => TimeControlType::Rapid,
-            "blitz" => TimeControlType::Blitz,
-            "bullet" => TimeControlType::Bullet,
-            "correspondence" => TimeControlType::Correspondence,
-            "fischer" => TimeControlType::Fischer,
-            "bronstein" => TimeControlType::Bronstein,
-            "custom" => TimeControlType::Custom,
-            _ => TimeControlType::Classical,
-        })
+str_enum! {
+    #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+    pub enum TimeControlType {
+        Classical => "classical",
+        Rapid => "rapid",
+        Blitz => "blitz",
+        Bullet => "bullet",
+        Correspondence => "correspondence",
+        Fischer => "fischer",
+        Bronstein => "bronstein",
+        Custom => "custom",
     }
+    default: Classical
 }
 
-#[allow(dead_code)]
 impl TimeControlType {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            TimeControlType::Classical => "classical",
-            TimeControlType::Rapid => "rapid",
-            TimeControlType::Blitz => "blitz",
-            TimeControlType::Bullet => "bullet",
-            TimeControlType::Correspondence => "correspondence",
-            TimeControlType::Fischer => "fischer",
-            TimeControlType::Bronstein => "bronstein",
-            TimeControlType::Custom => "custom",
-        }
-    }
-
-    pub fn get_default_time_minutes(&self) -> Option<i32> {
-        match self {
-            TimeControlType::Classical => Some(90),  // 90 minutes
-            TimeControlType::Rapid => Some(15),      // 15 minutes
-            TimeControlType::Blitz => Some(5),       // 5 minutes
-            TimeControlType::Bullet => Some(1),      // 1 minute
-            TimeControlType::Correspondence => None, // Days/weeks
-            TimeControlType::Fischer => Some(15),    // 15 minutes base
-            TimeControlType::Bronstein => Some(15),  // 15 minutes base
-            TimeControlType::Custom => None,
-        }
-    }
-
-    pub fn get_default_increment_seconds(&self) -> Option<i32> {
-        match self {
-            TimeControlType::Classical => Some(30), // 30 second increment
-            TimeControlType::Rapid => Some(10),     // 10 second increment
-            TimeControlType::Blitz => Some(3),      // 3 second increment
-            TimeControlType::Bullet => Some(1),     // 1 second increment
-            TimeControlType::Correspondence => None,
-            TimeControlType::Fischer => Some(10), // 10 seconds per move
-            TimeControlType::Bronstein => Some(10), // 10 second delay
-            TimeControlType::Custom => None,
-        }
-    }
-
     pub fn is_real_time(&self) -> bool {
         !matches!(self, TimeControlType::Correspondence)
     }
-
-    pub fn requires_increment(&self) -> bool {
-        matches!(self, TimeControlType::Fischer | TimeControlType::Bronstein)
-    }
 }
 
-// Knockout Tournament Models
+// ── Knockout ────────────────────────────────────────────────────────
 
-#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct KnockoutBracket {
     pub id: i32,
     pub tournament_id: i32,
-    pub bracket_type: String, // "main", "consolation", "third_place"
+    pub bracket_type: String,
     pub total_rounds: i32,
     pub created_at: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct BracketPosition {
     pub id: i32,
@@ -782,82 +378,24 @@ pub struct BracketPosition {
     pub position_number: i32,
     pub player_id: Option<i32>,
     pub advanced_from_position: Option<i32>,
-    pub status: String, // "waiting", "ready", "bye", "eliminated"
+    pub status: String,
     pub created_at: String,
 }
 
-#[allow(dead_code)]
-#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
-pub enum BracketType {
-    SingleElimination,
-    DoubleElimination,
-    ThirdPlacePlayoff,
-}
-
-#[allow(dead_code)]
-#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
-pub enum BracketPositionStatus {
-    Waiting,    // Waiting for opponent or previous match
-    Ready,      // Ready to play
-    Bye,        // Received a bye
-    Eliminated, // Player eliminated
-    Advanced,   // Player advanced to next round
-}
-
-impl std::str::FromStr for BracketType {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "single_elimination" => BracketType::SingleElimination,
-            "double_elimination" => BracketType::DoubleElimination,
-            "third_place_playoff" => BracketType::ThirdPlacePlayoff,
-            _ => BracketType::SingleElimination,
-        })
+str_enum! {
+    #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+    pub enum BracketPositionStatus {
+        Waiting => "waiting",
+        Ready => "ready",
+        Bye => "bye",
+        Eliminated => "eliminated",
+        Advanced => "advanced",
     }
+    default: Waiting
 }
 
-#[allow(dead_code)]
-impl BracketType {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            BracketType::SingleElimination => "single_elimination",
-            BracketType::DoubleElimination => "double_elimination",
-            BracketType::ThirdPlacePlayoff => "third_place_playoff",
-        }
-    }
-}
+// ── Team ────────────────────────────────────────────────────────────
 
-impl std::str::FromStr for BracketPositionStatus {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "waiting" => BracketPositionStatus::Waiting,
-            "ready" => BracketPositionStatus::Ready,
-            "bye" => BracketPositionStatus::Bye,
-            "eliminated" => BracketPositionStatus::Eliminated,
-            "advanced" => BracketPositionStatus::Advanced,
-            _ => BracketPositionStatus::Waiting,
-        })
-    }
-}
-
-#[allow(dead_code)]
-impl BracketPositionStatus {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            BracketPositionStatus::Waiting => "waiting",
-            BracketPositionStatus::Ready => "ready",
-            BracketPositionStatus::Bye => "bye",
-            BracketPositionStatus::Eliminated => "eliminated",
-            BracketPositionStatus::Advanced => "advanced",
-        }
-    }
-}
-
-// Scheveningen (Team-based) Tournament Models
-#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct Team {
     pub id: i32,
@@ -865,7 +403,7 @@ pub struct Team {
     pub name: String,
     pub captain: Option<String>,
     pub description: Option<String>,
-    pub color: Option<String>, // Team color for UI
+    pub color: Option<String>,
     pub club_affiliation: Option<String>,
     pub contact_email: Option<String>,
     pub contact_phone: Option<String>,
@@ -875,13 +413,12 @@ pub struct Team {
     pub updated_at: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct TeamMembership {
     pub id: i32,
     pub team_id: i32,
     pub player_id: i32,
-    pub board_number: i32, // Board position within the team (1, 2, 3, etc.)
+    pub board_number: i32,
     pub is_captain: bool,
     pub is_reserve: bool,
     pub rating_at_assignment: Option<i32>,
@@ -890,13 +427,12 @@ pub struct TeamMembership {
     pub created_at: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Serialize, SpectaType, Clone)]
 pub struct TeamStanding {
     pub team: Team,
     pub points: f64,
-    pub match_points: f64, // Team match points (2 for win, 1 for draw, 0 for loss)
-    pub board_points: f64, // Individual board points
+    pub match_points: f64,
+    pub board_points: f64,
     pub games_played: i32,
     pub matches_won: i32,
     pub matches_drawn: i32,
@@ -904,59 +440,6 @@ pub struct TeamStanding {
     pub players: Vec<Player>,
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Serialize, SpectaType, Clone)]
-pub struct SchevenigenenMatch {
-    pub round_number: i32,
-    pub team_a: Team,
-    pub team_b: Team,
-    pub board_pairings: Vec<BoardPairing>,
-    pub status: String, // "scheduled", "in_progress", "completed"
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Serialize, SpectaType, Clone)]
-pub struct BoardPairing {
-    pub board_number: i32,
-    pub white_player: Player,
-    pub black_player: Player,
-    pub white_team_id: i32,
-    pub black_team_id: i32,
-    pub result: Option<String>, // Game result
-}
-
-// Tournament Template System
-#[allow(dead_code)]
-#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
-pub struct TournamentTemplate {
-    pub id: i32,
-    pub name: String,
-    pub description: Option<String>,
-    pub tournament_type: String, // swiss, roundrobin, knockout, etc.
-    pub time_type: String,       // classical, rapid, blitz
-    pub default_rounds: i32,
-    pub time_control_template_id: Option<i32>,
-    pub tiebreak_order: String, // JSON array of tiebreak types
-    pub forfeit_time_minutes: i32,
-    pub draw_offers_allowed: bool,
-    pub mobile_phone_policy: String,
-    pub late_entry_allowed: bool,
-    pub is_public: bool,            // Whether template is available to all users
-    pub created_by: Option<String>, // User who created the template
-    pub created_at: String,
-    pub updated_at: Option<String>,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Serialize, SpectaType, Clone)]
-pub struct TournamentTemplateWithTimeControl {
-    pub template: TournamentTemplate,
-    pub time_control: Option<TimeControl>,
-}
-
-// Extended Team Tournament Models for comprehensive team management
-
-#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct TeamMatch {
     pub id: i32,
@@ -966,7 +449,7 @@ pub struct TeamMatch {
     pub team_b_id: i32,
     pub venue: Option<String>,
     pub scheduled_time: Option<String>,
-    pub status: String, // "scheduled", "in_progress", "completed", "postponed", "cancelled"
+    pub status: String,
     pub team_a_match_points: f64,
     pub team_b_match_points: f64,
     pub team_a_board_points: f64,
@@ -980,7 +463,6 @@ pub struct TeamMatch {
     pub updated_at: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct TeamLineup {
     pub id: i32,
@@ -997,51 +479,34 @@ pub struct TeamLineup {
     pub created_at: String,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
 pub struct TeamTournamentSettings {
     pub id: i32,
     pub tournament_id: i32,
     pub team_size: i32,
     pub max_teams: Option<i32>,
-    pub match_scoring_system: String, // "match_points", "board_points", "olympic_points", "custom"
+    pub match_scoring_system: String,
     pub match_points_win: i32,
     pub match_points_draw: i32,
     pub match_points_loss: i32,
-    pub board_weight_system: String, // "equal", "progressive", "custom"
+    pub board_weight_system: String,
     pub require_board_order: bool,
     pub allow_late_entries: bool,
-    pub team_pairing_method: String, // "swiss", "round_robin", "knockout", "scheveningen"
-    pub color_allocation: String,    // "balanced", "alternating", "random"
+    pub team_pairing_method: String,
+    pub color_allocation: String,
     pub created_at: String,
     pub updated_at: Option<String>,
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Serialize, FromRow, SpectaType, Clone)]
-pub struct TeamBoardRules {
-    pub id: i32,
-    pub tournament_id: i32,
-    pub rule_type: String, // "strict_rating", "flexible_rating", "fixed_assignment", "captain_choice"
-    pub rating_tolerance: i32,
-    pub allow_substitutions: bool,
-    pub substitution_deadline_minutes: i32,
-    pub max_substitutions_per_round: i32,
-    pub require_captain_approval: bool,
-    pub board_order_validation: bool,
-    pub created_at: String,
-}
+// ── Application Settings ────────────────────────────────────────────
 
-// Application Settings Models
-
-#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct ApplicationSetting {
     pub id: i32,
     pub category: String,
     pub setting_key: String,
     pub setting_value: Option<String>,
-    pub setting_type: String, // "string", "integer", "float", "boolean", "json", "array"
+    pub setting_type: String,
     pub default_value: Option<String>,
     pub description: Option<String>,
     pub validation_schema: Option<String>,
@@ -1052,7 +517,6 @@ pub struct ApplicationSetting {
     pub updated_at: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct UserPreference {
     pub id: i32,
@@ -1065,27 +529,25 @@ pub struct UserPreference {
     pub updated_at: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct SettingsTemplate {
     pub id: i32,
     pub template_name: String,
     pub template_description: Option<String>,
     pub template_category: String,
-    pub template_data: String, // JSON data
+    pub template_data: String,
     pub is_system_template: bool,
     pub is_default: bool,
     pub created_at: String,
     pub updated_at: Option<String>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct SettingsBackupHistory {
     pub id: i32,
     pub backup_name: String,
-    pub backup_type: String, // "manual", "automatic", "migration", "template"
-    pub backup_data: String, // JSON snapshot
+    pub backup_type: String,
+    pub backup_data: String,
     pub backup_size: Option<i32>,
     pub user_id: String,
     pub created_at: String,
@@ -1093,7 +555,6 @@ pub struct SettingsBackupHistory {
     pub is_active: bool,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, FromRow, SpectaType, Clone)]
 pub struct SettingsAuditLog {
     pub id: i32,
@@ -1102,211 +563,23 @@ pub struct SettingsAuditLog {
     pub setting_key: String,
     pub old_value: Option<String>,
     pub new_value: Option<String>,
-    pub change_type: String, // "create", "update", "delete", "reset", "import", "restore"
-    pub change_source: String, // "ui", "api", "migration", "template", "backup_restore", "system"
+    pub change_type: String,
+    pub change_source: String,
     pub ip_address: Option<String>,
     pub user_agent: Option<String>,
     pub created_at: String,
 }
 
-#[allow(dead_code)]
-#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
-pub enum SettingType {
-    String,
-    Integer,
-    Float,
-    Boolean,
-    Json,
-    Array,
-}
-
-#[allow(dead_code)]
-#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
-pub enum SettingCategory {
-    General,
-    Display,
-    Tournament,
-    Performance,
-    Privacy,
-    Security,
-    Data,
-}
-
-#[allow(dead_code)]
-#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
-pub enum BackupType {
-    Manual,
-    Automatic,
-    Migration,
-    Template,
-}
-
-#[allow(dead_code)]
-#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
-pub enum ChangeType {
-    Create,
-    Update,
-    Delete,
-    Reset,
-    Import,
-    Restore,
-}
-
-#[allow(dead_code, clippy::upper_case_acronyms)]
-#[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
-pub enum ChangeSource {
-    UI,
-    API,
-    Migration,
-    Template,
-    BackupRestore,
-    System,
-}
-
-impl std::str::FromStr for SettingType {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "string" => SettingType::String,
-            "integer" => SettingType::Integer,
-            "float" => SettingType::Float,
-            "boolean" => SettingType::Boolean,
-            "json" => SettingType::Json,
-            "array" => SettingType::Array,
-            _ => SettingType::String,
-        })
+str_enum! {
+    #[allow(dead_code, clippy::upper_case_acronyms)]
+    #[derive(Serialize, Debug, Type, SpectaType, Clone, PartialEq)]
+    pub enum ChangeSource {
+        UI => "ui",
+        API => "api",
+        Migration => "migration",
+        Template => "template",
+        BackupRestore => "backup_restore",
+        System => "system",
     }
-}
-
-#[allow(dead_code)]
-impl SettingType {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            SettingType::String => "string",
-            SettingType::Integer => "integer",
-            SettingType::Float => "float",
-            SettingType::Boolean => "boolean",
-            SettingType::Json => "json",
-            SettingType::Array => "array",
-        }
-    }
-}
-
-impl std::str::FromStr for SettingCategory {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "general" => SettingCategory::General,
-            "display" => SettingCategory::Display,
-            "tournament" => SettingCategory::Tournament,
-            "performance" => SettingCategory::Performance,
-            "privacy" => SettingCategory::Privacy,
-            "security" => SettingCategory::Security,
-            "data" => SettingCategory::Data,
-            _ => SettingCategory::General,
-        })
-    }
-}
-
-#[allow(dead_code)]
-impl SettingCategory {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            SettingCategory::General => "general",
-            SettingCategory::Display => "display",
-            SettingCategory::Tournament => "tournament",
-            SettingCategory::Performance => "performance",
-            SettingCategory::Privacy => "privacy",
-            SettingCategory::Security => "security",
-            SettingCategory::Data => "data",
-        }
-    }
-}
-
-impl std::str::FromStr for BackupType {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "manual" => BackupType::Manual,
-            "automatic" => BackupType::Automatic,
-            "migration" => BackupType::Migration,
-            "template" => BackupType::Template,
-            _ => BackupType::Manual,
-        })
-    }
-}
-
-#[allow(dead_code)]
-impl BackupType {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            BackupType::Manual => "manual",
-            BackupType::Automatic => "automatic",
-            BackupType::Migration => "migration",
-            BackupType::Template => "template",
-        }
-    }
-}
-
-impl std::str::FromStr for ChangeType {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "create" => ChangeType::Create,
-            "update" => ChangeType::Update,
-            "delete" => ChangeType::Delete,
-            "reset" => ChangeType::Reset,
-            "import" => ChangeType::Import,
-            "restore" => ChangeType::Restore,
-            _ => ChangeType::Update,
-        })
-    }
-}
-
-#[allow(dead_code)]
-impl ChangeType {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            ChangeType::Create => "create",
-            ChangeType::Update => "update",
-            ChangeType::Delete => "delete",
-            ChangeType::Reset => "reset",
-            ChangeType::Import => "import",
-            ChangeType::Restore => "restore",
-        }
-    }
-}
-
-impl std::str::FromStr for ChangeSource {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "ui" => ChangeSource::UI,
-            "api" => ChangeSource::API,
-            "migration" => ChangeSource::Migration,
-            "template" => ChangeSource::Template,
-            "backup_restore" => ChangeSource::BackupRestore,
-            "system" => ChangeSource::System,
-            _ => ChangeSource::UI,
-        })
-    }
-}
-
-#[allow(dead_code)]
-impl ChangeSource {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            ChangeSource::UI => "ui",
-            ChangeSource::API => "api",
-            ChangeSource::Migration => "migration",
-            ChangeSource::Template => "template",
-            ChangeSource::BackupRestore => "backup_restore",
-            ChangeSource::System => "system",
-        }
-    }
+    default: UI
 }

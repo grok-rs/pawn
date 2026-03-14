@@ -1,29 +1,29 @@
-import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useForm, Controller } from 'react-hook-form';
+import type { CreatePlayer, Player, UpdatePlayer } from '@dto/bindings';
+import { commands } from '@dto/bindings';
 import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Alert,
+  Box,
   Button,
-  TextField,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
   Grid,
   MenuItem,
+  TextField,
   Typography,
-  Box,
-  CircularProgress,
-  Alert,
-  Divider,
 } from '@mui/material';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import { commands } from '@dto/bindings';
-import type { CreatePlayer, UpdatePlayer, Player } from '@dto/bindings';
+import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import * as yup from 'yup';
 
 interface AddPlayerFormProps {
   open: boolean;
@@ -92,17 +92,13 @@ const schema = yup.object({
   birth_date: yup
     .mixed()
     .nullable()
-    .test(
-      'is-valid-date',
-      'Birth date cannot be in the future',
-      function (value) {
-        if (!value) return true;
-        return (
-          dayjs.isDayjs(value) &&
-          (value.isBefore(dayjs(), 'day') || value.isSame(dayjs(), 'day'))
-        );
-      }
-    ),
+    .test('is-valid-date', 'Birth date cannot be in the future', value => {
+      if (!value) return true;
+      return (
+        dayjs.isDayjs(value) &&
+        (value.isBefore(dayjs(), 'day') || value.isSame(dayjs(), 'day'))
+      );
+    }),
   gender: yup.string().nullable().oneOf(['M', 'F', 'O'], 'Invalid gender'),
   email: yup.string().nullable().email('Invalid email format'),
   phone: yup.string().nullable(),
@@ -200,7 +196,7 @@ function AddPlayerForm({
         // Create new player
         const createData: CreatePlayer = {
           tournament_id: tournamentId,
-          name: data.name!,
+          name: data.name ?? '',
           rating: data.rating ?? null,
           country_code: data.country_code || null,
           title: data.title || null,
@@ -217,8 +213,7 @@ function AddPlayerForm({
       }
 
       onSuccess();
-    } catch (err) {
-      console.error('Failed to save player:', err);
+    } catch (_err) {
       setError(
         editingPlayer ? t('failedToUpdatePlayer') : t('failedToCreatePlayer')
       );
@@ -335,7 +330,7 @@ function AddPlayerForm({
                       {...field}
                       fullWidth
                       select
-                      label={t('country')}
+                      label={t('country.label')}
                       value={field.value || ''}
                     >
                       <MenuItem value="">{t('selectCountry')}</MenuItem>
@@ -364,9 +359,7 @@ function AddPlayerForm({
                   render={({ field: { onChange, value, ref } }) => (
                     <DatePicker
                       label={t('birthDate')}
-                      value={
-                        value && dayjs.isDayjs(value) ? value : null
-                      }
+                      value={value && dayjs.isDayjs(value) ? value : null}
                       onChange={onChange}
                       inputRef={ref}
                       slotProps={{
@@ -391,7 +384,7 @@ function AddPlayerForm({
                       {...field}
                       fullWidth
                       select
-                      label={t('gender')}
+                      label={t('gender.label')}
                       value={field.value || ''}
                     >
                       <MenuItem value="">{t('selectGender')}</MenuItem>

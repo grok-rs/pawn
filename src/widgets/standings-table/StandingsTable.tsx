@@ -1,45 +1,46 @@
-import React, { useState, useMemo } from 'react';
+import type { PlayerStanding, TiebreakBreakdown } from '@dto/bindings';
+import {
+  Download,
+  EmojiEvents,
+  ExpandMore,
+  Info,
+  Print,
+  Remove,
+  Search,
+  TableRows,
+  TrendingDown,
+  TrendingUp,
+} from '@mui/icons-material';
 import {
   Box,
-  Paper,
-  TextField,
-  InputAdornment,
-  Tooltip,
   Button,
   ButtonGroup,
   Chip,
-  Typography,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
   Divider,
   FormControlLabel,
-  Switch,
   IconButton,
+  InputAdornment,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Paper,
+  Switch,
+  TextField,
+  Tooltip,
+  Typography,
 } from '@mui/material';
 import {
   DataGrid,
-  GridColDef,
-  GridRenderCellParams,
+  type GridColDef,
+  type GridColumnVisibilityModel,
+  type GridRenderCellParams,
+  type GridRowsProp,
   GridToolbar,
-  GridRowsProp,
-  GridColumnVisibilityModel,
 } from '@mui/x-data-grid';
-import {
-  Search,
-  Download,
-  Print,
-  TableRows,
-  EmojiEvents,
-  TrendingUp,
-  TrendingDown,
-  Remove,
-  ExpandMore,
-  Info,
-} from '@mui/icons-material';
+import type React from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { PlayerStanding, TiebreakBreakdown } from '@dto/bindings';
 import TiebreakBreakdownDialog from './TiebreakBreakdownDialog';
 
 interface StandingsTableProps {
@@ -119,7 +120,7 @@ function StandingsTable({
     },
     {
       field: 'name',
-      headerName: t('player'),
+      headerName: t('player.label'),
       flex: 1,
       minWidth: 200,
       renderCell: (params: GridRenderCellParams) => (

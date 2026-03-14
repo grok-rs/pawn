@@ -1,6 +1,6 @@
-import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 
 // Browser compatibility utilities
 const BrowserTestUtils = {
@@ -33,7 +33,7 @@ const BrowserTestUtils = {
       promises: () => typeof Promise !== 'undefined',
       asyncAwait: () => {
         try {
-          // Test if async/await is supported
+          // biome-ignore lint/security/noGlobalEval: needed for feature detection test
           eval('(async () => {})');
           return true;
         } catch {
@@ -358,6 +358,7 @@ const EventCompatibilityComponent = () => {
   return (
     <div data-testid="event-compatibility">
       <button
+        type="button"
         data-testid="multi-event-button"
         onClick={handleClick}
         onTouchStart={handleTouchStart}
@@ -489,7 +490,10 @@ const FormCompatibilityComponent = () => {
           max="100"
           value={formData.range}
           onChange={e =>
-            setFormData(prev => ({ ...prev, range: parseInt(e.target.value) }))
+            setFormData(prev => ({
+              ...prev,
+              range: parseInt(e.target.value, 10),
+            }))
           }
           data-testid="range-input"
         />
@@ -984,13 +988,13 @@ describe('Cross-Browser Compatibility Tests', () => {
         const triggerError = () => {
           try {
             // Intentional error to test error handling
-            const nullObject: { nonExistentMethod: () => void } | null = null;
-            nullObject!.nonExistentMethod();
+            throw new Error('Simulated error for testing');
           } catch (err: unknown) {
             setError(err instanceof Error ? err.message : String(err));
           }
         };
 
+        // biome-ignore lint/correctness/useExhaustiveDependencies: run once on mount
         React.useEffect(() => {
           triggerError();
         }, []);
@@ -1044,7 +1048,11 @@ describe('Cross-Browser Compatibility Tests', () => {
     test('should maintain accessibility across different browsers', () => {
       const AccessibilityComponent = () => (
         <div>
-          <button aria-label="Close dialog" data-testid="accessible-button">
+          <button
+            type="button"
+            aria-label="Close dialog"
+            data-testid="accessible-button"
+          >
             ×
           </button>
           <input

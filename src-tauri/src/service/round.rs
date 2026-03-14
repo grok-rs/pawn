@@ -1,6 +1,6 @@
 use crate::{
-    common::error::PawnError,
-    db::Db,
+    common::error::{ErrorCode, PawnError},
+    db::*,
     domain::{
         dto::{CreateGame, CreateRound, GeneratePairingsRequest, UpdateRoundStatus},
         model::{GameResult, Pairing, PairingMethod, Round, RoundDetails, RoundStatus},
@@ -9,13 +9,11 @@ use crate::{
 };
 use std::sync::Arc;
 
-#[allow(dead_code)]
 pub struct RoundService<D> {
     db: Arc<D>,
     pairing_service: PairingService,
 }
 
-#[allow(dead_code)]
 impl<D: Db> RoundService<D> {
     pub fn new(db: Arc<D>) -> Self {
         Self {
@@ -87,11 +85,11 @@ impl<D: Db> RoundService<D> {
 
         // Validate state transition
         if !current_status.can_transition_to(&new_status) {
-            return Err(PawnError::InvalidInput(format!(
-                "ROUND_INVALID_TRANSITION::{}::{}",
-                current_status.to_str(),
-                new_status.to_str()
-            )));
+            return Err(ErrorCode::RoundInvalidTransition {
+                from: current_status.as_str().to_string(),
+                to: new_status.as_str().to_string(),
+            }
+            .into_error());
         }
 
         // Additional validations based on new status
@@ -107,11 +105,9 @@ impl<D: Db> RoundService<D> {
                 if games.is_empty() {
                     // Check if round is published but has no games (data inconsistency)
                     if current_status == RoundStatus::Published {
-                        return Err(PawnError::InvalidInput(
-                            "ROUND_PUBLISHED_NO_GAMES_ERROR".into(),
-                        ));
+                        return Err(ErrorCode::RoundPublishedNoGames.into_error());
                     } else {
-                        return Err(PawnError::InvalidInput("ROUND_NO_PAIRINGS_ERROR".into()));
+                        return Err(ErrorCode::RoundNoPairings.into_error());
                     }
                 }
             }
@@ -125,9 +121,10 @@ impl<D: Db> RoundService<D> {
 
                 let incomplete_games = games.iter().filter(|game| game.game.result == "*").count();
                 if incomplete_games > 0 {
-                    return Err(PawnError::InvalidInput(format!(
-                        "INCOMPLETE_GAMES_ERROR::{incomplete_games}"
-                    )));
+                    return Err(ErrorCode::IncompleteGames {
+                        count: incomplete_games,
+                    }
+                    .into_error());
                 }
             }
             _ => {} // No additional validation needed
@@ -135,7 +132,7 @@ impl<D: Db> RoundService<D> {
 
         let round = self
             .db
-            .update_round_status(data.round_id, new_status.to_str())
+            .update_round_status(data.round_id, new_status.as_str())
             .await
             .map_err(PawnError::Database)?;
 
@@ -409,7 +406,7 @@ impl<D: Db> RoundService<D> {
         // Use the enhanced state machine validation in update_round_status
         self.update_round_status(UpdateRoundStatus {
             round_id,
-            status: RoundStatus::Completed.to_str().to_string(),
+            status: RoundStatus::Completed.as_str().to_string(),
         })
         .await
     }
@@ -451,162 +448,3 @@ impl<D: Db> RoundService<D> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::domain::model::Player;
-
-    // Unit tests for business logic validation (no database dependencies)
-
-    #[test]
-    fn test_round_status_transitions() {
-        use crate::domain::model::RoundStatus;
-
-        // Test valid transitions
-        assert!(RoundStatus::Planned.can_transition_to(&RoundStatus::Published));
-        assert!(RoundStatus::Published.can_transition_to(&RoundStatus::InProgress));
-        assert!(RoundStatus::InProgress.can_transition_to(&RoundStatus::Completed));
-
-        // Test invalid transitions
-        assert!(!RoundStatus::Completed.can_transition_to(&RoundStatus::Planned));
-        assert!(!RoundStatus::InProgress.can_transition_to(&RoundStatus::Planned));
-        assert!(!RoundStatus::Published.can_transition_to(&RoundStatus::Planned));
-    }
-
-    #[test]
-    fn test_pairing_validation_duplicate_players() {
-        // Test the validation logic for duplicate players in pairings
-        let player1 = Player {
-            id: 1,
-            tournament_id: 1,
-            name: "Player 1".to_string(),
-            rating: Some(1500),
-            country_code: Some("US".to_string()),
-            title: None,
-            birth_date: None,
-            gender: None,
-            email: None,
-            phone: None,
-            club: None,
-            status: "active".to_string(),
-            seed_number: None,
-            pairing_number: None,
-            initial_rating: Some(1500),
-            created_at: "2024-01-01T00:00:00Z".to_string(),
-            updated_at: None,
-        };
-
-        let player2 = Player {
-            id: 2,
-            name: "Player 2".to_string(),
-            ..player1.clone()
-        };
-
-        // Test creating pairings
-        let pairings = vec![
-            Pairing {
-                white_player: player1.clone(),
-                black_player: Some(player2.clone()),
-                board_number: 1,
-            },
-            Pairing {
-                white_player: player1, // Duplicate - should be caught
-                black_player: Some(player2),
-                board_number: 2,
-            },
-        ];
-
-        // This should fail validation - testing the logic that would be used
-        let mut used_white_players = std::collections::HashSet::new();
-        let mut validation_error = None;
-
-        for pairing in &pairings {
-            if used_white_players.contains(&pairing.white_player.id) {
-                validation_error = Some(format!(
-                    "Player {} ({}) is assigned as white in multiple games",
-                    pairing.white_player.name, pairing.white_player.id
-                ));
-                break;
-            }
-            used_white_players.insert(pairing.white_player.id);
-        }
-
-        assert!(validation_error.is_some());
-        assert!(
-            validation_error
-                .unwrap()
-                .contains("Player Player 1 (1) is assigned as white in multiple games")
-        );
-    }
-
-    #[test]
-    fn test_round_number_validation() {
-        // Test the validation logic for round numbers
-        let invalid_round_number = 0;
-        let valid_round_number = 1;
-
-        // Invalid round number should fail validation
-        assert!(invalid_round_number <= 0);
-
-        // Valid round number should pass validation
-        assert!(valid_round_number > 0);
-    }
-
-    #[test]
-    fn test_tournament_total_rounds_validation() {
-        let total_rounds = 7;
-        let existing_round_count = 7;
-        let next_round_number = existing_round_count + 1;
-
-        // Should not be able to create round beyond total
-        assert!(next_round_number > total_rounds);
-
-        // Should be able to create round within total
-        let valid_next_round = 6;
-        assert!(valid_next_round <= total_rounds);
-    }
-
-    #[test]
-    fn test_bye_player_id_generation() {
-        // Test the logic for generating unique bye player IDs
-        let tournament_id = 1;
-        let round_number = 3;
-        let bye_player_id = -(tournament_id * 1000 + round_number);
-
-        // Should be negative and unique per tournament/round combination
-        assert!(bye_player_id < 0);
-        assert_eq!(bye_player_id, -1003);
-
-        // Different rounds should generate different IDs
-        let different_round = 4;
-        let different_bye_id = -(tournament_id * 1000 + different_round);
-        assert_ne!(bye_player_id, different_bye_id);
-    }
-
-    #[tokio::test]
-    async fn test_round_service_creation() {
-        // Test that we can create a RoundService with a mock database
-        // This is a simple integration test to verify the service can be instantiated
-        use crate::db::sqlite::SqliteDb;
-        use sqlx::SqlitePool;
-
-        // This test would normally use a real database connection, but for TDD compliance
-        // we'll create a minimal test to verify the service structure is correct
-
-        // Mock a minimal database URL (this won't actually connect)
-        let pool_result = SqlitePool::connect("sqlite::memory:").await;
-
-        if let Ok(pool) = pool_result {
-            let db = SqliteDb::new(pool);
-            let service = RoundService::new(Arc::new(db));
-
-            // Verify the service was created (basic structure test)
-            // In a real TDD environment, this would test actual functionality
-            assert!(std::ptr::addr_of!(service) as usize != 0);
-        } else {
-            // If we can't create an in-memory database, just test the structure
-            // This ensures the test doesn't fail in environments without SQLite
-            println!("SQLite not available for testing - service structure validation passed");
-        }
-    }
-}

@@ -1,6 +1,6 @@
-import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 import { vi } from 'vitest';
 
 // Global type definitions for testing
@@ -9,7 +9,7 @@ declare global {
 }
 
 // Types for test data - use actual types from bindings
-import type { Tournament, Player } from '@dto/bindings';
+import type { Player, Tournament } from '@dto/bindings';
 
 interface OperationStats {
   count: number;
@@ -341,6 +341,7 @@ const MockTournamentManager = ({
       <div data-testid="tournament-count">{tournaments.length} tournaments</div>
       <div data-testid="error-count">{errors.length} errors</div>
       <button
+        type="button"
         onClick={createMultipleTournaments}
         disabled={loading}
         data-testid="create-tournaments-button"
@@ -353,7 +354,7 @@ const MockTournamentManager = ({
       {errors.length > 0 && (
         <div data-testid="error-list">
           {errors.map((error, index) => (
-            <div key={index} data-testid={`error-${index}`}>
+            <div key={error} data-testid={`error-${index}`}>
               {error}
             </div>
           ))}
@@ -410,7 +411,11 @@ const MockPlayerBulkOperations = ({ playerCount }: { playerCount: number }) => {
       <div data-testid="operations-in-progress">
         {operationsInProgress} operations in progress
       </div>
-      <button onClick={performBulkOperations} data-testid="bulk-create-button">
+      <button
+        type="button"
+        onClick={performBulkOperations}
+        data-testid="bulk-create-button"
+      >
         Create {playerCount} Players
       </button>
     </div>
@@ -446,6 +451,7 @@ const MockRealTimeUpdates = ({
   return (
     <div data-testid="real-time-updates">
       <button
+        type="button"
         onClick={() => setIsActive(!isActive)}
         data-testid="toggle-updates"
       >
@@ -683,7 +689,7 @@ describe('Stress Testing for Concurrent Operations', () => {
       // Should have created most tournaments
       expect(tournamentCount.textContent).toMatch(/\d+/);
       expect(
-        parseInt(tournamentCount.textContent!.split(' ')[0])
+        parseInt(tournamentCount.textContent?.split(' ')[0], 10)
       ).toBeGreaterThan(15);
     });
 
@@ -715,9 +721,9 @@ describe('Stress Testing for Concurrent Operations', () => {
       );
 
       const playerCount = screen.getByTestId('player-count');
-      expect(parseInt(playerCount.textContent!.split(' ')[0])).toBeGreaterThan(
-        90
-      );
+      expect(
+        parseInt(playerCount.textContent?.split(' ')[0], 10)
+      ).toBeGreaterThan(90);
     });
 
     test('should handle high-frequency real-time updates', async () => {
@@ -736,7 +742,7 @@ describe('Stress Testing for Concurrent Operations', () => {
       await user.click(toggleButton); // Stop updates
 
       const updateCount = screen.getByTestId('update-count');
-      const count = parseInt(updateCount.textContent!.split(' ')[0]);
+      const count = parseInt(updateCount.textContent?.split(' ')[0], 10);
 
       // Should have received approximately 20 updates (10/sec * 2 seconds)
       expect(count).toBeGreaterThan(15);

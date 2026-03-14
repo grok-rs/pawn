@@ -1,24 +1,28 @@
-import { useState } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField,
-  FormControlLabel,
-  Switch,
-  Typography,
-  Box,
+  commands,
+  type GeneratePairingNumbersRequest,
+  type Player,
+} from '@dto/bindings';
+import {
   Alert,
+  Box,
+  Button,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Select,
+  Switch,
+  TextField,
+  Typography,
 } from '@mui/material';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { commands, GeneratePairingNumbersRequest, Player } from '@dto/bindings';
 
 interface PairingNumbersManagementProps {
   open: boolean;
@@ -60,8 +64,7 @@ function PairingNumbersManagement({
       await commands.generatePairingNumbers(request);
       onUpdate();
       onClose();
-    } catch (error: unknown) {
-      console.error('Failed to generate pairing numbers:', error);
+    } catch (_error: unknown) {
     } finally {
       setLoading(false);
     }
@@ -112,7 +115,7 @@ function PairingNumbersManagement({
             type="number"
             label={t('pairingNumbers.startNumber')}
             value={startNumber}
-            onChange={e => setStartNumber(parseInt(e.target.value) || 1)}
+            onChange={e => setStartNumber(parseInt(e.target.value, 10) || 1)}
             inputProps={{ min: 1 }}
             helperText={t('pairingNumbers.startNumberHelp')}
           />

@@ -85,7 +85,7 @@ html {
 
 /* Disable transitions on page load */
 .preload * {
-  transition: none !important;
+  transition: none;
 }
 
 /* Card hover effects */

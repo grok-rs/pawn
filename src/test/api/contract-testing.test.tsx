@@ -1,5 +1,5 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
+import React from 'react';
 import { vi } from 'vitest';
 
 // Note: __TAURI_INTERNALS__ type is defined in test/setup.ts
@@ -569,8 +569,9 @@ const APIContractUtils = {
         }
 
         if (schema.items && Array.isArray(obj)) {
+          const itemSchema = schema.items;
           obj.forEach((item, index) => {
-            validate(item, schema.items!, `${path}[${index}]`);
+            validate(item, itemSchema, `${path}[${index}]`);
           });
         }
       } else if (schema.type === 'string') {
@@ -614,7 +615,7 @@ const APIContractUtils = {
           );
         }
       } else if (schema.type === 'number') {
-        if (typeof obj !== 'number' || isNaN(obj)) {
+        if (typeof obj !== 'number' || Number.isNaN(obj)) {
           errors.push(`${path}: Expected number, got ${typeof obj}`);
           return;
         }
@@ -825,9 +826,10 @@ const MockAPITestComponent = ({
     }
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: run once on mount with initial props
   React.useEffect(() => {
     executeCommand();
-  }, [command]);
+  }, []);
 
   return (
     <div data-testid="api-test-component">
@@ -1340,8 +1342,7 @@ describe('API Contract Testing', () => {
   });
 });
 
-// Export documentation type references to prevent unused warnings
-// These types document API contracts and schemas
+// biome-ignore lint/suspicious/noExportsInTest: shared type documentation for API contracts
 export type DocumentationTypes = {
   tournament: _TournamentCreatePayload;
   tournamentResponse: _TournamentResponseType;

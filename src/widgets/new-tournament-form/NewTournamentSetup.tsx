@@ -1,15 +1,18 @@
-import { useMemo, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useNotification } from '@shared/lib/notification';
-
+import {
+  type CreateTournament,
+  commands,
+  type Tournament,
+} from '@dto/bindings';
 import { APP_ROUTES } from '@shared/config/routes';
+import { useNotification } from '@shared/lib/notification';
 import FormStepper from '@shared/ui/FormStepper';
+import { useCallback, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { NEW_TOURNAMENT_FORM_STEPS } from './constants';
 import StepperNavigation from './StepperNavigation/StepperNavigation';
 import { StyledBox, StyledDivider } from './styled';
+import type { TournamentFormValues } from './types';
 import { DEFAULT_TOURNAMENT_FORM_VALUES } from './validation';
-import { commands, CreateTournament, Tournament } from '@dto/bindings';
-import { TournamentFormValues } from './types';
 
 const NewTournamentSetup = () => {
   const navigate = useNavigate();
@@ -51,7 +54,6 @@ const NewTournamentSetup = () => {
         showSuccess('Tournament created successfully!');
         return newTournament;
       } catch (error: unknown) {
-        console.error('Failed to create tournament:', error);
         let errorMessage = 'Failed to create tournament. Please try again.';
 
         if (error && typeof error === 'object') {
@@ -104,22 +106,20 @@ const NewTournamentSetup = () => {
   };
 
   return (
-    <>
-      <FormStepper
-        steps={NEW_TOURNAMENT_FORM_STEPS}
-        defaultValues={defaultValues}
-        onLastStep={onSubmit}
-        onCancel={onCancel}
-      >
-        <FormStepper.Intro />
-        <StyledBox>
-          <FormStepper.Indicator />
-          <FormStepper.Content />
-        </StyledBox>
-        <StyledDivider />
-        <FormStepper.Navigation component={StepperNavigation} />
-      </FormStepper>
-    </>
+    <FormStepper
+      steps={NEW_TOURNAMENT_FORM_STEPS}
+      defaultValues={defaultValues}
+      onLastStep={onSubmit}
+      onCancel={onCancel}
+    >
+      <FormStepper.Intro />
+      <StyledBox>
+        <FormStepper.Indicator />
+        <FormStepper.Content />
+      </StyledBox>
+      <StyledDivider />
+      <FormStepper.Navigation component={StepperNavigation} />
+    </FormStepper>
   );
 };
 

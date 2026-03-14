@@ -1,45 +1,46 @@
-import React, { useState, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import type {
+  BulkImportPlayer,
+  BulkImportRequest,
+  BulkImportResult,
+} from '@dto/bindings';
+import { commands } from '@dto/bindings';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Box,
-  Typography,
+  CheckCircle,
+  CloudUpload,
+  Error as ErrorIcon,
+  Save,
+  Visibility,
+  Warning,
+} from '@mui/icons-material';
+import {
   Alert,
-  Stepper,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Paper,
   Step,
   StepLabel,
-  Paper,
+  Stepper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
-  CircularProgress,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
+  Typography,
 } from '@mui/material';
-import {
-  CloudUpload,
-  CheckCircle,
-  Error as ErrorIcon,
-  Warning,
-  Visibility,
-  Save,
-} from '@mui/icons-material';
-import { commands } from '@dto/bindings';
-import type {
-  BulkImportRequest,
-  BulkImportResult,
-  BulkImportPlayer,
-} from '@dto/bindings';
+import type React from 'react';
+import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface BulkImportDialogProps {
   open: boolean;
@@ -128,7 +129,7 @@ function BulkImportDialog({
           case 'rating':
           case 'elo':
           case 'fide_rating':
-            player.rating = parseInt(value) || null;
+            player.rating = parseInt(value, 10) || null;
             break;
           case 'country':
           case 'country_code':
@@ -185,8 +186,7 @@ function BulkImportDialog({
       setValidationResult(result);
       setActiveStep(2);
       setError(null);
-    } catch (err) {
-      console.error('Validation failed:', err);
+    } catch (_err) {
       setError(t('validationFailed'));
     } finally {
       setLoading(false);
@@ -207,8 +207,7 @@ function BulkImportDialog({
       setActiveStep(3);
       onSuccess();
       setError(null);
-    } catch (err) {
-      console.error('Import failed:', err);
+    } catch (_err) {
       setError(t('importFailed'));
     } finally {
       setLoading(false);
@@ -319,17 +318,24 @@ function BulkImportDialog({
                   <TableRow>
                     <TableCell>{t('name')}</TableCell>
                     <TableCell>{t('rating')}</TableCell>
-                    <TableCell>{t('country')}</TableCell>
-                    <TableCell>{t('title')}</TableCell>
+                    <TableCell>{t('country.label')}</TableCell>
+                    <TableCell>{t('title.label')}</TableCell>
                     <TableCell>{t('email')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {csvData.slice(0, 10).map((player, index) => (
-                    <TableRow key={index}>
+                  {csvData.slice(0, 10).map(player => (
+                    <TableRow key={player.name}>
                       <TableCell>{player.name}</TableCell>
                       <TableCell>{player.rating || '-'}</TableCell>
-                      <TableCell>{player.country_code || '-'}</TableCell>
+                      <TableCell>
+                        {player.country_code
+                          ? t(
+                              `country.${player.country_code}`,
+                              player.country_code
+                            )
+                          : '-'}
+                      </TableCell>
                       <TableCell>{player.title || '-'}</TableCell>
                       <TableCell>{player.email || '-'}</TableCell>
                     </TableRow>
@@ -385,7 +391,7 @@ function BulkImportDialog({
                 <Table stickyHeader>
                   <TableHead>
                     <TableRow>
-                      <TableCell>{t('player')}</TableCell>
+                      <TableCell>{t('player.label')}</TableCell>
                       <TableCell>{t('status')}</TableCell>
                       <TableCell>{t('issues')}</TableCell>
                     </TableRow>
@@ -393,8 +399,8 @@ function BulkImportDialog({
                   <TableBody>
                     {validationResult.validations
                       .filter(v => v.errors.length > 0 || v.warnings.length > 0)
-                      .map((validation, index) => (
-                        <TableRow key={index}>
+                      .map(validation => (
+                        <TableRow key={validation.player_data.name}>
                           <TableCell>{validation.player_data.name}</TableCell>
                           <TableCell>
                             <Chip
@@ -413,16 +419,16 @@ function BulkImportDialog({
                           </TableCell>
                           <TableCell>
                             <List dense>
-                              {validation.errors.map((error, i) => (
-                                <ListItem key={i} sx={{ py: 0 }}>
+                              {validation.errors.map(error => (
+                                <ListItem key={error} sx={{ py: 0 }}>
                                   <ListItemIcon sx={{ minWidth: 24 }}>
                                     <ErrorIcon color="error" fontSize="small" />
                                   </ListItemIcon>
                                   <ListItemText primary={error} />
                                 </ListItem>
                               ))}
-                              {validation.warnings.map((warning, i) => (
-                                <ListItem key={i} sx={{ py: 0 }}>
+                              {validation.warnings.map(warning => (
+                                <ListItem key={warning} sx={{ py: 0 }}>
                                   <ListItemIcon sx={{ minWidth: 24 }}>
                                     <Warning color="warning" fontSize="small" />
                                   </ListItemIcon>

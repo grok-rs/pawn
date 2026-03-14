@@ -1,59 +1,59 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useForm, Controller } from 'react-hook-form';
+import type { CreateRatingHistory, Player, RatingHistory } from '@dto/bindings';
+import { commands } from '@dto/bindings';
 import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Typography,
-  Box,
+  Add,
+  EmojiEvents,
+  History,
+  // Remove,
+  // Edit,
+  Person,
+  Schedule,
+  Speed,
+  TrendingDown,
+  TrendingUp,
+} from '@mui/icons-material';
+import {
   Alert,
+  Box,
+  Button,
   Card,
   CardContent,
+  Checkbox,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  // List,
+  // ListItem,
+  // ListItemText,
+  FormControlLabel,
+  Grid,
+  // IconButton,
+  MenuItem,
+  Paper,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Chip,
-  // IconButton,
-  MenuItem,
-  Grid,
   Tabs,
-  Tab,
-  // List,
-  // ListItem,
-  // ListItemText,
-  FormControlLabel,
-  Checkbox,
-  CircularProgress,
-  Divider,
+  TextField,
+  Typography,
 } from '@mui/material';
-import {
-  Add,
-  History,
-  TrendingUp,
-  TrendingDown,
-  // Remove,
-  // Edit,
-  Person,
-  EmojiEvents,
-  Speed,
-  Schedule,
-} from '@mui/icons-material';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import { commands } from '@dto/bindings';
-import type { Player, RatingHistory, CreateRatingHistory } from '@dto/bindings';
+import { useCallback, useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import * as yup from 'yup';
 
 interface RatingHistoryDialogProps {
   open: boolean;
@@ -119,8 +119,7 @@ function RatingHistoryDialog({
       const history = await commands.getPlayerRatingHistory(player.id);
       setRatingHistory(history);
       setError(null);
-    } catch (err) {
-      console.error('Failed to fetch rating history:', err);
+    } catch (_err) {
       setError(t('failedToLoadRatingHistory'));
     } finally {
       setLoading(false);
@@ -141,7 +140,7 @@ function RatingHistoryDialog({
       const ratingData: CreateRatingHistory = {
         player_id: player.id,
         rating_type: data.rating_type,
-        rating: data.rating!,
+        rating: data.rating ?? 0,
         is_provisional: data.is_provisional || false,
         effective_date: dayjs.isDayjs(data.effective_date)
           ? data.effective_date.format('YYYY-MM-DD')
@@ -155,8 +154,7 @@ function RatingHistoryDialog({
       setAddingRating(false);
       reset();
       setError(null);
-    } catch (err) {
-      console.error('Failed to add rating:', err);
+    } catch (_err) {
       setError(t('failedToAddRating'));
     } finally {
       setLoading(false);
@@ -282,10 +280,7 @@ function RatingHistoryDialog({
                   const trend = getRatingTrend(type);
 
                   return (
-                    <Grid
-                      size={{ xs: 12, sm: 6, md: 4 }}
-                      key={type}
-                    >
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={type}>
                       <Card variant="outlined">
                         <CardContent>
                           <Box

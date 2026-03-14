@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useFormContext } from 'react-hook-form';
-import { commands } from '@dto/bindings';
-import type { TournamentFormValues } from './types';
 import type { TimeControlTemplate } from '@dto/bindings';
+import { commands } from '@dto/bindings';
 import TournamentPreview from '@widgets/tournament-list/TournamentPreview';
+import { useEffect, useState } from 'react';
+import { useFormContext } from 'react-hook-form';
+import type { TournamentFormValues } from './types';
 
 function PreviewStep() {
   const { getValues } = useFormContext<TournamentFormValues>();
@@ -18,9 +18,7 @@ function PreviewStep() {
       try {
         const templates = await commands.getTimeControlTemplates();
         setTimeControlTemplates(templates);
-      } catch (error) {
-        console.error('Failed to load time control templates:', error);
-      }
+      } catch (_error) {}
     };
 
     loadTimeControlTemplates();

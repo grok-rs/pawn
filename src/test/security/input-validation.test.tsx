@@ -1,6 +1,6 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 import { vi } from 'vitest';
 
 // Type definitions
@@ -236,7 +236,7 @@ const MockSecurePlayerForm = ({
 
     if (
       formData.rating &&
-      (isNaN(Number(formData.rating)) ||
+      (Number.isNaN(Number(formData.rating)) ||
         Number(formData.rating) < 0 ||
         Number(formData.rating) > 3500)
     ) {
@@ -364,7 +364,7 @@ const MockSecurePlayerForm = ({
           <h4>Security Warnings:</h4>
           {securityWarnings.map((warning, index) => (
             <div
-              key={index}
+              key={warning}
               data-testid={`warning-${index}`}
               className="warning"
             >
@@ -443,7 +443,7 @@ const MockFileUploadComponent = ({
         <div data-testid="upload-errors">
           {uploadErrors.map((error, index) => (
             <div
-              key={index}
+              key={error}
               data-testid={`upload-error-${index}`}
               className="error"
             >
@@ -514,7 +514,7 @@ const MockSearchComponent = ({
         maxLength={500}
         data-testid="search-input"
       />
-      <button onClick={handleSearch} data-testid="search-button">
+      <button type="button" onClick={handleSearch} data-testid="search-button">
         Search
       </button>
 
@@ -522,7 +522,7 @@ const MockSearchComponent = ({
         <div data-testid="search-warnings">
           {searchWarnings.map((warning, index) => (
             <div
-              key={index}
+              key={warning}
               data-testid={`search-warning-${index}`}
               className="warning"
             >
@@ -1017,9 +1017,7 @@ describe('Security Testing - Input Validation', () => {
         '<script>window.xssExecuted = true;</script><p>Test content</p>';
 
       // Script should not execute
-      expect(Object.prototype.hasOwnProperty.call(window, 'xssExecuted')).toBe(
-        false
-      );
+      expect(Object.hasOwn(window, 'xssExecuted')).toBe(false);
     });
 
     test('should sanitize dynamic content', () => {

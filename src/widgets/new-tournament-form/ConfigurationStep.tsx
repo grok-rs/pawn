@@ -1,40 +1,39 @@
+import type { TiebreakType, TimeControlTemplate } from '@dto/bindings';
+import { commands } from '@dto/bindings';
+import {
+  CompareArrows,
+  EmojiEvents,
+  Gavel,
+  Numbers,
+  Person,
+  PersonAdd,
+  Phone,
+  Schedule,
+  Settings,
+  Speed,
+  Timer,
+  ViewModule,
+} from '@mui/icons-material';
 import {
   Box,
+  Chip,
   FormControl,
+  InputAdornment,
   InputLabel,
   MenuItem,
+  Paper,
   Select,
   TextField,
   Typography,
-  Paper,
-  InputAdornment,
-  Chip,
 } from '@mui/material';
-import { useFormContext } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
-import {
-  Person,
-  Timer,
-  EmojiEvents,
-  ViewModule,
-  Numbers,
-  Speed,
-  CompareArrows,
-  Settings,
-  Gavel,
-  Phone,
-  Schedule,
-  PersonAdd,
-} from '@mui/icons-material';
-import { useState, useEffect } from 'react';
-import type { TiebreakType, TimeControlTemplate } from '@dto/bindings';
-import { commands } from '@dto/bindings';
-
 import CustomFormHelperText from '@shared/ui/FormHelperText';
 import TimeInputWithUnits from '@shared/ui/TimeInputWithUnits';
-import { StyledGrid } from './styled';
-import { TournamentFormValues } from './types';
 import TiebreakConfig from '@widgets/standings-table/TiebreakConfig';
+import { useEffect, useState } from 'react';
+import { useFormContext } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { StyledGrid } from './styled';
+import type { TournamentFormValues } from './types';
 
 const ConfigurationStep = () => {
   const { t } = useTranslation();
@@ -71,8 +70,7 @@ const ConfigurationStep = () => {
       try {
         const templates = await commands.getTimeControlTemplates();
         setTimeControlTemplates(templates);
-      } catch (error) {
-        console.error('Failed to load time control templates:', error);
+      } catch (_error) {
       } finally {
         setLoadingTemplates(false);
       }
@@ -145,7 +143,7 @@ const ConfigurationStep = () => {
                           width: '100%',
                         }}
                       >
-                        <span>{t('tournament.types.rapid')}</span>
+                        <span>{t('tournament.types.rapid.label')}</span>
                         <Chip
                           label={t('tournament.types.rapid.timeRange')}
                           size="small"
@@ -179,7 +177,7 @@ const ConfigurationStep = () => {
                           width: '100%',
                         }}
                       >
-                        <span>{t('tournament.types.blitz')}</span>
+                        <span>{t('tournament.types.blitz.label')}</span>
                         <Chip
                           label={t('tournament.types.blitz.timeRange')}
                           size="small"
@@ -208,7 +206,9 @@ const ConfigurationStep = () => {
                   >
                     <MenuItem value="swiss">
                       <Box>
-                        <Typography>{t('tournament.types.swiss')}</Typography>
+                        <Typography>
+                          {t('tournament.types.swiss.label')}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {t('tournament.types.swiss.description')}
                         </Typography>
@@ -217,7 +217,7 @@ const ConfigurationStep = () => {
                     <MenuItem value="roundRobin">
                       <Box>
                         <Typography>
-                          {t('tournament.types.roundRobin')}
+                          {t('tournament.types.roundRobin.label')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {t('tournament.types.roundRobin.description')}
@@ -227,7 +227,7 @@ const ConfigurationStep = () => {
                     <MenuItem value="knockout">
                       <Box>
                         <Typography>
-                          {t('tournament.types.knockout')}
+                          {t('tournament.types.knockout.label')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {t('tournament.types.knockout.description')}
@@ -237,7 +237,7 @@ const ConfigurationStep = () => {
                     <MenuItem value="elimination">
                       <Box>
                         <Typography>
-                          {t('tournament.types.elimination')}
+                          {t('tournament.types.elimination.label')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {t('tournament.types.elimination.description')}
@@ -396,7 +396,7 @@ const ConfigurationStep = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Settings color="primary" />
               <Typography variant="h6" fontWeight={600}>
-                {t('form.sections.advancedRules')}
+                {t('form.sections.advancedRules.label')}
               </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -461,7 +461,7 @@ const ConfigurationStep = () => {
                     <MenuItem value="allowed">
                       <Box>
                         <Typography>
-                          {t('tournament.drawOffers.allowed')}
+                          {t('tournament.drawOffers.allowed.label')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {t('tournament.drawOffers.allowed.description')}
@@ -471,7 +471,7 @@ const ConfigurationStep = () => {
                     <MenuItem value="restricted">
                       <Box>
                         <Typography>
-                          {t('tournament.drawOffers.restricted')}
+                          {t('tournament.drawOffers.restricted.label')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {t('tournament.drawOffers.restricted.description')}
@@ -481,7 +481,7 @@ const ConfigurationStep = () => {
                     <MenuItem value="prohibited">
                       <Box>
                         <Typography>
-                          {t('tournament.drawOffers.prohibited')}
+                          {t('tournament.drawOffers.prohibited.label')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {t('tournament.drawOffers.prohibited.description')}
@@ -511,7 +511,7 @@ const ConfigurationStep = () => {
                     <MenuItem value="allowed">
                       <Box>
                         <Typography>
-                          {t('tournament.mobilePhone.allowed')}
+                          {t('tournament.mobilePhone.allowed.label')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {t('tournament.mobilePhone.allowed.description')}
@@ -521,7 +521,7 @@ const ConfigurationStep = () => {
                     <MenuItem value="silent_only">
                       <Box>
                         <Typography>
-                          {t('tournament.mobilePhone.silentOnly')}
+                          {t('tournament.mobilePhone.silentOnly.label')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {t('tournament.mobilePhone.silentOnly.description')}
@@ -531,7 +531,7 @@ const ConfigurationStep = () => {
                     <MenuItem value="prohibited">
                       <Box>
                         <Typography>
-                          {t('tournament.mobilePhone.prohibited')}
+                          {t('tournament.mobilePhone.prohibited.label')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {t('tournament.mobilePhone.prohibited.description')}
@@ -561,7 +561,7 @@ const ConfigurationStep = () => {
                     <MenuItem value="allowed">
                       <Box>
                         <Typography>
-                          {t('tournament.lateEntry.allowed')}
+                          {t('tournament.lateEntry.allowed.label')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {t('tournament.lateEntry.allowed.description')}
@@ -571,7 +571,7 @@ const ConfigurationStep = () => {
                     <MenuItem value="restricted">
                       <Box>
                         <Typography>
-                          {t('tournament.lateEntry.restricted')}
+                          {t('tournament.lateEntry.restricted.label')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {t('tournament.lateEntry.restricted.description')}
@@ -581,7 +581,7 @@ const ConfigurationStep = () => {
                     <MenuItem value="prohibited">
                       <Box>
                         <Typography>
-                          {t('tournament.lateEntry.prohibited')}
+                          {t('tournament.lateEntry.prohibited.label')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {t('tournament.lateEntry.prohibited.description')}

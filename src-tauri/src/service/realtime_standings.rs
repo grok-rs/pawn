@@ -8,7 +8,7 @@ use tracing::{debug, error, info, instrument, warn};
 
 use crate::{
     common::error::PawnError,
-    db::Db,
+    db::*,
     domain::tiebreak::{
         PlayerStanding, RealTimeStandingsConfig, StandingsCalculationResult, StandingsEventType,
         StandingsUpdateEvent, TournamentTiebreakConfig,
@@ -369,71 +369,3 @@ pub struct CacheStatistics {
     pub newest_cache_age_seconds: u64,
 }
 
-#[cfg(test)]
-mod tests {
-    #[tokio::test]
-    async fn test_realtime_standings_service() {
-        // Mock implementation - in real tests, you'd use a mock database
-        // This is a placeholder for the test structure
-
-        // let db = Arc::new(MockDb::new());
-        // let tiebreak_calculator = Arc::new(TiebreakCalculator::new(Arc::clone(&db)));
-        // let service = RealTimeStandingsService::new(db, tiebreak_calculator);
-
-        // Test caching behavior
-        // Test event broadcasting
-        // Test performance metrics
-        // Test cache invalidation
-
-        // TODO: Implement proper caching behavior test with mock database implementation
-    }
-
-    #[tokio::test]
-    async fn test_performance_threshold_warning() {
-        // Test performance threshold logic
-        let threshold_ms = 1000; // 1 second threshold
-        let fast_calculation_ms = 500;
-        let slow_calculation_ms = 1500;
-
-        assert!(
-            fast_calculation_ms < threshold_ms,
-            "Fast calculation is below threshold"
-        );
-        assert!(
-            slow_calculation_ms > threshold_ms,
-            "Slow calculation exceeds threshold"
-        );
-    }
-
-    #[tokio::test]
-    async fn test_cache_expiration() {
-        // Test cache expiration timing logic
-        use std::time::Duration;
-
-        let cache_duration = Duration::from_secs(60); // 1 minute cache
-        let short_duration = Duration::from_secs(30); // 30 seconds
-        let long_duration = Duration::from_secs(120); // 2 minutes
-
-        assert!(
-            short_duration < cache_duration,
-            "Short duration is within cache window"
-        );
-        assert!(
-            long_duration > cache_duration,
-            "Long duration exceeds cache window"
-        );
-    }
-
-    #[tokio::test]
-    async fn test_event_broadcasting() {
-        // Test event broadcasting concept
-        let max_subscribers = 100;
-        let current_subscribers = 50;
-
-        assert!(
-            current_subscribers <= max_subscribers,
-            "Subscriber count is within limits"
-        );
-        assert!(current_subscribers >= 0, "Subscriber count is non-negative");
-    }
-}

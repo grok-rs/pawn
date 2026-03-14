@@ -1,5 +1,5 @@
+import type { AlertColor } from '@mui/material';
 import { createContext } from 'react';
-import { AlertColor } from '@mui/material';
 
 interface NotificationContextType {
   showNotification: (message: string, severity?: AlertColor) => void;

@@ -1,6 +1,6 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 import { vi } from 'vitest';
 
 // Types for performance profiling
@@ -449,19 +449,7 @@ const PerformanceMonitor = ({
 
   const intervalRef = React.useRef<number | null>(null);
 
-  React.useEffect(() => {
-    if (autoStart) {
-      startMonitoring();
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [autoStart]);
-
-  const startMonitoring = async () => {
+  const startMonitoring = React.useCallback(async () => {
     setIsMonitoring(true);
 
     // Start real-time monitoring
@@ -507,7 +495,19 @@ const PerformanceMonitor = ({
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-  };
+  }, [monitorDuration, onMetricsUpdate]);
+
+  React.useEffect(() => {
+    if (autoStart) {
+      startMonitoring();
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [autoStart, startMonitoring]);
 
   const stopMonitoring = () => {
     setIsMonitoring(false);
@@ -521,13 +521,14 @@ const PerformanceMonitor = ({
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
   };
 
   return (
     <div data-testid="performance-monitor">
       <div data-testid="monitor-controls">
         <button
+          type="button"
           data-testid="start-monitoring"
           onClick={startMonitoring}
           disabled={isMonitoring}
@@ -536,6 +537,7 @@ const PerformanceMonitor = ({
         </button>
 
         <button
+          type="button"
           data-testid="stop-monitoring"
           onClick={stopMonitoring}
           disabled={!isMonitoring}
@@ -572,7 +574,7 @@ const PerformanceMonitor = ({
             {metrics.longTasks.length > 0 ? (
               <ul>
                 {metrics.longTasks.map((task: LongTaskInfo, index: number) => (
-                  <li key={index} data-testid={`long-task-${index}`}>
+                  <li key={task.name} data-testid={`long-task-${index}`}>
                     {task.name}: {task.duration.toFixed(2)}ms
                   </li>
                 ))}
@@ -609,7 +611,10 @@ const PerformanceMonitor = ({
               {metrics.resources
                 .slice(0, 5)
                 .map((resource: ResourceInfo, index: number) => (
-                  <li key={index} data-testid={`slow-resource-${index}`}>
+                  <li
+                    key={resource.name}
+                    data-testid={`slow-resource-${index}`}
+                  >
                     {resource.name}: {resource.duration.toFixed(2)}ms (
                     {formatBytes(resource.size)})
                     {resource.cached && ' (cached)'}
@@ -690,7 +695,7 @@ const ComponentPerformanceTest = ({
     const k = 1024;
     const sizes = ['B', 'KB', 'MB'];
     const i = Math.floor(Math.log(Math.abs(bytes)) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
   };
 
   return (
@@ -699,6 +704,7 @@ const ComponentPerformanceTest = ({
 
       <div data-testid="test-controls">
         <button
+          type="button"
           data-testid="run-render-test"
           onClick={runPerformanceTest}
           disabled={testing}
@@ -707,6 +713,7 @@ const ComponentPerformanceTest = ({
         </button>
 
         <button
+          type="button"
           data-testid="run-memory-test"
           onClick={runMemoryLeakTest}
           disabled={testing}
@@ -805,6 +812,7 @@ const LargeDatasetPerformance = ({
     <div data-testid="large-dataset-performance">
       <div data-testid="dataset-controls">
         <button
+          type="button"
           data-testid="generate-dataset"
           onClick={measureRenderPerformance}
           disabled={isRendering}
@@ -922,15 +930,27 @@ const MemoryLeakTestComponent = () => {
   return (
     <div data-testid="memory-leak-test">
       <div data-testid="memory-controls">
-        <button data-testid="add-leaky" onClick={addLeakyComponent}>
+        <button
+          type="button"
+          data-testid="add-leaky"
+          onClick={addLeakyComponent}
+        >
           Add Leaky Component
         </button>
 
-        <button data-testid="add-healthy" onClick={addHealthyComponent}>
+        <button
+          type="button"
+          data-testid="add-healthy"
+          onClick={addHealthyComponent}
+        >
           Add Healthy Component
         </button>
 
-        <button data-testid="clear-components" onClick={clearComponents}>
+        <button
+          type="button"
+          data-testid="clear-components"
+          onClick={clearComponents}
+        >
           Clear All Components
         </button>
       </div>
@@ -1013,7 +1033,8 @@ describe('Performance Profiling and Memory Usage Analytics Tests', () => {
       const ComplexComponent = ({ itemCount }: { itemCount: number }) => (
         <div>
           {Array.from({ length: itemCount }, (_, i) => (
-            <div key={i} style={{ padding: '4px' }}>
+            // biome-ignore lint/suspicious/noArrayIndexKey: generated test data
+            <div key={`item-${i}`} style={{ padding: '4px' }}>
               Item {i + 1} - {Math.random()}
             </div>
           ))}
@@ -1097,7 +1118,8 @@ describe('Performance Profiling and Memory Usage Analytics Tests', () => {
       const TestComponent = ({ count }: { count: number }) => (
         <div>
           {Array.from({ length: count }, (_, i) => (
-            <span key={i}>Item {i}</span>
+            // biome-ignore lint/suspicious/noArrayIndexKey: generated test data
+            <span key={`span-${i}`}>Item {i}</span>
           ))}
         </div>
       );
@@ -1128,11 +1150,14 @@ describe('Performance Profiling and Memory Usage Analytics Tests', () => {
       const SimpleComponent = () => <div>Simple</div>;
       const ComplexComponent = () => (
         <div>
-          {Array.from({ length: 1000 }, (_, i) => (
-            <div key={i} style={{ backgroundColor: `hsl(${i}, 50%, 50%)` }}>
-              Complex item {i}
-            </div>
-          ))}
+          {Array.from({ length: 1000 }, (_, i) => {
+            const key = `complex-${i}`;
+            return (
+              <div key={key} style={{ backgroundColor: `hsl(${i}, 50%, 50%)` }}>
+                Complex item {i}
+              </div>
+            );
+          })}
         </div>
       );
 
@@ -1328,7 +1353,8 @@ describe('Performance Profiling and Memory Usage Analytics Tests', () => {
       const TestComponent = ({ items }: { items: number }) => (
         <div>
           {Array.from({ length: items }, (_, i) => (
-            <div key={i}>Item {i}</div>
+            // biome-ignore lint/suspicious/noArrayIndexKey: generated test data
+            <div key={`harness-${i}`}>Item {i}</div>
           ))}
         </div>
       );
@@ -1497,17 +1523,20 @@ describe('Performance Profiling and Memory Usage Analytics Tests', () => {
         complexity: number;
       }) => (
         <div>
-          {Array.from({ length: complexity }, (_, i) => (
-            <div
-              key={i}
-              style={{
-                backgroundColor: `hsl(${(i * 360) / complexity}, 50%, 50%)`,
-                transform: `scale(${1 + i * 0.01})`,
-              }}
-            >
-              Item {i}
-            </div>
-          ))}
+          {Array.from({ length: complexity }, (_, i) => {
+            const key = `perf-${i}`;
+            return (
+              <div
+                key={key}
+                style={{
+                  backgroundColor: `hsl(${(i * 360) / complexity}, 50%, 50%)`,
+                  transform: `scale(${1 + i * 0.01})`,
+                }}
+              >
+                Item {i}
+              </div>
+            );
+          })}
         </div>
       );
 

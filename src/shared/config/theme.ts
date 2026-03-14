@@ -121,13 +121,9 @@ export const muiTheme = createTheme({
         root: {
           borderRadius: 8,
           padding: '12px 20px',
-          minHeight: '44px', // Touch-friendly minimum size for tablets
-          transition: 'all 0.2s ease-in-out',
-          '&:hover': {
-            transform: 'translateY(-1px)',
-            boxShadow: '0px 4px 8px rgba(0,0,0,0.1)',
-          },
-          // Enhanced touch targets for tablets
+          minHeight: '44px',
+          transition:
+            'background-color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease',
           '@media (max-width: 1024px)': {
             padding: '14px 24px',
             fontSize: '1rem',
@@ -136,7 +132,7 @@ export const muiTheme = createTheme({
         contained: {
           boxShadow: 'none',
           '&:hover': {
-            boxShadow: '0px 4px 8px rgba(0,0,0,0.1)',
+            boxShadow: '0px 2px 6px rgba(0,0,0,0.1)',
           },
         },
       },
@@ -147,10 +143,10 @@ export const muiTheme = createTheme({
           borderRadius: 12,
           boxShadow: '0px 4px 16px rgba(0,0,0,0.05)',
           border: '1px solid rgba(0,0,0,0.05)',
-          transition: 'all 0.2s ease-in-out',
+          transition: 'box-shadow 0.15s ease, border-color 0.15s ease',
           '&:hover': {
-            transform: 'translateY(-2px)',
-            boxShadow: '0px 8px 24px rgba(0,0,0,0.08)',
+            boxShadow: '0px 4px 20px rgba(0,0,0,0.08)',
+            borderColor: 'rgba(0,0,0,0.1)',
           },
         },
       },
@@ -196,8 +192,8 @@ export const muiTheme = createTheme({
         root: {
           '& .MuiOutlinedInput-root': {
             borderRadius: 8,
-            minHeight: '44px', // Better touch targets for tablets
-            transition: 'all 0.2s ease-in-out',
+            minHeight: '44px',
+            transition: 'border-color 0.15s ease',
             '&:hover': {
               '& .MuiOutlinedInput-notchedOutline': {
                 borderColor: '#333365',
@@ -239,7 +235,7 @@ export const muiTheme = createTheme({
           textTransform: 'none',
           fontWeight: 500,
           minHeight: 48,
-          transition: 'all 0.2s ease-in-out',
+          transition: 'color 0.15s ease, background-color 0.15s ease',
         },
       },
     },

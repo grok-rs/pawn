@@ -1,6 +1,6 @@
-import { FunctionComponent } from 'react';
-import { FieldValues } from 'react-hook-form';
-import { AnyObject, ObjectSchema } from 'yup';
+import type { FunctionComponent } from 'react';
+import type { FieldValues } from 'react-hook-form';
+import type { AnyObject, ObjectSchema } from 'yup';
 
 export type FormStepComponentProps<T extends FieldValues = FieldValues> = {
   onCancel?: () => void;

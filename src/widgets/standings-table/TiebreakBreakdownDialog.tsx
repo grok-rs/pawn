@@ -1,39 +1,39 @@
+import type { TiebreakBreakdown } from '@dto/bindings';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Typography,
+  Calculate,
+  Close,
+  PersonOutline,
+  Remove,
+  StarsOutlined,
+  TrendingDown,
+  TrendingUp,
+} from '@mui/icons-material';
+import {
+  Alert,
   Box,
-  Stepper,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  IconButton,
+  Paper,
   Step,
-  StepLabel,
   StepContent,
+  StepLabel,
+  Stepper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Chip,
-  Divider,
-  IconButton,
   Tooltip,
-  Alert,
+  Typography,
 } from '@mui/material';
-import {
-  Close,
-  Calculate,
-  TrendingUp,
-  TrendingDown,
-  Remove,
-  PersonOutline,
-  StarsOutlined,
-} from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import type { TiebreakBreakdown } from '@dto/bindings';
 
 interface TiebreakBreakdownDialogProps {
   open: boolean;
@@ -155,7 +155,7 @@ function TiebreakBreakdownDialog({
           <Stepper orientation="vertical" sx={{ pl: 2 }}>
             {breakdown.calculation_details.map((step, index) => (
               <Step
-                key={index}
+                key={step.step_number}
                 active={true}
                 completed={index < breakdown.calculation_details.length - 1}
               >
@@ -217,8 +217,8 @@ function TiebreakBreakdownDialog({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {breakdown.opponents_involved.map((opponent, index) => (
-                    <TableRow key={index} hover>
+                  {breakdown.opponents_involved.map(opponent => (
+                    <TableRow key={opponent.opponent_id} hover>
                       <TableCell>
                         <Typography variant="body2" fontWeight={500}>
                           {opponent.opponent_name}

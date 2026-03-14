@@ -1,7 +1,7 @@
 import { useContext } from 'react';
-import { FieldValues } from 'react-hook-form';
-import { FormStepperContextType } from '../types';
+import type { FieldValues } from 'react-hook-form';
 import FormStepperContext from '../FormStepperContext/FormStepperContext';
+import type { FormStepperContextType } from '../types';
 
 // Create a hook that works with the context
 export function useFormStepperContext(): FormStepperContextType<FieldValues> {

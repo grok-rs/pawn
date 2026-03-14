@@ -1,46 +1,47 @@
-import { useState, useEffect } from 'react';
 import {
+  Add,
+  Close,
+  Delete,
+  Edit,
+  EmojiEvents,
+  Lock,
+  Public,
+  // ContentCopy,
+  Timer,
+  // Save,
+  Visibility,
+} from '@mui/icons-material';
+import {
+  Alert,
   Box,
-  // Paper,
-  Typography,
   Button,
   Card,
-  CardContent,
   CardActions,
-  Grid,
+  CardContent,
   Chip,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
-  TextField,
+  DialogContent,
+  DialogTitle,
   FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Switch,
   FormControlLabel,
+  Grid,
+  IconButton,
+  InputLabel,
   List,
   ListItem,
   ListItemText,
-  IconButton,
+  MenuItem,
+  Select,
+  Switch,
+  TextField,
   Tooltip,
-  Alert,
+  // Paper,
+  Typography,
   // Divider,
 } from '@mui/material';
-import {
-  Add,
-  Edit,
-  Delete,
-  // Save,
-  Visibility,
-  Public,
-  Lock,
-  // ContentCopy,
-  Timer,
-  EmojiEvents,
-  Close,
-} from '@mui/icons-material';
+import { formatLocalizedDate } from '@shared/lib/tournamentUtils';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // Mock types for demonstration
@@ -111,7 +112,7 @@ function TournamentTemplates({
   onSelectTemplate,
   showSelection = false,
 }: TournamentTemplatesProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [templates, setTemplates] = useState<TournamentTemplate[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -268,9 +269,8 @@ function TournamentTemplates({
     return typeObj ? t(typeObj.label) : type;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
+  const formatDate = (dateString: string) =>
+    formatLocalizedDate(dateString, i18n.language);
 
   return (
     <Box>
@@ -317,19 +317,16 @@ function TournamentTemplates({
       ) : (
         <Grid container spacing={3}>
           {templates.map(template => (
-            <Grid
-              size={{ xs: 12, sm: 6, lg: 4 }}
-              key={template.id}
-            >
+            <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={template.id}>
               <Card
                 sx={{
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
-                  transition: 'all 0.2s ease',
+                  transition: 'box-shadow 0.15s ease, border-color 0.15s ease',
                   '&:hover': {
-                    boxShadow: 4,
-                    transform: 'translateY(-2px)',
+                    boxShadow: '0px 4px 20px rgba(0,0,0,0.08)',
+                    borderColor: 'rgba(0,0,0,0.1)',
                   },
                   border: '1px solid',
                   borderColor: 'divider',

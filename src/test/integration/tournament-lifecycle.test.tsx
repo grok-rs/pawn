@@ -1,8 +1,8 @@
+import App from '@app/App';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import { renderWithAllProviders } from '../utils/test-utils';
-import App from '../../App';
 
 // Type definitions for mock payloads
 interface MockTournamentPayload {

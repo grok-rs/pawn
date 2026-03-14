@@ -1,6 +1,7 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
+
 // Note: Tournament types are defined inline below to avoid circular dependencies
 
 // Types for tournament rules engine
@@ -567,7 +568,7 @@ const TournamentRulesEngine = {
   ): number => {
     // Expected score calculation
     const expectedScore =
-      1 / (1 + Math.pow(10, (opponentRating - playerRating) / 400));
+      1 / (1 + 10 ** ((opponentRating - playerRating) / 400));
 
     // Rating change
     const ratingChange = kFactor * (score - expectedScore);
@@ -729,7 +730,7 @@ const TournamentRulesEngine = {
 
     games.forEach(game => {
       const opponent = game.opponent;
-      if (opponent && opponent.rating && game.result !== 'bye') {
+      if (opponent?.rating && game.result !== 'bye') {
         totalOpponentRating += opponent.rating;
 
         if (game.result === 'win') totalScore += 1;
@@ -795,7 +796,7 @@ const TournamentRulesEngine = {
   // Statistical variance calculation
   calculateVariance: (data: number[]): number => {
     const mean = data.reduce((sum, value) => sum + value, 0) / data.length;
-    const squaredDifferences = data.map(value => Math.pow(value - mean, 2));
+    const squaredDifferences = data.map(value => (value - mean) ** 2);
     return (
       squaredDifferences.reduce((sum, sqDiff) => sum + sqDiff, 0) / data.length
     );
@@ -813,12 +814,8 @@ const TournamentRulesValidator = ({
     React.useState<TournamentRulesValidationResult | null>(null);
   const [showDetails, setShowDetails] = React.useState(false);
 
-  React.useEffect(() => {
-    validateRules();
-  }, [tournament, pairings, standings, ruleSet]);
-
-  const validateRules = () => {
-    let result;
+  const validateRules = React.useCallback(() => {
+    let result: TournamentRulesValidationResult;
 
     switch (ruleSet) {
       case 'swiss':
@@ -849,7 +846,11 @@ const TournamentRulesValidator = ({
     }
 
     setValidation(result);
-  };
+  }, [ruleSet, tournament, pairings, standings]);
+
+  React.useEffect(() => {
+    validateRules();
+  }, [validateRules]);
 
   if (!validation) {
     return <div data-testid="rules-validator-loading">Validating rules...</div>;
@@ -880,6 +881,7 @@ const TournamentRulesValidator = ({
       </div>
 
       <button
+        type="button"
         data-testid="toggle-details"
         onClick={() => setShowDetails(!showDetails)}
       >
@@ -894,7 +896,7 @@ const TournamentRulesValidator = ({
               <ul>
                 {validation.violations.map(
                   (violation: string, index: number) => (
-                    <li key={index} data-testid={`violation-${index}`}>
+                    <li key={violation} data-testid={`violation-${index}`}>
                       {violation}
                     </li>
                   )
@@ -908,7 +910,7 @@ const TournamentRulesValidator = ({
               <h4>Warnings:</h4>
               <ul>
                 {validation.warnings.map((warning: string, index: number) => (
-                  <li key={index} data-testid={`warning-${index}`}>
+                  <li key={warning} data-testid={`warning-${index}`}>
                     {warning}
                   </li>
                 ))}
@@ -940,7 +942,7 @@ const RatingCalculator = () => {
     );
 
     const expectedScore =
-      1 / (1 + Math.pow(10, (player2Rating - player1Rating) / 400));
+      1 / (1 + 10 ** ((player2Rating - player1Rating) / 400));
 
     setCalculation({
       expectedScore: expectedScore.toFixed(3),
@@ -956,28 +958,31 @@ const RatingCalculator = () => {
 
       <div data-testid="calculator-inputs">
         <div>
-          <label>Player 1 Rating:</label>
+          <label htmlFor="player1-rating">Player 1 Rating:</label>
           <input
+            id="player1-rating"
             data-testid="player1-rating"
             type="number"
             value={player1Rating}
-            onChange={e => setPlayer1Rating(parseInt(e.target.value))}
+            onChange={e => setPlayer1Rating(parseInt(e.target.value, 10))}
           />
         </div>
 
         <div>
-          <label>Player 2 Rating:</label>
+          <label htmlFor="player2-rating">Player 2 Rating:</label>
           <input
+            id="player2-rating"
             data-testid="player2-rating"
             type="number"
             value={player2Rating}
-            onChange={e => setPlayer2Rating(parseInt(e.target.value))}
+            onChange={e => setPlayer2Rating(parseInt(e.target.value, 10))}
           />
         </div>
 
         <div>
-          <label>Result (Player 1):</label>
+          <label htmlFor="result-select">Result (Player 1):</label>
           <select
+            id="result-select"
             data-testid="result-select"
             value={result}
             onChange={e => {
@@ -994,16 +999,21 @@ const RatingCalculator = () => {
         </div>
 
         <div>
-          <label>K-Factor:</label>
+          <label htmlFor="k-factor">K-Factor:</label>
           <input
+            id="k-factor"
             data-testid="k-factor"
             type="number"
             value={kFactor}
-            onChange={e => setKFactor(parseInt(e.target.value))}
+            onChange={e => setKFactor(parseInt(e.target.value, 10))}
           />
         </div>
 
-        <button data-testid="calculate-button" onClick={calculateRating}>
+        <button
+          type="button"
+          data-testid="calculate-button"
+          onClick={calculateRating}
+        >
           Calculate
         </button>
       </div>
@@ -1080,7 +1090,7 @@ const TiebreakCalculator = ({
         <h5>Opponent Scores:</h5>
         <ul>
           {opponents.map((opponent, index) => (
-            <li key={index} data-testid={`opponent-${index}`}>
+            <li key={opponent.name} data-testid={`opponent-${index}`}>
               {opponent.name}: {opponent.score || 0}
             </li>
           ))}

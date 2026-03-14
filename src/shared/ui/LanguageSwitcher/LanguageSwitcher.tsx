@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Language } from '@mui/icons-material';
 import {
+  Box,
   IconButton,
-  Menu,
-  MenuItem,
   ListItemIcon,
   ListItemText,
-  Box,
+  Menu,
+  MenuItem,
   Tooltip,
 } from '@mui/material';
-import { Language } from '@mui/icons-material';
+import type React from 'react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface LanguageOption {
   code: string;
@@ -35,8 +36,7 @@ function LanguageSwitcher() {
   const safeTranslation = (key: string, fallback: string = key) => {
     try {
       return t(key);
-    } catch (error) {
-      console.warn(`Translation error for key "${key}":`, error);
+    } catch (_error) {
       return fallback;
     }
   };

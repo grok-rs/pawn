@@ -1,36 +1,37 @@
-import React, { useState } from 'react';
+import type { TiebreakType } from '@dto/bindings';
 import {
-  Box,
-  Typography,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  ListItemSecondaryAction,
-  IconButton,
-  Button,
-  ButtonGroup,
-  Paper,
-  Chip,
-  FormControlLabel,
-  Switch,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Alert,
-  ListItemButton,
-} from '@mui/material';
-import {
-  DragIndicator,
-  Delete,
   Add,
-  ArrowUpward,
   ArrowDownward,
+  ArrowUpward,
+  Delete,
+  DragIndicator,
   RestartAlt,
 } from '@mui/icons-material';
+import {
+  Alert,
+  Box,
+  Button,
+  ButtonGroup,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemSecondaryAction,
+  ListItemText,
+  Paper,
+  Switch,
+  Typography,
+} from '@mui/material';
+import type React from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { TiebreakType } from '@dto/bindings';
 
 interface TiebreakConfigProps {
   tiebreaks: TiebreakType[];
@@ -200,7 +201,7 @@ function TiebreakConfig({
           <List>
             {tiebreaks.map((tiebreak, index) => (
               <ListItem
-                key={`${tiebreak}-${index}`}
+                key={tiebreak}
                 draggable
                 onDragStart={handleDragStart(index)}
                 onDragOver={handleDragOver}

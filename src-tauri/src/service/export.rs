@@ -10,7 +10,7 @@ use tracing::{error, info, instrument};
 
 use crate::{
     common::error::PawnError,
-    db::Db,
+    db::*,
     domain::{
         model::{Game, Player, Tournament},
         tiebreak::{
@@ -21,14 +21,12 @@ use crate::{
     service::tiebreak::TiebreakCalculator,
 };
 
-#[allow(dead_code)]
 pub struct ExportService<D> {
     db: Arc<D>,
     tiebreak_calculator: Arc<TiebreakCalculator<D>>,
     export_dir: PathBuf,
 }
 
-#[allow(dead_code)]
 impl<D: Db> ExportService<D> {
     pub fn new(
         db: Arc<D>,
@@ -865,7 +863,6 @@ impl<D: Db> ExportService<D> {
 }
 
 /// Container for all export data
-#[allow(dead_code)]
 #[derive(Debug, Clone)]
 struct ExportData {
     tournament: Tournament,
@@ -875,90 +872,3 @@ struct ExportData {
     cross_table: Option<CrossTable>,
 }
 
-#[cfg(test)]
-mod tests {
-    use tempfile::TempDir;
-
-    #[tokio::test]
-    async fn test_export_service_creation() {
-        let temp_dir = TempDir::new().unwrap();
-        let export_dir = temp_dir.path().to_path_buf();
-
-        // Mock implementation would go here
-        // let db = Arc::new(MockDb::new());
-        // let tiebreak_calculator = Arc::new(TiebreakCalculator::new(Arc::clone(&db)));
-        // let export_service = ExportService::new(db, tiebreak_calculator, export_dir);
-
-        assert!(export_dir.exists());
-    }
-
-    #[test]
-    fn test_filename_generation() {
-        // Test filename generation functionality
-        use crate::domain::tiebreak::{ExportFormat, ExportRequest, ExportType};
-
-        let _request = ExportRequest {
-            tournament_id: 1,
-            format: ExportFormat::Csv,
-            export_type: ExportType::Standings,
-            custom_filename: Some("test_tournament".to_string()),
-            include_tiebreaks: false,
-            include_cross_table: false,
-            include_game_results: false,
-            include_player_details: false,
-            template_options: None,
-        };
-
-        // Test that we can create export service (even if we can't test filename generation directly)
-        let tempdir = tempfile::tempdir().expect("Failed to create temp dir");
-
-        // Since the generate_filename method is private, we test the ExportService creation
-        // which exercises filename-related logic
-        assert!(tempdir.path().exists());
-    }
-
-    #[test]
-    fn test_csv_export() {
-        // Test CSV format functionality by validating the export format
-        use crate::domain::tiebreak::ExportFormat;
-
-        // Test that CSV format is properly defined
-        let csv_format = ExportFormat::Csv;
-
-        // Verify format string representation
-        match csv_format {
-            ExportFormat::Csv => (),
-            _ => panic!("Expected CSV format"),
-        }
-    }
-
-    #[test]
-    fn test_json_export() {
-        // Test JSON format functionality by validating the export format
-        use crate::domain::tiebreak::ExportFormat;
-
-        // Test that JSON format is properly defined
-        let json_format = ExportFormat::Json;
-
-        // Verify format string representation
-        match json_format {
-            ExportFormat::Json => (),
-            _ => panic!("Expected JSON format"),
-        }
-    }
-
-    #[test]
-    fn test_html_export() {
-        // Test HTML format functionality by validating the export format
-        use crate::domain::tiebreak::ExportFormat;
-
-        // Test that HTML format is properly defined
-        let html_format = ExportFormat::Html;
-
-        // Verify format string representation
-        match html_format {
-            ExportFormat::Html => (),
-            _ => panic!("Expected HTML format"),
-        }
-    }
-}

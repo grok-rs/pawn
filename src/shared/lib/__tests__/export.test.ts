@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { PlayerStanding, Player, TiebreakScore } from '@dto/bindings';
+import type { Player, PlayerStanding, TiebreakScore } from '@dto/bindings';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { exportStandingsToCsv, exportStandingsToPdf } from '../export';
 
 // Mock DOM methods
