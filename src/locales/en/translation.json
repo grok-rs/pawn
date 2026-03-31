@@ -525,6 +525,11 @@
   "user": "User",
   "allTournaments": "All Tournaments",
   "importTournament": "Import Tournament",
+  "tournamentSections": {
+    "activeNow": "Active Now",
+    "draft": "Draft",
+    "completed": "Completed"
+  },
   "totalTournaments": "Total Tournaments",
   "ongoing": "Ongoing",
   "notStarted": "Not Started",
@@ -605,8 +610,12 @@
     "manual": "Manual",
     "createRound": "Create Round",
     "noPairingsGenerated": "No pairings could be generated. This might happen if there are insufficient players or all players have already played each other.",
+    "confirmDeleteRound": "Are you sure you want to delete this round? All pairings and games for this round will be removed.",
+    "verifyRound": "Verify Round",
+    "generatingPairings": "Generating pairings",
     "label": "Rounds"
   },
+  "failedToDeleteRound": "Failed to delete round",
   "tournamentNotFound": "Tournament not found",
   "noDataAvailable": "No data available",
   "standings": "Standings",
@@ -987,6 +996,26 @@
       "sameResult": "Result is the same as current result",
       "changingResult": "Changing existing result will create audit trail",
       "needsApproval": "Result requires arbiter approval and will be marked as pending"
+    },
+    "form": {
+      "nameRequired": "Tournament name is required",
+      "cityRequired": "City is required",
+      "countryRequired": "Country is required",
+      "startDateRequired": "Start date is required",
+      "endDateRequired": "End date is required",
+      "typeRequired": "Tournament type is required",
+      "formatRequired": "Tournament format is required",
+      "roundsMin": "At least 1 round is required",
+      "roundsMax": "Maximum 99 rounds allowed",
+      "roundsRequired": "Number of rounds is required",
+      "additionalTimeMin": "Additional time cannot be negative",
+      "forfeitTimeMin": "Forfeit time must be at least 1 minute",
+      "forfeitTimeMax": "Forfeit time cannot exceed 120 minutes",
+      "invalidPolicy": "Invalid policy value",
+      "organizerNameMax": "Organizer name cannot exceed 100 characters",
+      "invalidEmail": "Invalid email format",
+      "emailMax": "Email cannot exceed 100 characters",
+      "arbiterNotesMax": "Arbiter notes cannot exceed 1000 characters"
     }
   },
   "addPlayer": "Add Player",
@@ -1386,6 +1415,34 @@
       "resetSuccess": "Reset {{count}} settings successfully",
       "resetFailed": "Reset failed: {{errors}}",
       "failedToReset": "Failed to reset settings"
+    }
+  },
+  "tournamentEdit": {
+    "title": "Edit Tournament",
+    "menuEdit": "Edit Tournament",
+    "coreSection": "Core Information",
+    "extraSection": "Additional Details",
+    "description": "Description",
+    "websiteUrl": "Website URL",
+    "contactEmail": "Contact Email",
+    "entryFee": "Entry Fee",
+    "currency": "Currency",
+    "minRoundsHelper": "Minimum {{min}} (completed rounds)",
+    "failedToUpdate": "Failed to update tournament",
+    "errors": {
+      "totalRoundsBelowCompleted": "Cannot set total rounds to {{requested}} — at least {{min}} rounds are already completed"
+    }
+  },
+  "pairingEdit": {
+    "editPairings": "Edit Pairings",
+    "errors": {
+      "modificationNotAllowed": "Pairing modifications are not allowed when the round status is '{{status}}'",
+      "playerAlreadyPaired": "Player {{playerId}} is already paired in round {{roundNumber}}",
+      "completedRoundRequiresIdentity": "Editing results on a completed round requires identifying who made the change",
+      "failedToSwapColors": "Failed to swap colors",
+      "failedToReplacePlayer": "Failed to replace player",
+      "failedToDeletePairing": "Failed to delete pairing",
+      "failedToAddPairing": "Failed to add pairing"
     }
   }
 }

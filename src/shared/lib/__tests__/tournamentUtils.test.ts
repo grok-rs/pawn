@@ -135,8 +135,8 @@ describe('Tournament Utils', () => {
     describe('calculateActualRoundsPlayed', () => {
       it('should count completed rounds correctly', () => {
         const rounds = [
-          createMockRound({ round_number: 1, status: 'Completed' }),
-          createMockRound({ round_number: 2, status: 'Completed' }),
+          createMockRound({ round_number: 1, status: 'completed' }),
+          createMockRound({ round_number: 2, status: 'completed' }),
           createMockRound({ round_number: 3, status: 'Active' }),
           createMockRound({ round_number: 4, status: 'Draft' }),
         ];
@@ -153,9 +153,9 @@ describe('Tournament Utils', () => {
 
       it('should return full count for all completed rounds', () => {
         const rounds = [
-          createMockRound({ round_number: 1, status: 'Completed' }),
-          createMockRound({ round_number: 2, status: 'Completed' }),
-          createMockRound({ round_number: 3, status: 'Completed' }),
+          createMockRound({ round_number: 1, status: 'completed' }),
+          createMockRound({ round_number: 2, status: 'completed' }),
+          createMockRound({ round_number: 3, status: 'completed' }),
         ];
         expect(calculateActualRoundsPlayed(rounds)).toBe(3);
       });
@@ -169,9 +169,9 @@ describe('Tournament Utils', () => {
       it('should return true when all rounds are completed', () => {
         const tournament = createMockTournament({ total_rounds: 3 });
         const rounds = [
-          createMockRound({ round_number: 1, status: 'Completed' }),
-          createMockRound({ round_number: 2, status: 'Completed' }),
-          createMockRound({ round_number: 3, status: 'Completed' }),
+          createMockRound({ round_number: 1, status: 'completed' }),
+          createMockRound({ round_number: 2, status: 'completed' }),
+          createMockRound({ round_number: 3, status: 'completed' }),
         ];
         expect(isFinishedTournamentActual(tournament, rounds)).toBe(true);
       });
@@ -179,7 +179,7 @@ describe('Tournament Utils', () => {
       it('should return false when not all rounds are completed', () => {
         const tournament = createMockTournament({ total_rounds: 3 });
         const rounds = [
-          createMockRound({ round_number: 1, status: 'Completed' }),
+          createMockRound({ round_number: 1, status: 'completed' }),
           createMockRound({ round_number: 2, status: 'Active' }),
           createMockRound({ round_number: 3, status: 'Draft' }),
         ];
@@ -191,7 +191,7 @@ describe('Tournament Utils', () => {
       it('should return true when some but not all rounds are completed', () => {
         const tournament = createMockTournament({ total_rounds: 3 });
         const rounds = [
-          createMockRound({ round_number: 1, status: 'Completed' }),
+          createMockRound({ round_number: 1, status: 'completed' }),
           createMockRound({ round_number: 2, status: 'Active' }),
           createMockRound({ round_number: 3, status: 'Draft' }),
         ];
@@ -211,9 +211,9 @@ describe('Tournament Utils', () => {
       it('should return false when all rounds are completed', () => {
         const tournament = createMockTournament({ total_rounds: 3 });
         const rounds = [
-          createMockRound({ round_number: 1, status: 'Completed' }),
-          createMockRound({ round_number: 2, status: 'Completed' }),
-          createMockRound({ round_number: 3, status: 'Completed' }),
+          createMockRound({ round_number: 1, status: 'completed' }),
+          createMockRound({ round_number: 2, status: 'completed' }),
+          createMockRound({ round_number: 3, status: 'completed' }),
         ];
         expect(isOngoingTournamentActual(tournament, rounds)).toBe(false);
       });
@@ -233,7 +233,7 @@ describe('Tournament Utils', () => {
       it('should return false when at least one round is completed', () => {
         const tournament = createMockTournament({ total_rounds: 3 });
         const rounds = [
-          createMockRound({ round_number: 1, status: 'Completed' }),
+          createMockRound({ round_number: 1, status: 'completed' }),
           createMockRound({ round_number: 2, status: 'Draft' }),
           createMockRound({ round_number: 3, status: 'Draft' }),
         ];
@@ -259,7 +259,7 @@ describe('Tournament Utils', () => {
       it('should return "ongoing" for tournament with some completed rounds', () => {
         const tournament = createMockTournament({ total_rounds: 3 });
         const rounds = [
-          createMockRound({ round_number: 1, status: 'Completed' }),
+          createMockRound({ round_number: 1, status: 'completed' }),
           createMockRound({ round_number: 2, status: 'Active' }),
         ];
         expect(getTournamentStatusActual(tournament, rounds)).toBe('ongoing');
@@ -268,8 +268,8 @@ describe('Tournament Utils', () => {
       it('should return "finished" for tournament with all completed rounds', () => {
         const tournament = createMockTournament({ total_rounds: 2 });
         const rounds = [
-          createMockRound({ round_number: 1, status: 'Completed' }),
-          createMockRound({ round_number: 2, status: 'Completed' }),
+          createMockRound({ round_number: 1, status: 'completed' }),
+          createMockRound({ round_number: 2, status: 'completed' }),
         ];
         expect(getTournamentStatusActual(tournament, rounds)).toBe('finished');
       });
@@ -279,8 +279,8 @@ describe('Tournament Utils', () => {
       it('should calculate progress percentage correctly', () => {
         const tournament = createMockTournament({ total_rounds: 4 });
         const rounds = [
-          createMockRound({ round_number: 1, status: 'Completed' }),
-          createMockRound({ round_number: 2, status: 'Completed' }),
+          createMockRound({ round_number: 1, status: 'completed' }),
+          createMockRound({ round_number: 2, status: 'completed' }),
           createMockRound({ round_number: 3, status: 'Active' }),
           createMockRound({ round_number: 4, status: 'Draft' }),
         ];
@@ -299,8 +299,8 @@ describe('Tournament Utils', () => {
       it('should return 100 for finished tournament', () => {
         const tournament = createMockTournament({ total_rounds: 2 });
         const rounds = [
-          createMockRound({ round_number: 1, status: 'Completed' }),
-          createMockRound({ round_number: 2, status: 'Completed' }),
+          createMockRound({ round_number: 1, status: 'completed' }),
+          createMockRound({ round_number: 2, status: 'completed' }),
         ];
         expect(getTournamentProgressActual(tournament, rounds)).toBe(100);
       });
@@ -319,9 +319,9 @@ describe('Tournament Utils', () => {
       it('should handle partial progress correctly', () => {
         const tournament = createMockTournament({ total_rounds: 7 });
         const rounds = [
-          createMockRound({ round_number: 1, status: 'Completed' }),
-          createMockRound({ round_number: 2, status: 'Completed' }),
-          createMockRound({ round_number: 3, status: 'Completed' }),
+          createMockRound({ round_number: 1, status: 'completed' }),
+          createMockRound({ round_number: 2, status: 'completed' }),
+          createMockRound({ round_number: 3, status: 'completed' }),
         ];
         // 3/7 * 100 = 42.857...
         expect(getTournamentProgressActual(tournament, rounds)).toBeCloseTo(

@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
 use crate::{
-    common::error::PawnError,
+    common::error::{ErrorCode, PawnError},
     competition::dto::CreateGame,
     competition::model::{Game, GameResult},
     db::*,
     participant::dto::CreatePlayer,
     participant::model::{Player, PlayerResult},
     tournament::{
-        dto::{CreateTournament, UpdateTournamentStatus},
+        dto::{CreateTournament, UpdateTournament, UpdateTournamentStatus},
         model::{Tournament, TournamentDetails},
         value_objects::TournamentStatus,
     },
@@ -100,6 +100,65 @@ impl<D: Db> TournamentService<D> {
     pub async fn delete_tournament(&self, id: i32) -> Result<(), PawnError> {
         self.db
             .delete_tournament(id)
+            .await
+            .map_err(PawnError::Database)
+    }
+
+    pub async fn update_tournament(&self, data: UpdateTournament) -> Result<Tournament, PawnError> {
+        // Validate name if provided
+        if let Some(ref name) = data.name {
+            if name.trim().is_empty() {
+                return Err(PawnError::InvalidInput(
+                    "Tournament name cannot be empty".into(),
+                ));
+            }
+        }
+
+        // Validate entry_fee if provided
+        if let Some(entry_fee) = data.entry_fee {
+            if entry_fee < 0.0 {
+                return Err(PawnError::InvalidInput(
+                    "Entry fee cannot be negative".into(),
+                ));
+            }
+        }
+
+        // Validate total_rounds if provided
+        if let Some(total_rounds) = data.total_rounds {
+            if total_rounds <= 0 {
+                return Err(PawnError::InvalidInput(
+                    "Total rounds must be positive".into(),
+                ));
+            }
+
+            // Check against highest completed/verified round number
+            let rounds = self
+                .db
+                .get_rounds_by_tournament(data.id)
+                .await
+                .map_err(PawnError::Database)?;
+
+            let min_allowed = rounds
+                .iter()
+                .filter(|r| {
+                    let status = r.status.as_str();
+                    status == "completed" || status == "verified"
+                })
+                .map(|r| r.round_number)
+                .max()
+                .unwrap_or(0);
+
+            if total_rounds < min_allowed {
+                return Err(ErrorCode::TournamentTotalRoundsBelowCompleted {
+                    min_allowed,
+                    requested: total_rounds,
+                }
+                .into_error());
+            }
+        }
+
+        self.db
+            .update_tournament(data)
             .await
             .map_err(PawnError::Database)
     }

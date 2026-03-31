@@ -66,7 +66,8 @@ import { StandingsTable } from '@widgets/standings-table';
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import TournamentEditDialog from './TournamentEditDialog';
 import TournamentSettings from './TournamentSettings';
 
 interface TabPanelProps {
@@ -101,6 +102,7 @@ function a11yProps(index: number) {
 function TournamentInfoPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const theme = useTheme();
   const { t, i18n } = useTranslation();
   const [tournamentDetails, setTournamentDetails] =
@@ -112,11 +114,15 @@ function TournamentInfoPage() {
   const [loading, setLoading] = useState(true);
   const [loadingStandings, setLoadingStandings] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue, setTabValue] = useState(() => {
+    const tab = searchParams.get('tab');
+    return tab !== null ? Number(tab) : 0;
+  });
   const [hasMockData, setHasMockData] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [actualRoundsPlayed, setActualRoundsPlayed] = useState<number>(0);
   const [actualPlayerCount, setActualPlayerCount] = useState<number | null>(
@@ -171,7 +177,7 @@ function TournamentInfoPage() {
         // Fetch rounds to calculate actual rounds played
         const rounds = await commands.getRoundsByTournament(tournamentId);
         const playedRounds = rounds.filter(
-          round => round.status === 'Completed'
+          round => round.status === 'completed' || round.status === 'verified'
         ).length;
         setActualRoundsPlayed(playedRounds);
 
@@ -527,7 +533,14 @@ function TournamentInfoPage() {
                           : 'N/A'}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {t('tournament.timeControl.label')}
+                        {tournament.time_type
+                          ? t(
+                              `tournament.types.${tournament.time_type.toLowerCase()}.timeRange`,
+                              {
+                                defaultValue: t('tournament.timeControl.label'),
+                              }
+                            )
+                          : t('tournament.timeControl.label')}
                       </Typography>
                     </Box>
                   </Box>
@@ -619,6 +632,11 @@ function TournamentInfoPage() {
               <StandingsTable
                 standings={standings.standings}
                 loading={loadingStandings}
+                isFinished={
+                  tournamentDetails !== null &&
+                  actualRoundsPlayed >=
+                    tournamentDetails.tournament.total_rounds
+                }
                 onPlayerClick={_playerId => {
                   // Player clicked: playerId
                 }}
@@ -720,6 +738,7 @@ function TournamentInfoPage() {
             {/* Round Management */}
             <RoundManager
               tournamentId={parseInt(id ?? '', 10)}
+              totalRounds={tournament.total_rounds}
               onRoundUpdate={() => {
                 // Refresh tournament details when rounds are updated
                 fetchTournamentDetails();
@@ -793,6 +812,15 @@ function TournamentInfoPage() {
           <MenuItem
             onClick={() => {
               handleMenuClose();
+              setEditDialogOpen(true);
+            }}
+          >
+            <Edit fontSize="small" sx={{ mr: 1 }} />
+            {t('tournamentEdit.menuEdit')}
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              handleMenuClose();
               setSettingsOpen(true);
             }}
           >
@@ -828,6 +856,15 @@ function TournamentInfoPage() {
             {t('deleteTournament')}
           </MenuItem>
         </Menu>
+
+        {/* Tournament Edit Dialog */}
+        <TournamentEditDialog
+          open={editDialogOpen}
+          onClose={() => setEditDialogOpen(false)}
+          tournament={tournament}
+          onUpdated={fetchTournamentDetails}
+          minRounds={actualRoundsPlayed}
+        />
 
         {/* Tournament Settings Dialog */}
         <TournamentSettings

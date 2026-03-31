@@ -1,10 +1,11 @@
+import type { TFunction } from 'i18next';
 import ConfigurationStep from './ConfigurationStep';
 import GeneralInfoStep from './GeneralInfoStep';
 import PreviewStep from './PreviewStep';
 import SeedingStep from './SeedingStep';
-import { TOURNAMENT_FORM_SCHEMA } from './validation';
+import { createTournamentFormSchema } from './validation';
 
-export const NEW_TOURNAMENT_FORM_STEPS = [
+export const createTournamentFormSteps = (t: TFunction) => [
   {
     id: 1,
     label: 'form.steps.generalInformation',
@@ -13,7 +14,7 @@ export const NEW_TOURNAMENT_FORM_STEPS = [
       description: 'form.steps.generalInfo.description',
     },
     component: GeneralInfoStep,
-    schema: TOURNAMENT_FORM_SCHEMA,
+    schema: createTournamentFormSchema(t),
   },
   {
     id: 2,
@@ -26,7 +27,7 @@ export const NEW_TOURNAMENT_FORM_STEPS = [
   },
   {
     id: 3,
-    label: 'form.steps.seeding',
+    label: 'form.steps.seeding.label',
     stepIntro: {
       title: 'form.steps.seeding.title',
       description: 'form.steps.seeding.description',
@@ -35,7 +36,7 @@ export const NEW_TOURNAMENT_FORM_STEPS = [
   },
   {
     id: 4,
-    label: 'form.steps.preview',
+    label: 'form.steps.preview.label',
     stepIntro: {
       title: 'form.steps.preview.title',
       description: 'form.steps.preview.description',

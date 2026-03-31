@@ -311,6 +311,22 @@ pub struct PlayerColorStatsDto {
 // Knockout Tournament DTOs
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct UpdateGamePlayers {
+    pub game_id: i32,
+    pub white_player_id: i32,
+    pub black_player_id: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct AddManualPairing {
+    pub tournament_id: i32,
+    pub round_number: i32,
+    pub white_player_id: i32,
+    pub black_player_id: Option<i32>,
+    pub board_number: Option<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateKnockoutBracket {
     pub tournament_id: i32,
     pub bracket_type: String,

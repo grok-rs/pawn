@@ -39,6 +39,20 @@ pub struct UpdateTournamentStatus {
     pub status: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct UpdateTournament {
+    pub id: i32,
+    pub name: Option<String>,
+    pub location: Option<String>,
+    pub date: Option<String>,
+    pub total_rounds: Option<i32>,
+    pub description: Option<String>,
+    pub website_url: Option<String>,
+    pub contact_email: Option<String>,
+    pub entry_fee: Option<f64>,
+    pub currency: Option<String>,
+}
+
 // Seeding DTOs
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]

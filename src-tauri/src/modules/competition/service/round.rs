@@ -2,8 +2,8 @@ use crate::{
     common::error::{ErrorCode, PawnError},
     competition::pairing::dispatcher::PairingService,
     competition::{
-        dto::{CreateGame, CreateRound, GeneratePairingsRequest, UpdateRoundStatus},
-        model::{GameResult, Pairing, PairingMethod, Round, RoundDetails, RoundStatus},
+        dto::{AddManualPairing, CreateGame, CreateRound, GeneratePairingsRequest, UpdateGamePlayers, UpdateRoundStatus},
+        model::{Game, GameResult, Pairing, PairingMethod, Round, RoundDetails, RoundStatus},
     },
     db::*,
 };
@@ -434,5 +434,263 @@ impl<D: Db> RoundService<D> {
             round_number: next_round_number,
         })
         .await
+    }
+
+    pub async fn delete_round(&self, round_id: i32) -> Result<(), PawnError> {
+        let round = self
+            .db
+            .get_round(round_id)
+            .await
+            .map_err(PawnError::Database)?;
+
+        // Only prevent deletion of in-progress rounds
+        let status: RoundStatus = round.status.parse().unwrap_or(RoundStatus::Planned);
+        if status == RoundStatus::InProgress || status == RoundStatus::Finishing {
+            return Err(PawnError::InvalidInput(
+                "Cannot delete a round that is currently in progress".into(),
+            ));
+        }
+
+        self.db
+            .delete_round(round_id)
+            .await
+            .map_err(PawnError::Database)
+    }
+
+    // ── Pairing modification methods ─────────────────────────────────
+
+    /// Validate that the round allows pairing modifications (status must be Pairing or Published).
+    fn validate_pairing_modifiable(round: &Round) -> Result<(), PawnError> {
+        let status = round.parsed_status();
+        if status != RoundStatus::Pairing && status != RoundStatus::Published {
+            return Err(ErrorCode::PairingModificationNotAllowed {
+                round_status: round.status.clone(),
+            }
+            .into_error());
+        }
+        Ok(())
+    }
+
+    pub async fn swap_game_colors(&self, game_id: i32) -> Result<Game, PawnError> {
+        let game = self.db.get_game(game_id).await.map_err(PawnError::Database)?;
+
+        let rounds = self
+            .db
+            .get_rounds_by_tournament(game.tournament_id)
+            .await
+            .map_err(PawnError::Database)?;
+        let round = rounds
+            .iter()
+            .find(|r| r.round_number == game.round_number)
+            .ok_or_else(|| PawnError::NotFound("Round not found".into()))?;
+
+        Self::validate_pairing_modifiable(round)?;
+
+        self.db
+            .swap_game_colors(game_id)
+            .await
+            .map_err(PawnError::Database)
+    }
+
+    pub async fn replace_player_in_game(
+        &self,
+        data: UpdateGamePlayers,
+    ) -> Result<Game, PawnError> {
+        let game = self
+            .db
+            .get_game(data.game_id)
+            .await
+            .map_err(PawnError::Database)?;
+
+        let rounds = self
+            .db
+            .get_rounds_by_tournament(game.tournament_id)
+            .await
+            .map_err(PawnError::Database)?;
+        let round = rounds
+            .iter()
+            .find(|r| r.round_number == game.round_number)
+            .ok_or_else(|| PawnError::NotFound("Round not found".into()))?;
+
+        Self::validate_pairing_modifiable(round)?;
+
+        // Check that new players exist in the tournament
+        let _white = self
+            .db
+            .get_player(data.white_player_id)
+            .await
+            .map_err(|_| {
+                PawnError::NotFound(format!("Player {} not found", data.white_player_id))
+            })?;
+        let _black = self
+            .db
+            .get_player(data.black_player_id)
+            .await
+            .map_err(|_| {
+                PawnError::NotFound(format!("Player {} not found", data.black_player_id))
+            })?;
+
+        // Check that new players are not already paired in this round (excluding this game)
+        let round_games = self
+            .db
+            .get_games_by_round(game.tournament_id, game.round_number)
+            .await
+            .map_err(PawnError::Database)?;
+
+        for g in &round_games {
+            if g.game.id == data.game_id {
+                continue;
+            }
+            if g.game.white_player_id == data.white_player_id
+                || g.game.black_player_id == data.white_player_id
+            {
+                return Err(ErrorCode::PlayerAlreadyPaired {
+                    player_id: data.white_player_id,
+                    round_number: game.round_number,
+                }
+                .into_error());
+            }
+            if g.game.white_player_id == data.black_player_id
+                || g.game.black_player_id == data.black_player_id
+            {
+                return Err(ErrorCode::PlayerAlreadyPaired {
+                    player_id: data.black_player_id,
+                    round_number: game.round_number,
+                }
+                .into_error());
+            }
+        }
+
+        self.db
+            .update_game_players(data.game_id, data.white_player_id, data.black_player_id)
+            .await
+            .map_err(PawnError::Database)
+    }
+
+    pub async fn delete_game_from_round(&self, game_id: i32) -> Result<(), PawnError> {
+        let game = self.db.get_game(game_id).await.map_err(PawnError::Database)?;
+
+        let rounds = self
+            .db
+            .get_rounds_by_tournament(game.tournament_id)
+            .await
+            .map_err(PawnError::Database)?;
+        let round = rounds
+            .iter()
+            .find(|r| r.round_number == game.round_number)
+            .ok_or_else(|| PawnError::NotFound("Round not found".into()))?;
+
+        Self::validate_pairing_modifiable(round)?;
+
+        self.db
+            .delete_game(game_id)
+            .await
+            .map_err(PawnError::Database)
+    }
+
+    pub async fn add_manual_pairing(
+        &self,
+        data: AddManualPairing,
+    ) -> Result<GameResult, PawnError> {
+        // Find the round for this tournament + round_number
+        let rounds = self
+            .db
+            .get_rounds_by_tournament(data.tournament_id)
+            .await
+            .map_err(PawnError::Database)?;
+        let round = rounds
+            .iter()
+            .find(|r| r.round_number == data.round_number)
+            .ok_or_else(|| {
+                PawnError::NotFound(format!("Round {} not found", data.round_number))
+            })?;
+
+        Self::validate_pairing_modifiable(round)?;
+
+        // Validate players exist
+        let white_player = self
+            .db
+            .get_player(data.white_player_id)
+            .await
+            .map_err(|_| {
+                PawnError::NotFound(format!("Player {} not found", data.white_player_id))
+            })?;
+
+        // Check players not already paired
+        let round_games = self
+            .db
+            .get_games_by_round(data.tournament_id, data.round_number)
+            .await
+            .map_err(PawnError::Database)?;
+
+        for g in &round_games {
+            if g.game.white_player_id == data.white_player_id
+                || g.game.black_player_id == data.white_player_id
+            {
+                return Err(ErrorCode::PlayerAlreadyPaired {
+                    player_id: data.white_player_id,
+                    round_number: data.round_number,
+                }
+                .into_error());
+            }
+            if let Some(black_id) = data.black_player_id {
+                if g.game.white_player_id == black_id || g.game.black_player_id == black_id {
+                    return Err(ErrorCode::PlayerAlreadyPaired {
+                        player_id: black_id,
+                        round_number: data.round_number,
+                    }
+                    .into_error());
+                }
+            }
+        }
+
+        let (black_player_id, black_player, result) = if let Some(black_id) = data.black_player_id
+        {
+            let bp = self.db.get_player(black_id).await.map_err(|_| {
+                PawnError::NotFound(format!("Player {} not found", black_id))
+            })?;
+            (black_id, bp, "*".to_string())
+        } else {
+            // Bye
+            let bye_id = -(data.tournament_id * 1000 + data.round_number);
+            let bye_player = crate::participant::model::Player {
+                id: bye_id,
+                tournament_id: data.tournament_id,
+                name: "BYE".to_string(),
+                rating: None,
+                country_code: None,
+                title: None,
+                birth_date: None,
+                gender: None,
+                email: None,
+                phone: None,
+                club: None,
+                status: "bye".to_string(),
+                seed_number: None,
+                pairing_number: None,
+                initial_rating: None,
+                created_at: chrono::Utc::now().to_rfc3339(),
+                updated_at: None,
+            };
+            (bye_id, bye_player, "1-0".to_string())
+        };
+
+        let game = self
+            .db
+            .create_game(CreateGame {
+                tournament_id: data.tournament_id,
+                round_number: data.round_number,
+                white_player_id: data.white_player_id,
+                black_player_id,
+                result,
+            })
+            .await
+            .map_err(PawnError::Database)?;
+
+        Ok(GameResult {
+            game,
+            white_player,
+            black_player,
+        })
     }
 }

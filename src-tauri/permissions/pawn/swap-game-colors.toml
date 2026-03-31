@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-swap-game-colors"
+description = "Allows swapping game colors"
+commands.allow = ["swap_game_colors"]
+
+[[permission]]
+identifier = "deny-swap-game-colors"
+description = "Denies the swap-game-colors command"
+commands.deny = ["swap_game_colors"]

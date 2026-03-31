@@ -4,17 +4,18 @@ use tracing::{info, instrument, warn};
 use crate::{
     common::{error::PawnError, types::CommandResult},
     competition::dto::{
-        ApproveGameResult, BatchUpdateResults, BatchValidationResult, CreateKnockoutBracket,
-        CreateRound, CsvImportError, CsvImportResult, CsvResultImport, CsvResultRow,
-        EnhancedPairingRequest, EnhancedPairingResult, GameResultValidation,
+        AddManualPairing, ApproveGameResult, BatchUpdateResults, BatchValidationResult,
+        CreateKnockoutBracket, CreateRound, CsvImportError, CsvImportResult, CsvResultImport,
+        CsvResultRow, EnhancedPairingRequest, EnhancedPairingResult, GameResultValidation,
         GeneratePairingsRequest, PairingPerformanceMetrics, PairingValidationResults,
         RoundRobinAnalysis, RoundRobinOptions, SwissPairingAnalysis, SwissPairingOptions,
-        UpdateGameResult, UpdateRoundStatus, UpdateTournamentPairingMethod, ValidateGameResult,
+        UpdateGamePlayers, UpdateGameResult, UpdateRoundStatus, UpdateTournamentPairingMethod,
+        ValidateGameResult,
     },
     competition::knockout_domain::KnockoutService,
     competition::model::{
-        BracketPosition, EnhancedGameResult, GameResult, GameResultAudit, KnockoutBracket, Pairing,
-        Round, RoundDetails,
+        BracketPosition, EnhancedGameResult, Game, GameResult, GameResultAudit, KnockoutBracket,
+        Pairing, Round, RoundDetails,
     },
     competition::service::validation::ResultValidationService,
     db::*,
@@ -115,6 +116,13 @@ pub async fn create_next_round(
     tournament_id: i32,
 ) -> CommandResult<Round> {
     state.round_service.create_next_round(tournament_id).await
+}
+
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_round(state: State<'_, PawnState>, round_id: i32) -> CommandResult<()> {
+    state.round_service.delete_round(round_id).await
 }
 
 #[instrument(ret, skip(_state))]
@@ -764,6 +772,50 @@ fn find_matching_game<'a>(
     }
 
     None
+}
+
+// =====================================================
+// Pairing modification operations
+// =====================================================
+
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn swap_game_colors(
+    state: State<'_, PawnState>,
+    game_id: i32,
+) -> CommandResult<Game> {
+    state.round_service.swap_game_colors(game_id).await
+}
+
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn replace_player_in_game(
+    state: State<'_, PawnState>,
+    data: UpdateGamePlayers,
+) -> CommandResult<Game> {
+    state.round_service.replace_player_in_game(data).await
+}
+
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_game_from_round(
+    state: State<'_, PawnState>,
+    game_id: i32,
+) -> CommandResult<()> {
+    state.round_service.delete_game_from_round(game_id).await
+}
+
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn add_manual_pairing(
+    state: State<'_, PawnState>,
+    data: AddManualPairing,
+) -> CommandResult<GameResult> {
+    state.round_service.add_manual_pairing(data).await
 }
 
 // =====================================================

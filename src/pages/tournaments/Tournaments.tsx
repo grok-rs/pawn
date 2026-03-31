@@ -1,14 +1,6 @@
 import type { Tournament } from '@dto/bindings';
 import { commands } from '@dto/bindings';
-import {
-  Add,
-  CheckCircle,
-  EmojiEvents,
-  FilterList,
-  PlayArrow,
-  Schedule,
-  Search,
-} from '@mui/icons-material';
+import { Add, EmojiEvents, Search } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -18,11 +10,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Grid,
-  IconButton,
+  Divider,
   InputAdornment,
-  Menu,
-  MenuItem,
   Paper,
   Skeleton,
   TextField,
@@ -32,29 +21,26 @@ import {
 import { APP_ROUTES } from '@shared/config/routes';
 import BaseLayout from '@shared/layouts/BaseLayout';
 import {
+  groupTournamentsByStatus,
   isDraftTournament,
   isFinishedTournament,
   isOngoingTournament,
 } from '@shared/lib/tournamentUtils';
 import TournamentList from '@widgets/tournament-list/TournamentList';
-import type React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { StatCard } from './StatCard';
+
+type FilterStatus = 'all' | 'ongoing' | 'draft' | 'finished';
 
 const TournamentsPage = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [filteredTournaments, setFilteredTournaments] = useState<Tournament[]>(
-    []
-  );
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState<FilterStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tournamentToDelete, setTournamentToDelete] =
     useState<Tournament | null>(null);
@@ -72,7 +58,6 @@ const TournamentsPage = () => {
     try {
       const data = await commands.getTournaments();
       setTournaments(data);
-      setFilteredTournaments(data);
     } catch (_error) {
     } finally {
       setLoading(false);
@@ -83,10 +68,9 @@ const TournamentsPage = () => {
     fetchTournaments();
   }, [fetchTournaments]);
 
-  useEffect(() => {
+  const filteredTournaments = useMemo(() => {
     let filtered = tournaments;
 
-    // Apply status filter
     switch (filter) {
       case 'ongoing':
         filtered = filtered.filter(isOngoingTournament);
@@ -99,28 +83,22 @@ const TournamentsPage = () => {
         break;
     }
 
-    // Apply search filter
     if (searchQuery) {
+      const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         t =>
-          t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          t.location.toLowerCase().includes(searchQuery.toLowerCase())
+          t.name.toLowerCase().includes(query) ||
+          t.location.toLowerCase().includes(query)
       );
     }
 
-    setFilteredTournaments(filtered);
+    return filtered;
   }, [filter, searchQuery, tournaments]);
 
-  const handleFilterClick = useCallback(
-    (event: React.MouseEvent<HTMLElement>) => {
-      setAnchorEl(event.currentTarget);
-    },
-    []
+  const grouped = useMemo(
+    () => groupTournamentsByStatus(filteredTournaments),
+    [filteredTournaments]
   );
-
-  const handleFilterClose = useCallback(() => {
-    setAnchorEl(null);
-  }, []);
 
   const handleDeleteClick = useCallback(
     (id: number) => {
@@ -135,7 +113,6 @@ const TournamentsPage = () => {
 
   const handleConfirmDelete = useCallback(async () => {
     if (!tournamentToDelete) return;
-
     try {
       await commands.deleteTournament(tournamentToDelete.id);
       await fetchTournaments();
@@ -162,231 +139,184 @@ const TournamentsPage = () => {
     navigate(APP_ROUTES.NEW_TOURNAMENT);
   }, [navigate]);
 
-  // Memoized filter handlers to prevent re-renders
-  const handleFilterAll = useCallback(() => setFilter('all'), []);
-  const handleFilterOngoing = useCallback(() => setFilter('ongoing'), []);
-  const handleFilterDraft = useCallback(() => setFilter('draft'), []);
-  const handleFilterFinished = useCallback(() => setFilter('finished'), []);
+  const filterPills: Array<{
+    key: FilterStatus;
+    label: string;
+    count: number;
+    color: 'primary' | 'success' | 'warning' | 'info';
+  }> = [
+    { key: 'all', label: t('all'), count: stats.total, color: 'primary' },
+    {
+      key: 'ongoing',
+      label: t('ongoing'),
+      count: stats.ongoing,
+      color: 'success',
+    },
+    {
+      key: 'draft',
+      label: t('notStarted'),
+      count: stats.draft,
+      color: 'warning',
+    },
+    {
+      key: 'finished',
+      label: t('finished'),
+      count: stats.finished,
+      color: 'info',
+    },
+  ];
 
-  // Menu item handlers that also close the menu
-  const handleMenuFilterAll = useCallback(() => {
-    setFilter('all');
-    setAnchorEl(null);
-  }, []);
-  const handleMenuFilterOngoing = useCallback(() => {
-    setFilter('ongoing');
-    setAnchorEl(null);
-  }, []);
-  const handleMenuFilterDraft = useCallback(() => {
-    setFilter('draft');
-    setAnchorEl(null);
-  }, []);
-  const handleMenuFilterFinished = useCallback(() => {
-    setFilter('finished');
-    setAnchorEl(null);
-  }, []);
+  const renderSectionHeader = (label: string) => (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 3, mb: 1.5 }}>
+      <Typography
+        variant="overline"
+        sx={{
+          fontWeight: 700,
+          letterSpacing: '0.08em',
+          color: 'text.secondary',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {label}
+      </Typography>
+      <Divider sx={{ flex: 1 }} />
+    </Box>
+  );
+
+  const hasResults = filteredTournaments.length > 0;
+  const showGrouped = filter === 'all';
 
   return (
     <BaseLayout>
       <Box>
-        {/* Page Header */}
-        <Box sx={{ mb: 4 }}>
+        {/* Page header */}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 3,
+          }}
+        >
+          <Typography
+            variant="h4"
+            fontWeight={700}
+            sx={{ color: theme.palette.text.primary }}
+          >
+            {t('tournaments')}
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleNavigateToNewTournament}
+            sx={{
+              backgroundColor: theme.palette.secondary.main,
+              color: theme.palette.secondary.contrastText,
+              '&:hover': {
+                backgroundColor: theme.palette.secondary.dark,
+              },
+            }}
+          >
+            {t('newTournament')}
+          </Button>
+        </Box>
+
+        {/* Search + Filter pills */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            mb: 3,
+            flexWrap: 'wrap',
+          }}
+        >
+          <TextField
+            placeholder={t('searchTournaments')}
+            variant="outlined"
+            size="small"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            sx={{
+              width: '280px',
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search sx={{ fontSize: '1.25rem' }} />
+                </InputAdornment>
+              ),
+            }}
+          />
           <Box
             sx={{
               display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 3,
+              gap: 1,
+              flexWrap: 'wrap',
             }}
           >
-            <Typography
-              variant="h4"
-              fontWeight={700}
-              sx={{ color: theme.palette.text.primary }}
-            >
-              {t('tournaments')}
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={handleNavigateToNewTournament}
-                sx={{
-                  backgroundColor: theme.palette.secondary.main,
-                  color: theme.palette.secondary.contrastText,
-                  '&:hover': {
-                    backgroundColor: theme.palette.secondary.dark,
-                  },
-                }}
-              >
-                {t('newTournament')}
-              </Button>
-            </Box>
+            {filterPills.map(pill => (
+              <Chip
+                key={pill.key}
+                label={`${pill.label} ${pill.count}`}
+                onClick={() => setFilter(pill.key)}
+                color={filter === pill.key ? pill.color : 'default'}
+                variant={filter === pill.key ? 'filled' : 'outlined'}
+                clickable
+              />
+            ))}
           </Box>
-
-          {/* Stats Cards - Optimized for Tablet Layout */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3 }}>
-              {loading ? (
-                <Skeleton variant="rounded" height={120} />
-              ) : (
-                <StatCard
-                  title={t('totalTournaments')}
-                  value={stats.total}
-                  icon={<EmojiEvents />}
-                  color={theme.palette.primary.main}
-                />
-              )}
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3 }}>
-              {loading ? (
-                <Skeleton variant="rounded" height={120} />
-              ) : (
-                <StatCard
-                  title={t('ongoing')}
-                  value={stats.ongoing}
-                  icon={<PlayArrow />}
-                  color={theme.palette.success.main}
-                />
-              )}
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3 }}>
-              {loading ? (
-                <Skeleton variant="rounded" height={120} />
-              ) : (
-                <StatCard
-                  title={t('notStarted')}
-                  value={stats.draft}
-                  icon={<Schedule />}
-                  color={theme.palette.warning.main}
-                />
-              )}
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3 }}>
-              {loading ? (
-                <Skeleton variant="rounded" height={120} />
-              ) : (
-                <StatCard
-                  title={t('finished')}
-                  value={stats.finished}
-                  icon={<CheckCircle />}
-                  color={theme.palette.info.main}
-                />
-              )}
-            </Grid>
-          </Grid>
-
-          {/* Search and Filter Bar - Enhanced for Tablet */}
-          <Paper
-            sx={{
-              p: { xs: 2, sm: 3 },
-              display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              gap: { xs: 2, sm: 3 },
-              alignItems: { xs: 'stretch', sm: 'center' },
-              backgroundColor: 'background.paper',
-            }}
-          >
-            <TextField
-              placeholder={t('searchTournaments')}
-              variant="outlined"
-              size="medium"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              sx={{
-                flex: 1,
-                minWidth: { sm: '300px' },
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search />
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Box
-              sx={{
-                display: 'flex',
-                gap: { xs: 1, sm: 1.5 },
-                flexWrap: 'wrap',
-                justifyContent: { xs: 'center', sm: 'flex-start' },
-              }}
-            >
-              <Chip
-                label={t('all')}
-                onClick={handleFilterAll}
-                color={filter === 'all' ? 'primary' : 'default'}
-                variant={filter === 'all' ? 'filled' : 'outlined'}
-                clickable
-              />
-              <Chip
-                label={t('ongoing')}
-                onClick={handleFilterOngoing}
-                color={filter === 'ongoing' ? 'success' : 'default'}
-                variant={filter === 'ongoing' ? 'filled' : 'outlined'}
-                clickable
-              />
-              <Chip
-                label={t('notStarted')}
-                onClick={handleFilterDraft}
-                color={filter === 'draft' ? 'warning' : 'default'}
-                variant={filter === 'draft' ? 'filled' : 'outlined'}
-                clickable
-              />
-              <Chip
-                label={t('finished')}
-                onClick={handleFilterFinished}
-                color={filter === 'finished' ? 'info' : 'default'}
-                variant={filter === 'finished' ? 'filled' : 'outlined'}
-                clickable
-              />
-            </Box>
-            <IconButton
-              onClick={handleFilterClick}
-              sx={{
-                minHeight: '44px',
-                minWidth: '44px',
-                alignSelf: { xs: 'center', sm: 'auto' },
-              }}
-            >
-              <FilterList />
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleFilterClose}
-            >
-              <MenuItem onClick={handleMenuFilterAll}>{t('all')}</MenuItem>
-              <MenuItem onClick={handleMenuFilterOngoing}>
-                {t('ongoing')}
-              </MenuItem>
-              <MenuItem onClick={handleMenuFilterDraft}>
-                {t('notStarted')}
-              </MenuItem>
-              <MenuItem onClick={handleMenuFilterFinished}>
-                {t('finished')}
-              </MenuItem>
-            </Menu>
-          </Paper>
         </Box>
 
-        {/* Tournament List */}
+        {/* Tournament sections */}
         {loading ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {['skeleton-1', 'skeleton-2', 'skeleton-3'].map(id => (
               <Skeleton key={id} variant="rounded" height={120} />
             ))}
           </Box>
+        ) : hasResults ? (
+          showGrouped ? (
+            <>
+              {grouped.ongoing.length > 0 && (
+                <>
+                  {renderSectionHeader(t('tournamentSections.activeNow'))}
+                  <TournamentList
+                    tournaments={grouped.ongoing}
+                    onDelete={handleDeleteClick}
+                    variant="featured"
+                  />
+                </>
+              )}
+              {grouped.draft.length > 0 && (
+                <>
+                  {renderSectionHeader(t('tournamentSections.draft'))}
+                  <TournamentList
+                    tournaments={grouped.draft}
+                    onDelete={handleDeleteClick}
+                    variant="compact"
+                  />
+                </>
+              )}
+              {grouped.finished.length > 0 && (
+                <>
+                  {renderSectionHeader(t('tournamentSections.completed'))}
+                  <TournamentList
+                    tournaments={grouped.finished}
+                    onDelete={handleDeleteClick}
+                    variant="compact"
+                  />
+                </>
+              )}
+            </>
+          ) : (
+            <TournamentList
+              tournaments={filteredTournaments}
+              onDelete={handleDeleteClick}
+              variant={filter === 'ongoing' ? 'featured' : 'compact'}
+            />
+          )
         ) : (
-          <TournamentList
-            tournaments={filteredTournaments}
-            onDelete={handleDeleteClick}
-          />
-        )}
-
-        {/* Empty State */}
-        {!loading && filteredTournaments.length === 0 && (
           <Paper
             sx={{
               p: 8,

@@ -21,7 +21,7 @@ use crate::team::dto::{
 use crate::team::model::{Team, TeamLineup, TeamMatch, TeamMembership, TeamTournamentSettings};
 use crate::tournament::dto::{
     CreateTournament, CreateTournamentSeedingSettings, UpdatePlayerSeeding, UpdateTimeControl,
-    UpdateTournamentSeedingSettings, UpdateTournamentSettings,
+    UpdateTournament, UpdateTournamentSeedingSettings, UpdateTournamentSettings,
 };
 use crate::tournament::model::{
     TimeControl, Tournament, TournamentDetails, TournamentSeedingSettings,
@@ -51,6 +51,10 @@ pub trait TournamentDb: Send + Sync {
         &self,
         id: i32,
     ) -> impl std::future::Future<Output = Result<(), sqlx::Error>> + Send;
+    fn update_tournament(
+        &self,
+        data: UpdateTournament,
+    ) -> impl std::future::Future<Output = Result<Tournament, sqlx::Error>> + Send;
     fn update_tournament_status(
         &self,
         tournament_id: i32,
@@ -159,6 +163,20 @@ pub trait GameDb: Send + Sync {
         &self,
         tournament_id: i32,
     ) -> impl std::future::Future<Output = Result<Vec<GameResult>, sqlx::Error>> + Send;
+    fn swap_game_colors(
+        &self,
+        game_id: i32,
+    ) -> impl std::future::Future<Output = Result<Game, sqlx::Error>> + Send;
+    fn update_game_players(
+        &self,
+        game_id: i32,
+        white_player_id: i32,
+        black_player_id: i32,
+    ) -> impl std::future::Future<Output = Result<Game, sqlx::Error>> + Send;
+    fn delete_game(
+        &self,
+        game_id: i32,
+    ) -> impl std::future::Future<Output = Result<(), sqlx::Error>> + Send;
 }
 
 // ── Round ────────────────────────────────────────────────────────────
@@ -185,6 +203,10 @@ pub trait RoundDb: Send + Sync {
         round_id: i32,
         status: &str,
     ) -> impl std::future::Future<Output = Result<Round, sqlx::Error>> + Send;
+    fn delete_round(
+        &self,
+        round_id: i32,
+    ) -> impl std::future::Future<Output = Result<(), sqlx::Error>> + Send;
 }
 
 // ── TimeControl ──────────────────────────────────────────────────────

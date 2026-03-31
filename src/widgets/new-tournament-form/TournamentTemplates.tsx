@@ -66,40 +66,41 @@ interface TournamentTemplate {
 interface TournamentTemplatesProps {
   onSelectTemplate?: (template: TournamentTemplate) => void;
   showSelection?: boolean;
+  compact?: boolean;
 }
 
 const TOURNAMENT_TYPES = [
   {
     value: 'swiss',
-    label: 'tournament.types.swiss',
+    label: 'tournament.types.swiss.label',
     description: 'tournament.types.swiss.description',
   },
   {
     value: 'roundRobin',
-    label: 'tournament.types.roundRobin',
+    label: 'tournament.types.roundRobin.label',
     description: 'tournament.types.roundRobin.description',
   },
   {
     value: 'knockout',
-    label: 'tournament.types.knockout',
+    label: 'tournament.types.knockout.label',
     description: 'tournament.types.knockout.description',
   },
   {
     value: 'elimination',
-    label: 'tournament.types.elimination',
+    label: 'tournament.types.elimination.label',
     description: 'tournament.types.elimination.description',
   },
   {
     value: 'scheveningen',
-    label: 'tournament.types.scheveningen',
+    label: 'tournament.types.scheveningen.label',
     description: 'tournament.types.scheveningen.description',
   },
 ];
 
 const TIME_TYPES = [
   { value: 'classical', label: 'tournament.types.classic' },
-  { value: 'rapid', label: 'tournament.types.rapid' },
-  { value: 'blitz', label: 'tournament.types.blitz' },
+  { value: 'rapid', label: 'tournament.types.rapid.label' },
+  { value: 'blitz', label: 'tournament.types.blitz.label' },
 ];
 
 const MOBILE_PHONE_POLICIES = [
@@ -111,6 +112,7 @@ const MOBILE_PHONE_POLICIES = [
 function TournamentTemplates({
   onSelectTemplate,
   showSelection = false,
+  compact = false,
 }: TournamentTemplatesProps) {
   const { t, i18n } = useTranslation();
   const [templates, setTemplates] = useState<TournamentTemplate[]>([]);
@@ -271,6 +273,71 @@ function TournamentTemplates({
 
   const formatDate = (dateString: string) =>
     formatLocalizedDate(dateString, i18n.language);
+
+  if (compact) {
+    return (
+      <Box>
+        {templates.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            {t('tournament.templates.noTemplatesMessage')}
+          </Typography>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {templates.map(template => (
+              <Box key={template.id}>
+                <Typography
+                  variant="body2"
+                  fontWeight={600}
+                  sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {template.name}
+                </Typography>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 1,
+                    mt: 0.5,
+                  }}
+                >
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    <Chip
+                      label={getTypeLabel(
+                        template.tournament_type,
+                        TOURNAMENT_TYPES
+                      )}
+                      size="small"
+                      variant="outlined"
+                    />
+                    <Chip
+                      label={getTypeLabel(template.time_type, TIME_TYPES)}
+                      size="small"
+                      variant="outlined"
+                    />
+                  </Box>
+                  {showSelection && onSelectTemplate && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => onSelectTemplate(template)}
+                      sx={{ flexShrink: 0 }}
+                    >
+                      {t('tournament.templates.useTemplate')}
+                    </Button>
+                  )}
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        )}
+      </Box>
+    );
+  }
 
   return (
     <Box>

@@ -31,7 +31,11 @@ macro_rules! str_enum {
     ) => {
         $(#[$meta])*
         $vis enum $Name {
-            $($(#[$variant_meta])* $Variant),+
+            $(
+                $(#[$variant_meta])*
+                #[serde(rename = $str)]
+                $Variant
+            ),+
         }
 
         impl $Name {

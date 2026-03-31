@@ -525,6 +525,11 @@
   "user": "Користувач",
   "allTournaments": "Всі турніри",
   "importTournament": "Імпорт турніру",
+  "tournamentSections": {
+    "activeNow": "Активні",
+    "draft": "Чернетки",
+    "completed": "Завершені"
+  },
   "totalTournaments": "Всього турнірів",
   "ongoing": "Поточні",
   "notStarted": "Не розпочаті",
@@ -605,8 +610,12 @@
     "manual": "Вручну",
     "createRound": "Створити тур",
     "noPairingsGenerated": "Не вдалося згенерувати пари. Це може статися якщо недостатньо гравців або всі гравці вже зіграли один з одним.",
+    "confirmDeleteRound": "Ви впевнені, що хочете видалити цей тур? Всі пари та партії цього туру будуть видалені.",
+    "verifyRound": "Підтвердити тур",
+    "generatingPairings": "Генерація пар",
     "label": "Тури"
   },
+  "failedToDeleteRound": "Не вдалося видалити тур",
   "tournamentNotFound": "Турнір не знайдено",
   "noDataAvailable": "Дані відсутні",
   "standings": "Турнірна таблиця",
@@ -642,24 +651,24 @@
   "viewDetails": "Переглянути деталі",
   "editTournament": "Редагувати турнір",
   "exportData": "Експортувати дані",
-  "showTiebreaks": "Показати тай-брейки",
+  "showTiebreaks": "Показати коефіцієнти",
   "denseView": "Компактний вигляд",
   "export": "Експорт",
   "exportCsv": "Експорт у CSV",
   "exportPdf": "Експорт у PDF",
   "print": "Друк",
   "tournamentPerformanceRating": "Турнірний перформанс рейтинг",
-  "tiebreakOrder": "Порядок тай-брейків",
+  "tiebreakOrder": "Порядок коефіцієнтів",
   "useFideDefaults": "Використати стандарти ФІДЕ",
   "resetToDefaults": "Скинути до стандартних",
-  "noTiebreaksConfigured": "Тай-брейки не налаштовані. Додайте принаймні один метод тай-брейка.",
-  "addTiebreak": "Додати тай-брейк",
-  "selectTiebreak": "Оберіть метод тай-брейка",
-  "tiebreakSettings": "Налаштування тай-брейка",
-  "tiebreakConfiguration": "Налаштуйте порядок критеріїв тай-брейка для ранжування гравців з рівними очками",
-  "dragToReorder": "Перетягніть для зміни пріоритету тай-брейків",
+  "noTiebreaksConfigured": "Коефіцієнти не налаштовані. Додайте принаймні один коефіцієнт.",
+  "addTiebreak": "Додати коефіцієнт",
+  "selectTiebreak": "Оберіть коефіцієнт",
+  "tiebreakSettings": "Налаштування коефіцієнтів",
+  "tiebreakConfiguration": "Налаштуйте порядок коефіцієнтів для ранжування гравців з рівними очками",
+  "dragToReorder": "Перетягніть для зміни пріоритету коефіцієнтів",
   "tournamentSettings": "Налаштування турніру",
-  "tiebreakConfigDescription": "Налаштуйте правила тай-брейка для визначення фінальних місць коли у гравців однакові очки.",
+  "tiebreakConfigDescription": "Налаштуйте коефіцієнти для визначення фінальних місць коли у гравців однакові очки.",
   "save": "Зберегти",
   "tiebreaks": {
     "buchholz_full": {
@@ -987,6 +996,26 @@
       "sameResult": "Результат такий же як поточний",
       "changingResult": "Зміна існуючого результату створить запис в історії",
       "needsApproval": "Результат потребує схвалення арбітра і буде позначений як очікуючий"
+    },
+    "form": {
+      "nameRequired": "Назва турніру обов'язкова",
+      "cityRequired": "Місто обов'язкове",
+      "countryRequired": "Країна обов'язкова",
+      "startDateRequired": "Дата початку обов'язкова",
+      "endDateRequired": "Дата закінчення обов'язкова",
+      "typeRequired": "Тип турніру обов'язковий",
+      "formatRequired": "Формат турніру обов'язковий",
+      "roundsMin": "Мінімум 1 тур",
+      "roundsMax": "Максимум 99 турів",
+      "roundsRequired": "Кількість турів обов'язкова",
+      "additionalTimeMin": "Додатковий час не може бути від'ємним",
+      "forfeitTimeMin": "Час неявки — мінімум 1 хвилина",
+      "forfeitTimeMax": "Час неявки не може перевищувати 120 хвилин",
+      "invalidPolicy": "Недопустиме значення політики",
+      "organizerNameMax": "Ім'я організатора не може перевищувати 100 символів",
+      "invalidEmail": "Невірний формат email",
+      "emailMax": "Email не може перевищувати 100 символів",
+      "arbiterNotesMax": "Нотатки арбітра не можуть перевищувати 1000 символів"
     }
   },
   "addPlayer": "Додати гравця",
@@ -1230,8 +1259,8 @@
     "existingWarning": "{{existing}} з {{total}} гравців вже мають номери пар.",
     "seedMethodWarning": "Метод за рейтингом вимагає, щоб у гравців були призначені номери рейтингу."
   },
-  "showTiebreakBreakdown": "Показати деталі розрахунку тай-брейка",
-  "tiebreakBreakdownFor": "Розрахунок тай-брейка для {{playerName}}",
+  "showTiebreakBreakdown": "Показати деталі розрахунку коефіцієнта",
+  "tiebreakBreakdownFor": "Розрахунок коефіцієнта для {{playerName}}",
   "calculationSteps": "Кроки розрахунку",
   "intermediateResult": "Проміжний результат",
   "opponentsInvolved": "Задіяні суперники",
@@ -1386,6 +1415,34 @@
       "resetSuccess": "Скинуто {{count}} налаштувань",
       "resetFailed": "Скидання не вдалося: {{errors}}",
       "failedToReset": "Не вдалося скинути налаштування"
+    }
+  },
+  "tournamentEdit": {
+    "title": "Редагувати турнір",
+    "menuEdit": "Редагувати турнір",
+    "coreSection": "Основна інформація",
+    "extraSection": "Додаткова інформація",
+    "description": "Опис",
+    "websiteUrl": "URL сайту",
+    "contactEmail": "Контактний email",
+    "entryFee": "Вступний внесок",
+    "currency": "Валюта",
+    "minRoundsHelper": "Мінімум {{min}} (завершені тури)",
+    "failedToUpdate": "Не вдалося оновити турнір",
+    "errors": {
+      "totalRoundsBelowCompleted": "Не можна встановити кількість турів {{requested}} — вже завершено {{min}} турів"
+    }
+  },
+  "pairingEdit": {
+    "editPairings": "Редагувати жеребкування",
+    "errors": {
+      "modificationNotAllowed": "Зміна жеребкування неможлива при статусі туру '{{status}}'",
+      "playerAlreadyPaired": "Гравець {{playerId}} вже бере участь у жеребкуванні туру {{roundNumber}}",
+      "completedRoundRequiresIdentity": "Редагування результатів завершеного туру потребує вказання автора змін",
+      "failedToSwapColors": "Не вдалося поміняти кольори",
+      "failedToReplacePlayer": "Не вдалося замінити гравця",
+      "failedToDeletePairing": "Не вдалося видалити пару",
+      "failedToAddPairing": "Не вдалося додати пару"
     }
   }
 }

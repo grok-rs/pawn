@@ -253,6 +253,111 @@ export function useRoundManager(
     }
   };
 
+  const handleDeleteRound = async (roundId: number) => {
+    try {
+      setActionLoading(true);
+      await commands.deleteRound(roundId);
+      await fetchRounds();
+      onRoundUpdate?.();
+    } catch (err) {
+      const errorMessage = parseBackendError(err, t, 'failedToDeleteRound');
+      setError(errorMessage);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSwapGameColors = async (gameId: number) => {
+    try {
+      setActionLoading(true);
+      await commands.swapGameColors(gameId);
+      await fetchRounds();
+      onRoundUpdate?.();
+    } catch (err) {
+      const errorMessage = parseBackendError(
+        err,
+        t,
+        'pairingEdit.errors.failedToSwapColors'
+      );
+      setError(errorMessage);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReplacePlayer = async (
+    gameId: number,
+    whitePlayerId: number,
+    blackPlayerId: number
+  ) => {
+    try {
+      setActionLoading(true);
+      await commands.replacePlayerInGame({
+        game_id: gameId,
+        white_player_id: whitePlayerId,
+        black_player_id: blackPlayerId,
+      });
+      await fetchRounds();
+      onRoundUpdate?.();
+    } catch (err) {
+      const errorMessage = parseBackendError(
+        err,
+        t,
+        'pairingEdit.errors.failedToReplacePlayer'
+      );
+      setError(errorMessage);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteGameFromRound = async (gameId: number) => {
+    try {
+      setActionLoading(true);
+      await commands.deleteGameFromRound(gameId);
+      await fetchRounds();
+      onRoundUpdate?.();
+    } catch (err) {
+      const errorMessage = parseBackendError(
+        err,
+        t,
+        'pairingEdit.errors.failedToDeletePairing'
+      );
+      setError(errorMessage);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAddManualPairing = async (
+    tournamentId: number,
+    roundNumber: number,
+    whitePlayerId: number,
+    blackPlayerId: number | null
+  ) => {
+    try {
+      setActionLoading(true);
+      await commands.addManualPairing({
+        tournament_id: tournamentId,
+        round_number: roundNumber,
+        white_player_id: whitePlayerId,
+        black_player_id: blackPlayerId,
+        board_number: null,
+      });
+      await fetchRounds();
+      onRoundUpdate?.();
+    } catch (err) {
+      const errorMessage = parseBackendError(
+        err,
+        t,
+        'pairingEdit.errors.failedToAddPairing'
+      );
+      setError(errorMessage);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const clearError = () => setError(null);
 
   const closePairings = () => {
@@ -301,6 +406,11 @@ export function useRoundManager(
     handleCompleteRound,
     handleCreateNextRound,
     handleRegeneratePairings,
+    handleDeleteRound,
+    handleSwapGameColors,
+    handleReplacePlayer,
+    handleDeleteGameFromRound,
+    handleAddManualPairing,
 
     // Derived
     getProgressPercentage,

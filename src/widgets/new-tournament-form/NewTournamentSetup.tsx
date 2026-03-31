@@ -7,8 +7,9 @@ import { APP_ROUTES } from '@shared/config/routes';
 import { useNotification } from '@shared/lib/notification';
 import FormStepper from '@shared/ui/FormStepper';
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { NEW_TOURNAMENT_FORM_STEPS } from './constants';
+import { createTournamentFormSteps } from './constants';
 import StepperNavigation from './StepperNavigation/StepperNavigation';
 import { StyledBox, StyledDivider } from './styled';
 import type { TournamentFormValues } from './types';
@@ -16,6 +17,7 @@ import { DEFAULT_TOURNAMENT_FORM_VALUES } from './validation';
 
 const NewTournamentSetup = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { showSuccess, showError } = useNotification();
   const [createdTournament, setCreatedTournament] = useState<Tournament | null>(
     null
@@ -107,7 +109,7 @@ const NewTournamentSetup = () => {
 
   return (
     <FormStepper
-      steps={NEW_TOURNAMENT_FORM_STEPS}
+      steps={createTournamentFormSteps(t)}
       defaultValues={defaultValues}
       onLastStep={onSubmit}
       onCancel={onCancel}

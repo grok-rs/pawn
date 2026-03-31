@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-delete-game-from-round"
+description = "Allows deleting a game from a round"
+commands.allow = ["delete_game_from_round"]
+
+[[permission]]
+identifier = "deny-delete-game-from-round"
+description = "Denies the delete-game-from-round command"
+commands.deny = ["delete_game_from_round"]

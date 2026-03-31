@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-replace-player-in-game"
+description = "Allows replacing a player in a game"
+commands.allow = ["replace_player_in_game"]
+
+[[permission]]
+identifier = "deny-replace-player-in-game"
+description = "Denies the replace-player-in-game command"
+commands.deny = ["replace_player_in_game"]

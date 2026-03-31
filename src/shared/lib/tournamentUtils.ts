@@ -52,7 +52,9 @@ export const isDraftTournament = (tournament: Tournament): boolean => {
 
 // Enhanced tournament status functions using actual data
 export const calculateActualRoundsPlayed = (rounds: Round[]): number => {
-  return rounds.filter(round => round.status === 'Completed').length;
+  return rounds.filter(
+    round => round.status === 'completed' || round.status === 'verified'
+  ).length;
 };
 
 export const isFinishedTournamentActual = (
@@ -100,4 +102,30 @@ export const getTournamentProgressActual = (
   return tournament.total_rounds > 0
     ? (actualRoundsPlayed / tournament.total_rounds) * 100
     : 0;
+};
+
+export type GroupedTournaments = {
+  ongoing: Tournament[];
+  draft: Tournament[];
+  finished: Tournament[];
+};
+
+export const groupTournamentsByStatus = (
+  tournaments: Tournament[]
+): GroupedTournaments => {
+  const ongoing: Tournament[] = [];
+  const draft: Tournament[] = [];
+  const finished: Tournament[] = [];
+
+  for (const t of tournaments) {
+    if (isFinishedTournament(t)) {
+      finished.push(t);
+    } else if (isOngoingTournament(t)) {
+      ongoing.push(t);
+    } else {
+      draft.push(t);
+    }
+  }
+
+  return { ongoing, draft, finished };
 };

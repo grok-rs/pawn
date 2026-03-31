@@ -3,6 +3,7 @@ use tracing::instrument;
 use super::SqliteDb;
 use crate::db::{GameDb, TournamentDb, UpdateTournamentSettings};
 use crate::standings::model::{TiebreakType, TournamentTiebreakConfig};
+use crate::tournament::dto::UpdateTournament;
 use crate::tournament::model::{Tournament, TournamentDetails};
 
 impl TournamentDb for SqliteDb {
@@ -109,6 +110,82 @@ impl TournamentDb for SqliteDb {
         tx.commit().await?;
 
         Ok(())
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn update_tournament(&self, data: UpdateTournament) -> Result<Tournament, sqlx::Error> {
+        let mut set_clauses = Vec::new();
+
+        if data.name.is_some() {
+            set_clauses.push("name = ?");
+        }
+        if data.location.is_some() {
+            set_clauses.push("location = ?");
+        }
+        if data.date.is_some() {
+            set_clauses.push("date = ?");
+        }
+        if data.total_rounds.is_some() {
+            set_clauses.push("total_rounds = ?");
+        }
+        if data.description.is_some() {
+            set_clauses.push("description = ?");
+        }
+        if data.website_url.is_some() {
+            set_clauses.push("website_url = ?");
+        }
+        if data.contact_email.is_some() {
+            set_clauses.push("contact_email = ?");
+        }
+        if data.entry_fee.is_some() {
+            set_clauses.push("entry_fee = ?");
+        }
+        if data.currency.is_some() {
+            set_clauses.push("currency = ?");
+        }
+
+        if set_clauses.is_empty() {
+            return self.get_tournament(data.id).await;
+        }
+
+        let query_str = format!(
+            "UPDATE tournaments SET {} WHERE id = ? RETURNING *",
+            set_clauses.join(", ")
+        );
+
+        let mut query = sqlx::query_as::<_, Tournament>(&query_str);
+
+        if let Some(ref name) = data.name {
+            query = query.bind(name);
+        }
+        if let Some(ref location) = data.location {
+            query = query.bind(location);
+        }
+        if let Some(ref date) = data.date {
+            query = query.bind(date);
+        }
+        if let Some(total_rounds) = data.total_rounds {
+            query = query.bind(total_rounds);
+        }
+        if let Some(ref description) = data.description {
+            query = query.bind(description);
+        }
+        if let Some(ref website_url) = data.website_url {
+            query = query.bind(website_url);
+        }
+        if let Some(ref contact_email) = data.contact_email {
+            query = query.bind(contact_email);
+        }
+        if let Some(entry_fee) = data.entry_fee {
+            query = query.bind(entry_fee);
+        }
+        if let Some(ref currency) = data.currency {
+            query = query.bind(currency);
+        }
+
+        query = query.bind(data.id);
+
+        query.fetch_one(&self.pool).await
     }
 
     #[instrument(ret, skip(self))]

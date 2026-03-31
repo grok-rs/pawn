@@ -8,12 +8,13 @@ import TournamentPreview from '../TournamentPreview';
 // Mock useTranslation
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
+    i18n: { language: 'en' },
     t: (key: string) => {
       const translations: Record<string, string> = {
         'form.preview.title': 'Tournament Preview',
         'form.sections.basicInformation': 'Basic Information',
         'form.sections.tournamentFormat': 'Tournament Format',
-        'form.sections.advancedRules': 'Advanced Rules',
+        'form.sections.advancedRules.label': 'Advanced Rules',
         'form.preview.readyToCreate': 'Ready to Create',
         'form.preview.confirmMessage':
           'Please review the information above and click "Create Tournament" to proceed.',
@@ -32,22 +33,22 @@ vi.mock('react-i18next', () => ({
         'tournament.configuration.organizerName': 'Organizer',
         'tournament.configuration.organizerEmail': 'Organizer Email',
         'tournament.configuration.arbiterNotes': 'Arbiter Notes',
-        'tournament.types.rapid': 'Rapid',
+        'tournament.types.rapid.label': 'Rapid',
         'tournament.types.classic': 'Classical',
-        'tournament.types.blitz': 'Blitz',
-        'tournament.types.swiss': 'Swiss System',
-        'tournament.types.roundRobin': 'Round Robin',
-        'tournament.types.knockout': 'Knockout',
-        'tournament.types.elimination': 'Elimination',
-        'tournament.drawOffers.allowed': 'Allowed',
-        'tournament.drawOffers.restricted': 'Restricted',
-        'tournament.drawOffers.prohibited': 'Prohibited',
-        'tournament.mobilePhone.allowed': 'Allowed',
-        'tournament.mobilePhone.silentOnly': 'Silent Only',
-        'tournament.mobilePhone.prohibited': 'Prohibited',
-        'tournament.lateEntry.allowed': 'Allowed',
-        'tournament.lateEntry.restricted': 'Restricted',
-        'tournament.lateEntry.prohibited': 'Prohibited',
+        'tournament.types.blitz.label': 'Blitz',
+        'tournament.types.swiss.label': 'Swiss System',
+        'tournament.types.roundRobin.label': 'Round Robin',
+        'tournament.types.knockout.label': 'Knockout',
+        'tournament.types.elimination.label': 'Elimination',
+        'tournament.drawOffers.allowed.label': 'Allowed',
+        'tournament.drawOffers.restricted.label': 'Restricted',
+        'tournament.drawOffers.prohibited.label': 'Prohibited',
+        'tournament.mobilePhone.allowed.label': 'Allowed',
+        'tournament.mobilePhone.silentOnly.label': 'Silent Only',
+        'tournament.mobilePhone.prohibited.label': 'Prohibited',
+        'tournament.lateEntry.allowed.label': 'Allowed',
+        'tournament.lateEntry.restricted.label': 'Restricted',
+        'tournament.lateEntry.prohibited.label': 'Prohibited',
         'tournament.timeUnits.minutes.short': 'min',
         'form.placeholders.notSet': 'Not Set',
       };
@@ -145,9 +146,15 @@ describe('TournamentPreview', () => {
     it('should display formatted dates', () => {
       renderWithTheme(<TournamentPreview {...defaultProps} />);
 
-      // Dates are formatted using toLocaleDateString()
-      const startDate = new Date('2024-06-01').toLocaleDateString();
-      const endDate = new Date('2024-06-03').toLocaleDateString();
+      // Dates are formatted using formatLocalizedDate with 'en' locale
+      const formatDate = (date: Date) =>
+        date.toLocaleDateString('en', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        });
+      const startDate = formatDate(new Date('2024-06-01'));
+      const endDate = formatDate(new Date('2024-06-03'));
       expect(screen.getByText(`${startDate} - ${endDate}`)).toBeInTheDocument();
     });
 
@@ -397,7 +404,11 @@ describe('TournamentPreview', () => {
         <TournamentPreview {...defaultProps} formData={formDataWithDates} />
       );
 
-      const expectedDateString = testDate.toLocaleDateString();
+      const expectedDateString = testDate.toLocaleDateString('en', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
       expect(
         screen.getByText(`${expectedDateString} - ${expectedDateString}`)
       ).toBeInTheDocument();

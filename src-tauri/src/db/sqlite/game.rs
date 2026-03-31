@@ -256,6 +256,49 @@ impl GameDb for SqliteDb {
     }
 
     #[instrument(ret, skip(self))]
+    async fn swap_game_colors(&self, game_id: i32) -> Result<Game, sqlx::Error> {
+        let game: Game = sqlx::query_as(
+            "UPDATE games SET white_player_id = black_player_id, black_player_id = white_player_id WHERE id = ?
+             RETURNING id, tournament_id, round_number, white_player_id, black_player_id, result, result_type, result_reason, arbiter_notes, last_updated, approved_by, created_at"
+        )
+        .bind(game_id)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(game)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn update_game_players(
+        &self,
+        game_id: i32,
+        white_player_id: i32,
+        black_player_id: i32,
+    ) -> Result<Game, sqlx::Error> {
+        let game: Game = sqlx::query_as(
+            "UPDATE games SET white_player_id = ?, black_player_id = ? WHERE id = ?
+             RETURNING id, tournament_id, round_number, white_player_id, black_player_id, result, result_type, result_reason, arbiter_notes, last_updated, approved_by, created_at"
+        )
+        .bind(white_player_id)
+        .bind(black_player_id)
+        .bind(game_id)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(game)
+    }
+
+    #[instrument(ret, skip(self))]
+    async fn delete_game(&self, game_id: i32) -> Result<(), sqlx::Error> {
+        sqlx::query("DELETE FROM games WHERE id = ?")
+            .bind(game_id)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+
+    #[instrument(ret, skip(self))]
     async fn get_player_results(
         &self,
         tournament_id: i32,

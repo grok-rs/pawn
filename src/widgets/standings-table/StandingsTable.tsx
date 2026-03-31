@@ -5,11 +5,8 @@ import {
   ExpandMore,
   Info,
   Print,
-  Remove,
   Search,
   TableRows,
-  TrendingDown,
-  TrendingUp,
 } from '@mui/icons-material';
 import {
   Box,
@@ -46,6 +43,7 @@ import TiebreakBreakdownDialog from './TiebreakBreakdownDialog';
 interface StandingsTableProps {
   standings: PlayerStanding[];
   loading?: boolean;
+  isFinished?: boolean;
   onPlayerClick?: (playerId: number) => void;
   onExportCsv?: () => void;
   onExportPdf?: () => void;
@@ -61,6 +59,7 @@ interface StandingsTableProps {
 function StandingsTable({
   standings,
   loading = false,
+  isFinished = false,
   onPlayerClick,
   onExportCsv,
   onExportPdf,
@@ -91,33 +90,71 @@ function StandingsTable({
     );
   }, [standings, searchQuery]);
 
+  // Compute rank display labels: "1-3" for ties, "4" for unique
+  const rankDisplayMap = useMemo(() => {
+    const map = new Map<number, string>();
+    const rankCounts = new Map<number, number>();
+    for (const s of standings) {
+      rankCounts.set(s.rank, (rankCounts.get(s.rank) || 0) + 1);
+    }
+    for (const [rank, count] of rankCounts) {
+      map.set(rank, count > 1 ? `${rank}-${rank + count - 1}` : `${rank}`);
+    }
+    return map;
+  }, [standings]);
+
   const rows: GridRowsProp = filteredStandings.map(standing => ({
     id: standing.player.id,
     ...standing,
   }));
 
+  const getRankDisplay = (rank: number) =>
+    rankDisplayMap.get(rank) || `${rank}`;
+
+  const rankColumn: GridColDef[] = isFinished
+    ? [
+        {
+          field: 'rank',
+          headerName: t('rank'),
+          width: 80,
+          align: 'center',
+          headerAlign: 'center',
+          renderCell: (params: GridRenderCellParams) => {
+            const display = getRankDisplay(params.value);
+            return (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                {display}
+                {params.value === 1 && (
+                  <EmojiEvents sx={{ color: 'gold', fontSize: 20 }} />
+                )}
+                {params.value === 2 && (
+                  <EmojiEvents sx={{ color: 'silver', fontSize: 18 }} />
+                )}
+                {params.value === 3 && (
+                  <EmojiEvents sx={{ color: '#CD7F32', fontSize: 16 }} />
+                )}
+              </Box>
+            );
+          },
+        },
+      ]
+    : [
+        {
+          field: 'rank',
+          headerName: '#',
+          width: 60,
+          align: 'center',
+          headerAlign: 'center',
+          renderCell: (params: GridRenderCellParams) => (
+            <Typography variant="body2">
+              {getRankDisplay(params.value)}
+            </Typography>
+          ),
+        },
+      ];
+
   const baseColumns: GridColDef[] = [
-    {
-      field: 'rank',
-      headerName: t('rank'),
-      width: 80,
-      align: 'center',
-      headerAlign: 'center',
-      renderCell: (params: GridRenderCellParams) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          {params.value}
-          {params.value === 1 && (
-            <EmojiEvents sx={{ color: 'gold', fontSize: 20 }} />
-          )}
-          {params.value === 2 && (
-            <EmojiEvents sx={{ color: 'silver', fontSize: 18 }} />
-          )}
-          {params.value === 3 && (
-            <EmojiEvents sx={{ color: '#CD7F32', fontSize: 16 }} />
-          )}
-        </Box>
-      ),
-    },
+    ...rankColumn,
     {
       field: 'name',
       headerName: t('player.label'),
@@ -130,6 +167,7 @@ function StandingsTable({
             '&:hover': onPlayerClick ? { textDecoration: 'underline' } : {},
             display: 'flex',
             alignItems: 'center',
+            height: '100%',
             gap: 1,
           }}
           onClick={() => onPlayerClick?.(params.row.player.id)}
@@ -137,24 +175,6 @@ function StandingsTable({
           <Typography variant="body2" fontWeight={500}>
             {params.row.player.name}
           </Typography>
-          {params.row.player.country_code && (
-            <Chip
-              label={String(
-                t(
-                  `country.${params.row.player.country_code}`,
-                  params.row.player.country_code
-                )
-              )}
-              size="small"
-              variant="outlined"
-              sx={{
-                height: 20,
-                fontSize: '0.75rem',
-                color: 'text.secondary',
-                borderColor: 'text.secondary',
-              }}
-            />
-          )}
         </Box>
       ),
     },
@@ -165,38 +185,29 @@ function StandingsTable({
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams) => (
-        <Box>
-          {params.row.player.rating || t('unrated')}
-          {params.row.rating_change && (
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {params.row.rating_change > 0 ? (
-                <TrendingUp sx={{ color: 'success.main', fontSize: 16 }} />
-              ) : params.row.rating_change < 0 ? (
-                <TrendingDown sx={{ color: 'error.main', fontSize: 16 }} />
-              ) : (
-                <Remove sx={{ color: 'text.secondary', fontSize: 16 }} />
-              )}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 0.5,
+          }}
+        >
+          <Typography variant="body2">
+            {params.row.player.rating || t('unrated')}
+          </Typography>
+          {params.row.rating_change != null &&
+            params.row.rating_change !== 0 && (
               <Typography
                 variant="caption"
                 color={
-                  params.row.rating_change > 0
-                    ? 'success.main'
-                    : params.row.rating_change < 0
-                      ? 'error.main'
-                      : 'text.secondary'
+                  params.row.rating_change > 0 ? 'success.main' : 'error.main'
                 }
               >
                 {params.row.rating_change > 0 ? '+' : ''}
                 {params.row.rating_change}
               </Typography>
-            </Box>
-          )}
+            )}
         </Box>
       ),
     },
@@ -207,7 +218,7 @@ function StandingsTable({
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams) => (
-        <Typography variant="h6" color="primary">
+        <Typography variant="body2" fontWeight={700} color="primary">
           {params.value}
         </Typography>
       ),
@@ -337,7 +348,10 @@ function StandingsTable({
         })
       : [];
 
-  const columns = [...baseColumns, ...tiebreakColumns];
+  const columns = [...baseColumns, ...tiebreakColumns].map(col => ({
+    ...col,
+    description: '',
+  }));
 
   const handleExportMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -446,6 +460,10 @@ function StandingsTable({
           }}
           sx={{
             border: 'none',
+            '& .MuiDataGrid-cell': {
+              display: 'flex',
+              alignItems: 'center',
+            },
             '& .MuiDataGrid-row:nth-of-type(odd)': {
               backgroundColor: 'action.hover',
             },

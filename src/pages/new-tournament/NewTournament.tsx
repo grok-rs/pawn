@@ -1,5 +1,4 @@
 import {
-  ContentCopy,
   EmojiEvents,
   FileUpload,
   Info,
@@ -22,7 +21,6 @@ import BaseLayout from '@shared/layouts/BaseLayout';
 import ImportTournamentButton from '@widgets/new-tournament-form/ImportTournamentButton';
 import NewTournamentSetup from '@widgets/new-tournament-form/NewTournamentSetup';
 import TournamentConfigurationExport from '@widgets/new-tournament-form/TournamentConfigurationExport';
-import TournamentTemplates from '@widgets/new-tournament-form/TournamentTemplates';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -126,34 +124,6 @@ const NewTournamentPage = () => {
                   {t('tournament.configuration.description')}
                 </Typography>
                 <TournamentConfigurationExport />
-              </CardContent>
-            </Card>
-
-            {/* Tournament Templates */}
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
-                <Box
-                  sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
-                >
-                  <ContentCopy color="primary" />
-                  <Typography variant="h6" fontWeight={600}>
-                    {t('tournament.templates.title')}
-                  </Typography>
-                </Box>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mb: 2 }}
-                >
-                  {t('tournament.templates.quickStart')}
-                </Typography>
-                <TournamentTemplates
-                  showSelection={true}
-                  onSelectTemplate={_template => {
-                    // In a real implementation, this would populate the form with template data
-                    // Selected template: template
-                  }}
-                />
               </CardContent>
             </Card>
 

@@ -29,6 +29,14 @@ pub enum ErrorCode {
     TournamentIncompleteGames { count: usize },
     /// Tournament has incomplete rounds
     TournamentIncompleteRounds { incomplete: usize, total: usize },
+    /// Cannot set total_rounds below the highest completed/verified round
+    TournamentTotalRoundsBelowCompleted { min_allowed: i32, requested: i32 },
+    /// Pairing modification not allowed for current round status
+    PairingModificationNotAllowed { round_status: String },
+    /// Player is already paired in this round
+    PlayerAlreadyPaired { player_id: i32, round_number: i32 },
+    /// Editing a completed round requires changed_by identity
+    CompletedRoundEditRequiresIdentity,
 }
 
 impl fmt::Display for ErrorCode {
@@ -48,6 +56,33 @@ impl fmt::Display for ErrorCode {
                     f,
                     "TOURNAMENT_INCOMPLETE_ROUNDS_ERROR::{incomplete}::{total}"
                 )
+            }
+            Self::TournamentTotalRoundsBelowCompleted {
+                min_allowed,
+                requested,
+            } => {
+                write!(
+                    f,
+                    "TOURNAMENT_TOTAL_ROUNDS_BELOW_COMPLETED::{min_allowed}::{requested}"
+                )
+            }
+            Self::PairingModificationNotAllowed { round_status } => {
+                write!(
+                    f,
+                    "PAIRING_MODIFICATION_NOT_ALLOWED::{round_status}"
+                )
+            }
+            Self::PlayerAlreadyPaired {
+                player_id,
+                round_number,
+            } => {
+                write!(
+                    f,
+                    "PLAYER_ALREADY_PAIRED::{player_id}::{round_number}"
+                )
+            }
+            Self::CompletedRoundEditRequiresIdentity => {
+                write!(f, "COMPLETED_ROUND_EDIT_REQUIRES_IDENTITY")
             }
         }
     }

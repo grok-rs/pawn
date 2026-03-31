@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-add-manual-pairing"
+description = "Allows adding a manual pairing to a round"
+commands.allow = ["add_manual_pairing"]
+
+[[permission]]
+identifier = "deny-add-manual-pairing"
+description = "Denies the add-manual-pairing command"
+commands.deny = ["add_manual_pairing"]

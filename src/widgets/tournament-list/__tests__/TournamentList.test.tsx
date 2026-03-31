@@ -63,6 +63,7 @@ vi.mock('react-router-dom', () => ({
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
+    i18n: { language: 'en' },
   }),
 }));
 
@@ -192,8 +193,8 @@ describe('TournamentList', () => {
 
     // Wait for async data to load
     await waitFor(() => {
-      // First tournament has 3 completed rounds out of 9, so it's ongoing
-      expect(screen.getByText('ongoing')).toBeInTheDocument();
+      // First tournament has 3 completed rounds out of 9, so it shows "Round 3"
+      expect(screen.getByText('round 3')).toBeInTheDocument();
       // Second tournament has 0 completed rounds, so it's not started
       expect(screen.getByText('notStarted')).toBeInTheDocument();
     });

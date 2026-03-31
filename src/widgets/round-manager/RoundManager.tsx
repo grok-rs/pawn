@@ -1,6 +1,10 @@
+import type { GameResult } from '@dto/bindings';
+import { commands } from '@dto/bindings';
 import {
   Add,
   CheckCircle,
+  Delete,
+  EditNote,
   PlayArrow,
   Refresh,
   Stop,
@@ -26,7 +30,7 @@ import {
   Select,
   Typography,
 } from '@mui/material';
-import { StandingsTable } from '@widgets/standings-table';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import PairingsDisplay from './PairingsDisplay';
 import {
@@ -38,10 +42,15 @@ import { useRoundManager } from './useRoundManager';
 
 interface RoundManagerProps {
   tournamentId: number;
+  totalRounds: number;
   onRoundUpdate?: () => void;
 }
 
-function RoundManager({ tournamentId, onRoundUpdate }: RoundManagerProps) {
+function RoundManager({
+  tournamentId,
+  totalRounds,
+  onRoundUpdate,
+}: RoundManagerProps) {
   const { t } = useTranslation();
   const {
     rounds,
@@ -53,8 +62,6 @@ function RoundManager({ tournamentId, onRoundUpdate }: RoundManagerProps) {
     pairingMethod,
     generatedPairings,
     showPairings,
-    standings,
-    standingsLoading,
     roundsWithGames,
     setCreateRoundDialogOpen,
     setPairingMethod,
@@ -67,8 +74,27 @@ function RoundManager({ tournamentId, onRoundUpdate }: RoundManagerProps) {
     handleCompleteRound,
     handleCreateNextRound,
     handleRegeneratePairings,
-    getProgressPercentage,
+    handleDeleteRound,
+    handleSwapGameColors,
+    handleDeleteGameFromRound,
   } = useRoundManager(tournamentId, onRoundUpdate);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [roundToDelete, setRoundToDelete] = useState<number | null>(null);
+  const [editPairingsGames, setEditPairingsGames] = useState<GameResult[]>([]);
+  const [editPairingsRoundNumber, setEditPairingsRoundNumber] = useState(0);
+  const [editPairingsOpen, setEditPairingsOpen] = useState(false);
+
+  const handleEditPairings = async (roundId: number, roundNumber: number) => {
+    try {
+      const details = await commands.getRoundDetails(roundId);
+      setEditPairingsGames(details.games);
+      setEditPairingsRoundNumber(roundNumber);
+      setEditPairingsOpen(true);
+    } catch (_err) {
+      // handled by error state
+    }
+  };
 
   if (loading) {
     return (
@@ -89,23 +115,6 @@ function RoundManager({ tournamentId, onRoundUpdate }: RoundManagerProps) {
         <Alert severity="error" sx={{ mb: 3 }} onClose={clearError}>
           {error}
         </Alert>
-      )}
-
-      {/* Current Standings */}
-      {standings && (
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-              {t('rounds.currentStandings')}
-            </Typography>
-            <Box sx={{ height: 400 }}>
-              <StandingsTable
-                standings={standings.standings}
-                loading={standingsLoading}
-              />
-            </Box>
-          </CardContent>
-        </Card>
       )}
 
       {/* Round Progress Overview */}
@@ -145,12 +154,20 @@ function RoundManager({ tournamentId, onRoundUpdate }: RoundManagerProps) {
                     r => r.status === 'completed' || r.status === 'verified'
                   ).length
                 }{' '}
-                / {rounds.length}
+                / {totalRounds}
               </Typography>
             </Box>
             <LinearProgress
               variant="determinate"
-              value={getProgressPercentage()}
+              value={
+                totalRounds > 0
+                  ? (rounds.filter(
+                      r => r.status === 'completed' || r.status === 'verified'
+                    ).length /
+                      totalRounds) *
+                    100
+                  : 0
+              }
               sx={{ height: 8, borderRadius: 4 }}
             />
           </Box>
@@ -193,7 +210,7 @@ function RoundManager({ tournamentId, onRoundUpdate }: RoundManagerProps) {
                   }}
                 >
                   <Typography variant="h6" fontWeight={600}>
-                    Round {round.round_number}
+                    {t('round')} {round.round_number}
                   </Typography>
                   <Chip
                     icon={getRoundStatusIcon(round.status)}
@@ -242,17 +259,29 @@ function RoundManager({ tournamentId, onRoundUpdate }: RoundManagerProps) {
 
                   {round.status === 'published' &&
                     (roundsWithGames.has(round.id) ? (
-                      <Button
-                        size="small"
-                        startIcon={<PlayArrow />}
-                        color="primary"
-                        onClick={() =>
-                          handleUpdateRoundStatus(round.id, 'in_progress')
-                        }
-                        disabled={actionLoading}
-                      >
-                        {t('rounds.startRound')}
-                      </Button>
+                      <>
+                        <Button
+                          size="small"
+                          startIcon={<PlayArrow />}
+                          color="primary"
+                          onClick={() =>
+                            handleUpdateRoundStatus(round.id, 'in_progress')
+                          }
+                          disabled={actionLoading}
+                        >
+                          {t('rounds.startRound')}
+                        </Button>
+                        <Button
+                          size="small"
+                          startIcon={<EditNote />}
+                          onClick={() =>
+                            handleEditPairings(round.id, round.round_number)
+                          }
+                          disabled={actionLoading}
+                        >
+                          {t('pairingEdit.editPairings')}
+                        </Button>
+                      </>
                     ) : (
                       <Button
                         size="small"
@@ -303,6 +332,22 @@ function RoundManager({ tournamentId, onRoundUpdate }: RoundManagerProps) {
                         disabled={actionLoading}
                       >
                         {t('rounds.nextRound')}
+                      </Button>
+                    )}
+
+                  {round.status !== 'in_progress' &&
+                    round.status !== 'finishing' && (
+                      <Button
+                        size="small"
+                        startIcon={<Delete />}
+                        color="error"
+                        onClick={() => {
+                          setRoundToDelete(round.id);
+                          setDeleteDialogOpen(true);
+                        }}
+                        disabled={actionLoading}
+                      >
+                        {t('delete')}
                       </Button>
                     )}
                 </Box>
@@ -397,6 +442,114 @@ function RoundManager({ tournamentId, onRoundUpdate }: RoundManagerProps) {
           loading={actionLoading}
         />
       )}
+
+      {/* Delete Round Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>{t('confirmDeleteTitle')}</DialogTitle>
+        <DialogContent>
+          <Typography>{t('rounds.confirmDeleteRound')}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>
+            {t('cancel')}
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={async () => {
+              if (roundToDelete !== null) {
+                await handleDeleteRound(roundToDelete);
+              }
+              setDeleteDialogOpen(false);
+              setRoundToDelete(null);
+            }}
+            disabled={actionLoading}
+          >
+            {t('delete')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Pairings Dialog */}
+      <Dialog
+        open={editPairingsOpen}
+        onClose={() => setEditPairingsOpen(false)}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle>
+          {t('pairingEdit.editPairings')} — {t('round')}{' '}
+          {editPairingsRoundNumber}
+        </DialogTitle>
+        <DialogContent dividers>
+          {editPairingsGames.length === 0 ? (
+            <Typography color="text.secondary">
+              {t('pairings.noPairingsMessage')}
+            </Typography>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {editPairingsGames.map(gr => (
+                <Card key={gr.game.id} variant="outlined">
+                  <CardContent
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      py: 1,
+                      '&:last-child': { pb: 1 },
+                    }}
+                  >
+                    <Typography variant="body2">
+                      {gr.white_player.name} vs {gr.black_player.name}
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button
+                        size="small"
+                        onClick={async () => {
+                          await handleSwapGameColors(gr.game.id);
+                          handleEditPairings(
+                            rounds.find(
+                              r => r.round_number === editPairingsRoundNumber
+                            )?.id ?? 0,
+                            editPairingsRoundNumber
+                          );
+                        }}
+                        disabled={actionLoading}
+                      >
+                        {t('pairings.swapColors')}
+                      </Button>
+                      <Button
+                        size="small"
+                        color="error"
+                        onClick={async () => {
+                          await handleDeleteGameFromRound(gr.game.id);
+                          handleEditPairings(
+                            rounds.find(
+                              r => r.round_number === editPairingsRoundNumber
+                            )?.id ?? 0,
+                            editPairingsRoundNumber
+                          );
+                        }}
+                        disabled={actionLoading}
+                      >
+                        {t('delete')}
+                      </Button>
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditPairingsOpen(false)}>
+            {t('close')}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {actionLoading && (
         <Box

@@ -2,6 +2,18 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::instrument;
 
+/// Format tiebreak value: use 1 decimal for half-point values, no decimals for integers
+fn format_tiebreak_value(value: f64) -> String {
+    if (value - value.round()).abs() < f64::EPSILON {
+        // Integer value (e.g., 26.0 -> "26")
+        format!("{}", value as i64)
+    } else {
+        // Has meaningful decimals — show up to 2, trim trailing zeros
+        let s = format!("{value:.2}");
+        s.trim_end_matches('0').to_string()
+    }
+}
+
 use crate::{
     common::error::PawnError,
     competition::model::Game,
@@ -227,7 +239,7 @@ impl<D: Db> TiebreakCalculator<D> {
         Ok(TiebreakScore {
             tiebreak_type: tiebreak_type.clone(),
             value,
-            display_value: format!("{value:.3}"),
+            display_value: format_tiebreak_value(value),
         })
     }
 

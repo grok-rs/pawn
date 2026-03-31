@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next';
 import * as yup from 'yup';
 
 export const DEFAULT_TOURNAMENT_FORM_VALUES = {
@@ -23,54 +24,62 @@ export const DEFAULT_TOURNAMENT_FORM_VALUES = {
   arbiterNotes: '',
 };
 
-export const TOURNAMENT_FORM_SCHEMA = yup.object().shape({
-  name: yup.string().required('Tournament name is required'),
-  city: yup.string().required('City is required'),
-  country: yup.string().required('Country is required'),
-  startDate: yup.date().required('Start date is required').nullable(),
-  endDate: yup.date().required('End date is required').nullable(),
-  mainReferee: yup.string(),
-  type: yup.string().required('Tournament type is required'),
-  pairingSystem: yup.string().required('Tournament format is required'),
-  timeControlTemplate: yup.mixed().nullable(),
-  rounds: yup
-    .number()
-    .min(1, 'At least 1 round is required')
-    .max(99, 'Maximum 99 rounds allowed')
-    .required('Number of rounds is required'),
-  additionalTime: yup.number().min(0, 'Additional time cannot be negative'),
-  additionalTimeUnit: yup.string(),
-  // Advanced tournament settings validation
-  forfeitTimeMinutes: yup
-    .number()
-    .min(1, 'Forfeit time must be at least 1 minute')
-    .max(120, 'Forfeit time cannot exceed 120 minutes'),
-  drawOffersPolicy: yup
-    .string()
-    .oneOf(
-      ['allowed', 'restricted', 'prohibited'],
-      'Invalid draw offers policy'
-    ),
-  mobilePhonePolicy: yup
-    .string()
-    .oneOf(
-      ['allowed', 'silent_only', 'prohibited'],
-      'Invalid mobile phone policy'
-    ),
-  lateEntryPolicy: yup
-    .string()
-    .oneOf(
-      ['allowed', 'restricted', 'prohibited'],
-      'Invalid late entry policy'
-    ),
-  organizerName: yup
-    .string()
-    .max(100, 'Organizer name cannot exceed 100 characters'),
-  organizerEmail: yup
-    .string()
-    .email('Invalid email format')
-    .max(100, 'Email cannot exceed 100 characters'),
-  arbiterNotes: yup
-    .string()
-    .max(1000, 'Arbiter notes cannot exceed 1000 characters'),
-});
+export const createTournamentFormSchema = (t: TFunction) =>
+  yup.object().shape({
+    name: yup.string().required(t('validation.form.nameRequired')),
+    city: yup.string().required(t('validation.form.cityRequired')),
+    country: yup.string().required(t('validation.form.countryRequired')),
+    startDate: yup
+      .date()
+      .required(t('validation.form.startDateRequired'))
+      .nullable(),
+    endDate: yup
+      .date()
+      .required(t('validation.form.endDateRequired'))
+      .nullable(),
+    mainReferee: yup.string(),
+    type: yup.string().required(t('validation.form.typeRequired')),
+    pairingSystem: yup.string().required(t('validation.form.formatRequired')),
+    timeControlTemplate: yup.mixed().nullable(),
+    rounds: yup
+      .number()
+      .min(1, t('validation.form.roundsMin'))
+      .max(99, t('validation.form.roundsMax'))
+      .required(t('validation.form.roundsRequired')),
+    additionalTime: yup.number().min(0, t('validation.form.additionalTimeMin')),
+    additionalTimeUnit: yup.string(),
+    // Advanced tournament settings validation
+    forfeitTimeMinutes: yup
+      .number()
+      .min(1, t('validation.form.forfeitTimeMin'))
+      .max(120, t('validation.form.forfeitTimeMax')),
+    drawOffersPolicy: yup
+      .string()
+      .oneOf(
+        ['allowed', 'restricted', 'prohibited'],
+        t('validation.form.invalidPolicy')
+      ),
+    mobilePhonePolicy: yup
+      .string()
+      .oneOf(
+        ['allowed', 'silent_only', 'prohibited'],
+        t('validation.form.invalidPolicy')
+      ),
+    lateEntryPolicy: yup
+      .string()
+      .oneOf(
+        ['allowed', 'restricted', 'prohibited'],
+        t('validation.form.invalidPolicy')
+      ),
+    organizerName: yup.string().max(100, t('validation.form.organizerNameMax')),
+    organizerEmail: yup
+      .string()
+      .email(t('validation.form.invalidEmail'))
+      .max(100, t('validation.form.emailMax')),
+    arbiterNotes: yup.string().max(1000, t('validation.form.arbiterNotesMax')),
+  });
+
+/** @deprecated Use createTournamentFormSchema(t) instead */
+export const TOURNAMENT_FORM_SCHEMA = createTournamentFormSchema(
+  ((key: string) => key) as unknown as TFunction
+);

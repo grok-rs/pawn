@@ -150,7 +150,7 @@ function PairingsDisplay({
           }}
         >
           <Typography variant="h6" fontWeight={600}>
-            Round {roundNumber} Pairings
+            {t('round')} {roundNumber} — {t('pairings.games')}
           </Typography>
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Chip

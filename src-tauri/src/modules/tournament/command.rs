@@ -17,8 +17,8 @@ use crate::{
         BatchUpdatePlayerSeeding, CreateTimeControl, CreateTournament,
         CreateTournamentSeedingSettings, GeneratePairingNumbersRequest, GenerateSeedingRequest,
         SeedingAnalysis, SeedingPreview, TimeControlFilter, TimeControlValidation,
-        UpdateTimeControl, UpdateTournamentSeedingSettings, UpdateTournamentSettings,
-        UpdateTournamentStatus,
+        UpdateTimeControl, UpdateTournament, UpdateTournamentSeedingSettings,
+        UpdateTournamentSettings, UpdateTournamentStatus,
     },
     tournament::model::{
         TimeControl, TimeControlTemplate, Tournament, TournamentDetails, TournamentSeedingSettings,
@@ -79,6 +79,16 @@ pub async fn update_tournament_status(
         .tournament_service
         .update_tournament_status(data)
         .await
+}
+
+#[instrument(ret, skip(state))]
+#[tauri::command]
+#[specta::specta]
+pub async fn update_tournament(
+    state: State<'_, PawnState>,
+    data: UpdateTournament,
+) -> CommandResult<Tournament> {
+    state.tournament_service.update_tournament(data).await
 }
 
 // Player operations (delegated through tournament service)

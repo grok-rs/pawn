@@ -82,6 +82,35 @@ export function parseBackendError(
     });
   }
 
+  // Handle tournament total_rounds validation
+  if (errorString.startsWith('TOURNAMENT_TOTAL_ROUNDS_BELOW_COMPLETED::')) {
+    const parts = errorString.split('::');
+    return t('tournamentEdit.errors.totalRoundsBelowCompleted', {
+      min: parseInt(parts[1], 10),
+      requested: parseInt(parts[2], 10),
+    });
+  }
+
+  // Handle pairing modification errors
+  if (errorString.startsWith('PAIRING_MODIFICATION_NOT_ALLOWED::')) {
+    const roundStatus = errorString.split('::')[1];
+    return t('pairingEdit.errors.modificationNotAllowed', {
+      status: roundStatus,
+    });
+  }
+
+  if (errorString.startsWith('PLAYER_ALREADY_PAIRED::')) {
+    const parts = errorString.split('::');
+    return t('pairingEdit.errors.playerAlreadyPaired', {
+      playerId: parseInt(parts[1], 10),
+      roundNumber: parseInt(parts[2], 10),
+    });
+  }
+
+  if (errorString === 'COMPLETED_ROUND_EDIT_REQUIRES_IDENTITY') {
+    return t('pairingEdit.errors.completedRoundRequiresIdentity');
+  }
+
   // If we have a specific error message, use it
   if (errorString) {
     return errorString;

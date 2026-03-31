@@ -41,6 +41,7 @@ fn main() {
             tournament_cmd::clear_standings_cache,
             tournament_cmd::get_tournament_settings,
             tournament_cmd::update_tournament_settings,
+            tournament_cmd::update_tournament,
             tournament_cmd::update_tournament_status,
             // Round operations
             competition_cmd::get_rounds_by_tournament,
@@ -52,6 +53,11 @@ fn main() {
             competition_cmd::create_pairings_as_games,
             competition_cmd::complete_round,
             competition_cmd::create_next_round,
+            competition_cmd::delete_round,
+            competition_cmd::swap_game_colors,
+            competition_cmd::replace_player_in_game,
+            competition_cmd::delete_game_from_round,
+            competition_cmd::add_manual_pairing,
             competition_cmd::update_tournament_pairing_method,
             // Enhanced Pairing System Commands
             competition_cmd::generate_enhanced_pairings,

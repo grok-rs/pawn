@@ -78,4 +78,21 @@ impl RoundDb for SqliteDb {
 
         Ok(round)
     }
+
+    #[instrument(ret, skip(self))]
+    async fn delete_round(&self, round_id: i32) -> Result<(), sqlx::Error> {
+        // Delete associated games first
+        sqlx::query("DELETE FROM games WHERE round_number = (SELECT round_number FROM rounds WHERE id = ?) AND tournament_id = (SELECT tournament_id FROM rounds WHERE id = ?)")
+            .bind(round_id)
+            .bind(round_id)
+            .execute(&self.pool)
+            .await?;
+
+        sqlx::query("DELETE FROM rounds WHERE id = ?")
+            .bind(round_id)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
 }

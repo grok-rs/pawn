@@ -118,7 +118,7 @@ function LateEntryDialog({
   useEffect(() => {
     if (rounds.length > 0) {
       const nextRound =
-        rounds.find(r => r.status === 'Upcoming') || rounds[rounds.length - 1];
+        rounds.find(r => r.status === 'planned') || rounds[rounds.length - 1];
       if (nextRound) {
         reset(prev => ({ ...prev, start_from_round: nextRound.round_number }));
       }
@@ -172,7 +172,9 @@ function LateEntryDialog({
   };
 
   const getCompletedRounds = () => {
-    return rounds.filter(r => r.status === 'Completed');
+    return rounds.filter(
+      r => r.status === 'completed' || r.status === 'verified'
+    );
   };
 
   const getMissedRounds = () => {
